@@ -12,8 +12,30 @@ This directory holds the database layer for the P0 scope defined in
   4. `0004_finance_chanda_payroll.sql` — `finance_categories`, `approval_policies`, `transactions`, `financial_reconciliations`, `chanda_schedules`, `chanda_payments`, `payroll_payments`
   5. `0005_notices_notifications_audit.sql` — `notices`, `notice_audiences`, `device_tokens`, `event_outbox`, `notifications`, `notification_deliveries`, `ai_requests`, `audit_logs`, `security_events`
 - `policies/` — Row Level Security policies, one file per migration group, applied after all migrations.
-- `functions/` — (empty) target for secure RPC/Edge Functions (e.g. chanda payment posting, payroll finalize, notice publish). Not yet written.
+- `functions/` — secure RPC (SQL, SECURITY DEFINER), applied after migrations and policies:
+  1. `0001_log_audit_event.sql` — internal helper; the only writer of `audit_logs`
+  2. `0002_generate_business_code.sql` — atomic per-mosque sequence generator (`TXN-2026-000123` style IDs) + its own `mosque_sequences` table/RLS
+  3. `0003_request_chanda_payment.sql` — member self-submits a chanda payment claim (pending, not yet posted)
+  4. `0004_receive_chanda_payment.sql` — admin receives/verifies a chanda payment; posts to Finance Income exactly once, generates receipt + QR code
+  5. `0005_submit_finance_transaction.sql` — creates a pending discretionary income/expense transaction
+  6. `0006_approve_finance_transaction.sql` — approves/rejects a pending transaction; blocks self-approval; enforces tiered authority from `approval_policies`
+  7. `0007_reverse_finance_transaction.sql` — corrects a posted transaction via a linked equal-and-opposite reversal (never edits/deletes the original)
+  8. `0008_finalize_payroll_payment.sql` — creates the one linked Finance expense for a payroll payment
+  9. `0009_publish_notice.sql` — the only path that sets a notice to `published`; always attributes to a human profile
+  10. `0010_complete_ai_request.sql` — service-role only; records Gemini draft output on an `ai_requests` row
+
+  Not yet written: Madrasa fee payment posting (P1, mirrors `0004`), guardian-portal RPCs, subscription/entitlement RPCs (P2), and Edge Functions for actual FCM delivery / Gemini calls (these SQL functions are the DB-side half; the Deno Edge Function that calls Gemini/FCM and then calls `complete_ai_request` / inserts notifications is not in this repo yet).
 - `seed/` — (empty) target for local development seed data (a demo mosque, roles/permissions catalogue, a few members).
+
+## Applying the RPCs
+
+Apply after migrations and policies, in filename order:
+
+```bash
+for f in supabase/functions/*.sql; do psql "$DATABASE_URL" -f "$f"; done
+```
+
+Every RPC here validates its own inputs and re-checks permissions with `public.has_permission(...)` even though RLS also applies — this "belt and suspenders" pattern matches the authorization formula in `docs/SECURITY_MODEL.md` and gives clearer, PRD-aligned error codes (`SELF_APPROVAL_NOT_ALLOWED`, `PAYMENT_ALREADY_PROCESSED`, etc. from `docs/ARCHITECTURE.md`'s error-code table) instead of a generic RLS denial.
 
 ## What's covered vs. not yet
 
@@ -31,6 +53,7 @@ Covered here: **P0 scope** — auth/tenant identity, roles/permissions, members,
 - `staff_availability` has a `no_overlapping_availability` exclusion constraint (PRD §10).
 - AI-authored notices cannot self-publish: `published_by` must be a human profile before `status = 'published'` (PRD §14, §28).
 - `event_outbox`, `audit_logs`, and `security_events` are not directly writable by any client role — only by SECURITY DEFINER functions/Edge Functions running with service credentials, matching `docs/SECURITY_MODEL.md`.
+- Every money-moving RPC in `functions/` is idempotent (replay-safe via `idempotency_key` or a source-row lock) and writes to `audit_logs` via `log_audit_event()` before returning.
 
 ## Applying locally
 
