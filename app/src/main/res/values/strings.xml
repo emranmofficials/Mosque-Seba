@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Mosque Committee</string>
+    <string name="app_title_bn">মসজিদ কমিটি</string>
+    <string name="dashboard">ড্যাশবোর্ড</string>
+    <string name="members">সদস্য</string>
+    <string name="finance">ফাইন্যান্স</string>
+    <string name="notices">নোটিশ</string>
+    <string name="more">আরও</string>
+</resources>
