@@ -93,6 +93,7 @@ create policy chanda_payments_select on public.chanda_payments
     mosque_id = public.current_mosque_id()
     and (
       public.has_permission('chanda.view')
+      or public.has_permission('chanda.receive')
       or member_id in (select id from public.members where profile_id = public.current_profile_id())
     )
   );

@@ -37,7 +37,7 @@ begin
     raise exception 'VALIDATION_ERROR: approved transaction not found for this mosque' using errcode = '22023';
   end if;
 
-  if exists (select 1 from public.transactions where reversed_by_id = v_original.id) then
+  if v_original.reversed_by_id is not null then
     raise exception 'PAYMENT_ALREADY_PROCESSED: transaction already reversed' using errcode = '23505';
   end if;
 
