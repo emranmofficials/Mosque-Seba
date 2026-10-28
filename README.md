@@ -1,4 +1,7 @@
-# মসজিদ সেবা — Mosque Seba (Mosque Committee Management System)
+# মসজিদ সেবা — Mosque Seba
+
+> **অফিসিয়াল স্লোগান:** *মসজিদের খেদমতে আধুনিক প্রযুক্তি, পরিচালনায় স্বচ্ছ আস্থা*  
+> **Application Package:** `com.mosqueseba.app`
 
 Production repository foundation for **মসজিদ সেবা (Mosque Seba)** — Comprehensive Islamic mosque, committee, madrasa, and finance operations platform.
 

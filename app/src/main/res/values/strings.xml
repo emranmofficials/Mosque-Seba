@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">Mosque Seba</string>
     <string name="app_title_bn">মসজিদ সেবা</string>
+    <string name="app_slogan">মসজিদের খেদমতে আধুনিক প্রযুক্তি, পরিচালনায় স্বচ্ছ আস্থা</string>
     <string name="dashboard">ড্যাশবোর্ড</string>
     <string name="members">সদস্য</string>
     <string name="finance">ফাইন্যান্স</string>

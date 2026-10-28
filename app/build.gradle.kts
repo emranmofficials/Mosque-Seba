@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example"
+    namespace = "com.mosqueseba.app"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.aistudio.mosquecommittee.mzqrxt"
+        applicationId = "com.mosqueseba.app"
         minSdk = 26
         targetSdk = 36
         versionCode = 1
