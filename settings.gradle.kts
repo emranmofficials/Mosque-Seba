@@ -19,5 +19,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Mosque Committee"
+rootProject.name = "Mosque-Seba"
 include(":app")
