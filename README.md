@@ -1,6 +1,6 @@
-# Mosque Committee Management System
+# মসজিদ সেবা — Mosque Seba (Mosque Committee Management System)
 
-Production repository foundation for the Mosque Committee Management System.
+Production repository foundation for **মসজিদ সেবা (Mosque Seba)** — Comprehensive Islamic mosque, committee, madrasa, and finance operations platform.
 
 ## Source of Truth
 1. `requirements/PRD_v2.0_FINAL.md`

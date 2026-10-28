@@ -61,13 +61,13 @@ fun LoginScreen(viewModel: MosqueViewModel) {
             Spacer(modifier = Modifier.height(14.dp))
 
             Text(
-                text = "মসজিদ কমিটি ম্যানেজমেন্ট",
+                text = "মসজিদ সেবা (Mosque Seba)",
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = MosqueEmeraldDark
             )
             Text(
-                text = "নিরাপদ, আধুনিক ও স্বচ্ছ প্রশাসনিক প্ল্যাটফর্ম",
+                text = "নিরাপদ, আধুনিক ও স্বচ্ছ মসজিদ পরিচালনা প্ল্যাটফর্ম",
                 style = MaterialTheme.typography.bodySmall,
                 color = MosqueTextSecondary
             )

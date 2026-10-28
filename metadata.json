@@ -1,5 +1,5 @@
 {
-  "name": "Mosque Committee",
+  "name": "Mosque Seba (মসজিদ সেবা)",
   "description": "Comprehensive Islamic mosque and committee operations management system with member directory, chanda ledger, finances, payroll, notices, and prayer times.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
