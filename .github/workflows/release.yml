@@ -1,0 +1,90 @@
+name: Build and Release APK
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    name: Build Mosque Seba Android APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+
+      - name: Build Release APK
+        run: gradle :app:assembleRelease --stacktrace
+
+      - name: Prepare APK Artifact
+        run: |
+          mkdir -p release-apk
+          if [ -f "app/build/outputs/apk/release/app-release.apk" ]; then
+            cp app/build/outputs/apk/release/app-release.apk release-apk/Mosque-Seba-v1.0.0.apk
+          else
+            cp app/build/outputs/apk/debug/app-debug.apk release-apk/Mosque-Seba-v1.0.0.apk
+          fi
+          ls -la release-apk/
+
+      - name: Upload APK as Workflow Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mosque-Seba-v1.0.0-APK
+          path: release-apk/Mosque-Seba-v1.0.0.apk
+
+      - name: Publish Official GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+        with:
+          name: "মসজিদ সেবা (Mosque Seba) — v1.0.0 Official Release"
+          tag_name: ${{ github.ref_name || 'v1.0.0' }}
+          draft: false
+          prerelease: false
+          files: release-apk/Mosque-Seba-v1.0.0.apk
+          body: |
+            # 🕌 মসজিদ সেবা (Mosque Seba) — v1.0.0
+
+            > **অফিসিয়াল স্লোগান:** *মসজিদের খেদমতে আধুনিক প্রযুক্তি, পরিচালনায় স্বচ্ছ আস্থা*  
+            > **Application Package:** `com.mosqueseba.app`
+
+            ## 📲 সরাসরি APK ডাউনলোড করুন:
+            নিচের অ্যাসেট থেকে সরাসরি আপনার অ্যান্ড্রয়েড মোবাইলে ডাউনলোড ও ইন্সটল করুন:
+            👉 **[Mosque-Seba-v1.0.0.apk](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name || 'v1.0.0' }}/Mosque-Seba-v1.0.0.apk)**
+
+            ---
+
+            ### ✨ এই রিলিজের মূল ফিচারসমূহ:
+            - 🕌 **স্মার্ট ড্যাশবোর্ড ও ওয়াক্ত ট্র্যাকার:** ৫ ওয়াক্তের নামাজের বিস্তারিত সময়সূচি, পরবর্তী ওয়াক্তের কাউন্টডাউন ও কুইক অ্যাকশন।
+            - 👥 **সদস্য ব্যবস্থাপনা:** সাধারণ ও আজীবন সদস্যদের প্রোফাইল ও মাসিক চাঁদার রেকর্ড।
+            - 💰 **স্বচ্ছ ফিন্যান্স ও অডিট:** আয় ও ব্যয়ের লেজার, নগদ/ব্যাংক ব্যালেন্স এবং মাসিক আর্থিক বিবরণী।
+            - 🧾 **ডিজিটাল চাঁদা রসিদ:** তাৎক্ষণিক কিউআর কোড ভেরিফিকেশন সহ ডিজিটাল রসিদ শেয়ারিং।
+            - 📚 **মাদরাসা ও মক্তব:** ছাত্র ভর্তি, পারাভিত্তিক হিফজ ট্র্যাকার (স্টার রেটিং সহ), ফি কালেকশন ও অভিভাবক পোর্টাল।
+            - 👔 **ইমাম ও কর্মচারী পে-রোল:** মাসিক বেতন বণ্টন এবং ফিন্যান্সে স্বয়ংক্রিয় ব্যয় ভাউচার এন্ট্রি।
+            - 🕌 **ডিউটি রোস্টার ও খাবার শিডিউল:** ইমামতি ও আজানের দায়িত্ব বণ্টন এবং খাবার বণ্টন ট্র্যাকার।
+            - 🤝 **সমাজকল্যাণ ও যাকাত তহবিল:** চিকিৎসা, শিক্ষা, বিধবা-এতিম ও খাদ্য সহায়তার আবেদন এবং অনুদান অনুমোদন।
+            - 📅 **মাহফিল ও বিশেষ অনুষ্ঠান:** বাৎসরিক ওয়াজ, শবে কদর, রমজান ইফতার মাহফিলের পূর্ণাঙ্গ শিডিউল।
+            - 📝 **কমিটি সভা ও রেজুলেশন:** সভার শিডিউল, এজেন্ডা এবং গৃহীত সিদ্ধান্তের স্থায়ী রেজুলেশন রেকর্ড।
+            - ✨ **জেমিনি এআই নোটিশ ড্রাফটার:** নোটিশের টাইটেল থেকে তাৎক্ষণিক প্রফেশনাল নোটিশ ড্রাফট।
+            - 🗄️ **রুম ডাটাবেজ (v3):** সম্পূর্ণ অফলাইন-ফার্স্ট ১৭টি এন্টিটি ও প্রি-লোডেড ডাটা।
+
+            ---
+            *নির্মাণে ও সৌজন্যে: [Emran Mahmud (@emranmofficials)](https://github.com/emranmofficials)*
