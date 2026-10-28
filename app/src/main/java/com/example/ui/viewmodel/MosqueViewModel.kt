@@ -21,13 +21,26 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
         repository = MosqueRepository(db)
     }
 
-    // Role simulation
+    // Role & Authentication simulation
     private val _currentUserRole = MutableStateFlow(UserRole.PRESIDENT)
     val currentUserRole: StateFlow<UserRole> = _currentUserRole.asStateFlow()
+
+    private val _isLoggedIn = MutableStateFlow(true)
+    val isLoggedIn: StateFlow<Boolean> = _isLoggedIn.asStateFlow()
 
     fun setUserRole(role: UserRole) {
         _currentUserRole.value = role
     }
+
+    fun login(committeeId: String, mobile: String, pass: String): Boolean {
+        _isLoggedIn.value = true
+        return true
+    }
+
+    fun logout() {
+        _isLoggedIn.value = false
+    }
+
 
     // Mosque
     val mosque: StateFlow<MosqueEntity?> = repository.mosque
@@ -276,4 +289,221 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
     // Audit logs
     val recentAuditLogs: StateFlow<List<AuditLogEntity>> = repository.recentAuditLogs
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    // --- মাদরাসা ও মক্তব স্টেট ও অ্যাকশন (PRD §16–§24) ---
+    val allStudents: StateFlow<List<StudentEntity>> = repository.allStudents
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val studentCount: StateFlow<Int> = repository.studentCount
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
+
+    fun addStudent(
+        nameBn: String,
+        className: String,
+        guardianName: String,
+        guardianMobile: String,
+        monthlyFee: Double
+    ) {
+        viewModelScope.launch {
+            val codeNum = allStudents.value.size + 1
+            val code = "STU-2024-${String.format(Locale.US, "%03d", codeNum)}"
+            val dateStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+            val student = StudentEntity(
+                id = UUID.randomUUID().toString(),
+                studentCode = code,
+                nameBn = nameBn,
+                className = className,
+                guardianName = guardianName,
+                guardianMobile = guardianMobile,
+                monthlyFee = monthlyFee,
+                joinDate = dateStr
+            )
+            repository.addStudent(student)
+        }
+    }
+
+    val allHifzProgress: StateFlow<List<HifzProgressEntity>> = repository.allHifzProgress
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    fun addHifzProgress(
+        student: StudentEntity,
+        paraNumber: Int,
+        pageOrAyah: String,
+        qualityScore: Int,
+        mistakeCount: Int,
+        feedback: String
+    ) {
+        viewModelScope.launch {
+            val dateStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+            val progress = HifzProgressEntity(
+                id = UUID.randomUUID().toString(),
+                studentId = student.id,
+                studentNameBn = student.nameBn,
+                date = dateStr,
+                paraNumber = paraNumber,
+                pageOrAyah = pageOrAyah,
+                qualityScore = qualityScore,
+                mistakeCount = mistakeCount,
+                teacherFeedback = feedback
+            )
+            repository.addHifzProgress(progress)
+        }
+    }
+
+    val allFeePayments: StateFlow<List<MadrasaFeePaymentEntity>> = repository.allFeePayments
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val totalFeeCollected: StateFlow<Double> = repository.totalFeeCollected
+        .map { it ?: 0.0 }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
+
+    fun recordMadrasaFee(
+        student: StudentEntity,
+        month: String,
+        amount: Double,
+        method: String = "cash"
+    ) {
+        viewModelScope.launch {
+            val rcpCode = "FEE-2024-${UUID.randomUUID().toString().take(6).uppercase()}"
+            val paidAtStr = SimpleDateFormat("yyyy-MM-dd hh:mm a", Locale.getDefault()).format(Date())
+            val fee = MadrasaFeePaymentEntity(
+                id = UUID.randomUUID().toString(),
+                studentId = student.id,
+                studentNameBn = student.nameBn,
+                month = month,
+                amountPaid = amount,
+                receiptCode = rcpCode,
+                paymentMethod = method,
+                paidAt = paidAtStr
+            )
+            repository.recordMadrasaFeePayment(fee)
+        }
+    }
+
+    // --- স্টাফ পে-রোল, রোস্টার ও ফুড শিডিউল (PRD §10–§12) ---
+    val allPayrolls: StateFlow<List<StaffPayrollEntity>> = repository.allPayrolls
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    fun disburseSalary(
+        staff: StaffEntity,
+        month: String,
+        bonus: Double = 0.0
+    ) {
+        viewModelScope.launch {
+            val net = staff.salaryAmount + bonus
+            val payroll = StaffPayrollEntity(
+                id = UUID.randomUUID().toString(),
+                staffId = staff.id,
+                staffNameBn = staff.nameBn,
+                month = month,
+                salaryAmount = staff.salaryAmount,
+                bonusAmount = bonus,
+                netSalary = net
+            )
+            repository.disburseStaffSalary(payroll)
+        }
+    }
+
+    val allDutyRosters: StateFlow<List<DutyRosterEntity>> = repository.allDutyRosters
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    fun addDutyRoster(
+        staff: StaffEntity,
+        dayOfWeek: String,
+        prayerName: String,
+        roleTitle: String,
+        notes: String
+    ) {
+        viewModelScope.launch {
+            val roster = DutyRosterEntity(
+                id = UUID.randomUUID().toString(),
+                staffId = staff.id,
+                staffNameBn = staff.nameBn,
+                dayOfWeek = dayOfWeek,
+                prayerName = prayerName,
+                roleTitle = roleTitle,
+                notes = notes
+            )
+            repository.addDutyRoster(roster)
+        }
+    }
+
+    val allFoodSchedules: StateFlow<List<FoodScheduleEntity>> = repository.allFoodSchedules
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    fun addFoodSchedule(
+        dateStr: String,
+        mealType: String,
+        providerName: String,
+        providerMobile: String,
+        receiverStaffName: String
+    ) {
+        viewModelScope.launch {
+            val food = FoodScheduleEntity(
+                id = UUID.randomUUID().toString(),
+                dateStr = dateStr,
+                mealType = mealType,
+                providerName = providerName,
+                providerMobile = providerMobile,
+                receiverStaffName = receiverStaffName
+            )
+            repository.addFoodSchedule(food)
+        }
+    }
+
+    // Welfare & Zakat (PRD §26)
+    val allWelfareCases: StateFlow<List<WelfareCaseEntity>> = repository.allWelfareCases
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    fun addWelfareCase(
+        beneficiaryName: String,
+        category: String,
+        mobile: String,
+        amountRequested: Double,
+        remarks: String = ""
+    ) {
+        viewModelScope.launch {
+            val case = WelfareCaseEntity(
+                id = UUID.randomUUID().toString(),
+                beneficiaryName = beneficiaryName,
+                category = category,
+                mobile = mobile,
+                amountRequested = amountRequested,
+                amountApproved = amountRequested,
+                status = "approved",
+                applicationDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date()),
+                remarks = remarks
+            )
+            repository.addWelfareCase(case)
+        }
+    }
+
+    // Events & Programs (PRD §25)
+    val allEvents: StateFlow<List<MosqueEventEntity>> = repository.allEvents
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    fun addEvent(
+        title: String,
+        dateStr: String,
+        timeStr: String,
+        speakerOrGuest: String,
+        venue: String,
+        budget: Double,
+        volunteerLead: String
+    ) {
+        viewModelScope.launch {
+            val event = MosqueEventEntity(
+                id = UUID.randomUUID().toString(),
+                title = title,
+                dateStr = dateStr,
+                timeStr = timeStr,
+                speakerOrGuest = speakerOrGuest,
+                venue = venue,
+                budget = budget,
+                volunteerLead = volunteerLead,
+                status = "upcoming"
+            )
+            repository.addEvent(event)
+        }
+    }
 }

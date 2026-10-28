@@ -108,8 +108,103 @@ class MosqueRepository(private val database: MosqueDatabase) {
         logAudit("MEETING_CREATED", "নতুন সভা নির্ধারিত: ${meeting.title}")
     }
 
+    // --- মাদরাসা মডিউল (PRD §16–§24) ---
+    val allStudents: Flow<List<StudentEntity>> = database.studentDao().getAllActiveStudents()
+    val studentCount: Flow<Int> = database.studentDao().getStudentCount()
+
+    suspend fun addStudent(student: StudentEntity) {
+        database.studentDao().insertStudent(student)
+        logAudit("STUDENT_ENROLLED", "নতুন শিক্ষার্থী ভর্তি: ${student.nameBn} (${student.studentCode})")
+    }
+
+    fun getAttendanceByDate(date: String): Flow<List<MadrasaAttendanceEntity>> =
+        database.madrasaAttendanceDao().getAttendanceByDate(date)
+
+    suspend fun recordAttendanceBatch(list: List<MadrasaAttendanceEntity>) {
+        database.madrasaAttendanceDao().recordAttendanceBatch(list)
+        logAudit("ATTENDANCE_RECORDED", "${list.size} জন শিক্ষার্থীর হাজিরা গ্রহণ করা হয়েছে")
+    }
+
+    val allHifzProgress: Flow<List<HifzProgressEntity>> = database.hifzDao().getAllProgress()
+    suspend fun addHifzProgress(progress: HifzProgressEntity) {
+        database.hifzDao().insertProgress(progress)
+        logAudit("HIFZ_EVALUATION", "${progress.studentNameBn}-এর হিফজ পাঠ মূল্যায়ন: পারা ${progress.paraNumber}")
+    }
+
+    val allFeePayments: Flow<List<MadrasaFeePaymentEntity>> = database.madrasaFeeDao().getAllFeePayments()
+    val totalFeeCollected: Flow<Double?> = database.madrasaFeeDao().getTotalFeeCollected()
+
+    suspend fun recordMadrasaFeePayment(payment: MadrasaFeePaymentEntity) {
+        database.madrasaFeeDao().insertFeePayment(payment)
+        // Automatically post to Finance as INCOME (PRD §20)
+        val txn = TransactionEntity(
+            id = UUID.randomUUID().toString(),
+            transactionCode = "TXN-FEE-${payment.receiptCode}",
+            categoryNameBn = "মাদরাসা মাসিক ফি",
+            type = "INCOME",
+            amount = payment.amountPaid,
+            txnDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date()),
+            description = "${payment.studentNameBn}-এর মাদরাসা ফি আদায় (${payment.month})",
+            sourceType = "fee_payment",
+            sourceId = payment.id,
+            createdBy = "মাদরাসা হিসাব শাখা",
+            approvalStatus = "approved"
+        )
+        database.transactionDao().insertTransaction(txn)
+        logAudit("MADRASA_FEE_RECORDED", "${payment.studentNameBn}-এর মাদরাসা ফি জমা: ৳${payment.amountPaid}")
+    }
+
+    // --- স্টাফ পে-রোল, রোস্টার ও ফুড শিডিউল (PRD §10–§12) ---
+    val allPayrolls: Flow<List<StaffPayrollEntity>> = database.staffPayrollDao().getAllPayrolls()
+
+    suspend fun disburseStaffSalary(payroll: StaffPayrollEntity) {
+        database.staffPayrollDao().insertPayroll(payroll.copy(paymentStatus = "paid", paidDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())))
+        // Post linked Finance EXPENSE (PRD §10)
+        val txn = TransactionEntity(
+            id = UUID.randomUUID().toString(),
+            transactionCode = "TXN-PAY-${UUID.randomUUID().toString().take(6).uppercase()}",
+            categoryNameBn = "কর্মচারী বেতন ও ভাতা",
+            type = "EXPENSE",
+            amount = payroll.netSalary,
+            txnDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date()),
+            description = "${payroll.staffNameBn}-এর বেতন পরিশোধ (${payroll.month})",
+            sourceType = "payroll",
+            sourceId = payroll.id,
+            createdBy = "কমিটি কোষাধ্যক্ষ",
+            approvalStatus = "approved"
+        )
+        database.transactionDao().insertTransaction(txn)
+        logAudit("SALARY_DISBURSED", "${payroll.staffNameBn}-কে বেতন পরিশোধ: ৳${payroll.netSalary}")
+    }
+
+    val allDutyRosters: Flow<List<DutyRosterEntity>> = database.dutyRosterDao().getAllRosters()
+    suspend fun addDutyRoster(roster: DutyRosterEntity) {
+        database.dutyRosterDao().insertRoster(roster)
+        logAudit("ROSTER_UPDATED", "ডিউটি রোস্টার যুক্ত: ${roster.staffNameBn} (${roster.prayerName})")
+    }
+
+    val allFoodSchedules: Flow<List<FoodScheduleEntity>> = database.foodScheduleDao().getAllSchedules()
+    suspend fun addFoodSchedule(schedule: FoodScheduleEntity) {
+        database.foodScheduleDao().insertSchedule(schedule)
+        logAudit("FOOD_SCHEDULED", "খাবার দায়িত্ব বণ্টন: ${schedule.providerName} (${schedule.mealType})")
+    }
+
     // Audit
     val recentAuditLogs: Flow<List<AuditLogEntity>> = database.auditDao().getRecentLogs()
+
+    // Welfare & Zakat (PRD §26)
+    val allWelfareCases: Flow<List<WelfareCaseEntity>> = database.welfareDao().getAllCases()
+    suspend fun addWelfareCase(case: WelfareCaseEntity) {
+        database.welfareDao().insertCase(case)
+        logAudit("WELFARE_APPLICATION_ADDED", "সমাজকল্যাণ আবেদন যুক্ত: ${case.beneficiaryName} (৳${case.amountRequested.toInt()})")
+    }
+
+    // Events & Programs (PRD §25)
+    val allEvents: Flow<List<MosqueEventEntity>> = database.eventDao().getAllEvents()
+    suspend fun addEvent(event: MosqueEventEntity) {
+        database.eventDao().insertEvent(event)
+        logAudit("EVENT_PROGRAM_CREATED", "নতুন মসজিদ অনুষ্ঠান: ${event.title} (${event.dateStr})")
+    }
 
     private suspend fun logAudit(action: String, details: String, actor: String = "মো: রফিকুল ইসলাম (সভাপতি)") {
         val time = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())

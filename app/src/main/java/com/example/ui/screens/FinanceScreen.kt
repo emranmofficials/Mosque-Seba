@@ -38,6 +38,7 @@ fun FinanceScreen(
     val currentRole by viewModel.currentUserRole.collectAsState()
 
     var selectedTab by remember { mutableIntStateOf(0) } // 0: All, 1: Pending, 2: Income, 3: Expense
+    var showReportDialog by remember { mutableStateOf(false) }
 
     val displayedTransactions = when (selectedTab) {
         1 -> pendingTransactions
@@ -101,7 +102,7 @@ fun FinanceScreen(
                             }
                             Spacer(modifier = Modifier.width(6.dp))
                             Column {
-                                Text("মোট জমা (আয়)", fontSize = 10.sp, color = Color.White.copy(alpha = 0.8f))
+                                Text("মোট আদায় (আয়)", fontSize = 10.sp, color = Color.White.copy(alpha = 0.8f))
                                 Text("৳${String.format("%,.0f", totalIncome)}", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
                             }
                         }
@@ -133,10 +134,10 @@ fun FinanceScreen(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Action Buttons: Add Income & Add Expense
+            // Action Buttons: Add Income, Add Expense & Financial Report
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 Button(
                     onClick = onAddIncomeClick,
@@ -144,9 +145,9 @@ fun FinanceScreen(
                     shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = MosqueSuccessGreen)
                 ) {
-                    Icon(Icons.Default.AddCircle, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("আয় যোগ করুন", style = MaterialTheme.typography.labelSmall)
+                    Icon(Icons.Default.AddCircle, contentDescription = null, modifier = Modifier.size(15.dp))
+                    Spacer(modifier = Modifier.width(3.dp))
+                    Text("আয় যোগ", style = MaterialTheme.typography.labelSmall)
                 }
 
                 Button(
@@ -155,11 +156,22 @@ fun FinanceScreen(
                     shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = MosqueUrgentRed)
                 ) {
-                    Icon(Icons.Default.RemoveCircle, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("ব্যয় লিপিবদ্ধ করুন", style = MaterialTheme.typography.labelSmall)
+                    Icon(Icons.Default.RemoveCircle, contentDescription = null, modifier = Modifier.size(15.dp))
+                    Spacer(modifier = Modifier.width(3.dp))
+                    Text("ব্যয় যোগ", style = MaterialTheme.typography.labelSmall)
+                }
+
+                OutlinedButton(
+                    onClick = { showReportDialog = true },
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MosqueEmeraldPrimary)
+                ) {
+                    Icon(Icons.Default.Summarize, contentDescription = null, modifier = Modifier.size(15.dp))
+                    Spacer(modifier = Modifier.width(3.dp))
+                    Text("রিপোর্ট", style = MaterialTheme.typography.labelSmall)
                 }
             }
+
 
             Spacer(modifier = Modifier.height(10.dp))
 
@@ -246,7 +258,18 @@ fun FinanceScreen(
             }
         }
     }
+
+    if (showReportDialog) {
+        FinancialReportDialog(
+            totalIncome = totalIncome,
+            totalExpense = totalExpense,
+            netBalance = netBalance,
+            transactions = allTransactions,
+            onDismiss = { showReportDialog = false }
+        )
+    }
 }
+
 
 @Composable
 fun TransactionCardItem(
@@ -421,3 +444,86 @@ fun TransactionCardItem(
         }
     }
 }
+
+@Composable
+fun FinancialReportDialog(
+    totalIncome: Double,
+    totalExpense: Double,
+    netBalance: Double,
+    transactions: List<TransactionEntity>,
+    onDismiss: () -> Unit
+) {
+    androidx.compose.ui.window.Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp)),
+            colors = CardDefaults.cardColors(containerColor = Color.White)
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(20.dp)
+                    .androidx.compose.foundation.verticalScroll(androidx.compose.foundation.rememberScrollState())
+            ) {
+                Text(
+                    text = "মাসিক আয়-ব্যয় সারসংক্ষেপ রিপোর্ট",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MosqueEmeraldDark
+                )
+                Text(
+                    text = "বায়তুল জান্নাত জামে মসজিদ • সেপ্টেম্বর ২০২৪",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MosqueTextSecondary
+                )
+                Spacer(modifier = Modifier.height(14.dp))
+                HorizontalDivider(color = MosqueGold)
+                Spacer(modifier = Modifier.height(12.dp))
+
+                ReportRow("সর্বমোট জমা (আয়)", "৳${String.format("%,.0f", totalIncome)}", MosqueSuccessGreen)
+                ReportRow("সর্বমোট খরচ (ব্যয়)", "৳${String.format("%,.0f", totalExpense)}", MosqueUrgentRed)
+                ReportRow("ফান্ড উদ্বৃত্ত / বর্তমান ব্যালেন্স", "৳${String.format("%,.0f", netBalance)}", MosqueEmeraldPrimary)
+                ReportRow("অনুমোদিত লেনদেন সংখ্যা", "${transactions.filter { it.approvalStatus == "approved" }.size} টি", MosqueTextPrimary)
+                ReportRow("অপেক্ষমান অনুমোদন", "${transactions.filter { it.approvalStatus == "pending" }.size} টি", MosqueWarningAmber)
+
+                Spacer(modifier = Modifier.height(16.dp))
+                HorizontalDivider(color = MosqueCardBorder)
+                Spacer(modifier = Modifier.height(14.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(onClick = onDismiss) {
+                        Text("বন্ধ করুন")
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(
+                        onClick = onDismiss,
+                        colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("রিপোর্ট কপি / শেয়ার")
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ReportRow(label: String, value: String, valueColor: Color) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(text = label, style = MaterialTheme.typography.bodySmall, color = MosqueTextSecondary)
+        Text(text = value, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = valueColor)
+    }
+}
+

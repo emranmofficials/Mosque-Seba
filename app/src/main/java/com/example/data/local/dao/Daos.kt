@@ -120,3 +120,113 @@ interface AuditDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertLog(log: AuditLogEntity): Long
 }
+
+// --- মাদরাসা DAOs ---
+@Dao
+interface StudentDao {
+    @Query("SELECT * FROM madrasa_students WHERE status = 'active' ORDER BY studentCode ASC")
+    fun getAllActiveStudents(): Flow<List<StudentEntity>>
+
+    @Query("SELECT COUNT(*) FROM madrasa_students WHERE status = 'active'")
+    fun getStudentCount(): Flow<Int>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertStudent(student: StudentEntity): Long
+
+    @Update
+    suspend fun updateStudent(student: StudentEntity): Int
+}
+
+@Dao
+interface MadrasaAttendanceDao {
+    @Query("SELECT * FROM madrasa_attendance WHERE date = :date ORDER BY studentNameBn ASC")
+    fun getAttendanceByDate(date: String): Flow<List<MadrasaAttendanceEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun recordAttendance(attendance: MadrasaAttendanceEntity): Long
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun recordAttendanceBatch(list: List<MadrasaAttendanceEntity>)
+}
+
+@Dao
+interface HifzDao {
+    @Query("SELECT * FROM hifz_progress ORDER BY date DESC")
+    fun getAllProgress(): Flow<List<HifzProgressEntity>>
+
+    @Query("SELECT * FROM hifz_progress WHERE studentId = :studentId ORDER BY date DESC")
+    fun getProgressForStudent(studentId: String): Flow<List<HifzProgressEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertProgress(progress: HifzProgressEntity): Long
+}
+
+@Dao
+interface MadrasaFeeDao {
+    @Query("SELECT * FROM madrasa_fee_payments ORDER BY paidAt DESC")
+    fun getAllFeePayments(): Flow<List<MadrasaFeePaymentEntity>>
+
+    @Query("SELECT SUM(amountPaid) FROM madrasa_fee_payments")
+    fun getTotalFeeCollected(): Flow<Double?>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertFeePayment(payment: MadrasaFeePaymentEntity): Long
+}
+
+// --- স্টাফ পে-রোল, রোস্টার ও ফুড শিডিউল DAOs ---
+@Dao
+interface StaffPayrollDao {
+    @Query("SELECT * FROM staff_payroll ORDER BY month DESC")
+    fun getAllPayrolls(): Flow<List<StaffPayrollEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertPayroll(payroll: StaffPayrollEntity): Long
+
+    @Update
+    suspend fun updatePayroll(payroll: StaffPayrollEntity): Int
+}
+
+@Dao
+interface DutyRosterDao {
+    @Query("SELECT * FROM duty_roster ORDER BY dayOfWeek ASC, prayerName ASC")
+    fun getAllRosters(): Flow<List<DutyRosterEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertRoster(roster: DutyRosterEntity): Long
+
+    @Delete
+    suspend fun deleteRoster(roster: DutyRosterEntity): Int
+}
+
+@Dao
+interface FoodScheduleDao {
+    @Query("SELECT * FROM food_schedules ORDER BY dateStr DESC")
+    fun getAllSchedules(): Flow<List<FoodScheduleEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertSchedule(schedule: FoodScheduleEntity): Long
+
+    @Update
+    suspend fun updateSchedule(schedule: FoodScheduleEntity): Int
+}
+
+// --- সমাজকল্যাণ ও যাকাত তহবিল (PRD §26) DAO ---
+@Dao
+interface WelfareDao {
+    @Query("SELECT * FROM welfare_cases ORDER BY id DESC")
+    fun getAllCases(): Flow<List<WelfareCaseEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertCase(welfareCase: WelfareCaseEntity): Long
+}
+
+// --- মাহফিল ও বিশেষ ইভেন্ট (PRD §25) DAO ---
+@Dao
+interface EventDao {
+    @Query("SELECT * FROM mosque_events ORDER BY id DESC")
+    fun getAllEvents(): Flow<List<MosqueEventEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertEvent(event: MosqueEventEntity): Long
+}
+

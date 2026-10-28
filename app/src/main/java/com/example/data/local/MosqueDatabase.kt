@@ -20,9 +20,18 @@ import kotlinx.coroutines.launch
         StaffEntity::class,
         NoticeEntity::class,
         MeetingEntity::class,
-        AuditLogEntity::class
+        AuditLogEntity::class,
+        StudentEntity::class,
+        MadrasaAttendanceEntity::class,
+        HifzProgressEntity::class,
+        MadrasaFeePaymentEntity::class,
+        StaffPayrollEntity::class,
+        DutyRosterEntity::class,
+        FoodScheduleEntity::class,
+        WelfareCaseEntity::class,
+        MosqueEventEntity::class
     ],
-    version = 1,
+    version = 3,
     exportSchema = false
 )
 abstract class MosqueDatabase : RoomDatabase() {
@@ -35,6 +44,22 @@ abstract class MosqueDatabase : RoomDatabase() {
     abstract fun noticeDao(): NoticeDao
     abstract fun meetingDao(): MeetingDao
     abstract fun auditDao(): AuditDao
+
+    // Madrasa DAOs
+    abstract fun studentDao(): StudentDao
+    abstract fun madrasaAttendanceDao(): MadrasaAttendanceDao
+    abstract fun hifzDao(): HifzDao
+    abstract fun madrasaFeeDao(): MadrasaFeeDao
+
+    // Staff Operations DAOs
+    abstract fun staffPayrollDao(): StaffPayrollDao
+    abstract fun dutyRosterDao(): DutyRosterDao
+    abstract fun foodScheduleDao(): FoodScheduleDao
+
+    // Welfare & Events DAOs
+    abstract fun welfareDao(): WelfareDao
+    abstract fun eventDao(): EventDao
+
 
     companion object {
         @Volatile

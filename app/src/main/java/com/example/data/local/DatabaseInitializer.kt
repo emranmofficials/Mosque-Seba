@@ -458,5 +458,180 @@ object DatabaseInitializer {
             )
         )
         logs.forEach { auditDao.insertLog(it) }
+
+        // 9. Madrasa Students
+        val studentDao = database.studentDao()
+        val students = listOf(
+            StudentEntity(
+                id = "stu-001",
+                studentCode = "STU-2024-001",
+                nameBn = "আব্দুর রহমান",
+                nameEn = "Abdur Rahman",
+                className = "হিফজুল কুরআন বিভাগ",
+                guardianName = "মো: রফিকুল ইসলাম",
+                guardianMobile = "01711-223344",
+                monthlyFee = 1000.0,
+                joinDate = "2024-01-10",
+                status = "active"
+            ),
+            StudentEntity(
+                id = "stu-002",
+                studentCode = "STU-2024-002",
+                nameBn = "মুহাম্মদ সালমান",
+                nameEn = "Muhammad Salman",
+                className = "নাজেরা বিভাগ",
+                guardianName = "আলহাজ্ব আব্দুল বারী",
+                guardianMobile = "01819-334455",
+                monthlyFee = 800.0,
+                joinDate = "2024-01-15",
+                status = "active"
+            ),
+            StudentEntity(
+                id = "stu-003",
+                studentCode = "STU-2024-003",
+                nameBn = "তাহমিদ হাসান",
+                nameEn = "Tahmid Hasan",
+                className = "কায়েদা / শিশু মক্তব",
+                guardianName = "ইঞ্জি: আব্দুল্লাহ আল মামুন",
+                guardianMobile = "01912-445566",
+                monthlyFee = 500.0,
+                joinDate = "2024-02-01",
+                status = "active"
+            )
+        )
+        students.forEach { studentDao.insertStudent(it) }
+
+        // 10. Hifz Progress
+        val hifzDao = database.hifzDao()
+        val hifzList = listOf(
+            HifzProgressEntity(
+                id = "hfz-001",
+                studentId = "stu-001",
+                studentNameBn = "আব্দুর রহমান",
+                date = "2024-09-10",
+                paraNumber = 12,
+                pageOrAyah = "পৃষ্ঠা ৫, আয়াত ৪৫-৫৫",
+                qualityScore = 5,
+                mistakeCount = 1,
+                teacherFeedback = "উচ্চারণ মাখরাজ অত্যন্ত সুন্দর, এগিয়ে যাও।"
+            ),
+            HifzProgressEntity(
+                id = "hfz-002",
+                studentId = "stu-002",
+                studentNameBn = "মুহাম্মদ সালমান",
+                date = "2024-09-10",
+                paraNumber = 3,
+                pageOrAyah = "সূরা আল-ইমরান ১-১৫",
+                qualityScore = 4,
+                mistakeCount = 3,
+                teacherFeedback = "মদ্দের কায়দা আরও ভালো করতে হবে।"
+            )
+        )
+        hifzList.forEach { hifzDao.insertProgress(it) }
+
+        // 11. Duty Roster
+        val dutyDao = database.dutyRosterDao()
+        val rosters = listOf(
+            DutyRosterEntity(
+                id = "rost-001",
+                staffId = "stf-001",
+                staffNameBn = "মাওলানা মুফতি মাহফুজুর রহমান",
+                dayOfWeek = "শুক্রবার (জুমআ)",
+                prayerName = "জুমআ ও আসর",
+                roleTitle = "খুতবা ও ইমামতি",
+                notes = "জুমার খুতবা ও মোনাজাত পরিচালনা"
+            ),
+            DutyRosterEntity(
+                id = "rost-002",
+                staffId = "stf-002",
+                staffNameBn = "হাফেজ ক্বারী নূরুল হক",
+                dayOfWeek = "শুক্রবার (জুমআ)",
+                prayerName = "জুমআ",
+                roleTitle = "আজান ও সানি আজান",
+                notes = "মাইক ও সাউন্ড সিস্টেম তদারকি"
+            )
+        )
+        rosters.forEach { dutyDao.insertRoster(it) }
+
+        // 12. Food Schedules
+        val foodDao = database.foodScheduleDao()
+        val foods = listOf(
+            FoodScheduleEntity(
+                id = "food-001",
+                dateStr = "২০২৪-০৯-১২",
+                mealType = "দুপুর",
+                providerName = "হাজী মো: আবুল কাসেম",
+                providerMobile = "01715-556677",
+                receiverStaffName = "ইমাম ও মুয়াজ্জিন সাহেব",
+                status = "scheduled"
+            ),
+            FoodScheduleEntity(
+                id = "food-002",
+                dateStr = "২০২৪-০৯-১২",
+                mealType = "রাত",
+                providerName = "মো: আসাদুজ্জামান",
+                providerMobile = "01611-778899",
+                receiverStaffName = "ইমাম ও মুয়াজ্জিন সাহেব",
+                status = "scheduled"
+            )
+        )
+        foods.forEach { foodDao.insertSchedule(it) }
+
+        // 13. Welfare Cases (যাকাত ও সমাজকল্যাণ)
+        val welfareDao = database.welfareDao()
+        val welfareCases = listOf(
+            WelfareCaseEntity(
+                id = "welfare-001",
+                beneficiaryName = "মোসাম্মৎ রহিমা খাতুন",
+                category = "বিধবা ও এতিম সহায়তা",
+                mobile = "01923-456789",
+                amountRequested = 10000.0,
+                amountApproved = 10000.0,
+                status = "disbursed",
+                applicationDate = "২০২৪-০৯-০৪",
+                remarks = "মাসিক পারিবারিক খরচ ও শিশুদের পড়াশোনা"
+            ),
+            WelfareCaseEntity(
+                id = "welfare-002",
+                beneficiaryName = "মোঃ আক্তার হোসেন",
+                category = "জরুরি চিকিৎসা সহায়তা",
+                mobile = "01819-334455",
+                amountRequested = 15000.0,
+                amountApproved = 15000.0,
+                status = "approved",
+                applicationDate = "২০২৪-০৯-০৮",
+                remarks = "হৃদরোগের অপারেশনের জন্য প্রেসক্রিপশন যাচাইকৃত"
+            )
+        )
+        welfareCases.forEach { welfareDao.insertCase(it) }
+
+        // 14. Mosque Events (মাহফিল ও বিশেষ অনুষ্ঠান)
+        val eventDao = database.eventDao()
+        val events = listOf(
+            MosqueEventEntity(
+                id = "event-001",
+                title = "বাৎসরিক তাফসিরুল কুরআন ও ওয়াজ মাহফিল",
+                dateStr = "২০২৪-১০-১৫",
+                timeStr = "বা’দ আছর হতে রাত ১১টা",
+                speakerOrGuest = "মুফতি ড. মিজানুর রহমান আল-আজহারী",
+                venue = "মসজিদ প্রাঙ্গণ ও সংলগ্ন ময়দান",
+                budget = 120000.0,
+                volunteerLead = "ইঞ্জি: আব্দুল্লাহ আল মামুন",
+                status = "upcoming"
+            ),
+            MosqueEventEntity(
+                id = "event-002",
+                title = "পবিত্র শবে কদর ও খতমে কুরআন আলোচনা",
+                dateStr = "২০২৪-০৪-০৫",
+                timeStr = "রাত ১০টা হতে ফজর পর্যন্ত",
+                speakerOrGuest = "মাওলানা মুফতি মিজানুর রহমান (পেশ ইমাম)",
+                venue = "মসজিদ মূল ভবন (১ম ও ২য় তলা)",
+                budget = 35000.0,
+                volunteerLead = "মো: জাহিদুল ইসলাম",
+                status = "completed"
+            )
+        )
+        events.forEach { eventDao.insertEvent(it) }
     }
 }
+

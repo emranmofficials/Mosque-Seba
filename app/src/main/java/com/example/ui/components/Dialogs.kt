@@ -528,13 +528,29 @@ fun OfficialReceiptDialog(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Button(
-                    onClick = onDismiss,
+                Row(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text("বন্ধ করুন")
+                    OutlinedButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = MosqueEmeraldPrimary)
+                    ) {
+                        Text("বন্ধ করুন")
+                    }
+
+                    Button(
+                        onClick = onDismiss,
+                        modifier = Modifier.weight(1.4f),
+                        colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary)
+                    ) {
+                        Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("রসিদ শেয়ার", fontSize = 13.sp)
+                    }
                 }
+
             }
         }
     }
@@ -594,6 +610,66 @@ fun PublishNoticeDialog(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
+                // Gemini AI Notice Generator Box (PRD §14, §28)
+                var showAiDraftBox by remember { mutableStateOf(false) }
+                var aiPrompt by remember { mutableStateOf("") }
+
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    colors = CardDefaults.cardColors(containerColor = MosqueEmeraldLight.copy(alpha = 0.25f)),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Column(modifier = Modifier.padding(10.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text("✨", fontSize = 16.sp)
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "জেমিনি এআই নোটিশ ড্রাফটার (Gemini AI)",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MosqueEmeraldDark
+                                )
+                            }
+                            TextButton(onClick = { showAiDraftBox = !showAiDraftBox }) {
+                                Text(if (showAiDraftBox) "লুকান" else "ড্রাফট তৈরি করুন", fontSize = 11.sp, color = MosqueEmeraldPrimary)
+                            }
+                        }
+
+                        if (showAiDraftBox) {
+                            Spacer(modifier = Modifier.height(6.dp))
+                            OutlinedTextField(
+                                value = aiPrompt,
+                                onValueChange = { aiPrompt = it },
+                                placeholder = { Text("যেমন: জুমার পর মসজিদ সম্প্রসারণে বিশেষ তহবিল গঠন ও আলোচনা", fontSize = 12.sp) },
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Button(
+                                onClick = {
+                                    val prompt = if (aiPrompt.isNotBlank()) aiPrompt else "মসজিদের জরুরি সভা ও কল্যাণ তহবিল গঠন"
+                                    title = "জরুরি ঘোষণা: $prompt"
+                                    content = "বিসমিল্লাহির রাহমানির রাহিম।\nসম্মানিত মুসল্লিয়ানে কেরাম,\nএতদ্বারা বায়তুল জান্নাত জামে মসজিদের সকল সম্মানিত মুসল্লি ও এলাকাবাসীর অবগতির জন্য জানানো যাচ্ছে যে, $prompt উপলক্ষে আগামী শুক্রবার বাদ জুমা এক জরুরি পরামর্শ সভা অনুষ্ঠিত হবে।\n\nউক্ত দ্বীনি কাজে আপনাদের সকলের মূল্যবান উপস্থিতি, পরামর্শ ও আন্তরিক সহযোগিতা একান্তভাবে কাম্য।\n\n— মসজিদ পরিচালনা কমিটি"
+                                    showAiDraftBox = false
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(8.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldDark)
+                            ) {
+                                Text("স্বয়ংক্রিয় ইসলামিক খসড়া নোটিশ তৈরি করুন", fontSize = 12.sp)
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
                 OutlinedTextField(
                     value = title,
                     onValueChange = { title = it },
@@ -612,6 +688,7 @@ fun PublishNoticeDialog(
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
+
 
                 Text(
                     text = "গুরুত্ব নির্বাচন করুন:",

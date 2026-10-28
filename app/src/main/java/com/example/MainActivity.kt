@@ -29,11 +29,17 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             MosqueCommitteeTheme {
-                MosqueAppShell(viewModel = viewModel)
+                val isLoggedIn by viewModel.isLoggedIn.collectAsState()
+                if (!isLoggedIn) {
+                    LoginScreen(viewModel = viewModel)
+                } else {
+                    MosqueAppShell(viewModel = viewModel)
+                }
             }
         }
     }
 }
+
 
 @Composable
 fun MosqueAppShell(viewModel: MosqueViewModel) {
@@ -55,7 +61,8 @@ fun MosqueAppShell(viewModel: MosqueViewModel) {
             GlobalHeader(
                 currentRole = currentRole,
                 onRoleSelected = { viewModel.setUserRole(it) },
-                onNotificationClick = { showNotificationDialog = true }
+                onNotificationClick = { showNotificationDialog = true },
+                onLogout = { viewModel.logout() }
             )
         },
         bottomBar = {

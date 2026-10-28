@@ -1,5 +1,6 @@
 package com.example.ui.screens
 
+import java.util.Locale
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -35,11 +36,22 @@ fun MoreScreen(
     var selectedSubModule by remember { mutableStateOf<String?>(null) }
     var selectedPaymentForReceipt by remember { mutableStateOf<ChandaPaymentEntity?>(null) }
     var showAddStaffDialog by remember { mutableStateOf(false) }
+    var showPaySalaryStaff by remember { mutableStateOf<StaffEntity?>(null) }
+    var showAddRosterDialog by remember { mutableStateOf(false) }
+    var showAddFoodDialog by remember { mutableStateOf(false) }
+    var showAddWelfareDialog by remember { mutableStateOf(false) }
+    var showAddEventDialog by remember { mutableStateOf(false) }
 
     val chandaPayments by viewModel.allChandaPayments.collectAsState()
     val activeStaff by viewModel.activeStaff.collectAsState()
     val auditLogs by viewModel.recentAuditLogs.collectAsState()
     val mosque by viewModel.mosque.collectAsState()
+    val dutyRosters by viewModel.allDutyRosters.collectAsState()
+    val foodSchedules by viewModel.allFoodSchedules.collectAsState()
+    val payrolls by viewModel.allPayrolls.collectAsState()
+    val allMeetings by viewModel.allMeetings.collectAsState()
+    val welfareCases by viewModel.allWelfareCases.collectAsState()
+    val events by viewModel.allEvents.collectAsState()
 
     Column(
         modifier = Modifier
@@ -64,8 +76,14 @@ fun MoreScreen(
             Column {
                 Text(
                     text = when (selectedSubModule) {
+                        "madrasa" -> "মাদরাসা ও মক্তব পরিচালনা"
                         "chanda" -> "চাঁদা আদায় ও রসিদ রেজিস্টার"
-                        "staff" -> "ইমাম ও কর্মচারী বেতন ব্যবস্থাপনা"
+                        "staff" -> "ইমাম ও কর্মচারী বেতন ও পে-রোল"
+                        "roster" -> "ওয়াক্ত ও ইমাম-মুয়াজ্জিন ডিউটি রোস্টার"
+                        "food" -> "ইমাম ও খাদেমদের খাবার শিডিউল"
+                        "meetings" -> "কমিটি সভা ও এজেন্ডা রেজুলেশন"
+                        "welfare" -> "সমাজকল্যাণ ও যাকাত তহবিল"
+                        "events" -> "মাহফিল ও বিশেষ অনুষ্ঠান"
                         "prayer" -> "পূর্ণ নামাজের সময়সূচি ও ওয়াক্ত"
                         "audit" -> "স্বচ্ছতা ও সিস্টেম অডিট লগ"
                         "about" -> "মসজিদ পরিচিতি ও কমিটি"
@@ -74,6 +92,7 @@ fun MoreScreen(
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = MosqueEmeraldDark
+
                 )
                 Text(
                     text = "মসজিদ কমিটি অপারেশনাল মডিউলসমূহ",
@@ -85,8 +104,12 @@ fun MoreScreen(
 
         // Sub-module routing
         when (selectedSubModule) {
+            "madrasa" -> {
+                MadrasaScreen(viewModel = viewModel)
+            }
             "chanda" -> {
                 // Chanda Ledger
+
                 LazyColumn(
                     contentPadding = PaddingValues(14.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
@@ -277,8 +300,19 @@ fun MoreScreen(
                                         )
                                     }
                                 }
+
+                                Spacer(modifier = Modifier.height(10.dp))
+                                Button(
+                                    onClick = { showPaySalaryStaff = staff },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary),
+                                    shape = RoundedCornerShape(8.dp)
+                                ) {
+                                    Text("বেতন পরিশোধ করুন (পে-রোল)", fontSize = 12.sp)
+                                }
                             }
                         }
+
                     }
                 }
             }
@@ -315,7 +349,577 @@ fun MoreScreen(
                     }
                 }
             }
+            "roster" -> {
+                // Duty Roster
+                LazyColumn(
+                    contentPadding = PaddingValues(14.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    item {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "ওয়াক্ত ও নামাজের দায়িত্ব বণ্টন",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MosqueEmeraldDark
+                            )
+                            Button(
+                                onClick = { showAddRosterDialog = true },
+                                shape = RoundedCornerShape(8.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary)
+                            ) {
+                                Text("+ দায়িত্ব নির্ধারণ", fontSize = 12.sp)
+                            }
+                        }
+                    }
+
+                    items(dutyRosters, key = { it.id }) { roster ->
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp)),
+                            colors = CardDefaults.cardColors(containerColor = Color.White)
+                        ) {
+                            Column(modifier = Modifier.padding(14.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        text = roster.prayerName,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MosqueEmeraldDark
+                                    )
+                                    Text(
+                                        text = roster.dayOfWeek,
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MosqueGoldDeep,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "দায়িত্বপ্রাপ্ত: ${roster.staffNameBn} (${roster.roleTitle})",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MosqueTextPrimary
+                                )
+                                if (roster.notes.isNotBlank()) {
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Text(
+                                        text = "বিশেষ দ্রষ্টব্য: ${roster.notes}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MosqueTextMuted
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            "food" -> {
+                // Food Schedules
+                LazyColumn(
+                    contentPadding = PaddingValues(14.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    item {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "ইমাম ও খাদেমদের খাবার শিডিউল",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MosqueEmeraldDark
+                            )
+                            Button(
+                                onClick = { showAddFoodDialog = true },
+                                shape = RoundedCornerShape(8.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary)
+                            ) {
+                                Text("+ খাবার বণ্টন", fontSize = 12.sp)
+                            }
+                        }
+                    }
+
+                    items(foodSchedules, key = { it.id }) { food ->
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp)),
+                            colors = CardDefaults.cardColors(containerColor = Color.White)
+                        ) {
+                            Column(modifier = Modifier.padding(14.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        text = "তারিখ: ${food.dateStr} (${food.mealType})",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MosqueEmeraldDark
+                                    )
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(6.dp))
+                                            .background(MosqueSuccessGreen.copy(alpha = 0.12f))
+                                            .padding(horizontal = 8.dp, vertical = 2.dp)
+                                    ) {
+                                        Text(
+                                            text = if (food.status == "delivered") "বিতরিত" else "নির্ধারিত",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MosqueSuccessGreen,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                }
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text(
+                                    text = "খাবার প্রেরক: ${food.providerName} (${food.providerMobile})",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MosqueTextPrimary
+                                )
+                                Text(
+                                    text = "প্রাপক: ${food.receiverStaffName}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MosqueTextSecondary
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+            "meetings" -> {
+                // Meetings & Agenda
+                LazyColumn(
+                    contentPadding = PaddingValues(14.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    item {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp)),
+                            colors = CardDefaults.cardColors(containerColor = MosqueEmeraldPrimary)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(14.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column {
+                                    Text(
+                                        text = "নির্ধারিত কমিটি সভা",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = Color.White.copy(alpha = 0.85f)
+                                    )
+                                    Text(
+                                        text = "${allMeetings.size} টি সভা নথিবদ্ধ",
+                                        style = MaterialTheme.typography.headlineSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MosqueGold
+                                    )
+                                }
+                                Button(
+                                    onClick = onOpenScheduleMeeting,
+                                    shape = RoundedCornerShape(8.dp),
+                                    colors = ButtonDefaults.buttonColors(containerColor = MosqueGold)
+                                ) {
+                                    Text(
+                                        text = "+ সভা আহ্বান",
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MosqueEmeraldDark
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    if (allMeetings.isEmpty()) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(32.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "বর্তমানে কোনো নির্ধারিত সভা নেই",
+                                    color = MosqueTextSecondary
+                                )
+                            }
+                        }
+                    } else {
+                        items(allMeetings, key = { it.id }) { meeting ->
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(12.dp)),
+                                colors = CardDefaults.cardColors(containerColor = Color.White)
+                            ) {
+                                Column(modifier = Modifier.padding(14.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = meeting.title,
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MosqueEmeraldDark
+                                        )
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(6.dp))
+                                                .background(
+                                                    if (meeting.status == "completed") MosqueSuccessGreen.copy(alpha = 0.12f)
+                                                    else MosqueGold.copy(alpha = 0.18f)
+                                                )
+                                                .padding(horizontal = 8.dp, vertical = 2.dp)
+                                        ) {
+                                            Text(
+                                                text = if (meeting.status == "completed") "সম্পন্ন" else "আসন্ন সভা",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = if (meeting.status == "completed") MosqueSuccessGreen else MosqueGoldDeep,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.height(6.dp))
+
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            Icons.Default.Event,
+                                            contentDescription = null,
+                                            tint = MosqueEmeraldPrimary,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text(
+                                            text = meeting.meetingDate,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MosqueTextPrimary,
+                                            fontWeight = FontWeight.SemiBold
+                                        )
+                                        Spacer(modifier = Modifier.width(16.dp))
+                                        Text(
+                                            text = "স্থান: ${meeting.location}",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MosqueTextSecondary
+                                        )
+                                    }
+
+                                    if (meeting.agenda.isNotBlank()) {
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        HorizontalDivider()
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Text(
+                                            text = "আলোচ্য এজেন্ডা:",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MosqueEmeraldDark
+                                        )
+                                        Spacer(modifier = Modifier.height(2.dp))
+                                        Text(
+                                            text = meeting.agenda,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MosqueTextPrimary
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            "welfare" -> {
+                // Welfare & Zakat Management (PRD §26)
+                LazyColumn(
+                    contentPadding = PaddingValues(14.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    item {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp)),
+                            colors = CardDefaults.cardColors(containerColor = MosqueEmeraldPrimary)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(14.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column {
+                                    Text(
+                                        text = "যাকাত ও সমাজকল্যাণ বিতরণ",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = Color.White.copy(alpha = 0.85f)
+                                    )
+                                    val totalDisbursed = welfareCases.sumOf { it.amountApproved }
+                                    Text(
+                                        text = "৳ ${String.format(Locale.getDefault(), "%,.0f", totalDisbursed)}",
+                                        style = MaterialTheme.typography.headlineSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MosqueGold
+                                    )
+                                }
+                                Button(
+                                    onClick = { showAddWelfareDialog = true },
+                                    shape = RoundedCornerShape(8.dp),
+                                    colors = ButtonDefaults.buttonColors(containerColor = MosqueGold)
+                                ) {
+                                    Text(
+                                        text = "+ অনুদান আবেদন",
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MosqueEmeraldDark
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    if (welfareCases.isEmpty()) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(32.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "বর্তমানে কোনো সমাজকল্যাণ আবেদন নেই",
+                                    color = MosqueTextSecondary
+                                )
+                            }
+                        }
+                    } else {
+                        items(welfareCases, key = { it.id }) { item ->
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(12.dp)),
+                                colors = CardDefaults.cardColors(containerColor = Color.White)
+                            ) {
+                                Column(modifier = Modifier.padding(14.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = item.beneficiaryName,
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MosqueEmeraldDark
+                                        )
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(6.dp))
+                                                .background(
+                                                    if (item.status == "disbursed") MosqueSuccessGreen.copy(alpha = 0.12f)
+                                                    else MosqueGold.copy(alpha = 0.18f)
+                                                )
+                                                .padding(horizontal = 8.dp, vertical = 2.dp)
+                                        ) {
+                                            Text(
+                                                text = if (item.status == "disbursed") "বিতরিত" else "অনুমোদিত",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = if (item.status == "disbursed") MosqueSuccessGreen else MosqueGoldDeep,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.height(4.dp))
+
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Text(
+                                            text = "খাত: ${item.category}",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MosqueTextSecondary
+                                        )
+                                        Text(
+                                            text = "অনুমোদিত: ৳${item.amountApproved.toInt()}",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MosqueEmeraldPrimary
+                                        )
+                                    }
+
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = "মোবাইল: ${item.mobile}  •  তারিখ: ${item.applicationDate}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MosqueTextMuted
+                                    )
+
+                                    if (item.remarks.isNotBlank()) {
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(
+                                            text = "মন্তব্য: ${item.remarks}",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MosqueTextPrimary
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            "events" -> {
+                // Mosque Events & Programs (PRD §25)
+                LazyColumn(
+                    contentPadding = PaddingValues(14.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    item {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp)),
+                            colors = CardDefaults.cardColors(containerColor = MosqueEmeraldPrimary)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(14.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column {
+                                    Text(
+                                        text = "মসজিদ মাহফিল ও অনুষ্ঠান",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = Color.White.copy(alpha = 0.85f)
+                                    )
+                                    Text(
+                                        text = "${events.size} টি ইভেন্ট তালিকাভুক্ত",
+                                        style = MaterialTheme.typography.headlineSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MosqueGold
+                                    )
+                                }
+                                Button(
+                                    onClick = { showAddEventDialog = true },
+                                    shape = RoundedCornerShape(8.dp),
+                                    colors = ButtonDefaults.buttonColors(containerColor = MosqueGold)
+                                ) {
+                                    Text(
+                                        text = "+ নতুন ইভেন্ট",
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MosqueEmeraldDark
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    if (events.isEmpty()) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(32.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "বর্তমানে কোনো আসন্ন অনুষ্ঠান নেই",
+                                    color = MosqueTextSecondary
+                                )
+                            }
+                        }
+                    } else {
+                        items(events, key = { it.id }) { ev ->
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(12.dp)),
+                                colors = CardDefaults.cardColors(containerColor = Color.White)
+                            ) {
+                                Column(modifier = Modifier.padding(14.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = ev.title,
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MosqueEmeraldDark
+                                        )
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(6.dp))
+                                                .background(
+                                                    if (ev.status == "completed") MosqueSuccessGreen.copy(alpha = 0.12f)
+                                                    else MosqueGold.copy(alpha = 0.18f)
+                                                )
+                                                .padding(horizontal = 8.dp, vertical = 2.dp)
+                                        ) {
+                                            Text(
+                                                text = if (ev.status == "completed") "সম্পন্ন" else "আসন্ন",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = if (ev.status == "completed") MosqueSuccessGreen else MosqueGoldDeep,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.height(6.dp))
+                                    Text(
+                                        text = "তারিখ ও সময়: ${ev.dateStr} (${ev.timeStr})",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = MosqueTextPrimary
+                                    )
+                                    Text(
+                                        text = "বক্তা/অতিথি: ${ev.speakerOrGuest}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MosqueTextSecondary
+                                    )
+                                    Text(
+                                        text = "স্থান: ${ev.venue}  •  বাজেট: ৳${ev.budget.toInt()}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MosqueTextSecondary
+                                    )
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Text(
+                                        text = "স্বেচ্ছাসেবক প্রধান: ${ev.volunteerLead}",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MosqueEmeraldPrimary
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
             "audit" -> {
+
                 // Audit Logs
                 LazyColumn(
                     contentPadding = PaddingValues(14.dp),
@@ -413,6 +1017,36 @@ fun MoreScreen(
                 ) {
                     item {
                         OperationMenuItem(
+                            title = "মাদরাসা ও মক্তব পরিচালনা",
+                            description = "ছাত্র ভর্তি, দৈনিক হাজিরা, হিফজ ট্র্যাকার ও মাদরাসা ফি কালেকশন",
+                            icon = Icons.Default.School,
+                            iconColor = MosqueEmeraldPrimary,
+                            onClick = { selectedSubModule = "madrasa" }
+                        )
+                    }
+
+                    item {
+                        OperationMenuItem(
+                            title = "ওয়াক্ত ও নামাজের দায়িত্ব বণ্টন",
+                            description = "ইমাম ও মুয়াজ্জিনদের ৫ ওয়াক্তের ডিউটি রোস্টার ও পরিচালনা",
+                            icon = Icons.Default.EventNote,
+                            iconColor = MosqueGoldDeep,
+                            onClick = { selectedSubModule = "roster" }
+                        )
+                    }
+
+                    item {
+                        OperationMenuItem(
+                            title = "ইমাম ও খাদেমদের খাবার শিডিউল",
+                            description = "দৈনিক দুপুর ও রাতের খাবার বণ্টন ও দায়িত্বপ্রাপ্ত দাতাদের তালিকা",
+                            icon = Icons.Default.Restaurant,
+                            iconColor = MosqueInfoBlue,
+                            onClick = { selectedSubModule = "food" }
+                        )
+                    }
+
+                    item {
+                        OperationMenuItem(
                             title = "চাঁদা আদায় ও রসিদ রেজিস্টার",
                             description = "সদস্যদের চাঁদা গ্রহণ ও ডিজিটাল ভেরিফাইড রসিদ প্রদান",
                             icon = Icons.Default.ReceiptLong,
@@ -420,6 +1054,7 @@ fun MoreScreen(
                             onClick = { selectedSubModule = "chanda" }
                         )
                     }
+
 
                     item {
                         OperationMenuItem(
@@ -447,7 +1082,27 @@ fun MoreScreen(
                             description = "আসন্ন মিটিং নির্ধারণ ও পূর্ববর্তী রেজুলেশন",
                             icon = Icons.Default.Event,
                             iconColor = MosqueGoldDeep,
-                            onClick = onOpenScheduleMeeting
+                            onClick = { selectedSubModule = "meetings" }
+                        )
+                    }
+
+                    item {
+                        OperationMenuItem(
+                            title = "সমাজকল্যাণ ও যাকাত তহবিল",
+                            description = "যাকাত ও ফেতরা বিতরণ, দুস্থ সহায়তা এবং চিকিৎসা অনুদান",
+                            icon = Icons.Default.Favorite,
+                            iconColor = MosqueEmeraldPrimary,
+                            onClick = { selectedSubModule = "welfare" }
+                        )
+                    }
+
+                    item {
+                        OperationMenuItem(
+                            title = "মাহফিল ও বিশেষ অনুষ্ঠান",
+                            description = "বাৎসরিক ওয়াজ, শবে কদর, ইফতার মাহফিল ও বিশেষ আয়োজন",
+                            icon = Icons.Default.Campaign,
+                            iconColor = MosqueGoldDeep,
+                            onClick = { selectedSubModule = "events" }
                         )
                     }
 
@@ -490,6 +1145,257 @@ fun MoreScreen(
             onConfirm = { name, role, designation, salary, mobile ->
                 viewModel.addStaff(name, role, designation, salary, mobile)
                 showAddStaffDialog = false
+            }
+        )
+    }
+
+    // Pay Salary Dialog
+    showPaySalaryStaff?.let { staff ->
+        var month by remember { mutableStateOf("সেপ্টেম্বর ২০২৪") }
+        var bonus by remember { mutableStateOf("0") }
+
+        Dialog(onDismissRequest = { showPaySalaryStaff = null }) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp)),
+                colors = CardDefaults.cardColors(containerColor = Color.White)
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Text(
+                        text = "বেতন ও ভাতা পরিশোধ",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MosqueEmeraldDark
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Text(
+                        text = "কর্মচারী: ${staff.nameBn} (${staff.designationBn})",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MosqueTextPrimary
+                    )
+                    Text(
+                        text = "মূল বেতন: ৳${String.format("%,.0f", staff.salaryAmount)}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MosqueEmeraldPrimary,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = month,
+                        onValueChange = { month = it },
+                        label = { Text("বেতনের মাস *") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = bonus,
+                        onValueChange = { bonus = it },
+                        label = { Text("বোনাস / অন্যান্য ভাতা (৳)") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        TextButton(onClick = { showPaySalaryStaff = null }) { Text("বাতিল") }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Button(
+                            onClick = {
+                                val b = bonus.toDoubleOrNull() ?: 0.0
+                                viewModel.disburseSalary(staff, month, b)
+                                showPaySalaryStaff = null
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary)
+                        ) {
+                            Text("পরিশোধ নিশ্চিত করুন")
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Add Roster Dialog
+    if (showAddRosterDialog && activeStaff.isNotEmpty()) {
+        var selectedStaff by remember { mutableStateOf(activeStaff.first()) }
+        var dayOfWeek by remember { mutableStateOf("শুক্রবার") }
+        var prayerName by remember { mutableStateOf("জুমআ ও আসর") }
+        var roleTitle by remember { mutableStateOf("খুতবা ও ইমামতি") }
+        var notes by remember { mutableStateOf("") }
+
+        Dialog(onDismissRequest = { showAddRosterDialog = false }) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp)),
+                colors = CardDefaults.cardColors(containerColor = Color.White)
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Text(
+                        text = "নতুন ওয়াক্ত দায়িত্ব বণ্টন",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MosqueEmeraldDark
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Text(
+                        text = "দায়িত্বপ্রাপ্ত: ${selectedStaff.nameBn}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MosqueEmeraldPrimary
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = dayOfWeek,
+                        onValueChange = { dayOfWeek = it },
+                        label = { Text("বার / দিন *") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = prayerName,
+                        onValueChange = { prayerName = it },
+                        label = { Text("নামাজের ওয়াক্ত *") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = roleTitle,
+                        onValueChange = { roleTitle = it },
+                        label = { Text("দায়িত্ব (ইমামতি / আজান) *") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = notes,
+                        onValueChange = { notes = it },
+                        label = { Text("বিশেষ নোট") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        TextButton(onClick = { showAddRosterDialog = false }) { Text("বাতিল") }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Button(
+                            onClick = {
+                                viewModel.addDutyRoster(selectedStaff, dayOfWeek, prayerName, roleTitle, notes)
+                                showAddRosterDialog = false
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary)
+                        ) {
+                            Text("নির্ধারণ করুন")
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Add Food Schedule Dialog
+    if (showAddFoodDialog) {
+        var dateStr by remember { mutableStateOf("২০২৪-০৯-১৫") }
+        var mealType by remember { mutableStateOf("দুপুর") }
+        var providerName by remember { mutableStateOf("") }
+        var providerMobile by remember { mutableStateOf("") }
+        var receiverName by remember { mutableStateOf("ইমাম ও মুয়াজ্জিন সাহেব") }
+
+        Dialog(onDismissRequest = { showAddFoodDialog = false }) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp)),
+                colors = CardDefaults.cardColors(containerColor = Color.White)
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Text(
+                        text = "খাবার দায়িত্ব বণ্টন ফরম",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MosqueEmeraldDark
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    OutlinedTextField(
+                        value = dateStr,
+                        onValueChange = { dateStr = it },
+                        label = { Text("তারিখ *") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = mealType,
+                        onValueChange = { mealType = it },
+                        label = { Text("খাবারের ওয়াক্ত (দুপুর / রাত) *") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = providerName,
+                        onValueChange = { providerName = it },
+                        label = { Text("খাবার প্রদানকারী দাতার নাম *") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = providerMobile,
+                        onValueChange = { providerMobile = it },
+                        label = { Text("দাতার মোবাইল নম্বর *") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = receiverName,
+                        onValueChange = { receiverName = it },
+                        label = { Text("প্রাপক স্টাফ *") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        TextButton(onClick = { showAddFoodDialog = false }) { Text("বাতিল") }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Button(
+                            onClick = {
+                                if (providerName.isNotBlank()) {
+                                    viewModel.addFoodSchedule(dateStr, mealType, providerName, providerMobile, receiverName)
+                                    showAddFoodDialog = false
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary)
+                        ) {
+                            Text("সংরক্ষণ করুন")
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Add Welfare Dialog
+    if (showAddWelfareDialog) {
+        AddWelfareDialog(
+            onDismiss = { showAddWelfareDialog = false },
+            onConfirm = { beneficiaryName, category, mobile, amount, remarks ->
+                viewModel.addWelfareCase(beneficiaryName, category, mobile, amount, remarks)
+                showAddWelfareDialog = false
+            }
+        )
+    }
+
+    // Add Event Dialog
+    if (showAddEventDialog) {
+        AddEventDialog(
+            onDismiss = { showAddEventDialog = false },
+            onConfirm = { title, dateStr, timeStr, speaker, venue, budget, lead ->
+                viewModel.addEvent(title, dateStr, timeStr, speaker, venue, budget, lead)
+                showAddEventDialog = false
             }
         )
     }
@@ -667,3 +1573,235 @@ fun AddStaffDialog(
         }
     }
 }
+
+@Composable
+fun AddWelfareDialog(
+    onDismiss: () -> Unit,
+    onConfirm: (beneficiaryName: String, category: String, mobile: String, amount: Double, remarks: String) -> Unit
+) {
+    var name by remember { mutableStateOf("") }
+    var category by remember { mutableStateOf("জরুরি চিকিৎসা সহায়তা") }
+    var mobile by remember { mutableStateOf("") }
+    var amount by remember { mutableStateOf("") }
+    var remarks by remember { mutableStateOf("") }
+
+    val categories = listOf("জরুরি চিকিৎসা সহায়তা", "বিধবা ও এতিম ভাতা", "দরিদ্র শিক্ষা সহায়তা", "খাদ্য ও ত্রাণ সহায়তা")
+
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White)
+        ) {
+            Column(modifier = Modifier.padding(18.dp)) {
+                Text(
+                    text = "সমাজকল্যাণ ও যাকাত সহায়তা আবেদন",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MosqueEmeraldDark
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("আবেদনকারী / সুবিধাভোগীর নাম *") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text("সহায়তার খাত:", style = MaterialTheme.typography.labelMedium, color = MosqueTextSecondary)
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    categories.take(2).forEach { cat ->
+                        FilterChip(
+                            selected = category == cat,
+                            onClick = { category = cat },
+                            label = { Text(cat, fontSize = 11.sp) }
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    categories.drop(2).forEach { cat ->
+                        FilterChip(
+                            selected = category == cat,
+                            onClick = { category = cat },
+                            label = { Text(cat, fontSize = 11.sp) }
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+
+                OutlinedTextField(
+                    value = mobile,
+                    onValueChange = { mobile = it },
+                    label = { Text("যোগাযোগের মোবাইল নম্বর *") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                OutlinedTextField(
+                    value = amount,
+                    onValueChange = { amount = it },
+                    label = { Text("সহায়তার পরিমাণ (৳) *") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                OutlinedTextField(
+                    value = remarks,
+                    onValueChange = { remarks = it },
+                    label = { Text("বিবরণ বা যাচাইকৃত সুপারিশ") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(onClick = onDismiss) { Text("বাতিল") }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(
+                        onClick = {
+                            val amt = amount.toDoubleOrNull() ?: 5000.0
+                            if (name.isNotBlank() && mobile.isNotBlank()) {
+                                onConfirm(name, category, mobile, amt, remarks)
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary)
+                    ) {
+                        Text("আবেদন জমা দিন")
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun AddEventDialog(
+    onDismiss: () -> Unit,
+    onConfirm: (title: String, dateStr: String, timeStr: String, speaker: String, venue: String, budget: Double, lead: String) -> Unit
+) {
+    var title by remember { mutableStateOf("") }
+    var dateStr by remember { mutableStateOf("২০২৪-১১-১৫") }
+    var timeStr by remember { mutableStateOf("বা’দ মাগরিব") }
+    var speaker by remember { mutableStateOf("") }
+    var venue by remember { mutableStateOf("মসজিদ প্রাঙ্গণ") }
+    var budget by remember { mutableStateOf("50000") }
+    var lead by remember { mutableStateOf("ইঞ্জি: আব্দুল্লাহ আল মামুন") }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White)
+        ) {
+            Column(modifier = Modifier.padding(18.dp)) {
+                Text(
+                    text = "নতুন মসজিদ অনুষ্ঠান / মাহফিল সূচি",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MosqueEmeraldDark
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+
+                OutlinedTextField(
+                    value = title,
+                    onValueChange = { title = it },
+                    label = { Text("অনুষ্ঠানের নাম (যেমন: তাফসির মাহফিল) *") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = dateStr,
+                        onValueChange = { dateStr = it },
+                        label = { Text("তারিখ *") },
+                        modifier = Modifier.weight(1f)
+                    )
+                    OutlinedTextField(
+                        value = timeStr,
+                        onValueChange = { timeStr = it },
+                        label = { Text("সময় *") },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+
+                OutlinedTextField(
+                    value = speaker,
+                    onValueChange = { speaker = it },
+                    label = { Text("প্রধান বক্তা / মেহমান *") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                OutlinedTextField(
+                    value = venue,
+                    onValueChange = { venue = it },
+                    label = { Text("অনুষ্ঠানের স্থান *") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = budget,
+                        onValueChange = { budget = it },
+                        label = { Text("আনুমানিক বাজেট (৳) *") },
+                        modifier = Modifier.weight(1f)
+                    )
+                    OutlinedTextField(
+                        value = lead,
+                        onValueChange = { lead = it },
+                        label = { Text("দায়িত্বপ্রাপ্ত দলনেতা") },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(onClick = onDismiss) { Text("বাতিল") }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(
+                        onClick = {
+                            val b = budget.toDoubleOrNull() ?: 20000.0
+                            if (title.isNotBlank()) {
+                                onConfirm(title, dateStr, timeStr, speaker, venue, b, lead)
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary)
+                    ) {
+                        Text("তালিকায় যুক্ত করুন")
+                    }
+                }
+            }
+        }
+    }
+}
+

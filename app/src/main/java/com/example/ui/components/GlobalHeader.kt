@@ -25,7 +25,8 @@ import com.example.ui.theme.*
 fun GlobalHeader(
     currentRole: UserRole,
     onRoleSelected: (UserRole) -> Unit,
-    onNotificationClick: () -> Unit
+    onNotificationClick: () -> Unit,
+    onLogout: (() -> Unit)? = null
 ) {
     var showRoleMenu by remember { mutableStateOf(false) }
 
@@ -136,6 +137,22 @@ fun GlobalHeader(
                                 onClick = {
                                     onRoleSelected(role)
                                     showRoleMenu = false
+                                }
+                            )
+                        }
+                        if (onLogout != null) {
+                            HorizontalDivider()
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        text = "🚪 লগআউট করুন",
+                                        fontWeight = FontWeight.Bold,
+                                        color = MosqueUrgentRed
+                                    )
+                                },
+                                onClick = {
+                                    showRoleMenu = false
+                                    onLogout()
                                 }
                             )
                         }
