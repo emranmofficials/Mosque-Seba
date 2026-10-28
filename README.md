@@ -1,5 +1,9 @@
 # মসজিদ সেবা — Mosque Seba
 
+<p align="center">
+  <img src="design/branding/banner_playstore.png" alt="Mosque Seba Banner" width="100%" />
+</p>
+
 > **অফিসিয়াল স্লোগান:** *মসজিদের খেদমতে আধুনিক প্রযুক্তি, পরিচালনায় স্বচ্ছ আস্থা*  
 > **Application Package:** `com.mosqueseba.app`
 
