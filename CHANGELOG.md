@@ -2,6 +2,12 @@
 
 All notable changes to the **মসজিদ সেবা (Mosque Seba)** project will be documented in this file.
 
+## [1.0.1] - 2026-10-28
+### Fixed
+- **Critical Launch Crash (`ClassNotFoundException`)**: Added missing `alias(libs.plugins.kotlin.android)` to `build.gradle.kts` and `app/build.gradle.kts`, enabling full Kotlin compilation for all 25 source files and Room DAOs.
+- **Bytecode Compatibility**: Aligned JVM bytecode target to `Java 17` (`JavaVersion.VERSION_17` and `jvmTarget = "17"`) for seamless ART compatibility across Android versions.
+- **Workflow Automation**: Made release asset and release name dynamic based on tag name.
+
 ## [1.0.0] - 2026-10-28
 ### Added
 - **Official Branding**: Set app name to "মসজিদ সেবা (Mosque Seba)" and package name to `com.mosqueseba.app`.

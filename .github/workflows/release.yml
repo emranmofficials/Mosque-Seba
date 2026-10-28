@@ -35,41 +35,46 @@ jobs:
       - name: Prepare APK Artifact
         run: |
           mkdir -p release-apk
+          TAG="${GITHUB_REF_NAME:-v1.0.1}"
           if [ -f "app/build/outputs/apk/release/app-release.apk" ]; then
-            cp app/build/outputs/apk/release/app-release.apk release-apk/Mosque-Seba-v1.0.0.apk
+            cp app/build/outputs/apk/release/app-release.apk "release-apk/Mosque-Seba-${TAG}.apk"
           else
-            cp app/build/outputs/apk/debug/app-debug.apk release-apk/Mosque-Seba-v1.0.0.apk
+            cp app/build/outputs/apk/debug/app-debug.apk "release-apk/Mosque-Seba-${TAG}.apk"
           fi
           ls -la release-apk/
 
       - name: Upload APK as Workflow Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Mosque-Seba-v1.0.0-APK
-          path: release-apk/Mosque-Seba-v1.0.0.apk
+          name: Mosque-Seba-APK
+          path: release-apk/*.apk
 
       - name: Publish Official GitHub Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
         with:
-          name: "মসজিদ সেবা (Mosque Seba) — v1.0.0 Official Release"
-          tag_name: ${{ github.ref_name || 'v1.0.0' }}
+          name: "মসজিদ সেবা (Mosque Seba) — ${{ github.ref_name }} Hotfix Release"
+          tag_name: ${{ github.ref_name }}
           draft: false
           prerelease: false
-          files: release-apk/Mosque-Seba-v1.0.0.apk
+          files: release-apk/*.apk
           body: |
-            # 🕌 মসজিদ সেবা (Mosque Seba) — v1.0.0
+            # 🕌 মসজিদ সেবা (Mosque Seba) — ${{ github.ref_name }}
 
             > **অফিসিয়াল স্লোগান:** *মসজিদের খেদমতে আধুনিক প্রযুক্তি, পরিচালনায় স্বচ্ছ আস্থা*  
             > **Application Package:** `com.mosqueseba.app`
 
             ## 📲 সরাসরি APK ডাউনলোড করুন:
-            নিচের অ্যাসেট থেকে সরাসরি আপনার অ্যান্ড্রয়েড মোবাইলে ডাউনলোড ও ইন্সটল করুন:
-            👉 **[Mosque-Seba-v1.0.0.apk](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name || 'v1.0.0' }}/Mosque-Seba-v1.0.0.apk)**
+            নিচের লিঙ্ক অথবা রিলিজ অ্যাসেট থেকে সরাসরি আপনার অ্যান্ড্রয়েড মোবাইলে ডাউনলোড ও ইন্সটল করুন:
+            👉 **[Mosque-Seba-${{ github.ref_name }}.apk](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/Mosque-Seba-${{ github.ref_name }}.apk)**
 
             ---
 
-            ### ✨ এই রিলিজের মূল ফিচারসমূহ:
+            ### 🚀 এই রিলিজের ফিক্স ও পরিবর্তনসমূহ:
+            - **কোটলিন কম্পাইলার ফিক্স:** `kotlin.android` প্লাগইন সক্রিয় করে সম্পূর্ণ কোটলিন কোডবেজ এবং রুম ডেটাবেজের সঠিক বাইটকোড কম্পাইলেশন নিশ্চিত করা হয়েছে।
+            - **ক্র্যাশ সমাধান (`ClassNotFoundException`):** অ্যান্ড্রয়েড ১৪ এবং অন্যান্য ডিভাইসে লঞ্চ ক্র্যাশ স্থায়ীভাবে দূরীভূত করা হয়েছে।
+            - **জাভা ১৭ স্ট্যান্ডার্ড:** অ্যান্ড্রয়েড রানটাইম আর্কিটেকচারের সাথে সম্পূর্ণ সামঞ্জস্যপূর্ণ `Java 17` বাইটকোড টার্গেট করা হয়েছে।
+
             - 🕌 **স্মার্ট ড্যাশবোর্ড ও ওয়াক্ত ট্র্যাকার:** ৫ ওয়াক্তের নামাজের বিস্তারিত সময়সূচি, পরবর্তী ওয়াক্তের কাউন্টডাউন ও কুইক অ্যাকশন।
             - 👥 **সদস্য ব্যবস্থাপনা:** সাধারণ ও আজীবন সদস্যদের প্রোফাইল ও মাসিক চাঁদার রেকর্ড।
             - 💰 **স্বচ্ছ ফিন্যান্স ও অডিট:** আয় ও ব্যয়ের লেজার, নগদ/ব্যাংক ব্যালেন্স এবং মাসিক আর্থিক বিবরণী।
