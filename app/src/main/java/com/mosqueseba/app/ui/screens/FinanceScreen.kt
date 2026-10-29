@@ -30,8 +30,9 @@ import com.mosqueseba.app.ui.viewmodel.MosqueViewModel
 @Composable
 fun FinanceScreen(
     viewModel: MosqueViewModel,
-    onAddIncomeClick: () -> Unit,
-    onAddExpenseClick: () -> Unit
+    onAddIncomeClick: (() -> Unit)? = null,
+    onAddExpenseClick: (() -> Unit)? = null,
+    isReadOnlyTransparencyMode: Boolean = false
 ) {
     val allTransactions by viewModel.allTransactions.collectAsState()
     val pendingTransactions by viewModel.pendingTransactions.collectAsState()
@@ -138,40 +139,53 @@ fun FinanceScreen(
             Spacer(modifier = Modifier.height(10.dp))
 
             // Action Buttons: Add Income, Add Expense & Financial Report
+            val isTransparencyOnly = isReadOnlyTransparencyMode || currentRole == UserRole.GENERAL_MEMBER || currentRole.level > 2
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                Button(
-                    onClick = onAddIncomeClick,
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MosqueSuccessGreen)
-                ) {
-                    Icon(Icons.Default.AddCircle, contentDescription = null, modifier = Modifier.size(15.dp))
-                    Spacer(modifier = Modifier.width(3.dp))
-                    Text("আয় যোগ", style = MaterialTheme.typography.labelSmall)
+                if (!isTransparencyOnly && onAddIncomeClick != null) {
+                    Button(
+                        onClick = onAddIncomeClick,
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = MosqueSuccessGreen)
+                    ) {
+                        Icon(Icons.Default.AddCircle, contentDescription = null, modifier = Modifier.size(15.dp))
+                        Spacer(modifier = Modifier.width(3.dp))
+                        Text("আয় যোগ", style = MaterialTheme.typography.labelSmall)
+                    }
+                }
+
+                if (!isTransparencyOnly && onAddExpenseClick != null) {
+                    Button(
+                        onClick = onAddExpenseClick,
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = MosqueUrgentRed)
+                    ) {
+                        Icon(Icons.Default.RemoveCircle, contentDescription = null, modifier = Modifier.size(15.dp))
+                        Spacer(modifier = Modifier.width(3.dp))
+                        Text("ব্যয় যোগ", style = MaterialTheme.typography.labelSmall)
+                    }
                 }
 
                 Button(
-                    onClick = onAddExpenseClick,
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MosqueUrgentRed)
-                ) {
-                    Icon(Icons.Default.RemoveCircle, contentDescription = null, modifier = Modifier.size(15.dp))
-                    Spacer(modifier = Modifier.width(3.dp))
-                    Text("ব্যয় যোগ", style = MaterialTheme.typography.labelSmall)
-                }
-
-                OutlinedButton(
                     onClick = { showReportDialog = true },
+                    modifier = if (isTransparencyOnly) Modifier.fillMaxWidth() else Modifier.wrapContentWidth(),
                     shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MosqueEmeraldPrimary)
+                    colors = if (isTransparencyOnly) {
+                        ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary)
+                    } else {
+                        ButtonDefaults.outlinedButtonColors(contentColor = MosqueEmeraldPrimary)
+                    }
                 ) {
                     Icon(Icons.Default.Summarize, contentDescription = null, modifier = Modifier.size(15.dp))
-                    Spacer(modifier = Modifier.width(3.dp))
-                    Text("রিপোর্ট", style = MaterialTheme.typography.labelSmall)
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        if (isTransparencyOnly) "উন্মুক্ত অডিট ও আর্থিক প্রতিবেদন দেখুন" else "রিপোর্ট",
+                        style = MaterialTheme.typography.labelSmall
+                    )
                 }
             }
 

@@ -38,6 +38,7 @@ fun DashboardScreen(
     val pendingTransactions by viewModel.pendingTransactions.collectAsState()
     val allTransactions by viewModel.allTransactions.collectAsState()
     val allMeetings by viewModel.allMeetings.collectAsState()
+    val currentRole by viewModel.currentUserRole.collectAsState()
 
     LazyColumn(
         modifier = Modifier
@@ -59,13 +60,14 @@ fun DashboardScreen(
         // 3. Prayer Schedule Card
         item {
             PrayerCard(
-                onViewFullScheduleClick = { onNavigateToTab(4) } // More tab
+                onViewFullScheduleClick = { onNavigateToTab(4) }
             )
         }
 
-        // 4. Committee KPIs (4 cards)
+        // 4. Role-based KPIs
         item {
             DashboardKpiGrid(
+                role = currentRole,
                 totalMembers = totalMembers,
                 netBalance = netBalance,
                 dueChanda = 3500.0,
@@ -76,23 +78,18 @@ fun DashboardScreen(
                         "finance" -> onNavigateToTab(2)
                         "chanda" -> onOpenDialog("receive_chanda")
                         "pending" -> onNavigateToTab(2)
+                        else -> onOpenDialog(key)
                     }
                 }
             )
         }
 
-        // 5. Quick Actions (6 items)
+        // 5. Role-based Quick Actions
         item {
             QuickActionsGrid(
+                role = currentRole,
                 onActionClick = { actionKey ->
-                    when (actionKey) {
-                        "add_member" -> onOpenDialog("add_member")
-                        "add_income" -> onOpenDialog("add_income")
-                        "add_expense" -> onOpenDialog("add_expense")
-                        "receive_chanda" -> onOpenDialog("receive_chanda")
-                        "schedule_meeting" -> onOpenDialog("schedule_meeting")
-                        "publish_notice" -> onOpenDialog("publish_notice")
-                    }
+                    onOpenDialog(actionKey)
                 }
             )
         }

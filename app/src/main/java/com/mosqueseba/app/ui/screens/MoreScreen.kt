@@ -30,10 +30,11 @@ import com.mosqueseba.app.ui.viewmodel.MosqueViewModel
 @Composable
 fun MoreScreen(
     viewModel: MosqueViewModel,
+    initialSubModule: String? = null,
     onOpenReceiveChanda: () -> Unit,
     onOpenScheduleMeeting: () -> Unit
 ) {
-    var selectedSubModule by remember { mutableStateOf<String?>(null) }
+    var selectedSubModule by remember(initialSubModule) { mutableStateOf<String?>(initialSubModule) }
     var selectedPaymentForReceipt by remember { mutableStateOf<ChandaPaymentEntity?>(null) }
     var showAddStaffDialog by remember { mutableStateOf(false) }
     var showPaySalaryStaff by remember { mutableStateOf<StaffEntity?>(null) }

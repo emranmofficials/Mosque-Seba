@@ -17,17 +17,131 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.mosqueseba.app.data.model.UserRole
 import com.mosqueseba.app.ui.theme.*
 
 @Composable
 fun DashboardKpiGrid(
+    role: UserRole = UserRole.PRESIDENT,
     totalMembers: Int,
     netBalance: Double,
     dueChanda: Double = 3500.0,
     pendingItems: Int = 1,
     onKpiClick: (String) -> Unit = {}
 ) {
-    Column {
+    when (role) {
+        UserRole.GENERAL_MEMBER -> {
+            Column {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    KpiCardItem(
+                        modifier = Modifier.weight(1f),
+                        title = "আমার মাসিক চাঁদা",
+                        value = "৳১,৫০০",
+                        subtext = "পরিশোধিত • সেপ্টেম্বর ২০২৪",
+                        icon = Icons.Default.Verified,
+                        iconBg = MosqueSuccessGreen.copy(alpha = 0.1f),
+                        iconColor = MosqueSuccessGreen,
+                        onClick = { onKpiClick("my_chanda") }
+                    )
+                    KpiCardItem(
+                        modifier = Modifier.weight(1f),
+                        title = "মসজিদ স্বচ্ছ তহবিল",
+                        value = "৳${String.format("%,.0f", netBalance)}",
+                        subtext = "সার্বজনীন নেট স্থিতি",
+                        icon = Icons.Default.AccountBalanceWallet,
+                        iconBg = MosqueEmeraldPrimary.copy(alpha = 0.1f),
+                        iconColor = MosqueEmeraldPrimary,
+                        onClick = { onKpiClick("finance") }
+                    )
+                }
+                Spacer(modifier = Modifier.height(10.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    KpiCardItem(
+                        modifier = Modifier.weight(1f),
+                        title = "পরবর্তী জামায়াত",
+                        value = "যোহর/জুমুআ",
+                        subtext = "০১:১৫ মিনিট (বাকি ৪২ মি.)",
+                        icon = Icons.Default.AccessTime,
+                        iconBg = MosqueGold.copy(alpha = 0.15f),
+                        iconColor = MosqueGoldDeep,
+                        onClick = { onKpiClick("prayers") }
+                    )
+                    KpiCardItem(
+                        modifier = Modifier.weight(1f),
+                        title = "নতুন নোটিশ",
+                        value = "২টি বিজ্ঞপ্তি",
+                        subtext = "কমিটি কর্তৃক প্রকাশিত",
+                        icon = Icons.Default.Campaign,
+                        iconBg = MosqueInfoBlue.copy(alpha = 0.1f),
+                        iconColor = MosqueInfoBlue,
+                        onClick = { onKpiClick("notices") }
+                    )
+                }
+            }
+        }
+        UserRole.IMAM, UserRole.MUAZZIN, UserRole.KHADEM -> {
+            Column {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    KpiCardItem(
+                        modifier = Modifier.weight(1f),
+                        title = "আজকের দায়িত্ব",
+                        value = "ইমামতি ও খুতবা",
+                        subtext = "জুমা ও মাগরিব জামায়াত",
+                        icon = Icons.Default.Schedule,
+                        iconBg = MosqueEmeraldPrimary.copy(alpha = 0.1f),
+                        iconColor = MosqueEmeraldPrimary,
+                        onClick = { onKpiClick("roster") }
+                    )
+                    KpiCardItem(
+                        modifier = Modifier.weight(1f),
+                        title = "খাবার শিডিউল",
+                        value = "দুপুর ও রাত",
+                        subtext = "হাজী মো: আবুল কাসেম",
+                        icon = Icons.Default.Restaurant,
+                        iconBg = MosqueGold.copy(alpha = 0.15f),
+                        iconColor = MosqueGoldDeep,
+                        onClick = { onKpiClick("food") }
+                    )
+                }
+                Spacer(modifier = Modifier.height(10.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    KpiCardItem(
+                        modifier = Modifier.weight(1f),
+                        title = "মাদরাসা শিক্ষার্থী",
+                        value = "১৮ জন ছাত্র",
+                        subtext = "হিফজ ও নূরানী বিভাগ",
+                        icon = Icons.Default.School,
+                        iconBg = MosqueInfoBlue.copy(alpha = 0.1f),
+                        iconColor = MosqueInfoBlue,
+                        onClick = { onKpiClick("madrasa") }
+                    )
+                    KpiCardItem(
+                        modifier = Modifier.weight(1f),
+                        title = "আমার বেতন স্ট্যাটাস",
+                        value = "পরিশোধিত",
+                        subtext = "সেপ্টেম্বর ২০২৪",
+                        icon = Icons.Default.CheckCircle,
+                        iconBg = MosqueSuccessGreen.copy(alpha = 0.1f),
+                        iconColor = MosqueSuccessGreen,
+                        onClick = { onKpiClick("staff_profile") }
+                    )
+                }
+            }
+        }
+        else -> {
+            Column {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -84,6 +198,7 @@ fun DashboardKpiGrid(
             )
         }
     }
+}
 }
 
 @Composable
@@ -156,16 +271,43 @@ fun KpiCardItem(
 
 @Composable
 fun QuickActionsGrid(
+    role: UserRole = UserRole.PRESIDENT,
     onActionClick: (String) -> Unit
 ) {
-    val actions = listOf(
-        QuickActionItem("add_member", "নতুন সদস্য", Icons.Default.PersonAdd, MosqueEmeraldPrimary),
-        QuickActionItem("add_income", "আয় যোগ", Icons.Default.AddCircle, MosqueSuccessGreen),
-        QuickActionItem("add_expense", "ব্যয় যোগ", Icons.Default.RemoveCircle, MosqueUrgentRed),
-        QuickActionItem("receive_chanda", "চাঁদা গ্রহণ", Icons.Default.Payments, MosqueGoldDeep),
-        QuickActionItem("schedule_meeting", "সভা আহ্বান", Icons.Default.EventAvailable, MosqueInfoBlue),
-        QuickActionItem("publish_notice", "নোটিশ প্রকাশ", Icons.Default.Campaign, MosqueEmeraldDark)
-    )
+    val actions = when (role) {
+        UserRole.GENERAL_MEMBER -> listOf(
+            QuickActionItem("my_chanda", "আমার চাঁদা", Icons.Default.ReceiptLong, MosqueGoldDeep),
+            QuickActionItem("view_receipt", "ডিজিটাল রসিদ", Icons.Default.QrCode2, MosqueEmeraldPrimary),
+            QuickActionItem("transparency", "স্বচ্ছ হিসাব", Icons.Default.AccountBalanceWallet, MosqueSuccessGreen),
+            QuickActionItem("view_prayers", "নামাজের সূচি", Icons.Default.AccessTime, MosqueInfoBlue),
+            QuickActionItem("publish_notice", "নোটিশ দেখুন", Icons.Default.Campaign, MosqueEmeraldDark),
+            QuickActionItem("welfare", "সহায়তা আবেদন", Icons.Default.VolunteerActivism, MosqueUrgentRed)
+        )
+        UserRole.IMAM, UserRole.MUAZZIN, UserRole.KHADEM -> listOf(
+            QuickActionItem("roster", "ডিউটি রোস্টার", Icons.Default.Schedule, MosqueEmeraldPrimary),
+            QuickActionItem("food", "খাবার শিডিউল", Icons.Default.Restaurant, MosqueGoldDeep),
+            QuickActionItem("madrasa", "হিফজ মূল্যায়ন", Icons.Default.School, MosqueInfoBlue),
+            QuickActionItem("view_prayers", "নামাজের সময়", Icons.Default.AccessTime, MosqueSuccessGreen),
+            QuickActionItem("publish_notice", "নোটিশ দেখুন", Icons.Default.Campaign, MosqueEmeraldDark),
+            QuickActionItem("staff_profile", "বেতন স্লিপ", Icons.Default.AccountBalanceWallet, MosqueUrgentRed)
+        )
+        UserRole.GENERAL_SECRETARY, UserRole.ORGANIZING_SECRETARY, UserRole.EXECUTIVE_MEMBER -> listOf(
+            QuickActionItem("add_member", "নতুন সদস্য", Icons.Default.PersonAdd, MosqueEmeraldPrimary),
+            QuickActionItem("schedule_meeting", "সভা আহ্বান", Icons.Default.EventAvailable, MosqueInfoBlue),
+            QuickActionItem("publish_notice", "নোটিশ প্রকাশ", Icons.Default.Campaign, MosqueEmeraldDark),
+            QuickActionItem("receive_chanda", "চাঁদা গ্রহণ", Icons.Default.Payments, MosqueGoldDeep),
+            QuickActionItem("welfare", "সমাজকল্যাণ", Icons.Default.VolunteerActivism, MosqueSuccessGreen),
+            QuickActionItem("events", "ইভেন্ট মাহফিল", Icons.Default.Celebration, MosqueGold)
+        )
+        else -> listOf(
+            QuickActionItem("add_member", "নতুন সদস্য", Icons.Default.PersonAdd, MosqueEmeraldPrimary),
+            QuickActionItem("add_income", "আয় যোগ", Icons.Default.AddCircle, MosqueSuccessGreen),
+            QuickActionItem("add_expense", "ব্যয় যোগ", Icons.Default.RemoveCircle, MosqueUrgentRed),
+            QuickActionItem("receive_chanda", "চাঁদা গ্রহণ", Icons.Default.Payments, MosqueGoldDeep),
+            QuickActionItem("schedule_meeting", "সভা আহ্বান", Icons.Default.EventAvailable, MosqueInfoBlue),
+            QuickActionItem("publish_notice", "নোটিশ প্রকাশ", Icons.Default.Campaign, MosqueEmeraldDark)
+        )
+    }
 
     Card(
         modifier = Modifier
@@ -176,7 +318,7 @@ fun QuickActionsGrid(
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
             Text(
-                text = "দ্রুত কার্যক্রম (Quick Actions)",
+                text = "দায়িত্ব ও দ্রুত কার্যক্রম (Quick Actions)",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = MosqueEmeraldDark

@@ -1,5 +1,6 @@
 package com.mosqueseba.app.ui.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -14,6 +15,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import com.mosqueseba.app.R
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -42,21 +45,14 @@ fun LoginScreen(viewModel: MosqueViewModel) {
         ) {
             Spacer(modifier = Modifier.height(30.dp))
 
-            // Branding Header
-            Box(
+            // Official Branding Header
+            Image(
+                painter = painterResource(id = R.drawable.app_logo),
+                contentDescription = "Mosque Seba Logo",
                 modifier = Modifier
-                    .size(68.dp)
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(MosqueEmeraldPrimary),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Mosque,
-                    contentDescription = null,
-                    tint = MosqueGold,
-                    modifier = Modifier.size(38.dp)
-                )
-            }
+                    .size(84.dp)
+                    .clip(RoundedCornerShape(20.dp))
+            )
 
             Spacer(modifier = Modifier.height(14.dp))
 

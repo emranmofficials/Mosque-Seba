@@ -17,21 +17,54 @@ import com.mosqueseba.app.ui.theme.*
 data class NavItem(
     val titleBn: String,
     val selectedIcon: ImageVector,
-    val unselectedIcon: ImageVector
+    val unselectedIcon: ImageVector,
+    val destinationKey: String
 )
+
+fun getNavItemsForRole(role: com.mosqueseba.app.data.model.UserRole): List<NavItem> = when (role) {
+    com.mosqueseba.app.data.model.UserRole.PRESIDENT,
+    com.mosqueseba.app.data.model.UserRole.VICE_PRESIDENT,
+    com.mosqueseba.app.data.model.UserRole.TREASURER -> listOf(
+        NavItem("ড্যাশবোর্ড", Icons.Filled.Dashboard, Icons.Outlined.Dashboard, "dashboard"),
+        NavItem("সদস্য", Icons.Filled.People, Icons.Outlined.People, "members"),
+        NavItem("ফাইন্যান্স", Icons.Filled.AccountBalanceWallet, Icons.Outlined.AccountBalanceWallet, "finance"),
+        NavItem("নোটিশ", Icons.Filled.Campaign, Icons.Outlined.Campaign, "notices"),
+        NavItem("আরও", Icons.Filled.Menu, Icons.Outlined.Menu, "more")
+    )
+    com.mosqueseba.app.data.model.UserRole.GENERAL_SECRETARY,
+    com.mosqueseba.app.data.model.UserRole.ORGANIZING_SECRETARY,
+    com.mosqueseba.app.data.model.UserRole.EXECUTIVE_MEMBER -> listOf(
+        NavItem("ড্যাশবোর্ড", Icons.Filled.Dashboard, Icons.Outlined.Dashboard, "dashboard"),
+        NavItem("সদস্য", Icons.Filled.People, Icons.Outlined.People, "members"),
+        NavItem("নোটিশ ও সভা", Icons.Filled.Campaign, Icons.Outlined.Campaign, "notices"),
+        NavItem("সমাজকল্যাণ", Icons.Filled.VolunteerActivism, Icons.Outlined.VolunteerActivism, "welfare"),
+        NavItem("অন্যান্য", Icons.Filled.Menu, Icons.Outlined.Menu, "more")
+    )
+    com.mosqueseba.app.data.model.UserRole.IMAM,
+    com.mosqueseba.app.data.model.UserRole.MUAZZIN,
+    com.mosqueseba.app.data.model.UserRole.KHADEM -> listOf(
+        NavItem("ড্যাশবোর্ড", Icons.Filled.Dashboard, Icons.Outlined.Dashboard, "dashboard"),
+        NavItem("রোস্টার", Icons.Filled.DateRange, Icons.Outlined.DateRange, "roster"),
+        NavItem("খাবার শিডিউল", Icons.Filled.Restaurant, Icons.Outlined.Restaurant, "food"),
+        NavItem("মাদরাসা", Icons.Filled.School, Icons.Outlined.School, "madrasa"),
+        NavItem("প্রোফাইল", Icons.Filled.Badge, Icons.Outlined.Badge, "staff_profile")
+    )
+    com.mosqueseba.app.data.model.UserRole.GENERAL_MEMBER -> listOf(
+        NavItem("ড্যাশবোর্ড", Icons.Filled.Dashboard, Icons.Outlined.Dashboard, "dashboard"),
+        NavItem("আমার চাঁদা", Icons.Filled.ReceiptLong, Icons.Outlined.ReceiptLong, "my_chanda"),
+        NavItem("স্বচ্ছ হিসাব", Icons.Filled.Assessment, Icons.Outlined.Assessment, "transparency"),
+        NavItem("নোটিশ", Icons.Filled.Campaign, Icons.Outlined.Campaign, "notices"),
+        NavItem("কমিটি", Icons.Filled.Groups, Icons.Outlined.Groups, "committee")
+    )
+}
 
 @Composable
 fun NavigationBottomBar(
     currentTabIndex: Int,
+    currentRole: com.mosqueseba.app.data.model.UserRole,
     onTabSelected: (Int) -> Unit
 ) {
-    val items = listOf(
-        NavItem("ড্যাশবোর্ড", Icons.Filled.Dashboard, Icons.Outlined.Dashboard),
-        NavItem("সদস্য", Icons.Filled.People, Icons.Outlined.People),
-        NavItem("ফাইন্যান্স", Icons.Filled.AccountBalanceWallet, Icons.Outlined.AccountBalanceWallet),
-        NavItem("নোটিশ", Icons.Filled.Campaign, Icons.Outlined.Campaign),
-        NavItem("আরও", Icons.Filled.Menu, Icons.Outlined.Menu)
-    )
+    val items = getNavItemsForRole(currentRole)
 
     NavigationBar(
         containerColor = Color.White,
@@ -69,3 +102,4 @@ fun NavigationBottomBar(
         }
     }
 }
+

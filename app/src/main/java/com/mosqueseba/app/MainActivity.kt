@@ -47,6 +47,17 @@ fun MosqueAppShell(viewModel: MosqueViewModel) {
     val currentRole by viewModel.currentUserRole.collectAsState()
     val allMembers by viewModel.allMembers.collectAsState()
 
+    // Reset tab to 0 whenever role switches
+    LaunchedEffect(currentRole) {
+        currentTabIndex = 0
+    }
+
+    val currentNavItems = remember(currentRole) {
+        getNavItemsForRole(currentRole)
+    }
+
+    val activeDestination = currentNavItems.getOrNull(currentTabIndex)?.destinationKey ?: "dashboard"
+
     // Dialog controllers
     var showAddMemberDialog by remember { mutableStateOf(false) }
     var showAddTransactionDialog by remember { mutableStateOf(false) }
@@ -68,6 +79,7 @@ fun MosqueAppShell(viewModel: MosqueViewModel) {
         bottomBar = {
             NavigationBottomBar(
                 currentTabIndex = currentTabIndex,
+                currentRole = currentRole,
                 onTabSelected = { currentTabIndex = it }
             )
         }
@@ -77,10 +89,14 @@ fun MosqueAppShell(viewModel: MosqueViewModel) {
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            when (currentTabIndex) {
-                0 -> DashboardScreen(
+            when (activeDestination) {
+                "dashboard" -> DashboardScreen(
                     viewModel = viewModel,
-                    onNavigateToTab = { currentTabIndex = it },
+                    onNavigateToTab = { tabIndex ->
+                        if (tabIndex in currentNavItems.indices) {
+                            currentTabIndex = tabIndex
+                        }
+                    },
                     onOpenDialog = { dialogKey ->
                         when (dialogKey) {
                             "add_member" -> showAddMemberDialog = true
@@ -95,14 +111,54 @@ fun MosqueAppShell(viewModel: MosqueViewModel) {
                             "receive_chanda" -> showReceiveChandaDialog = true
                             "schedule_meeting" -> showScheduleMeetingDialog = true
                             "publish_notice" -> showPublishNoticeDialog = true
+                            "members" -> {
+                                val idx = currentNavItems.indexOfFirst { it.destinationKey == "members" || it.destinationKey == "committee" }
+                                if (idx != -1) currentTabIndex = idx
+                            }
+                            "finance", "transparency" -> {
+                                val idx = currentNavItems.indexOfFirst { it.destinationKey == "finance" || it.destinationKey == "transparency" }
+                                if (idx != -1) currentTabIndex = idx
+                            }
+                            "notices" -> {
+                                val idx = currentNavItems.indexOfFirst { it.destinationKey == "notices" }
+                                if (idx != -1) currentTabIndex = idx
+                            }
+                            "my_chanda", "view_receipt" -> {
+                                val idx = currentNavItems.indexOfFirst { it.destinationKey == "my_chanda" }
+                                if (idx != -1) currentTabIndex = idx else showReceiveChandaDialog = true
+                            }
+                            "roster" -> {
+                                val idx = currentNavItems.indexOfFirst { it.destinationKey == "roster" }
+                                if (idx != -1) currentTabIndex = idx
+                            }
+                            "food" -> {
+                                val idx = currentNavItems.indexOfFirst { it.destinationKey == "food" }
+                                if (idx != -1) currentTabIndex = idx
+                            }
+                            "madrasa" -> {
+                                val idx = currentNavItems.indexOfFirst { it.destinationKey == "madrasa" }
+                                if (idx != -1) currentTabIndex = idx
+                            }
+                            "staff_profile" -> {
+                                val idx = currentNavItems.indexOfFirst { it.destinationKey == "staff_profile" }
+                                if (idx != -1) currentTabIndex = idx
+                            }
+                            "welfare" -> {
+                                val idx = currentNavItems.indexOfFirst { it.destinationKey == "welfare" }
+                                if (idx != -1) currentTabIndex = idx
+                            }
                         }
                     }
                 )
-                1 -> MembersScreen(
+                "members" -> MembersScreen(
                     viewModel = viewModel,
-                    onAddMemberClick = { showAddMemberDialog = true }
+                    onAddMemberClick = if (currentRole.level <= 2) { { showAddMemberDialog = true } } else null
                 )
-                2 -> FinanceScreen(
+                "committee" -> MembersScreen(
+                    viewModel = viewModel,
+                    onAddMemberClick = null
+                )
+                "finance" -> FinanceScreen(
                     viewModel = viewModel,
                     onAddIncomeClick = {
                         transactionInitialType = "INCOME"
@@ -111,16 +167,65 @@ fun MosqueAppShell(viewModel: MosqueViewModel) {
                     onAddExpenseClick = {
                         transactionInitialType = "EXPENSE"
                         showAddTransactionDialog = true
-                    }
+                    },
+                    isReadOnlyTransparencyMode = false
                 )
-                3 -> NoticesScreen(
+                "transparency" -> FinanceScreen(
+                    viewModel = viewModel,
+                    onAddIncomeClick = null,
+                    onAddExpenseClick = null,
+                    isReadOnlyTransparencyMode = true
+                )
+                "notices" -> NoticesScreen(
                     viewModel = viewModel,
                     onPublishNoticeClick = { showPublishNoticeDialog = true }
                 )
-                4 -> MoreScreen(
+                "more" -> MoreScreen(
                     viewModel = viewModel,
+                    initialSubModule = null,
                     onOpenReceiveChanda = { showReceiveChandaDialog = true },
                     onOpenScheduleMeeting = { showScheduleMeetingDialog = true }
+                )
+                "roster" -> MoreScreen(
+                    viewModel = viewModel,
+                    initialSubModule = "roster",
+                    onOpenReceiveChanda = { showReceiveChandaDialog = true },
+                    onOpenScheduleMeeting = { showScheduleMeetingDialog = true }
+                )
+                "food" -> MoreScreen(
+                    viewModel = viewModel,
+                    initialSubModule = "food",
+                    onOpenReceiveChanda = { showReceiveChandaDialog = true },
+                    onOpenScheduleMeeting = { showScheduleMeetingDialog = true }
+                )
+                "madrasa" -> MoreScreen(
+                    viewModel = viewModel,
+                    initialSubModule = "madrasa",
+                    onOpenReceiveChanda = { showReceiveChandaDialog = true },
+                    onOpenScheduleMeeting = { showScheduleMeetingDialog = true }
+                )
+                "staff_profile" -> MoreScreen(
+                    viewModel = viewModel,
+                    initialSubModule = "staff",
+                    onOpenReceiveChanda = { showReceiveChandaDialog = true },
+                    onOpenScheduleMeeting = { showScheduleMeetingDialog = true }
+                )
+                "my_chanda" -> MoreScreen(
+                    viewModel = viewModel,
+                    initialSubModule = "chanda",
+                    onOpenReceiveChanda = { showReceiveChandaDialog = true },
+                    onOpenScheduleMeeting = { showScheduleMeetingDialog = true }
+                )
+                "welfare" -> MoreScreen(
+                    viewModel = viewModel,
+                    initialSubModule = "welfare",
+                    onOpenReceiveChanda = { showReceiveChandaDialog = true },
+                    onOpenScheduleMeeting = { showScheduleMeetingDialog = true }
+                )
+                else -> DashboardScreen(
+                    viewModel = viewModel,
+                    onNavigateToTab = { currentTabIndex = 0 },
+                    onOpenDialog = {}
                 )
             }
         }

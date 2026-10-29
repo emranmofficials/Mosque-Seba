@@ -1,5 +1,6 @@
 package com.mosqueseba.app.ui.components
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -15,9 +16,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.mosqueseba.app.R
 import com.mosqueseba.app.data.model.UserRole
 import com.mosqueseba.app.ui.theme.*
 
@@ -47,19 +50,14 @@ fun GlobalHeader(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.weight(1f)
             ) {
-                // Mosque emblem
-                Box(
+                // Official Mosque Logo
+                Image(
+                    painter = painterResource(id = R.drawable.app_logo),
+                    contentDescription = "Mosque Seba Logo",
                     modifier = Modifier
                         .size(42.dp)
-                        .clip(CircleShape)
-                        .background(MosqueEmeraldDark),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "🕌",
-                        fontSize = 22.sp
-                    )
-                }
+                        .clip(RoundedCornerShape(10.dp))
+                )
 
                 Spacer(modifier = Modifier.width(10.dp))
 

@@ -30,7 +30,7 @@ import com.mosqueseba.app.ui.viewmodel.MosqueViewModel
 @Composable
 fun MembersScreen(
     viewModel: MosqueViewModel,
-    onAddMemberClick: () -> Unit
+    onAddMemberClick: (() -> Unit)? = null
 ) {
     val members by viewModel.filteredMembers.collectAsState()
     val totalCount by viewModel.memberCount.collectAsState()
@@ -165,26 +165,28 @@ fun MembersScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.width(8.dp))
+                if (onAddMemberClick != null) {
+                    Spacer(modifier = Modifier.width(8.dp))
 
-                // Context Action: Add Member
-                Button(
-                    onClick = onAddMemberClick,
-                    shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary),
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.PersonAdd,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "নতুন সদস্য",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold
-                    )
+                    // Context Action: Add Member
+                    Button(
+                        onClick = onAddMemberClick,
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.PersonAdd,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "নতুন সদস্য",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
         }
