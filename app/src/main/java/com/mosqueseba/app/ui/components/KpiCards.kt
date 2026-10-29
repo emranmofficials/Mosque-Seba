@@ -200,6 +200,7 @@ fun DashboardKpiGrid(
     }
 }
 }
+}
 
 @Composable
 fun KpiCardItem(
