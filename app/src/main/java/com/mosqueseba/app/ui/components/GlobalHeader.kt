@@ -198,8 +198,9 @@ fun GlobalHeader(
                     }
                 }
             }
+        }
 
-            // Subtle Gold Islamic Accent Trim
+        // Subtle Gold Islamic Accent Trim
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
