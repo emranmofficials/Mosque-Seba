@@ -21,6 +21,12 @@ interface MemberDao {
     @Query("SELECT * FROM members WHERE id = :id")
     suspend fun getMemberById(id: String): MemberEntity?
 
+    @Query("SELECT * FROM members WHERE REPLACE(REPLACE(mobile, '-', ''), ' ', '') = REPLACE(REPLACE(:mobile, '-', ''), ' ', '') LIMIT 1")
+    suspend fun getMemberByMobile(mobile: String): MemberEntity?
+
+    @Query("SELECT * FROM members WHERE roleCode = 'president' LIMIT 1")
+    suspend fun getPresident(): MemberEntity?
+
     @Query("SELECT * FROM members WHERE status = 'active' ORDER BY memberCode ASC")
     fun getActiveMembers(): Flow<List<MemberEntity>>
 

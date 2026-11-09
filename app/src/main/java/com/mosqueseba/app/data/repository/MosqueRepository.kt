@@ -28,6 +28,20 @@ class MosqueRepository(private val database: MosqueDatabase) {
         logAudit("MEMBER_UPDATED", "সদস্য তথ্য হালনাগাদ: ${member.nameBn} (${member.memberCode})")
     }
 
+    suspend fun getMemberByMobile(mobile: String): MemberEntity? = database.memberDao().getMemberByMobile(mobile)
+
+    suspend fun getPresident(): MemberEntity? = database.memberDao().getPresident()
+
+    suspend fun registerNewMosqueAndPresident(
+        mosque: MosqueEntity,
+        president: MemberEntity
+    ): Boolean {
+        database.mosqueDao().insertOrUpdate(mosque)
+        database.memberDao().insertMember(president)
+        logAudit("MOSQUE_REGISTERED", "নতুন মসজিদ ও সভাপতি নিবন্ধিত: ${mosque.nameBn} (${president.nameBn})")
+        return true
+    }
+
     suspend fun deleteMember(member: MemberEntity) {
         database.memberDao().deleteMember(member)
         logAudit("MEMBER_DELETED", "সদস্য অপসারিত: ${member.nameBn}")

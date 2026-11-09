@@ -17,9 +17,17 @@ import com.mosqueseba.app.data.local.entity.MemberEntity
 import com.mosqueseba.app.ui.components.*
 import com.mosqueseba.app.ui.screens.*
 import com.mosqueseba.app.ui.theme.MosqueCommitteeTheme
+import androidx.activity.compose.BackHandler
 import com.mosqueseba.app.ui.theme.MosqueEmeraldDark
 import com.mosqueseba.app.ui.theme.MosqueEmeraldPrimary
 import com.mosqueseba.app.ui.viewmodel.MosqueViewModel
+
+enum class AppScreen {
+    SPLASH,
+    LOGIN,
+    REGISTRATION,
+    MAIN
+}
 
 class MainActivity : ComponentActivity() {
 
@@ -31,11 +39,63 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             MosqueCommitteeTheme {
-                val isLoggedIn by viewModel.isLoggedIn.collectAsState()
-                if (!isLoggedIn) {
-                    LoginScreen(viewModel = viewModel)
-                } else {
-                    MosqueAppShell(viewModel = viewModel)
+                var currentScreen by remember { mutableStateOf(AppScreen.SPLASH) }
+
+                BackHandler(enabled = currentScreen == AppScreen.REGISTRATION) {
+                    currentScreen = AppScreen.LOGIN
+                }
+
+                AnimatedContent(
+                    targetState = currentScreen,
+                    transitionSpec = {
+                        fadeIn(animationSpec = tween(300)) togetherWith fadeOut(animationSpec = tween(250))
+                    },
+                    label = "AppScreenTransition"
+                ) { screen ->
+                    when (screen) {
+                        AppScreen.SPLASH -> {
+                            SplashScreen(
+                                onSplashFinished = {
+                                    currentScreen = if (viewModel.sessionManager.isLoggedIn()) {
+                                        AppScreen.MAIN
+                                    } else {
+                                        AppScreen.LOGIN
+                                    }
+                                }
+                            )
+                        }
+                        AppScreen.LOGIN -> {
+                            LoginScreen(
+                                viewModel = viewModel,
+                                onLoginSuccess = {
+                                    currentScreen = AppScreen.MAIN
+                                },
+                                onNavigateToRegister = {
+                                    currentScreen = AppScreen.REGISTRATION
+                                }
+                            )
+                        }
+                        AppScreen.REGISTRATION -> {
+                            RegistrationScreen(
+                                viewModel = viewModel,
+                                onNavigateBackToLogin = {
+                                    currentScreen = AppScreen.LOGIN
+                                },
+                                onRegistrationSuccess = {
+                                    currentScreen = AppScreen.MAIN
+                                }
+                            )
+                        }
+                        AppScreen.MAIN -> {
+                            MosqueAppShell(
+                                viewModel = viewModel,
+                                onLogout = {
+                                    viewModel.logout()
+                                    currentScreen = AppScreen.LOGIN
+                                }
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -44,7 +104,10 @@ class MainActivity : ComponentActivity() {
 
 
 @Composable
-fun MosqueAppShell(viewModel: MosqueViewModel) {
+fun MosqueAppShell(
+    viewModel: MosqueViewModel,
+    onLogout: () -> Unit = {}
+) {
     var currentTabIndex by remember { mutableIntStateOf(0) }
     var overlaySubModule by remember { mutableStateOf<String?>(null) }
     val currentRole by viewModel.currentUserRole.collectAsState()
@@ -77,7 +140,7 @@ fun MosqueAppShell(viewModel: MosqueViewModel) {
                 currentRole = currentRole,
                 onRoleSelected = { viewModel.setUserRole(it) },
                 onNotificationClick = { showNotificationDialog = true },
-                onLogout = { viewModel.logout() }
+                onLogout = onLogout
             )
         },
         bottomBar = {

@@ -7,6 +7,7 @@ import com.mosqueseba.app.data.local.MosqueDatabase
 import com.mosqueseba.app.data.local.entity.*
 import com.mosqueseba.app.data.model.UserRole
 import com.mosqueseba.app.data.repository.MosqueRepository
+import com.mosqueseba.app.data.local.SessionManager
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -21,15 +22,155 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
         repository = MosqueRepository(db)
     }
 
-    // Role & Authentication simulation
-    private val _currentUserRole = MutableStateFlow(UserRole.PRESIDENT)
+    val sessionManager = SessionManager(application)
+
+    // Role & Persistent Authentication
+    private val _currentUserRole = MutableStateFlow(
+        if (sessionManager.isLoggedIn()) sessionManager.getSavedRole() else UserRole.PRESIDENT
+    )
     val currentUserRole: StateFlow<UserRole> = _currentUserRole.asStateFlow()
 
-    private val _isLoggedIn = MutableStateFlow(true)
+    private val _isLoggedIn = MutableStateFlow(sessionManager.isLoggedIn())
     val isLoggedIn: StateFlow<Boolean> = _isLoggedIn.asStateFlow()
 
     fun setUserRole(role: UserRole) {
         _currentUserRole.value = role
+    }
+
+    suspend fun loginWithCredentials(
+        committeeId: String,
+        mobile: String,
+        pass: String,
+        rememberMe: Boolean = true
+    ): Pair<Boolean, String?> {
+        val cleanMobile = mobile.replace("-", "").replace(" ", "").trim()
+        val currentMosque = repository.mosque.firstOrNull()
+        val validCommitteeId = currentMosque?.committeeId ?: "MC-DHK-2024"
+
+        val member = repository.getMemberByMobile(cleanMobile)
+        if (member != null) {
+            val role = UserRole.fromCode(member.roleCode)
+            _currentUserRole.value = role
+            _isLoggedIn.value = true
+            sessionManager.saveSession(
+                role = role,
+                memberId = member.id,
+                memberName = member.nameBn,
+                committeeId = committeeId.ifBlank { validCommitteeId },
+                mobile = member.mobile,
+                rememberMe = rememberMe
+            )
+            return Pair(true, null)
+        }
+
+        // Demo credentials fallback by mobile patterns
+        val defaultRole = when {
+            cleanMobile.contains("71122") -> UserRole.PRESIDENT
+            cleanMobile.contains("71555") -> UserRole.TREASURER
+            cleanMobile.contains("91244") -> UserRole.GENERAL_SECRETARY
+            cleanMobile.contains("61177") -> UserRole.ORGANIZING_SECRETARY
+            cleanMobile.contains("81122") -> UserRole.IMAM
+            else -> UserRole.GENERAL_MEMBER
+        }
+        _currentUserRole.value = defaultRole
+        _isLoggedIn.value = true
+        sessionManager.saveSession(
+            role = defaultRole,
+            memberId = "mem-${defaultRole.code}",
+            memberName = if (defaultRole == UserRole.PRESIDENT) "মো: রফিকুল ইসলাম" else "সম্মানিত ব্যবহারকারী",
+            committeeId = committeeId.ifBlank { validCommitteeId },
+            mobile = mobile,
+            rememberMe = rememberMe
+        )
+        return Pair(true, null)
+    }
+
+    fun quickLoginAsRole(role: UserRole, rememberMe: Boolean = true) {
+        _currentUserRole.value = role
+        _isLoggedIn.value = true
+        val (name, mobile) = when (role) {
+            UserRole.PRESIDENT -> "মো: রফিকুল ইসলাম" to "01711-223344"
+            UserRole.VICE_PRESIDENT -> "আলহাজ্ব আব্দুল বারী" to "01819-334455"
+            UserRole.GENERAL_SECRETARY -> "ইঞ্জি: আব্দুল্লাহ আল মামুন" to "01912-445566"
+            UserRole.TREASURER -> "হাজী মো: আবুল কাসেম" to "01715-556677"
+            UserRole.ORGANIZING_SECRETARY -> "মো: আসাদুজ্জামান" to "01611-778899"
+            UserRole.IMAM -> "মাওলানা হাফেজ ক্বারী মো: নুরুল ইসলাম" to "01811-223344"
+            UserRole.MUAZZIN -> "মো: বেলাল হোসেন" to "01922-334455"
+            UserRole.KHADEM -> "মো: আব্দুল কুদ্দুস" to "01733-445566"
+            else -> "মো: শাহজাহান আলী (মুসুল্লি)" to "01723-001122"
+        }
+        sessionManager.saveSession(
+            role = role,
+            memberId = "mem-${role.code}",
+            memberName = name,
+            committeeId = "MC-DHK-2024",
+            mobile = mobile,
+            rememberMe = rememberMe
+        )
+    }
+
+    suspend fun registerNewMosqueAndPresident(
+        presidentNameBn: String,
+        presidentNameEn: String,
+        presidentMobile: String,
+        presidentEmail: String,
+        presidentNid: String,
+        password: String,
+        mosqueNameBn: String,
+        mosqueNameEn: String,
+        address: String,
+        establishedYear: Int,
+        startYear: Int,
+        endYear: Int
+    ): Result<String> {
+        val committeeId = "MC-REG-${System.currentTimeMillis().toString().takeLast(4)}"
+        val mosqueId = "mosque-${UUID.randomUUID().toString().take(8)}"
+        val presidentId = "mem-${UUID.randomUUID().toString().take(8)}"
+
+        val mosque = MosqueEntity(
+            id = mosqueId,
+            committeeId = committeeId,
+            nameBn = mosqueNameBn,
+            nameEn = mosqueNameEn.ifBlank { mosqueNameBn },
+            address = address,
+            establishedYear = establishedYear,
+            committeeStartYear = startYear,
+            committeeEndYear = endYear,
+            status = "active"
+        )
+
+        val president = MemberEntity(
+            id = presidentId,
+            memberCode = "MEM-001",
+            nameBn = presidentNameBn,
+            nameEn = presidentNameEn.ifBlank { presidentNameBn },
+            mobile = presidentMobile,
+            email = presidentEmail,
+            nid = presidentNid,
+            address = address,
+            villageArea = address.substringBefore(",").ifBlank { "সদর" },
+            roleCode = "president",
+            monthlyChanda = 2000.0,
+            joinDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date()),
+            status = "active"
+        )
+
+        val success = repository.registerNewMosqueAndPresident(mosque, president)
+        return if (success) {
+            _currentUserRole.value = UserRole.PRESIDENT
+            _isLoggedIn.value = true
+            sessionManager.saveSession(
+                role = UserRole.PRESIDENT,
+                memberId = presidentId,
+                memberName = presidentNameBn,
+                committeeId = committeeId,
+                mobile = presidentMobile,
+                rememberMe = true
+            )
+            Result.success(committeeId)
+        } else {
+            Result.failure(Exception("রেজিস্ট্রেশন সংরক্ষণ করা সম্ভব হয়নি"))
+        }
     }
 
     fun login(committeeId: String, mobile: String, pass: String): Boolean {
@@ -38,7 +179,9 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun logout() {
+        sessionManager.clearSession()
         _isLoggedIn.value = false
+        _currentUserRole.value = UserRole.GENERAL_MEMBER
     }
 
 
