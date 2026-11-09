@@ -45,11 +45,8 @@ class MosqueRepository(private val database: MosqueDatabase) {
     }
 
     suspend fun approveTransaction(transactionId: String, approverName: String) {
-        val all = database.transactionDao().getAllTransactions()
-        // Find and update
-        // We can do it directly with a query or retrieve & update
-        val list = mutableListOf<TransactionEntity>()
-        // Let's do updateTransaction
+        val txn = database.transactionDao().getTransactionById(transactionId) ?: return
+        updateTransactionStatus(txn, "approved", approverName)
     }
 
     suspend fun updateTransactionStatus(transaction: TransactionEntity, status: String, approver: String) {
@@ -206,7 +203,7 @@ class MosqueRepository(private val database: MosqueDatabase) {
         logAudit("EVENT_PROGRAM_CREATED", "নতুন মসজিদ অনুষ্ঠান: ${event.title} (${event.dateStr})")
     }
 
-    private suspend fun logAudit(action: String, details: String, actor: String = "মো: রফিকুল ইসলাম (সভাপতি)") {
+    private suspend fun logAudit(action: String, details: String, actor: String = "কমিটি প্রশাসন") {
         val time = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
         database.auditDao().insertLog(
             AuditLogEntity(

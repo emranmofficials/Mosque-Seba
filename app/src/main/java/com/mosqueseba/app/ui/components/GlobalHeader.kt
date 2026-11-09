@@ -65,10 +65,15 @@ fun GlobalHeader(
                     Text(
                         text = when (currentRole) {
                             UserRole.PRESIDENT -> "মো: রফিকুল ইসলাম"
+                            UserRole.VICE_PRESIDENT -> "আলহাজ্ব আব্দুল বারী"
                             UserRole.GENERAL_SECRETARY -> "ইঞ্জি: আব্দুল্লাহ আল মামুন"
                             UserRole.TREASURER -> "হাজী মো: আবুল কাসেম"
+                            UserRole.ORGANIZING_SECRETARY -> "মো: আসাদুজ্জামান"
+                            UserRole.EXECUTIVE_MEMBER -> "মো: শফিকুল ইসলাম"
                             UserRole.IMAM -> "মাওলানা মুফতি মিজানুর রহমান"
-                            else -> "সদস্য ব্যবহারকারী"
+                            UserRole.MUAZZIN -> "হাফেজ ক্বারী ফয়সাল আহমেদ"
+                            UserRole.KHADEM -> "মো: বেলাল হোসেন"
+                            UserRole.GENERAL_MEMBER -> "মো: তারেক মাহমুদ"
                         },
                         style = MaterialTheme.typography.titleMedium,
                         color = Color.White,

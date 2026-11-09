@@ -140,6 +140,116 @@ fun DashboardKpiGrid(
                 }
             }
         }
+        UserRole.TREASURER -> {
+            Column {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    KpiCardItem(
+                        modifier = Modifier.weight(1f),
+                        title = "নগদ ও ব্যাংক তহবিল",
+                        value = "৳${String.format("%,.0f", netBalance)}",
+                        subtext = "বর্তমান নেট ক্যাশ স্থিতি",
+                        icon = Icons.Default.AccountBalanceWallet,
+                        iconBg = MosqueSuccessGreen.copy(alpha = 0.1f),
+                        iconColor = MosqueSuccessGreen,
+                        onClick = { onKpiClick("finance") }
+                    )
+                    KpiCardItem(
+                        modifier = Modifier.weight(1f),
+                        title = "বকেয়া চাঁদা রেজিস্টার",
+                        value = "৳${String.format("%,.0f", dueChanda)}",
+                        subtext = "চলতি মাস আদায়যোগ্য",
+                        icon = Icons.Default.PendingActions,
+                        iconBg = MosqueWarningAmber.copy(alpha = 0.1f),
+                        iconColor = MosqueWarningAmber,
+                        onClick = { onKpiClick("treasurer_chanda") }
+                    )
+                }
+                Spacer(modifier = Modifier.height(10.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    KpiCardItem(
+                        modifier = Modifier.weight(1f),
+                        title = "অপেক্ষমান ব্যয় ভাউচার",
+                        value = "$pendingItems টি ভাউচার",
+                        subtext = "অনুমোদনের অপেক্ষায়",
+                        icon = Icons.Default.AssignmentLate,
+                        iconBg = MosqueUrgentRed.copy(alpha = 0.1f),
+                        iconColor = MosqueUrgentRed,
+                        onClick = { onKpiClick("pending") }
+                    )
+                    KpiCardItem(
+                        modifier = Modifier.weight(1f),
+                        title = "স্টাফ বেতন ও পে-রোল",
+                        value = "৪ জন স্টাফ",
+                        subtext = "চলতি মাসের বেতন প্রস্তুত",
+                        icon = Icons.Default.Badge,
+                        iconBg = MosqueEmeraldPrimary.copy(alpha = 0.1f),
+                        iconColor = MosqueEmeraldPrimary,
+                        onClick = { onKpiClick("treasurer_payroll") }
+                    )
+                }
+            }
+        }
+        UserRole.GENERAL_SECRETARY, UserRole.ORGANIZING_SECRETARY, UserRole.EXECUTIVE_MEMBER -> {
+            Column {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    KpiCardItem(
+                        modifier = Modifier.weight(1f),
+                        title = "নিবন্ধিত সদস্য পরিষদ",
+                        value = "$totalMembers জন",
+                        subtext = "৯ জন কার্যনির্বাহী পরিষদ",
+                        icon = Icons.Default.Groups,
+                        iconBg = MosqueEmeraldPrimary.copy(alpha = 0.1f),
+                        iconColor = MosqueEmeraldPrimary,
+                        onClick = { onKpiClick("members") }
+                    )
+                    KpiCardItem(
+                        modifier = Modifier.weight(1f),
+                        title = "আসন্ন কমিটি সভা",
+                        value = "১৫ সেপ্টেম্বর",
+                        subtext = "বাদ আসর • সাধারণ সভা",
+                        icon = Icons.Default.EventAvailable,
+                        iconBg = MosqueInfoBlue.copy(alpha = 0.1f),
+                        iconColor = MosqueInfoBlue,
+                        onClick = { onKpiClick("meetings") }
+                    )
+                }
+                Spacer(modifier = Modifier.height(10.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    KpiCardItem(
+                        modifier = Modifier.weight(1f),
+                        title = "সক্রিয় সার্কুলার/নোটিশ",
+                        value = "২টি নোটিশ",
+                        subtext = "সাধারণ ও জরুরি ঘোষণা",
+                        icon = Icons.Default.Campaign,
+                        iconBg = MosqueGold.copy(alpha = 0.15f),
+                        iconColor = MosqueGoldDeep,
+                        onClick = { onKpiClick("notices") }
+                    )
+                    KpiCardItem(
+                        modifier = Modifier.weight(1f),
+                        title = "সমাজকল্যাণ তহবিল",
+                        value = "৩টি আবেদন",
+                        subtext = "চিকিৎসা ও ত্রাণ অনুদান",
+                        icon = Icons.Default.VolunteerActivism,
+                        iconBg = MosqueSuccessGreen.copy(alpha = 0.1f),
+                        iconColor = MosqueSuccessGreen,
+                        onClick = { onKpiClick("welfare") }
+                    )
+                }
+            }
+        }
         else -> {
             Column {
         Row(
@@ -148,7 +258,7 @@ fun DashboardKpiGrid(
         ) {
             KpiCardItem(
                 modifier = Modifier.weight(1f),
-                title = "মোট সদস্য",
+                title = "মোট সদস্য পরিষদ",
                 value = "$totalMembers জন",
                 subtext = "৯ জন সক্রিয় পরিষদ",
                 icon = Icons.Default.Groups,
@@ -291,6 +401,14 @@ fun QuickActionsGrid(
             QuickActionItem("view_prayers", "নামাজের সময়", Icons.Default.AccessTime, MosqueSuccessGreen),
             QuickActionItem("publish_notice", "নোটিশ দেখুন", Icons.Default.Campaign, MosqueEmeraldDark),
             QuickActionItem("staff_profile", "বেতন স্লিপ", Icons.Default.AccountBalanceWallet, MosqueUrgentRed)
+        )
+        UserRole.TREASURER -> listOf(
+            QuickActionItem("add_income", "আয় এন্ট্রি", Icons.Default.AddCircle, MosqueSuccessGreen),
+            QuickActionItem("add_expense", "ব্যয় ভাউচার", Icons.Default.RemoveCircle, MosqueUrgentRed),
+            QuickActionItem("receive_chanda", "চাঁদা গ্রহণ", Icons.Default.Payments, MosqueGoldDeep),
+            QuickActionItem("treasurer_payroll", "বেতন বিতরণ", Icons.Default.Badge, MosqueEmeraldPrimary),
+            QuickActionItem("madrasa", "মাদরাসা ফি", Icons.Default.School, MosqueInfoBlue),
+            QuickActionItem("treasurer_report", "হিসাব রিপোর্ট", Icons.Default.Assessment, MosqueEmeraldDark)
         )
         UserRole.GENERAL_SECRETARY, UserRole.ORGANIZING_SECRETARY, UserRole.EXECUTIVE_MEMBER -> listOf(
             QuickActionItem("add_member", "নতুন সদস্য", Icons.Default.PersonAdd, MosqueEmeraldPrimary),

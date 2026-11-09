@@ -45,6 +45,9 @@ interface TransactionDao {
     @Query("SELECT * FROM transactions ORDER BY createdAt DESC")
     fun getAllTransactions(): Flow<List<TransactionEntity>>
 
+    @Query("SELECT * FROM transactions WHERE id = :id")
+    suspend fun getTransactionById(id: String): TransactionEntity?
+
     @Query("SELECT * FROM transactions WHERE approvalStatus = 'pending' ORDER BY createdAt DESC")
     fun getPendingTransactions(): Flow<List<TransactionEntity>>
 

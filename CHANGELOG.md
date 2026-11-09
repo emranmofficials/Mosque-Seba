@@ -2,6 +2,18 @@
 
 All notable changes to the **মসজিদ সেবা (Mosque Seba)** project will be documented in this file.
 
+## [1.0.3] - 2026-11-09
+### Added
+- **Dedicated Role-Based Interface Profiles (PRD v2.0)**:
+  - **Treasurer (কোষাধ্যক্ষ)**: Distinct 5-tab financial command navigation (Dashboard, Income/Expense, Chanda Register, Staff Payroll & Madrasa Fees, Audit Reports). Custom cash/bank KPI and quick actions.
+  - **General Secretary (সাধারণ সম্পাদক)**: Dedicated secretariat navigation (Dashboard, Member Council, Committee Meetings & Resolutions, Notice Board, Welfare Fund).
+  - **President & Executive**: Administrative command center, voucher approval workflows, member directory, circulars and full mosque operations.
+  - **Imam & Religious Staff**: Daily waqt duty roster, meal provider schedules, maktab/hifz progress tracking and salary status.
+  - **General Member**: Musalli portal for personal chanda payment/history, verified digital QR receipts, transparent fund balance and notices.
+- **Repository & DAO Enhancements**:
+  - Implemented `getTransactionById` in `TransactionDao` and completed `approveTransaction` in `MosqueRepository`.
+  - Generalized audit log actor attribution.
+
 ## [1.0.2] - 2026-10-29
 ### Added
 - **Official 3D Launcher Icons & Brand Logo**:

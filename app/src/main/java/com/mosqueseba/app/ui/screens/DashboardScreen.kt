@@ -75,9 +75,17 @@ fun DashboardScreen(
                 onKpiClick = { key ->
                     when (key) {
                         "members" -> onNavigateToTab(1)
-                        "finance" -> onNavigateToTab(2)
+                        "finance" -> onNavigateToTab(if (currentRole == com.mosqueseba.app.data.model.UserRole.TREASURER) 1 else 2)
+                        "treasurer_chanda" -> onNavigateToTab(2)
+                        "treasurer_payroll" -> onNavigateToTab(3)
+                        "meetings" -> onNavigateToTab(if (currentRole == com.mosqueseba.app.data.model.UserRole.GENERAL_SECRETARY) 2 else 0)
                         "chanda" -> onOpenDialog("receive_chanda")
-                        "pending" -> onNavigateToTab(2)
+                        "pending" -> onNavigateToTab(if (currentRole == com.mosqueseba.app.data.model.UserRole.TREASURER) 1 else 2)
+                        "roster" -> onNavigateToTab(1)
+                        "food" -> onNavigateToTab(2)
+                        "madrasa" -> onNavigateToTab(3)
+                        "staff_profile" -> onNavigateToTab(4)
+                        "my_chanda" -> onNavigateToTab(1)
                         else -> onOpenDialog(key)
                     }
                 }
@@ -94,20 +102,27 @@ fun DashboardScreen(
             )
         }
 
-        // 6. Upcoming Meetings Card
-        item {
-            UpcomingMeetingsCard(
-                meetings = allMeetings,
-                onScheduleClick = { onOpenDialog("schedule_meeting") }
-            )
+        // 6. Upcoming Meetings Card (Visible to Committee leadership)
+        if (currentRole.level <= 3 && currentRole != com.mosqueseba.app.data.model.UserRole.IMAM && currentRole != com.mosqueseba.app.data.model.UserRole.MUAZZIN) {
+            item {
+                UpcomingMeetingsCard(
+                    meetings = allMeetings,
+                    onScheduleClick = { onOpenDialog("schedule_meeting") }
+                )
+            }
         }
 
-        // 7. Recent Financial Activity
-        item {
-            RecentActivityCard(
-                transactions = allTransactions.take(4),
-                onViewAllClick = { onNavigateToTab(2) }
-            )
+        // 7. Recent Financial Activity (Visible to Committee leadership only)
+        if (currentRole.level <= 3 && currentRole != com.mosqueseba.app.data.model.UserRole.IMAM && currentRole != com.mosqueseba.app.data.model.UserRole.MUAZZIN) {
+            item {
+                RecentActivityCard(
+                    transactions = allTransactions.take(4),
+                    onViewAllClick = {
+                        val financeTab = if (currentRole == com.mosqueseba.app.data.model.UserRole.TREASURER) 1 else 2
+                        onNavigateToTab(financeTab)
+                    }
+                )
+            }
         }
 
         // Bottom space padding

@@ -144,8 +144,24 @@ fun MosqueAppShell(viewModel: MosqueViewModel) {
                                 if (idx != -1) currentTabIndex = idx
                             }
                             "welfare" -> {
-                                val idx = currentNavItems.indexOfFirst { it.destinationKey == "welfare" }
+                                val idx = currentNavItems.indexOfFirst { it.destinationKey == "welfare" || it.destinationKey == "secretary_welfare" }
                                 if (idx != -1) currentTabIndex = idx
+                            }
+                            "meetings" -> {
+                                val idx = currentNavItems.indexOfFirst { it.destinationKey == "secretary_meetings" }
+                                if (idx != -1) currentTabIndex = idx else showScheduleMeetingDialog = true
+                            }
+                            "treasurer_payroll" -> {
+                                val idx = currentNavItems.indexOfFirst { it.destinationKey == "treasurer_payroll" }
+                                if (idx != -1) currentTabIndex = idx
+                            }
+                            "treasurer_report" -> {
+                                val idx = currentNavItems.indexOfFirst { it.destinationKey == "treasurer_report" || it.destinationKey == "finance" }
+                                if (idx != -1) currentTabIndex = idx
+                            }
+                            "treasurer_chanda" -> {
+                                val idx = currentNavItems.indexOfFirst { it.destinationKey == "treasurer_chanda" }
+                                if (idx != -1) currentTabIndex = idx else showReceiveChandaDialog = true
                             }
                         }
                     }
@@ -175,6 +191,42 @@ fun MosqueAppShell(viewModel: MosqueViewModel) {
                     onAddIncomeClick = null,
                     onAddExpenseClick = null,
                     isReadOnlyTransparencyMode = true
+                )
+                "treasurer_chanda" -> MoreScreen(
+                    viewModel = viewModel,
+                    initialSubModule = "chanda",
+                    onOpenReceiveChanda = { showReceiveChandaDialog = true },
+                    onOpenScheduleMeeting = { showScheduleMeetingDialog = true }
+                )
+                "treasurer_payroll" -> MoreScreen(
+                    viewModel = viewModel,
+                    initialSubModule = "staff",
+                    onOpenReceiveChanda = { showReceiveChandaDialog = true },
+                    onOpenScheduleMeeting = { showScheduleMeetingDialog = true }
+                )
+                "treasurer_report" -> FinanceScreen(
+                    viewModel = viewModel,
+                    onAddIncomeClick = {
+                        transactionInitialType = "INCOME"
+                        showAddTransactionDialog = true
+                    },
+                    onAddExpenseClick = {
+                        transactionInitialType = "EXPENSE"
+                        showAddTransactionDialog = true
+                    },
+                    isReadOnlyTransparencyMode = false
+                )
+                "secretary_meetings" -> MoreScreen(
+                    viewModel = viewModel,
+                    initialSubModule = "meetings",
+                    onOpenReceiveChanda = { showReceiveChandaDialog = true },
+                    onOpenScheduleMeeting = { showScheduleMeetingDialog = true }
+                )
+                "secretary_welfare" -> MoreScreen(
+                    viewModel = viewModel,
+                    initialSubModule = "welfare",
+                    onOpenReceiveChanda = { showReceiveChandaDialog = true },
+                    onOpenScheduleMeeting = { showScheduleMeetingDialog = true }
                 )
                 "notices" -> NoticesScreen(
                     viewModel = viewModel,
