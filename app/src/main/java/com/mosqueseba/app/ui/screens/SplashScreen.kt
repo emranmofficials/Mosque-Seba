@@ -7,9 +7,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -175,18 +173,19 @@ fun SplashScreen(
             Spacer(modifier = Modifier.height(12.dp))
 
             // Official Slogan Banner
-            Surface(
-                color = Color.White.copy(alpha = 0.08f),
-                shape = RoundedCornerShape(20.dp),
-                border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.15f))
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(Color.White.copy(alpha = 0.08f))
+                    .border(1.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(20.dp))
+                    .padding(horizontal = 14.dp, vertical = 6.dp)
             ) {
                 Text(
                     text = "মসজিদের খেদমতে আধুনিক প্রযুক্তি, পরিচালনায় স্বচ্ছ আস্থা",
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium,
                     color = Color.White.copy(alpha = 0.9f),
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
+                    textAlign = TextAlign.Center
                 )
             }
 

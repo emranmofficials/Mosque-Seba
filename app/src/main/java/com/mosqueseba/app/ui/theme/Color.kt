@@ -21,6 +21,7 @@ val MosqueCardBorder = Color(0xFFE2E8F0)
 val MosqueCardBorderSubtle = Color(0xFFEDF2F7)
 
 val MosqueTextPrimary = Color(0xFF0F172A)
+val MosqueTextDark = Color(0xFF0F172A)
 val MosqueTextSecondary = Color(0xFF475569)
 val MosqueTextMuted = Color(0xFF94A3B8)
 
