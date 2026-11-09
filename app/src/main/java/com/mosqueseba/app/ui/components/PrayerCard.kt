@@ -37,13 +37,11 @@ fun PrayerCard(
         PrayerTimeItem("ইশা", "০৭:৪৫", "০৮:১৫")
     )
 
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(18.dp)),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        border = BorderStroke(1.dp, MosqueCardBorderSubtle)
+    MehrabArchCard(
+        modifier = Modifier.fillMaxWidth(),
+        backgroundColor = Color.White,
+        borderColor = MosqueCardBorderGold.copy(alpha = 0.6f),
+        elevation = 3.dp
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
             // Card Title

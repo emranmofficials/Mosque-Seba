@@ -26,18 +26,16 @@ fun HeroCard(mosque: MosqueEntity?) {
     val address = mosque?.address ?: "মিরপুর-১০, ঢাকা-১২১৬"
     val committeeId = mosque?.committeeId ?: "MC-DHK-2024"
 
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp)),
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.15f))
+    MehrabArchCard(
+        modifier = Modifier.fillMaxWidth(),
+        backgroundColor = Color.Transparent,
+        borderColor = MosqueCardBorderGold.copy(alpha = 0.5f),
+        elevation = 4.dp
     ) {
         Box(
             modifier = Modifier
-                .background(MosqueEmeraldGradient)
-                .padding(20.dp)
+                .background(MosqueEmeraldDarkGradient)
+                .padding(18.dp)
         ) {
             Column {
                 Row(

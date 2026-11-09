@@ -3,53 +3,86 @@ package com.mosqueseba.app.ui.theme
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 
-// Islamic Modern Design System Palette
-val MosqueEmeraldPrimary = Color(0xFF1B5E20)
-val MosqueEmeraldDark = Color(0xFF0D3813)
-val MosqueEmeraldLight = Color(0xFF2E7D32)
-val MosqueGreenAccent = Color(0xFF4CAF50)
+// Islamic Modern Design System Palette (মেহরাব ও অ্যারাবেস্ক কালার প্যালেট)
+val MosqueEmeraldPrimary = Color(0xFF064E3B) // Rich Islamic Emerald
+val MosqueEmeraldDark = Color(0xFF022C22)    // Deep Sanctuary Green
+val MosqueEmeraldLight = Color(0xFF047857)   // Vibrant Prayer Green
+val MosqueEmeraldSoft = Color(0xFFE6F4EA)    // Soft Tinted Emerald
+val MosqueGreenAccent = Color(0xFF10B981)
 
-val MosqueGold = Color(0xFFFFC107)
-val MosqueGoldDeep = Color(0xFFFFA000)
-val MosqueGoldLight = Color(0xFFFFF8E1)
-val MosqueGoldSoft = Color(0xFFFFFBEB)
+// Royal Islamic Gold Leaf & Bronze Accents
+val MosqueGold = Color(0xFFF59E0B)           // Radiant Dome Gold
+val MosqueGoldDeep = Color(0xFFD97706)       // Antique Bronze / Minaret Gold
+val MosqueGoldDark = Color(0xFFB45309)       // Deep Royal Ochre
+val MosqueGoldLight = Color(0xFFFEF3C7)      // Warm Gold Shimmer
+val MosqueGoldSoft = Color(0xFFFFFBEB)       // Soft Creamy Ivory Gold
 
-val MosqueBgLight = Color(0xFFF8FAFC)
+// Islamic Clean Surfaces & Warm Parchment
+val MosqueBgLight = Color(0xFFFBF9F5)        // Warm Islamic Parchment Ivory
 val MosqueSurface = Color(0xFFFFFFFF)
 val MosqueCardBg = Color(0xFFFFFFFF)
-val MosqueCardBorder = Color(0xFFE2E8F0)
-val MosqueCardBorderSubtle = Color(0xFFEDF2F7)
+val MosqueCardBorder = Color(0xFFE5E7EB)
+val MosqueCardBorderSubtle = Color(0xFFF3F4F6)
+val MosqueCardBorderGold = Color(0xFFFDE68A)
 
+// Typography & Ink Colors
 val MosqueTextPrimary = Color(0xFF0F172A)
 val MosqueTextDark = Color(0xFF0F172A)
 val MosqueTextSecondary = Color(0xFF475569)
 val MosqueTextMuted = Color(0xFF94A3B8)
 
+// Status & Alert Colors
 val MosqueUrgentRed = Color(0xFFDC2626)
 val MosqueWarningAmber = Color(0xFFD97706)
 val MosqueSuccessGreen = Color(0xFF16A34A)
 val MosqueInfoBlue = Color(0xFF0284C7)
 
-// Premium Islamic Gradients
+// Role-Specific Identity Accent Palettes
+val RolePresidentAccent = Color(0xFFD97706)     // Royal Executive Gold
+val RoleTreasurerAccent = Color(0xFF059669)     // Treasury Ledger Emerald
+val RoleSecretaryAccent = Color(0xFF2563EB)     // Secretariat Sapphire Blue
+val RoleImamAccent = Color(0xFF047857)          // Sanctuary Mihrab Green
+val RoleMusalliAccent = Color(0xFF0D9488)       // Devotional Teal
+
+// Premium Islamic Mehrab & Minaret Gradients
 val MosqueEmeraldGradient = Brush.linearGradient(
     colors = listOf(
-        Color(0xFF0A2E10),
-        Color(0xFF1B5E20),
-        Color(0xFF2E7D32)
+        Color(0xFF022C22),
+        Color(0xFF064E3B),
+        Color(0xFF047857)
     )
 )
 
 val MosqueEmeraldDarkGradient = Brush.verticalGradient(
     colors = listOf(
-        Color(0xFF0D3813),
-        Color(0xFF1B5E20)
+        Color(0xFF011C15),
+        Color(0xFF022C22),
+        Color(0xFF064E3B)
     )
 )
 
 val MosqueGoldGradient = Brush.linearGradient(
     colors = listOf(
-        Color(0xFFFFD54F),
-        Color(0xFFFFB300)
+        Color(0xFFFDE68A),
+        Color(0xFFF59E0B),
+        Color(0xFFD97706)
     )
 )
 
+val IslamicMehrabHeaderGradient = Brush.verticalGradient(
+    colors = listOf(
+        Color(0xFF011812),
+        Color(0xFF022C22),
+        Color(0xFF064E3B)
+    )
+)
+
+val IslamicGoldTrimGradient = Brush.horizontalGradient(
+    colors = listOf(
+        Color.Transparent,
+        Color(0xFFF59E0B).copy(alpha = 0.8f),
+        Color(0xFFFDE68A),
+        Color(0xFFF59E0B).copy(alpha = 0.8f),
+        Color.Transparent
+    )
+)

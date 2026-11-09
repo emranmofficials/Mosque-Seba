@@ -126,45 +126,87 @@ fun GlobalHeader(
 
                     DropdownMenu(
                         expanded = showRoleMenu,
-                        onDismissRequest = { showRoleMenu = false }
+                        onDismissRequest = { showRoleMenu = false },
+                        shape = RoundedCornerShape(16.dp),
+                        containerColor = Color.White
                     ) {
-                        Text(
-                            text = "ভূমিকা পরিবর্তন করুন (পরীক্ষা)",
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MosqueTextSecondary
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(3.dp)
+                                .background(IslamicGoldTrimGradient)
                         )
-                        HorizontalDivider()
-                        UserRole.entries.forEach { role ->
-                            DropdownMenuItem(
-                                text = {
-                                    Text(
-                                        text = role.titleBn,
-                                        fontWeight = if (role == currentRole) FontWeight.Bold else FontWeight.Normal,
-                                        color = if (role == currentRole) MosqueEmeraldPrimary else MosqueTextPrimary
-                                    )
-                                },
-                                onClick = {
-                                    onRoleSelected(role)
-                                    showRoleMenu = false
-                                }
+                        Column(modifier = Modifier.padding(vertical = 4.dp)) {
+                            Text(
+                                text = "۞  মসজিদ পরিচালনা পর্ষদ (কমিটি পদবি)  ۞",
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 14.dp, vertical = 8.dp),
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = MosqueEmeraldDark,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
                             )
-                        }
-                        if (onLogout != null) {
-                            HorizontalDivider()
-                            DropdownMenuItem(
-                                text = {
-                                    Text(
-                                        text = "🚪 লগআউট করুন",
-                                        fontWeight = FontWeight.Bold,
-                                        color = MosqueUrgentRed
-                                    )
-                                },
-                                onClick = {
-                                    showRoleMenu = false
-                                    onLogout()
+                            HorizontalDivider(color = MosqueCardBorderGold.copy(alpha = 0.5f))
+
+                            UserRole.entries.forEach { role ->
+                                val isSelected = role == currentRole
+                                val roleIcon = when (role) {
+                                    UserRole.PRESIDENT, UserRole.VICE_PRESIDENT -> "👑"
+                                    UserRole.TREASURER -> "💰"
+                                    UserRole.GENERAL_SECRETARY, UserRole.ORGANIZING_SECRETARY, UserRole.EXECUTIVE_MEMBER -> "📝"
+                                    UserRole.IMAM, UserRole.MUAZZIN, UserRole.KHADEM -> "🕌"
+                                    UserRole.GENERAL_MEMBER -> "👥"
                                 }
-                            )
+                                DropdownMenuItem(
+                                    leadingIcon = {
+                                        Text(text = roleIcon, fontSize = 16.sp)
+                                    },
+                                    text = {
+                                        Text(
+                                            text = role.titleBn,
+                                            fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.Medium,
+                                            color = if (isSelected) MosqueEmeraldPrimary else MosqueTextPrimary,
+                                            fontSize = 13.sp
+                                        )
+                                    },
+                                    trailingIcon = if (isSelected) {
+                                        {
+                                            Icon(
+                                                imageVector = Icons.Default.Check,
+                                                contentDescription = "Active",
+                                                tint = MosqueGoldDeep,
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                        }
+                                    } else null,
+                                    onClick = {
+                                        onRoleSelected(role)
+                                        showRoleMenu = false
+                                    },
+                                    modifier = if (isSelected) Modifier.background(MosqueEmeraldSoft.copy(alpha = 0.5f)) else Modifier
+                                )
+                            }
+                            if (onLogout != null) {
+                                HorizontalDivider(color = MosqueCardBorderSubtle)
+                                DropdownMenuItem(
+                                    leadingIcon = {
+                                        Text(text = "🚪", fontSize = 16.sp)
+                                    },
+                                    text = {
+                                        Text(
+                                            text = "লগআউট করুন",
+                                            fontWeight = FontWeight.Bold,
+                                            color = MosqueUrgentRed,
+                                            fontSize = 13.sp
+                                        )
+                                    },
+                                    onClick = {
+                                        showRoleMenu = false
+                                        onLogout()
+                                    }
+                                )
+                            }
                         }
                     }
                 }

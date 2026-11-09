@@ -81,8 +81,8 @@ fun NavigationBottomBar(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(1.dp)
-                    .background(MosqueCardBorderSubtle)
+                    .height(2.dp)
+                    .background(IslamicGoldTrimGradient)
             )
             NavigationBar(
                 containerColor = Color.White,

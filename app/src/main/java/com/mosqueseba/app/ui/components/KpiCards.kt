@@ -330,7 +330,7 @@ fun KpiCardItem(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp, pressedElevation = 5.dp),
-        border = BorderStroke(1.dp, MosqueCardBorderSubtle)
+        border = BorderStroke(1.dp, MosqueCardBorderGold.copy(alpha = 0.6f))
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
             Row(
@@ -430,13 +430,11 @@ fun QuickActionsGrid(
         )
     }
 
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(18.dp)),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        border = BorderStroke(1.dp, MosqueCardBorderSubtle)
+    MehrabArchCard(
+        modifier = Modifier.fillMaxWidth(),
+        backgroundColor = Color.White,
+        borderColor = MosqueCardBorderGold.copy(alpha = 0.6f),
+        elevation = 2.dp
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
             Text(

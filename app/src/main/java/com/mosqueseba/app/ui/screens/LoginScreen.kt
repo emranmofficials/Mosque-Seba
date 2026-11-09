@@ -67,7 +67,17 @@ fun LoginScreen(
                 .padding(horizontal = 20.dp, vertical = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Text(
+                text = "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = MosqueGoldDark,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
 
             // Official Branding Header
             Box(
@@ -109,7 +119,7 @@ fun LoginScreen(
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp)
             )
 
-            Spacer(modifier = Modifier.height(22.dp))
+            RubElHizbDivider(modifier = Modifier.padding(vertical = 4.dp))
 
             // Segmented Tab Selector
             Surface(
@@ -316,14 +326,14 @@ fun LoginScreen(
                         Spacer(modifier = Modifier.height(12.dp))
 
                         Text(
-                            text = "দ্রুত ডেমো ভূমিকা নির্বাচন করুন:",
+                            text = "মসজিদ কমিটি পরিষদ নির্বাচন (সরাসরি প্রবেশ):",
                             style = MaterialTheme.typography.labelSmall,
-                            color = MosqueTextMuted,
+                            color = MosqueEmeraldPrimary,
                             fontWeight = FontWeight.Bold
                         )
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        // Quick demo access chips
+                        // Official role access chips
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -525,7 +535,7 @@ fun LoginScreen(
                     )
                     Spacer(modifier = Modifier.height(10.dp))
                     Text(
-                        text = "• ডেমো টেস্টিংয়ের জন্য 'দ্রুত ডেমো ভূমিকা' বাটনগুলো ব্যবহার করতে পারেন।\n• সভাপতি অ্যাকাউন্ট: 01711-223344 (পাসওয়ার্ড: 123456)\n• কোষাধ্যক্ষ অ্যাকাউন্ট: 01715-556677 (পাসওয়ার্ড: 123456)\n• সাধারণ সম্পাদক অ্যাকাউন্ট: 01912-445566 (পাসওয়ার্ড: 123456)\n• পাসওয়ার্ড ভুলে গেলে কমিটির সভাপতির সাথে যোগাযোগ করুন।",
+                        text = "• পরিচালনা পরিষদ সদস্যগণ তাদের নিবন্ধিত মোবাইল নম্বর ও পাসওয়ার্ড দিয়ে সরাসরি লগইন করতে পারেন।\n• সভাপতি অ্যাকাউন্ট: 01711-223344 (পাসওয়ার্ড: 123456)\n• কোষাধ্যক্ষ অ্যাকাউন্ট: 01715-556677 (পাসওয়ার্ড: 123456)\n• সাধারণ সম্পাদক অ্যাকাউন্ট: 01912-445566 (পাসওয়ার্ড: 123456)\n• অথবা নিচের দ্রুত পদবি নির্বাচন বোতাম চেপে যেকোনো দায়িত্বে সরাসরি প্রবেশ করতে পারবেন।",
                         style = MaterialTheme.typography.bodySmall,
                         lineHeight = 20.sp,
                         color = MosqueTextDark
