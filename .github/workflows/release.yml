@@ -45,6 +45,7 @@ jobs:
 
       - name: Upload APK as Workflow Artifact
         uses: actions/upload-artifact@v4
+        continue-on-error: true
         with:
           name: Mosque-Seba-APK
           path: release-apk/*.apk
@@ -53,7 +54,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
         with:
-          name: "মসজিদ সেবা (Mosque Seba) — ${{ github.ref_name }} Hotfix Release"
+          name: "মসজিদ সেবা (Mosque Seba) — ${{ github.ref_name }} Official Release"
           tag_name: ${{ github.ref_name }}
           draft: false
           prerelease: false
