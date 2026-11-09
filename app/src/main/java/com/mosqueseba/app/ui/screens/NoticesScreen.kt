@@ -1,5 +1,6 @@
 package com.mosqueseba.app.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -126,11 +127,11 @@ fun NoticeCardItem(
     }
 
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp)),
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.5.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(1.dp, if (notice.priority == "urgent") MosqueUrgentRed.copy(alpha = 0.35f) else MosqueCardBorderSubtle)
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
             // Priority & Pinned Header

@@ -5,6 +5,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -89,10 +91,17 @@ fun MosqueAppShell(viewModel: MosqueViewModel) {
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            when (activeDestination) {
-                "dashboard" -> DashboardScreen(
-                    viewModel = viewModel,
-                    onNavigateToTab = { tabIndex ->
+            AnimatedContent(
+                targetState = activeDestination,
+                transitionSpec = {
+                    fadeIn(animationSpec = tween(220)) togetherWith fadeOut(animationSpec = tween(180))
+                },
+                label = "MainTabTransition"
+            ) { destination ->
+                when (destination) {
+                    "dashboard" -> DashboardScreen(
+                        viewModel = viewModel,
+                        onNavigateToTab = { tabIndex ->
                         if (tabIndex in currentNavItems.indices) {
                             currentTabIndex = tabIndex
                         }
@@ -281,6 +290,7 @@ fun MosqueAppShell(viewModel: MosqueViewModel) {
                 )
             }
         }
+    }
     }
 
     // Add Member Dialog

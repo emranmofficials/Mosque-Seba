@@ -2,6 +2,20 @@
 
 All notable changes to the **মসজিদ সেবা (Mosque Seba)** project will be documented in this file.
 
+## [1.0.4] - 2026-11-09
+### Improved & Optimized (UI & Performance)
+- **Islamic Modern Visual Refinement**:
+  - Implemented multi-stop Islamic emerald gradients (`MosqueEmeraldGradient`, `MosqueEmeraldDarkGradient`) and gold metallic accents.
+  - Added subtle card borders (`MosqueCardBorderSubtle`) and elevated depth (`elevation = 2.dp` / `4.dp`, `RoundedCornerShape(16.dp)` / `18.dp` / `20.dp`).
+  - Polished Global Header with rich vertical gradient, gold trim accent divider, and refined logo container.
+  - Upgraded HeroCard, Net Balance Card, and Prayer Waqt card with glowing next-waqt badges and gold callout banners.
+- **Typography & Bengali Script Legibility**:
+  - Optimized typography line-heights (24sp–38sp) to prevent clipping of complex Bengali diacritics and conjuncts.
+- **Buttery-Smooth Tab Transitions & Elevation**:
+  - Added `AnimatedContent` crossfade/slide transitions on bottom bar destination switches for 60/120fps smooth navigation.
+  - Migrated KPI cards and Member cards to native `Card(onClick = ...)` for bounded ripple effects and unclipped drop shadows.
+  - Added subtle top border and elevation to `NavigationBottomBar`.
+
 ## [1.0.3] - 2026-11-09
 ### Added
 - **Dedicated Role-Based Interface Profiles (PRD v2.0)**:

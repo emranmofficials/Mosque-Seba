@@ -1,5 +1,6 @@
 package com.mosqueseba.app.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -67,69 +68,77 @@ fun FinanceScreen(
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(14.dp)),
-                colors = CardDefaults.cardColors(containerColor = MosqueEmeraldPrimary)
+                    .clip(RoundedCornerShape(18.dp)),
+                colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.15f))
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        text = "মসজিদ ফান্ড বর্তমান নিট ব্যালেন্স",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = Color.White.copy(alpha = 0.85f)
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "৳${String.format("%,.0f", netBalance)}",
-                        style = MaterialTheme.typography.headlineLarge,
-                        color = MosqueGold,
-                        fontWeight = FontWeight.ExtraBold
-                    )
-                    Spacer(modifier = Modifier.height(10.dp))
+                Box(
+                    modifier = Modifier
+                        .background(MosqueEmeraldGradient)
+                        .padding(18.dp)
+                ) {
+                    Column {
+                        Text(
+                            text = "মসজিদ ফান্ড বর্তমান নিট ব্যালেন্স",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = Color.White.copy(alpha = 0.85f)
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "৳${String.format("%,.0f", netBalance)}",
+                            style = MaterialTheme.typography.headlineLarge,
+                            color = MosqueGold,
+                            fontWeight = FontWeight.ExtraBold
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .size(24.dp)
-                                    .clip(CircleShape)
-                                    .background(MosqueSuccessGreen.copy(alpha = 0.3f)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.ArrowDownward,
-                                    contentDescription = null,
-                                    tint = Color.White,
-                                    modifier = Modifier.size(14.dp)
-                                )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(26.dp)
+                                        .clip(CircleShape)
+                                        .background(MosqueSuccessGreen.copy(alpha = 0.35f)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.ArrowDownward,
+                                        contentDescription = null,
+                                        tint = Color.White,
+                                        modifier = Modifier.size(15.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Column {
+                                    Text("মোট আদায় (আয়)", fontSize = 10.sp, color = Color.White.copy(alpha = 0.85f))
+                                    Text("৳${String.format("%,.0f", totalIncome)}", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                }
                             }
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Column {
-                                Text("মোট আদায় (আয়)", fontSize = 10.sp, color = Color.White.copy(alpha = 0.8f))
-                                Text("৳${String.format("%,.0f", totalIncome)}", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                            }
-                        }
 
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .size(24.dp)
-                                    .clip(CircleShape)
-                                    .background(MosqueUrgentRed.copy(alpha = 0.3f)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.ArrowUpward,
-                                    contentDescription = null,
-                                    tint = Color.White,
-                                    modifier = Modifier.size(14.dp)
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Column {
-                                Text("মোট খরচ (ব্যয়)", fontSize = 10.sp, color = Color.White.copy(alpha = 0.8f))
-                                Text("৳${String.format("%,.0f", totalExpense)}", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(26.dp)
+                                        .clip(CircleShape)
+                                        .background(MosqueUrgentRed.copy(alpha = 0.35f)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.ArrowUpward,
+                                        contentDescription = null,
+                                        tint = Color.White,
+                                        modifier = Modifier.size(15.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Column {
+                                    Text("মোট খরচ (ব্যয়)", fontSize = 10.sp, color = Color.White.copy(alpha = 0.85f))
+                                    Text("৳${String.format("%,.0f", totalExpense)}", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                }
                             }
                         }
                     }
@@ -296,11 +305,11 @@ fun TransactionCardItem(
     onReject: () -> Unit
 ) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp)),
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.5.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(1.dp, MosqueCardBorderSubtle)
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
             Row(

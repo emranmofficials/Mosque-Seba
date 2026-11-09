@@ -1,5 +1,6 @@
 package com.mosqueseba.app.ui.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -28,21 +29,15 @@ fun HeroCard(mosque: MosqueEntity?) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp)),
+            .clip(RoundedCornerShape(20.dp)),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.15f))
     ) {
         Box(
             modifier = Modifier
-                .background(
-                    Brush.linearGradient(
-                        colors = listOf(
-                            MosqueEmeraldPrimary,
-                            MosqueEmeraldDark
-                        )
-                    )
-                )
-                .padding(18.dp)
+                .background(MosqueEmeraldGradient)
+                .padding(20.dp)
         ) {
             Column {
                 Row(

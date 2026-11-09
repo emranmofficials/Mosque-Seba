@@ -1,5 +1,6 @@
 package com.mosqueseba.app.ui.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -324,13 +325,14 @@ fun KpiCardItem(
     onClick: () -> Unit = {}
 ) {
     Card(
-        modifier = modifier
-            .clip(RoundedCornerShape(14.dp))
-            .clickable { onClick() },
+        onClick = onClick,
+        modifier = modifier,
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.5.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp, pressedElevation = 5.dp),
+        border = BorderStroke(1.dp, MosqueCardBorderSubtle)
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
+        Column(modifier = Modifier.padding(14.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -345,8 +347,8 @@ fun KpiCardItem(
 
                 Box(
                     modifier = Modifier
-                        .size(32.dp)
-                        .clip(RoundedCornerShape(8.dp))
+                        .size(34.dp)
+                        .clip(RoundedCornerShape(10.dp))
                         .background(iconBg),
                     contentAlignment = Alignment.Center
                 ) {
@@ -359,12 +361,12 @@ fun KpiCardItem(
                 }
             }
 
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(6.dp))
 
             Text(
                 text = value,
                 style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.ExtraBold,
                 color = MosqueTextPrimary
             )
 
@@ -431,9 +433,10 @@ fun QuickActionsGrid(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp)),
+            .clip(RoundedCornerShape(18.dp)),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(1.dp, MosqueCardBorderSubtle)
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
             Text(
@@ -456,16 +459,17 @@ fun QuickActionsGrid(
                         Column(
                             modifier = Modifier
                                 .weight(1f)
-                                .clip(RoundedCornerShape(12.dp))
+                                .clip(RoundedCornerShape(14.dp))
                                 .background(MosqueBgLight)
+                                .border(1.dp, MosqueCardBorderSubtle, RoundedCornerShape(14.dp))
                                 .clickable { onActionClick(item.key) }
                                 .padding(vertical = 12.dp, horizontal = 4.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .size(36.dp)
-                                    .clip(RoundedCornerShape(10.dp))
+                                    .size(38.dp)
+                                    .clip(RoundedCornerShape(12.dp))
                                     .background(item.color.copy(alpha = 0.12f)),
                                 contentAlignment = Alignment.Center
                             ) {

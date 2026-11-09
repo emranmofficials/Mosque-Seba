@@ -15,6 +15,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -34,30 +35,36 @@ fun GlobalHeader(
     var showRoleMenu by remember { mutableStateOf(false) }
 
     Surface(
-        color = MosqueEmeraldPrimary,
-        shadowElevation = 4.dp
+        color = Color.Transparent,
+        shadowElevation = 6.dp
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .statusBarsPadding()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+                .background(MosqueEmeraldDarkGradient)
         ) {
-            // Left: App Logo & User Info
             Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .statusBarsPadding()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.weight(1f)
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                // Official Mosque Logo
-                Image(
-                    painter = painterResource(id = R.drawable.app_logo),
-                    contentDescription = "Mosque Seba Logo",
-                    modifier = Modifier
-                        .size(42.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                )
+                // Left: App Logo & User Info
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    // Official Mosque Logo
+                    Image(
+                        painter = painterResource(id = R.drawable.app_logo),
+                        contentDescription = "Mosque Seba Logo",
+                        modifier = Modifier
+                            .size(44.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color.White.copy(alpha = 0.15f))
+                    )
 
                 Spacer(modifier = Modifier.width(10.dp))
 
@@ -191,6 +198,22 @@ fun GlobalHeader(
                     }
                 }
             }
+
+            // Subtle Gold Islamic Accent Trim
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(1.5.dp)
+                    .background(
+                        Brush.horizontalGradient(
+                            listOf(
+                                Color.Transparent,
+                                MosqueGold.copy(alpha = 0.7f),
+                                Color.Transparent
+                            )
+                        )
+                    )
+            )
         }
     }
 }

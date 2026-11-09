@@ -1,5 +1,6 @@
 package com.mosqueseba.app.ui.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -39,9 +40,10 @@ fun PrayerCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp)),
+            .clip(RoundedCornerShape(18.dp)),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(1.dp, MosqueCardBorderSubtle)
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
             // Card Title
@@ -90,54 +92,67 @@ fun PrayerCard(
                     Column(
                         modifier = Modifier
                             .weight(1f)
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(
-                                if (item.isNext) MosqueEmeraldPrimary else MosqueBgLight
+                            .clip(RoundedCornerShape(12.dp))
+                            .then(
+                                if (item.isNext) {
+                                    Modifier
+                                        .background(MosqueEmeraldDarkGradient)
+                                        .border(
+                                            width = 1.dp,
+                                            color = MosqueGold,
+                                            shape = RoundedCornerShape(12.dp)
+                                        )
+                                } else {
+                                    Modifier
+                                        .background(MosqueBgLight)
+                                        .border(
+                                            width = 1.dp,
+                                            color = MosqueCardBorderSubtle,
+                                            shape = RoundedCornerShape(12.dp)
+                                        )
+                                }
                             )
-                            .border(
-                                width = if (item.isNext) 1.dp else 0.dp,
-                                color = if (item.isNext) MosqueGold else Color.Transparent,
-                                shape = RoundedCornerShape(10.dp)
-                            )
-                            .padding(vertical = 8.dp, horizontal = 2.dp),
+                            .padding(vertical = 10.dp, horizontal = 2.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
                             text = item.nameBn,
                             style = MaterialTheme.typography.labelSmall,
-                            color = if (item.isNext) MosqueGold else MosqueTextPrimary,
+                            color = if (item.isNext) MosqueGold else MosqueTextSecondary,
                             fontWeight = if (item.isNext) FontWeight.Bold else FontWeight.Medium,
                             maxLines = 1
                         )
-                        Spacer(modifier = Modifier.height(2.dp))
+                        Spacer(modifier = Modifier.height(3.dp))
                         Text(
                             text = item.iqamahTime,
                             style = MaterialTheme.typography.labelMedium,
                             color = if (item.isNext) Color.White else MosqueEmeraldDark,
                             fontWeight = FontWeight.Bold
                         )
+                        Spacer(modifier = Modifier.height(1.dp))
                         Text(
                             text = "আজান ${item.azanTime}",
                             style = MaterialTheme.typography.labelSmall,
                             fontSize = 9.sp,
-                            color = if (item.isNext) Color.White.copy(alpha = 0.8f) else MosqueTextMuted
+                            color = if (item.isNext) Color.White.copy(alpha = 0.85f) else MosqueTextMuted
                         )
                     }
                     if (item != prayers.last()) {
-                        Spacer(modifier = Modifier.width(4.dp))
+                        Spacer(modifier = Modifier.width(5.dp))
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             // Next prayer callout banner
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(MosqueGoldLight)
-                    .padding(horizontal = 10.dp, vertical = 6.dp),
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(MosqueGoldSoft)
+                    .border(1.dp, MosqueGold.copy(alpha = 0.4f), RoundedCornerShape(10.dp))
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {

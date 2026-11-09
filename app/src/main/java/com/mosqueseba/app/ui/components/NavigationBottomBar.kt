@@ -1,6 +1,7 @@
 package com.mosqueseba.app.ui.components
 
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
@@ -72,39 +73,52 @@ fun NavigationBottomBar(
 ) {
     val items = getNavItemsForRole(currentRole)
 
-    NavigationBar(
-        containerColor = Color.White,
-        contentColor = MosqueEmeraldPrimary,
-        tonalElevation = 8.dp
+    Surface(
+        color = Color.White,
+        shadowElevation = 8.dp
     ) {
-        items.forEachIndexed { index, item ->
-            val isSelected = currentTabIndex == index
-            NavigationBarItem(
-                selected = isSelected,
-                onClick = { onTabSelected(index) },
-                icon = {
-                    Icon(
-                        imageVector = if (isSelected) item.selectedIcon else item.unselectedIcon,
-                        contentDescription = item.titleBn,
-                        modifier = Modifier.size(22.dp)
-                    )
-                },
-                label = {
-                    Text(
-                        text = item.titleBn,
-                        style = MaterialTheme.typography.labelSmall,
-                        fontSize = 11.sp,
-                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                    )
-                },
-                colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = MosqueEmeraldPrimary,
-                    selectedTextColor = MosqueEmeraldPrimary,
-                    indicatorColor = MosqueEmeraldLight.copy(alpha = 0.15f),
-                    unselectedIconColor = MosqueTextSecondary,
-                    unselectedTextColor = MosqueTextSecondary
-                )
+        Column {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(1.dp)
+                    .background(MosqueCardBorderSubtle)
             )
+            NavigationBar(
+                containerColor = Color.White,
+                contentColor = MosqueEmeraldPrimary,
+                tonalElevation = 0.dp
+            ) {
+                items.forEachIndexed { index, item ->
+                    val isSelected = currentTabIndex == index
+                    NavigationBarItem(
+                        selected = isSelected,
+                        onClick = { onTabSelected(index) },
+                        icon = {
+                            Icon(
+                                imageVector = if (isSelected) item.selectedIcon else item.unselectedIcon,
+                                contentDescription = item.titleBn,
+                                modifier = Modifier.size(22.dp)
+                            )
+                        },
+                        label = {
+                            Text(
+                                text = item.titleBn,
+                                style = MaterialTheme.typography.labelSmall,
+                                fontSize = 11.sp,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                            )
+                        },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = MosqueEmeraldPrimary,
+                            selectedTextColor = MosqueEmeraldPrimary,
+                            indicatorColor = MosqueEmeraldLight.copy(alpha = 0.16f),
+                            unselectedIconColor = MosqueTextMuted,
+                            unselectedTextColor = MosqueTextSecondary
+                        )
+                    )
+                }
+            }
         }
     }
 }
