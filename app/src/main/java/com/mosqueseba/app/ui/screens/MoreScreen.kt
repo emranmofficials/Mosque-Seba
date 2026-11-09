@@ -236,9 +236,9 @@ fun MoreScreen(
                 val displayedStaff = if (isStaffRole) {
                     activeStaff.filter {
                         when (currentRole) {
-                            UserRole.IMAM -> it.role.equals("imam", ignoreCase = true)
-                            UserRole.MUAZZIN -> it.role.equals("muazzin", ignoreCase = true)
-                            UserRole.KHADEM -> it.role.equals("khadem", ignoreCase = true)
+                            UserRole.IMAM -> it.roleCode.equals("imam", ignoreCase = true)
+                            UserRole.MUAZZIN -> it.roleCode.equals("muazzin", ignoreCase = true)
+                            UserRole.KHADEM -> it.roleCode.equals("khadem", ignoreCase = true)
                             else -> true
                         }
                     }.ifEmpty { activeStaff.take(1) }
