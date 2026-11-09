@@ -46,12 +46,14 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MosqueAppShell(viewModel: MosqueViewModel) {
     var currentTabIndex by remember { mutableIntStateOf(0) }
+    var overlaySubModule by remember { mutableStateOf<String?>(null) }
     val currentRole by viewModel.currentUserRole.collectAsState()
     val allMembers by viewModel.allMembers.collectAsState()
 
-    // Reset tab to 0 whenever role switches
+    // Reset tab and overlay whenever role switches
     LaunchedEffect(currentRole) {
         currentTabIndex = 0
+        overlaySubModule = null
     }
 
     val currentNavItems = remember(currentRole) {
@@ -82,7 +84,10 @@ fun MosqueAppShell(viewModel: MosqueViewModel) {
             NavigationBottomBar(
                 currentTabIndex = currentTabIndex,
                 currentRole = currentRole,
-                onTabSelected = { currentTabIndex = it }
+                onTabSelected = { 
+                    currentTabIndex = it
+                    overlaySubModule = null
+                }
             )
         }
     ) { innerPadding ->
@@ -91,93 +96,179 @@ fun MosqueAppShell(viewModel: MosqueViewModel) {
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            AnimatedContent(
-                targetState = activeDestination,
-                transitionSpec = {
-                    fadeIn(animationSpec = tween(220)) togetherWith fadeOut(animationSpec = tween(180))
-                },
-                label = "MainTabTransition"
-            ) { destination ->
-                when (destination) {
-                    "dashboard" -> DashboardScreen(
-                        viewModel = viewModel,
-                        onNavigateToTab = { tabIndex ->
-                        if (tabIndex in currentNavItems.indices) {
-                            currentTabIndex = tabIndex
-                        }
-                    },
-                    onOpenDialog = { dialogKey ->
-                        when (dialogKey) {
-                            "add_member" -> showAddMemberDialog = true
-                            "add_income" -> {
-                                transactionInitialType = "INCOME"
-                                showAddTransactionDialog = true
-                            }
-                            "add_expense" -> {
-                                transactionInitialType = "EXPENSE"
-                                showAddTransactionDialog = true
-                            }
-                            "receive_chanda" -> showReceiveChandaDialog = true
-                            "schedule_meeting" -> showScheduleMeetingDialog = true
-                            "publish_notice" -> showPublishNoticeDialog = true
-                            "members" -> {
-                                val idx = currentNavItems.indexOfFirst { it.destinationKey == "members" || it.destinationKey == "committee" }
-                                if (idx != -1) currentTabIndex = idx
-                            }
-                            "finance", "transparency" -> {
-                                val idx = currentNavItems.indexOfFirst { it.destinationKey == "finance" || it.destinationKey == "transparency" }
-                                if (idx != -1) currentTabIndex = idx
-                            }
-                            "notices" -> {
-                                val idx = currentNavItems.indexOfFirst { it.destinationKey == "notices" }
-                                if (idx != -1) currentTabIndex = idx
-                            }
-                            "my_chanda", "view_receipt" -> {
-                                val idx = currentNavItems.indexOfFirst { it.destinationKey == "my_chanda" }
-                                if (idx != -1) currentTabIndex = idx else showReceiveChandaDialog = true
-                            }
-                            "roster" -> {
-                                val idx = currentNavItems.indexOfFirst { it.destinationKey == "roster" }
-                                if (idx != -1) currentTabIndex = idx
-                            }
-                            "food" -> {
-                                val idx = currentNavItems.indexOfFirst { it.destinationKey == "food" }
-                                if (idx != -1) currentTabIndex = idx
-                            }
-                            "madrasa" -> {
-                                val idx = currentNavItems.indexOfFirst { it.destinationKey == "madrasa" }
-                                if (idx != -1) currentTabIndex = idx
-                            }
-                            "staff_profile" -> {
-                                val idx = currentNavItems.indexOfFirst { it.destinationKey == "staff_profile" }
-                                if (idx != -1) currentTabIndex = idx
-                            }
-                            "welfare" -> {
-                                val idx = currentNavItems.indexOfFirst { it.destinationKey == "welfare" || it.destinationKey == "secretary_welfare" }
-                                if (idx != -1) currentTabIndex = idx
-                            }
-                            "meetings" -> {
-                                val idx = currentNavItems.indexOfFirst { it.destinationKey == "secretary_meetings" }
-                                if (idx != -1) currentTabIndex = idx else showScheduleMeetingDialog = true
-                            }
-                            "treasurer_payroll" -> {
-                                val idx = currentNavItems.indexOfFirst { it.destinationKey == "treasurer_payroll" }
-                                if (idx != -1) currentTabIndex = idx
-                            }
-                            "treasurer_report" -> {
-                                val idx = currentNavItems.indexOfFirst { it.destinationKey == "treasurer_report" || it.destinationKey == "finance" }
-                                if (idx != -1) currentTabIndex = idx
-                            }
-                            "treasurer_chanda" -> {
-                                val idx = currentNavItems.indexOfFirst { it.destinationKey == "treasurer_chanda" }
-                                if (idx != -1) currentTabIndex = idx else showReceiveChandaDialog = true
-                            }
-                        }
-                    }
+            if (overlaySubModule != null) {
+                MoreScreen(
+                    viewModel = viewModel,
+                    initialSubModule = overlaySubModule,
+                    onBack = { overlaySubModule = null },
+                    onOpenReceiveChanda = { showReceiveChandaDialog = true },
+                    onOpenScheduleMeeting = { showScheduleMeetingDialog = true }
                 )
+            } else {
+                AnimatedContent(
+                    targetState = activeDestination,
+                    transitionSpec = {
+                        fadeIn(animationSpec = tween(220)) togetherWith fadeOut(animationSpec = tween(180))
+                    },
+                    label = "MainTabTransition"
+                ) { destination ->
+                    when (destination) {
+                        "dashboard" -> DashboardScreen(
+                            viewModel = viewModel,
+                            onNavigateToTab = { tabIndex ->
+                                if (tabIndex in currentNavItems.indices) {
+                                    currentTabIndex = tabIndex
+                                    overlaySubModule = null
+                                }
+                            },
+                            onOpenDialog = { dialogKey ->
+                                when (dialogKey) {
+                                    "add_member" -> {
+                                        if (currentRole in listOf(
+                                                com.mosqueseba.app.data.model.UserRole.GENERAL_SECRETARY,
+                                                com.mosqueseba.app.data.model.UserRole.ORGANIZING_SECRETARY,
+                                                com.mosqueseba.app.data.model.UserRole.PRESIDENT,
+                                                com.mosqueseba.app.data.model.UserRole.VICE_PRESIDENT
+                                            )
+                                        ) {
+                                            showAddMemberDialog = true
+                                        }
+                                    }
+                                    "add_income" -> {
+                                        if (currentRole in listOf(
+                                                com.mosqueseba.app.data.model.UserRole.TREASURER,
+                                                com.mosqueseba.app.data.model.UserRole.PRESIDENT,
+                                                com.mosqueseba.app.data.model.UserRole.VICE_PRESIDENT
+                                            )
+                                        ) {
+                                            transactionInitialType = "INCOME"
+                                            showAddTransactionDialog = true
+                                        }
+                                    }
+                                    "add_expense" -> {
+                                        if (currentRole in listOf(
+                                                com.mosqueseba.app.data.model.UserRole.TREASURER,
+                                                com.mosqueseba.app.data.model.UserRole.PRESIDENT,
+                                                com.mosqueseba.app.data.model.UserRole.VICE_PRESIDENT
+                                            )
+                                        ) {
+                                            transactionInitialType = "EXPENSE"
+                                            showAddTransactionDialog = true
+                                        }
+                                    }
+                                    "receive_chanda" -> {
+                                        if (currentRole in listOf(
+                                                com.mosqueseba.app.data.model.UserRole.TREASURER,
+                                                com.mosqueseba.app.data.model.UserRole.PRESIDENT,
+                                                com.mosqueseba.app.data.model.UserRole.VICE_PRESIDENT
+                                            )
+                                        ) {
+                                            showReceiveChandaDialog = true
+                                        }
+                                    }
+                                    "schedule_meeting" -> {
+                                        if (currentRole in listOf(
+                                                com.mosqueseba.app.data.model.UserRole.GENERAL_SECRETARY,
+                                                com.mosqueseba.app.data.model.UserRole.ORGANIZING_SECRETARY,
+                                                com.mosqueseba.app.data.model.UserRole.PRESIDENT,
+                                                com.mosqueseba.app.data.model.UserRole.VICE_PRESIDENT
+                                            )
+                                        ) {
+                                            showScheduleMeetingDialog = true
+                                        }
+                                    }
+                                    "publish_notice" -> {
+                                        if (currentRole in listOf(
+                                                com.mosqueseba.app.data.model.UserRole.GENERAL_SECRETARY,
+                                                com.mosqueseba.app.data.model.UserRole.ORGANIZING_SECRETARY,
+                                                com.mosqueseba.app.data.model.UserRole.PRESIDENT,
+                                                com.mosqueseba.app.data.model.UserRole.VICE_PRESIDENT
+                                            )
+                                        ) {
+                                            showPublishNoticeDialog = true
+                                        }
+                                    }
+                                    "members" -> {
+                                        val idx = currentNavItems.indexOfFirst { it.destinationKey == "members" || it.destinationKey == "committee" }
+                                        if (idx != -1) currentTabIndex = idx
+                                    }
+                                    "finance", "transparency" -> {
+                                        val idx = currentNavItems.indexOfFirst { it.destinationKey == "finance" || it.destinationKey == "transparency" }
+                                        if (idx != -1) currentTabIndex = idx
+                                    }
+                                    "pending_approval" -> {
+                                        val idx = currentNavItems.indexOfFirst { it.destinationKey == "finance" }
+                                        if (idx != -1) currentTabIndex = idx
+                                    }
+                                    "notices", "view_notices" -> {
+                                        val idx = currentNavItems.indexOfFirst { it.destinationKey == "notices" }
+                                        if (idx != -1) currentTabIndex = idx
+                                    }
+                                    "my_chanda", "view_receipt" -> {
+                                        val idx = currentNavItems.indexOfFirst { it.destinationKey == "my_chanda" }
+                                        if (idx != -1) currentTabIndex = idx else overlaySubModule = "chanda"
+                                    }
+                                    "roster" -> {
+                                        val idx = currentNavItems.indexOfFirst { it.destinationKey == "roster" }
+                                        if (idx != -1) currentTabIndex = idx else overlaySubModule = "roster"
+                                    }
+                                    "food" -> {
+                                        val idx = currentNavItems.indexOfFirst { it.destinationKey == "food" }
+                                        if (idx != -1) currentTabIndex = idx else overlaySubModule = "food"
+                                    }
+                                    "madrasa" -> {
+                                        val idx = currentNavItems.indexOfFirst { it.destinationKey == "madrasa" }
+                                        if (idx != -1) currentTabIndex = idx else overlaySubModule = "madrasa"
+                                    }
+                                    "madrasa_fee" -> {
+                                        val idx = currentNavItems.indexOfFirst { it.destinationKey == "treasurer_payroll" || it.destinationKey == "madrasa" }
+                                        if (idx != -1) currentTabIndex = idx else overlaySubModule = "madrasa"
+                                    }
+                                    "staff_profile" -> {
+                                        val idx = currentNavItems.indexOfFirst { it.destinationKey == "staff_profile" }
+                                        if (idx != -1) currentTabIndex = idx else overlaySubModule = "staff"
+                                    }
+                                    "welfare", "welfare_apply" -> {
+                                        val idx = currentNavItems.indexOfFirst { it.destinationKey == "welfare" || it.destinationKey == "secretary_welfare" }
+                                        if (idx != -1) currentTabIndex = idx else overlaySubModule = "welfare"
+                                    }
+                                    "meetings" -> {
+                                        val idx = currentNavItems.indexOfFirst { it.destinationKey == "secretary_meetings" }
+                                        if (idx != -1) currentTabIndex = idx else overlaySubModule = "meetings"
+                                    }
+                                    "events" -> {
+                                        overlaySubModule = "events"
+                                    }
+                                    "audit" -> {
+                                        overlaySubModule = "audit"
+                                    }
+                                    "view_prayers", "prayers" -> {
+                                        overlaySubModule = "prayer"
+                                    }
+                                    "treasurer_payroll" -> {
+                                        val idx = currentNavItems.indexOfFirst { it.destinationKey == "treasurer_payroll" }
+                                        if (idx != -1) currentTabIndex = idx else overlaySubModule = "staff"
+                                    }
+                                    "treasurer_report" -> {
+                                        val idx = currentNavItems.indexOfFirst { it.destinationKey == "treasurer_report" || it.destinationKey == "finance" }
+                                        if (idx != -1) currentTabIndex = idx
+                                    }
+                                    "treasurer_chanda" -> {
+                                        val idx = currentNavItems.indexOfFirst { it.destinationKey == "treasurer_chanda" }
+                                        if (idx != -1) currentTabIndex = idx else overlaySubModule = "chanda"
+                                    }
+                                }
+                            }
+                        )
                 "members" -> MembersScreen(
                     viewModel = viewModel,
-                    onAddMemberClick = if (currentRole.level <= 2) { { showAddMemberDialog = true } } else null
+                    onAddMemberClick = if (currentRole in listOf(
+                            com.mosqueseba.app.data.model.UserRole.GENERAL_SECRETARY,
+                            com.mosqueseba.app.data.model.UserRole.ORGANIZING_SECRETARY,
+                            com.mosqueseba.app.data.model.UserRole.PRESIDENT,
+                            com.mosqueseba.app.data.model.UserRole.VICE_PRESIDENT
+                        )
+                    ) { { showAddMemberDialog = true } } else null
                 )
                 "committee" -> MembersScreen(
                     viewModel = viewModel,
@@ -185,14 +276,28 @@ fun MosqueAppShell(viewModel: MosqueViewModel) {
                 )
                 "finance" -> FinanceScreen(
                     viewModel = viewModel,
-                    onAddIncomeClick = {
-                        transactionInitialType = "INCOME"
-                        showAddTransactionDialog = true
-                    },
-                    onAddExpenseClick = {
-                        transactionInitialType = "EXPENSE"
-                        showAddTransactionDialog = true
-                    },
+                    onAddIncomeClick = if (currentRole in listOf(
+                            com.mosqueseba.app.data.model.UserRole.TREASURER,
+                            com.mosqueseba.app.data.model.UserRole.PRESIDENT,
+                            com.mosqueseba.app.data.model.UserRole.VICE_PRESIDENT
+                        )
+                    ) {
+                        {
+                            transactionInitialType = "INCOME"
+                            showAddTransactionDialog = true
+                        }
+                    } else null,
+                    onAddExpenseClick = if (currentRole in listOf(
+                            com.mosqueseba.app.data.model.UserRole.TREASURER,
+                            com.mosqueseba.app.data.model.UserRole.PRESIDENT,
+                            com.mosqueseba.app.data.model.UserRole.VICE_PRESIDENT
+                        )
+                    ) {
+                        {
+                            transactionInitialType = "EXPENSE"
+                            showAddTransactionDialog = true
+                        }
+                    } else null,
                     isReadOnlyTransparencyMode = false
                 )
                 "transparency" -> FinanceScreen(
@@ -292,6 +397,8 @@ fun MosqueAppShell(viewModel: MosqueViewModel) {
         }
     }
     }
+    }
+
 
     // Add Member Dialog
     if (showAddMemberDialog) {

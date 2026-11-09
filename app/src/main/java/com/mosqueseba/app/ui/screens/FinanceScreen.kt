@@ -148,7 +148,8 @@ fun FinanceScreen(
             Spacer(modifier = Modifier.height(10.dp))
 
             // Action Buttons: Add Income, Add Expense & Financial Report
-            val isTransparencyOnly = isReadOnlyTransparencyMode || currentRole == UserRole.GENERAL_MEMBER || currentRole.level > 2
+            val canAddIncomeExpense = currentRole in listOf(UserRole.TREASURER, UserRole.PRESIDENT, UserRole.VICE_PRESIDENT)
+            val isTransparencyOnly = isReadOnlyTransparencyMode || !canAddIncomeExpense
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -276,7 +277,7 @@ fun FinanceScreen(
                 items(displayedTransactions, key = { it.id }) { txn ->
                     TransactionCardItem(
                         transaction = txn,
-                        canApprove = currentRole == UserRole.PRESIDENT || currentRole == UserRole.TREASURER,
+                        canApprove = currentRole == UserRole.PRESIDENT || currentRole == UserRole.VICE_PRESIDENT,
                         onApprove = { viewModel.updateTransactionStatus(txn, true) },
                         onReject = { viewModel.updateTransactionStatus(txn, false) }
                     )

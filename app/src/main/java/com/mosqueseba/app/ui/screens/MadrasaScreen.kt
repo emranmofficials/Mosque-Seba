@@ -19,12 +19,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.mosqueseba.app.data.local.entity.StudentEntity
+import com.mosqueseba.app.data.model.UserRole
 import com.mosqueseba.app.ui.theme.*
 import com.mosqueseba.app.ui.viewmodel.MosqueViewModel
 
 @Composable
-fun MadrasaScreen(viewModel: MosqueViewModel) {
-    var selectedTab by remember { mutableIntStateOf(0) }
+fun MadrasaScreen(viewModel: MosqueViewModel, initialTab: Int = 0) {
+    val currentRole by viewModel.currentUserRole.collectAsState()
+    val defaultTab = when {
+        initialTab != 0 -> initialTab
+        currentRole == UserRole.TREASURER -> 2
+        currentRole == UserRole.GENERAL_MEMBER -> 3
+        else -> 0
+    }
+    var selectedTab by remember(currentRole, initialTab) { mutableIntStateOf(defaultTab) }
     var showAddStudentDialog by remember { mutableStateOf(false) }
     var showAddHifzDialog by remember { mutableStateOf(false) }
     var showCollectFeeDialog by remember { mutableStateOf(false) }
@@ -88,12 +96,15 @@ fun MadrasaScreen(viewModel: MosqueViewModel) {
                                 fontWeight = FontWeight.Bold,
                                 color = MosqueEmeraldDark
                             )
-                            Button(
-                                onClick = { showAddStudentDialog = true },
-                                shape = RoundedCornerShape(8.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary)
-                            ) {
-                                Text("+ নতুন ভর্তি", fontSize = 12.sp)
+                            val canEnrollStudent = currentRole in listOf(UserRole.PRESIDENT, UserRole.VICE_PRESIDENT, UserRole.GENERAL_SECRETARY, UserRole.IMAM)
+                            if (canEnrollStudent) {
+                                Button(
+                                    onClick = { showAddStudentDialog = true },
+                                    shape = RoundedCornerShape(8.dp),
+                                    colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary)
+                                ) {
+                                    Text("+ নতুন ভর্তি", fontSize = 12.sp)
+                                }
                             }
                         }
                     }
@@ -185,12 +196,15 @@ fun MadrasaScreen(viewModel: MosqueViewModel) {
                                 fontWeight = FontWeight.Bold,
                                 color = MosqueEmeraldDark
                             )
-                            Button(
-                                onClick = { showAddHifzDialog = true },
-                                shape = RoundedCornerShape(8.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = MosqueGoldDeep)
-                            ) {
-                                Text("+ সবক এন্ট্রি", color = Color.White, fontSize = 12.sp)
+                            val canEvaluateHifz = currentRole in listOf(UserRole.PRESIDENT, UserRole.VICE_PRESIDENT, UserRole.IMAM, UserRole.MUAZZIN)
+                            if (canEvaluateHifz) {
+                                Button(
+                                    onClick = { showAddHifzDialog = true },
+                                    shape = RoundedCornerShape(8.dp),
+                                    colors = ButtonDefaults.buttonColors(containerColor = MosqueGoldDeep)
+                                ) {
+                                    Text("+ সবক এন্ট্রি", color = Color.White, fontSize = 12.sp)
+                                }
                             }
                         }
                     }
@@ -278,12 +292,15 @@ fun MadrasaScreen(viewModel: MosqueViewModel) {
                                     Text("মোট সংগৃহীত ফি", color = Color.White.copy(alpha = 0.85f), fontSize = 12.sp)
                                     Text("৳${String.format("%,.0f", totalFee)}", color = MosqueGold, fontWeight = FontWeight.Bold, fontSize = 20.sp)
                                 }
-                                Button(
-                                    onClick = { showCollectFeeDialog = true },
-                                    colors = ButtonDefaults.buttonColors(containerColor = MosqueGold),
-                                    shape = RoundedCornerShape(8.dp)
-                                ) {
-                                    Text("ফি গ্রহণ করুন", color = MosqueEmeraldDark, fontWeight = FontWeight.Bold)
+                                val canCollectFee = currentRole in listOf(UserRole.TREASURER, UserRole.PRESIDENT, UserRole.VICE_PRESIDENT)
+                                if (canCollectFee) {
+                                    Button(
+                                        onClick = { showCollectFeeDialog = true },
+                                        colors = ButtonDefaults.buttonColors(containerColor = MosqueGold),
+                                        shape = RoundedCornerShape(8.dp)
+                                    ) {
+                                        Text("ফি গ্রহণ করুন", color = MosqueEmeraldDark, fontWeight = FontWeight.Bold)
+                                    }
                                 }
                             }
                         }

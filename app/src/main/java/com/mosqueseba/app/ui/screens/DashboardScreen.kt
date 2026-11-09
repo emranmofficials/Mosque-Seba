@@ -62,7 +62,7 @@ fun DashboardScreen(
         // 3. Prayer Schedule Card
         item {
             PrayerCard(
-                onViewFullScheduleClick = { onNavigateToTab(4) }
+                onViewFullScheduleClick = { onOpenDialog("view_prayers") }
             )
         }
 
@@ -80,8 +80,8 @@ fun DashboardScreen(
                         "finance" -> onNavigateToTab(if (currentRole == com.mosqueseba.app.data.model.UserRole.TREASURER) 1 else 2)
                         "treasurer_chanda" -> onNavigateToTab(2)
                         "treasurer_payroll" -> onNavigateToTab(3)
-                        "meetings" -> onNavigateToTab(if (currentRole == com.mosqueseba.app.data.model.UserRole.GENERAL_SECRETARY) 2 else 0)
-                        "chanda" -> onOpenDialog("receive_chanda")
+                        "meetings" -> onNavigateToTab(if (currentRole == com.mosqueseba.app.data.model.UserRole.GENERAL_SECRETARY || currentRole == com.mosqueseba.app.data.model.UserRole.ORGANIZING_SECRETARY) 2 else 0)
+                        "chanda" -> onOpenDialog(if (currentRole == com.mosqueseba.app.data.model.UserRole.TREASURER || currentRole == com.mosqueseba.app.data.model.UserRole.PRESIDENT) "receive_chanda" else "my_chanda")
                         "pending" -> onNavigateToTab(if (currentRole == com.mosqueseba.app.data.model.UserRole.TREASURER) 1 else 2)
                         "roster" -> onNavigateToTab(1)
                         "food" -> onNavigateToTab(2)
@@ -104,8 +104,15 @@ fun DashboardScreen(
             )
         }
 
-        // 6. Upcoming Meetings Card (Visible to Committee leadership)
-        if (currentRole.level <= 3 && currentRole != com.mosqueseba.app.data.model.UserRole.IMAM && currentRole != com.mosqueseba.app.data.model.UserRole.MUAZZIN) {
+        // 6. Upcoming Meetings Card (Visible strictly to Secretariat and Executive Committee)
+        if (currentRole in listOf(
+                com.mosqueseba.app.data.model.UserRole.PRESIDENT,
+                com.mosqueseba.app.data.model.UserRole.VICE_PRESIDENT,
+                com.mosqueseba.app.data.model.UserRole.GENERAL_SECRETARY,
+                com.mosqueseba.app.data.model.UserRole.ORGANIZING_SECRETARY,
+                com.mosqueseba.app.data.model.UserRole.EXECUTIVE_MEMBER
+            )
+        ) {
             item {
                 UpcomingMeetingsCard(
                     meetings = allMeetings,
@@ -114,8 +121,13 @@ fun DashboardScreen(
             }
         }
 
-        // 7. Recent Financial Activity (Visible to Committee leadership only)
-        if (currentRole.level <= 3 && currentRole != com.mosqueseba.app.data.model.UserRole.IMAM && currentRole != com.mosqueseba.app.data.model.UserRole.MUAZZIN) {
+        // 7. Recent Financial Activity (Visible strictly to Treasurer and Presidential Supervisors)
+        if (currentRole in listOf(
+                com.mosqueseba.app.data.model.UserRole.PRESIDENT,
+                com.mosqueseba.app.data.model.UserRole.VICE_PRESIDENT,
+                com.mosqueseba.app.data.model.UserRole.TREASURER
+            )
+        ) {
             item {
                 RecentActivityCard(
                     transactions = allTransactions.take(4),

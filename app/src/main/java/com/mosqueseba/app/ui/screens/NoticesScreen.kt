@@ -31,7 +31,12 @@ fun NoticesScreen(
 ) {
     val notices by viewModel.allNotices.collectAsState()
     val currentRole by viewModel.currentUserRole.collectAsState()
-    val canPublish = currentRole.level <= 2 // President, VP, Secretary, Treasurer
+    val canPublish = currentRole in listOf(
+        UserRole.PRESIDENT,
+        UserRole.VICE_PRESIDENT,
+        UserRole.GENERAL_SECRETARY,
+        UserRole.ORGANIZING_SECRETARY
+    )
 
     Column(
         modifier = Modifier

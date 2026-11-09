@@ -391,17 +391,17 @@ fun QuickActionsGrid(
         UserRole.GENERAL_MEMBER -> listOf(
             QuickActionItem("my_chanda", "আমার চাঁদা", Icons.Default.ReceiptLong, MosqueGoldDeep),
             QuickActionItem("view_receipt", "ডিজিটাল রসিদ", Icons.Default.QrCode2, MosqueEmeraldPrimary),
-            QuickActionItem("transparency", "স্বচ্ছ হিসাব", Icons.Default.AccountBalanceWallet, MosqueSuccessGreen),
+            QuickActionItem("transparency", "স্বচ্ছ তহবিল", Icons.Default.AccountBalanceWallet, MosqueSuccessGreen),
             QuickActionItem("view_prayers", "নামাজের সূচি", Icons.Default.AccessTime, MosqueInfoBlue),
-            QuickActionItem("publish_notice", "নোটিশ দেখুন", Icons.Default.Campaign, MosqueEmeraldDark),
-            QuickActionItem("welfare", "সহায়তা আবেদন", Icons.Default.VolunteerActivism, MosqueUrgentRed)
+            QuickActionItem("view_notices", "নোটিশ দেখুন", Icons.Default.Campaign, MosqueEmeraldDark),
+            QuickActionItem("welfare_apply", "সহায়তা আবেদন", Icons.Default.VolunteerActivism, MosqueUrgentRed)
         )
         UserRole.IMAM, UserRole.MUAZZIN, UserRole.KHADEM -> listOf(
             QuickActionItem("roster", "ডিউটি রোস্টার", Icons.Default.Schedule, MosqueEmeraldPrimary),
             QuickActionItem("food", "খাবার শিডিউল", Icons.Default.Restaurant, MosqueGoldDeep),
             QuickActionItem("madrasa", "হিফজ মূল্যায়ন", Icons.Default.School, MosqueInfoBlue),
             QuickActionItem("view_prayers", "নামাজের সময়", Icons.Default.AccessTime, MosqueSuccessGreen),
-            QuickActionItem("publish_notice", "নোটিশ দেখুন", Icons.Default.Campaign, MosqueEmeraldDark),
+            QuickActionItem("view_notices", "নোটিশ দেখুন", Icons.Default.Campaign, MosqueEmeraldDark),
             QuickActionItem("staff_profile", "বেতন স্লিপ", Icons.Default.AccountBalanceWallet, MosqueUrgentRed)
         )
         UserRole.TREASURER -> listOf(
@@ -409,24 +409,24 @@ fun QuickActionsGrid(
             QuickActionItem("add_expense", "ব্যয় ভাউচার", Icons.Default.RemoveCircle, MosqueUrgentRed),
             QuickActionItem("receive_chanda", "চাঁদা গ্রহণ", Icons.Default.Payments, MosqueGoldDeep),
             QuickActionItem("treasurer_payroll", "বেতন বিতরণ", Icons.Default.Badge, MosqueEmeraldPrimary),
-            QuickActionItem("madrasa", "মাদরাসা ফি", Icons.Default.School, MosqueInfoBlue),
+            QuickActionItem("madrasa_fee", "মাদরাসা ফি", Icons.Default.School, MosqueInfoBlue),
             QuickActionItem("treasurer_report", "হিসাব রিপোর্ট", Icons.Default.Assessment, MosqueEmeraldDark)
         )
         UserRole.GENERAL_SECRETARY, UserRole.ORGANIZING_SECRETARY, UserRole.EXECUTIVE_MEMBER -> listOf(
             QuickActionItem("add_member", "নতুন সদস্য", Icons.Default.PersonAdd, MosqueEmeraldPrimary),
             QuickActionItem("schedule_meeting", "সভা আহ্বান", Icons.Default.EventAvailable, MosqueInfoBlue),
             QuickActionItem("publish_notice", "নোটিশ প্রকাশ", Icons.Default.Campaign, MosqueEmeraldDark),
-            QuickActionItem("receive_chanda", "চাঁদা গ্রহণ", Icons.Default.Payments, MosqueGoldDeep),
+            QuickActionItem("meetings", "কার্যবিবরণী", Icons.Default.Assignment, MosqueGoldDeep),
             QuickActionItem("welfare", "সমাজকল্যাণ", Icons.Default.VolunteerActivism, MosqueSuccessGreen),
             QuickActionItem("events", "ইভেন্ট মাহফিল", Icons.Default.Celebration, MosqueGold)
         )
         else -> listOf(
-            QuickActionItem("add_member", "নতুন সদস্য", Icons.Default.PersonAdd, MosqueEmeraldPrimary),
-            QuickActionItem("add_income", "আয় যোগ", Icons.Default.AddCircle, MosqueSuccessGreen),
-            QuickActionItem("add_expense", "ব্যয় যোগ", Icons.Default.RemoveCircle, MosqueUrgentRed),
-            QuickActionItem("receive_chanda", "চাঁদা গ্রহণ", Icons.Default.Payments, MosqueGoldDeep),
+            QuickActionItem("pending_approval", "ভাউচার অনুমোদন", Icons.Default.AssignmentTurnedIn, MosqueUrgentRed),
             QuickActionItem("schedule_meeting", "সভা আহ্বান", Icons.Default.EventAvailable, MosqueInfoBlue),
-            QuickActionItem("publish_notice", "নোটিশ প্রকাশ", Icons.Default.Campaign, MosqueEmeraldDark)
+            QuickActionItem("publish_notice", "নোটিশ জারি", Icons.Default.Campaign, MosqueEmeraldDark),
+            QuickActionItem("welfare", "অনুদান অনুমোদন", Icons.Default.VolunteerActivism, MosqueSuccessGreen),
+            QuickActionItem("audit", "অডিট নিরীক্ষা", Icons.Default.FactCheck, MosqueWarningAmber),
+            QuickActionItem("members", "সদস্য পরিষদ", Icons.Default.Groups, MosqueEmeraldPrimary)
         )
     }
 
