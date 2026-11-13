@@ -1,5 +1,6 @@
 package com.mosqueseba.app.ui.screens
 
+import android.content.Intent
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -20,12 +21,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mosqueseba.app.data.local.entity.TransactionEntity
 import com.mosqueseba.app.data.model.UserRole
 import com.mosqueseba.app.ui.theme.*
+import com.mosqueseba.app.ui.viewmodel.AiSummaryUiState
 import com.mosqueseba.app.ui.viewmodel.MosqueViewModel
 
 @Composable
@@ -41,6 +44,8 @@ fun FinanceScreen(
     val totalExpense by viewModel.totalExpense.collectAsState()
     val netBalance by viewModel.netBalance.collectAsState()
     val currentRole by viewModel.currentUserRole.collectAsState()
+    val mosque by viewModel.mosque.collectAsState()
+    val aiSummaryState by viewModel.aiSummaryState.collectAsState()
 
     var selectedTab by remember { mutableIntStateOf(0) } // 0: All, 1: Pending, 2: Income, 3: Expense
     var showReportDialog by remember { mutableStateOf(false) }
@@ -277,7 +282,7 @@ fun FinanceScreen(
                 items(displayedTransactions, key = { it.id }) { txn ->
                     TransactionCardItem(
                         transaction = txn,
-                        canApprove = currentRole == UserRole.PRESIDENT || currentRole == UserRole.VICE_PRESIDENT,
+                        canApprove = currentRole.canApproveFinance(),
                         onApprove = { viewModel.updateTransactionStatus(txn, true) },
                         onReject = { viewModel.updateTransactionStatus(txn, false) }
                     )
@@ -288,10 +293,14 @@ fun FinanceScreen(
 
     if (showReportDialog) {
         FinancialReportDialog(
+            mosqueName = mosque?.nameBn ?: "বায়তুল জান্নাত জামে মসজিদ",
             totalIncome = totalIncome,
             totalExpense = totalExpense,
             netBalance = netBalance,
             transactions = allTransactions,
+            aiSummaryState = aiSummaryState,
+            onGenerateAiSummary = { viewModel.generateFinanceSummaryWithAi() },
+            onClearAiSummary = { viewModel.clearAiSummaryState() },
             onDismiss = { showReportDialog = false }
         )
     }
@@ -474,12 +483,22 @@ fun TransactionCardItem(
 
 @Composable
 fun FinancialReportDialog(
+    mosqueName: String = "বায়তুল জান্নাত জামে মসজিদ",
     totalIncome: Double,
     totalExpense: Double,
     netBalance: Double,
     transactions: List<TransactionEntity>,
+    aiSummaryState: AiSummaryUiState = AiSummaryUiState.Idle,
+    onGenerateAiSummary: () -> Unit = {},
+    onClearAiSummary: () -> Unit = {},
     onDismiss: () -> Unit
 ) {
+    val context = LocalContext.current
+
+    DisposableEffect(Unit) {
+        onDispose { onClearAiSummary() }
+    }
+
     Dialog(onDismissRequest = onDismiss) {
         Card(
             modifier = Modifier
@@ -493,13 +512,13 @@ fun FinancialReportDialog(
                     .verticalScroll(rememberScrollState())
             ) {
                 Text(
-                    text = "মাসিক আয়-ব্যয় সারসংক্ষেপ রিপোর্ট",
+                    text = "আয়-ব্যয় সারসংক্ষেপ রিপোর্ট",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = MosqueEmeraldDark
                 )
                 Text(
-                    text = "বায়তুল জান্নাত জামে মসজিদ • সেপ্টেম্বর ২০২৪",
+                    text = "$mosqueName • অডিট প্রতিবেদন",
                     style = MaterialTheme.typography.bodySmall,
                     color = MosqueTextSecondary
                 )
@@ -507,11 +526,102 @@ fun FinancialReportDialog(
                 HorizontalDivider(color = MosqueGold)
                 Spacer(modifier = Modifier.height(12.dp))
 
+                val approvedCount = transactions.count { it.approvalStatus == "approved" }
+                val pendingCount = transactions.count { it.approvalStatus == "pending" }
+
                 ReportRow("সর্বমোট জমা (আয়)", "৳${String.format("%,.0f", totalIncome)}", MosqueSuccessGreen)
                 ReportRow("সর্বমোট খরচ (ব্যয়)", "৳${String.format("%,.0f", totalExpense)}", MosqueUrgentRed)
                 ReportRow("ফান্ড উদ্বৃত্ত / বর্তমান ব্যালেন্স", "৳${String.format("%,.0f", netBalance)}", MosqueEmeraldPrimary)
-                ReportRow("অনুমোদিত লেনদেন সংখ্যা", "${transactions.filter { it.approvalStatus == "approved" }.size} টি", MosqueTextPrimary)
-                ReportRow("অপেক্ষমান অনুমোদন", "${transactions.filter { it.approvalStatus == "pending" }.size} টি", MosqueWarningAmber)
+                ReportRow("অনুমোদিত লেনদেন সংখ্যা", "$approvedCount টি", MosqueTextPrimary)
+                ReportRow("অপেক্ষমান অনুমোদন", "$pendingCount টি", MosqueWarningAmber)
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Gemini AI Financial Summary Card
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = MosqueEmeraldLight.copy(alpha = 0.2f),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "✨ জেমিনি এআই আর্থিক সারসংক্ষেপ",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MosqueEmeraldDark
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        when (aiSummaryState) {
+                            is AiSummaryUiState.Idle -> {
+                                Button(
+                                    onClick = onGenerateAiSummary,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(8.dp),
+                                    colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldDark)
+                                ) {
+                                    Text("এআই আর্থিক সারসংক্ষেপ তৈরি করুন", fontSize = 12.sp)
+                                }
+                            }
+                            is AiSummaryUiState.Loading -> {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(16.dp),
+                                        color = MosqueEmeraldPrimary,
+                                        strokeWidth = 2.dp
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = "জেমিনি হিসাব বিশ্লেষণ করছে...",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MosqueEmeraldDark
+                                    )
+                                }
+                            }
+                            is AiSummaryUiState.Streaming -> {
+                                Text(
+                                    text = aiSummaryState.text,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MosqueTextPrimary
+                                )
+                            }
+                            is AiSummaryUiState.Success -> {
+                                Text(
+                                    text = aiSummaryState.text,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MosqueTextPrimary
+                                )
+                                Spacer(modifier = Modifier.height(6.dp))
+                                TextButton(
+                                    onClick = onGenerateAiSummary,
+                                    contentPadding = PaddingValues(0.dp)
+                                ) {
+                                    Text("পুনরায় বিশ্লেষণ করুন", fontSize = 11.sp, color = MosqueEmeraldPrimary)
+                                }
+                            }
+                            is AiSummaryUiState.Error -> {
+                                Text(
+                                    text = aiSummaryState.message,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MosqueUrgentRed
+                                )
+                                Spacer(modifier = Modifier.height(6.dp))
+                                TextButton(
+                                    onClick = onGenerateAiSummary,
+                                    contentPadding = PaddingValues(0.dp)
+                                ) {
+                                    Text("আবার চেষ্টা করুন", fontSize = 11.sp, color = MosqueEmeraldPrimary)
+                                }
+                            }
+                        }
+                    }
+                }
 
                 Spacer(modifier = Modifier.height(16.dp))
                 HorizontalDivider(color = MosqueCardBorder)
@@ -526,13 +636,35 @@ fun FinancialReportDialog(
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     Button(
-                        onClick = onDismiss,
+                        onClick = {
+                            val aiText = when (aiSummaryState) {
+                                is AiSummaryUiState.Success -> "\n\nএআই সারসংক্ষেপ:\n${aiSummaryState.text}"
+                                is AiSummaryUiState.Streaming -> "\n\nএআই সারসংক্ষেপ:\n${aiSummaryState.text}"
+                                else -> ""
+                            }
+                            val reportText = buildString {
+                                appendLine("$mosqueName — আয়-ব্যয় সারসংক্ষেপ রিপোর্ট")
+                                appendLine("------------------------------------------")
+                                appendLine("মোট আদায় (আয়): ৳${String.format("%,.0f", totalIncome)}")
+                                appendLine("মোট খরচ (ব্যয়): ৳${String.format("%,.0f", totalExpense)}")
+                                appendLine("বর্তমান নিট ব্যালেন্স: ৳${String.format("%,.0f", netBalance)}")
+                                appendLine("অনুমোদিত লেনদেন: $approvedCount টি")
+                                appendLine("অপেক্ষমান অনুমোদন: $pendingCount টি")
+                                append(aiText)
+                            }
+                            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                type = "text/plain"
+                                putExtra(Intent.EXTRA_SUBJECT, "$mosqueName - আর্থিক রিপোর্ট")
+                                putExtra(Intent.EXTRA_TEXT, reportText)
+                            }
+                            context.startActivity(Intent.createChooser(shareIntent, "আর্থিক রিপোর্ট শেয়ার করুন"))
+                        },
                         colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary),
                         shape = RoundedCornerShape(8.dp)
                     ) {
                         Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("রিপোর্ট কপি / শেয়ার")
+                        Text("রিপোর্ট শেয়ার")
                     }
                 }
             }

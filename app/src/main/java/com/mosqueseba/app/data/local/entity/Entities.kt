@@ -13,7 +13,13 @@ data class MosqueEntity(
     val establishedYear: Int,
     val committeeStartYear: Int,
     val committeeEndYear: Int,
-    val status: String = "active"
+    val status: String = "active",
+    val district: String = "",
+    val upazila: String = "",
+    val waqfRegNo: String = "",
+    val capacity: Int? = null,
+    val bankAccountInfo: String = "",
+    val logoUrl: String? = null
 )
 
 @Entity(tableName = "members")
@@ -31,7 +37,8 @@ data class MemberEntity(
     val monthlyChanda: Double,
     val joinDate: String,
     val photoUrl: String? = null,
-    val status: String = "active" // active, inactive, archived
+    val status: String = "active", // active, inactive, archived
+    val willingToProvideStaffMeals: Boolean = false
 )
 
 @Entity(tableName = "transactions")
@@ -230,4 +237,66 @@ data class MosqueEventEntity(
     val volunteerLead: String,
     val status: String = "upcoming" // upcoming, ongoing, completed
 )
+
+// --- দান বাক্স (ক্যাশবক্স) খোলা, সাক্ষী ও ব্যাংক জমা ---
+@Entity(tableName = "cashbox_records")
+data class CashboxRecordEntity(
+    @PrimaryKey val id: String,
+    val collectionDate: String,
+    val boxType: String, // সাপ্তাহিক জুমার দান বাক্স, মাসিক দান বাক্স
+    val countedAmount: Double,
+    val countedBy: String,
+    val witnessNames: String,
+    val witnessVerified: Boolean = false,
+    val verifiedBy: String? = null,
+    val bankName: String = "",
+    val depositSlipNo: String = "",
+    val depositStatus: String = "counted", // counted, witness_verified, bank_deposited
+    val notes: String = "",
+    val createdAt: Long = System.currentTimeMillis()
+)
+
+// --- দপ্তর, দলিল-চুক্তি ও চিঠিপত্র রেজিস্টার ---
+@Entity(tableName = "office_documents")
+data class OfficeDocumentEntity(
+    @PrimaryKey val id: String,
+    val docCode: String,
+    val title: String,
+    val category: String, // দলিল, চুক্তি, আগত চিঠি, প্রেরিত চিঠি, অফিস ফাইল
+    val counterparty: String,
+    val docDate: String,
+    val summary: String,
+    val replyNote: String = "",
+    val status: String = "সংরক্ষিত", // সংরক্ষিত, জবাব অপেক্ষমান, জবাব প্রেরিত
+    val recordedBy: String,
+    val createdAt: Long = System.currentTimeMillis()
+)
+
+// --- শরিয়াহ পর্যালোচনা ও উপদেষ্টা পরামর্শ লগ ---
+@Entity(tableName = "advisory_notes")
+data class AdvisoryNoteEntity(
+    @PrimaryKey val id: String,
+    val noteType: String, // SHARIA_REVIEW, ADVISORY_GUIDANCE
+    val topic: String,
+    val recommendation: String,
+    val authorName: String,
+    val authorRoleTitle: String,
+    val shariaCompliance: String = "শরিয়াহ সম্মত", // শরিয়াহ সম্মত, সংশোধনী প্রয়োজন, কৌশলগত পরামর্শ
+    val status: String = "পর্যালোচনাধীন", // পর্যালোচনাধীন, গৃহীত, বাস্তবায়িত
+    val createdDate: String,
+    val createdAt: Long = System.currentTimeMillis()
+)
+
+// --- প্রচার ও প্রকাশনা / স্মার্ট বোর্ড দেয়াল উক্তি ও নির্দেশনা ---
+@Entity(tableName = "smart_board_quotes")
+data class SmartBoardQuoteEntity(
+    @PrimaryKey val id: String,
+    val category: String, // দেয়াল উক্তি, জুমার নির্দেশনা, বিশেষ ধর্মীয় দিবস
+    val title: String,
+    val message: String,
+    val isPinned: Boolean = true,
+    val createdBy: String,
+    val createdAt: Long = System.currentTimeMillis()
+)
+
 

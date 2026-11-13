@@ -13,13 +13,21 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.text.font.FontWeight
+import com.mosqueseba.app.data.local.entity.MeetingEntity
 import com.mosqueseba.app.data.local.entity.MemberEntity
+import com.mosqueseba.app.data.local.entity.NoticeEntity
+import com.mosqueseba.app.data.local.entity.TransactionEntity
 import com.mosqueseba.app.ui.components.*
 import com.mosqueseba.app.ui.screens.*
 import com.mosqueseba.app.ui.theme.MosqueCommitteeTheme
 import androidx.activity.compose.BackHandler
 import com.mosqueseba.app.ui.theme.MosqueEmeraldDark
 import com.mosqueseba.app.ui.theme.MosqueEmeraldPrimary
+import com.mosqueseba.app.ui.theme.MosqueTextMuted
+import com.mosqueseba.app.ui.theme.MosqueTextSecondary
 import com.mosqueseba.app.ui.viewmodel.MosqueViewModel
 
 enum class AppScreen {
@@ -35,6 +43,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        configureAppCheck(this, intent)
         enableEdgeToEdge()
 
         setContent {
@@ -111,7 +120,39 @@ fun MosqueAppShell(
     var currentTabIndex by remember { mutableIntStateOf(0) }
     var overlaySubModule by remember { mutableStateOf<String?>(null) }
     val currentRole by viewModel.currentUserRole.collectAsState()
+    val mosque by viewModel.mosque.collectAsState()
     val allMembers by viewModel.allMembers.collectAsState()
+    val aiNoticeState by viewModel.aiNoticeState.collectAsState()
+    val pendingTransactions by viewModel.pendingTransactions.collectAsState()
+    val allNotices by viewModel.allNotices.collectAsState()
+    val allMeetings by viewModel.allMeetings.collectAsState()
+
+    val savedRole = remember(currentRole) { viewModel.sessionManager.getSavedRole() }
+    val savedName = remember(currentRole) { viewModel.sessionManager.getSavedMemberName() }
+    val savedMemberId = remember(currentRole) { viewModel.sessionManager.getSavedMemberId() }
+    val currentMember = remember(currentRole, allMembers, savedRole, savedMemberId) {
+        allMembers.firstOrNull { it.id == savedMemberId && currentRole == savedRole }
+            ?: allMembers.firstOrNull { it.roleCode.equals(currentRole.code, ignoreCase = true) }
+    }
+    val currentMemberName = remember(currentRole, currentMember, savedRole, savedName) {
+        if (currentRole == savedRole && savedName.isNotBlank() && savedName != "সদস্য") {
+            savedName
+        } else {
+            currentMember?.nameBn
+        }
+    }
+
+    val upcomingMeetings = remember(allMeetings) { allMeetings.filter { it.status == "upcoming" } }
+    val recentNotices = remember(allNotices) { allNotices.take(2) }
+    val notificationCount = pendingTransactions.size + recentNotices.size + upcomingMeetings.size
+
+    BackHandler(enabled = overlaySubModule != null || currentTabIndex != 0) {
+        if (overlaySubModule != null) {
+            overlaySubModule = null
+        } else {
+            currentTabIndex = 0
+        }
+    }
 
     // Reset tab and overlay whenever role switches
     LaunchedEffect(currentRole) {
@@ -138,6 +179,10 @@ fun MosqueAppShell(
         topBar = {
             GlobalHeader(
                 currentRole = currentRole,
+                memberName = currentMemberName,
+                mosqueLogoUrl = mosque?.logoUrl,
+                userPhotoUrl = currentMember?.photoUrl,
+                notificationCount = notificationCount,
                 onRoleSelected = { viewModel.setUserRole(it) },
                 onNotificationClick = { showNotificationDialog = true },
                 onLogout = onLogout
@@ -187,67 +232,34 @@ fun MosqueAppShell(
                             onOpenDialog = { dialogKey ->
                                 when (dialogKey) {
                                     "add_member" -> {
-                                        if (currentRole in listOf(
-                                                com.mosqueseba.app.data.model.UserRole.GENERAL_SECRETARY,
-                                                com.mosqueseba.app.data.model.UserRole.ORGANIZING_SECRETARY,
-                                                com.mosqueseba.app.data.model.UserRole.PRESIDENT,
-                                                com.mosqueseba.app.data.model.UserRole.VICE_PRESIDENT
-                                            )
-                                        ) {
+                                        if (currentRole.canManageMembers()) {
                                             showAddMemberDialog = true
                                         }
                                     }
                                     "add_income" -> {
-                                        if (currentRole in listOf(
-                                                com.mosqueseba.app.data.model.UserRole.TREASURER,
-                                                com.mosqueseba.app.data.model.UserRole.PRESIDENT,
-                                                com.mosqueseba.app.data.model.UserRole.VICE_PRESIDENT
-                                            )
-                                        ) {
+                                        if (currentRole.canManageFinance()) {
                                             transactionInitialType = "INCOME"
                                             showAddTransactionDialog = true
                                         }
                                     }
                                     "add_expense" -> {
-                                        if (currentRole in listOf(
-                                                com.mosqueseba.app.data.model.UserRole.TREASURER,
-                                                com.mosqueseba.app.data.model.UserRole.PRESIDENT,
-                                                com.mosqueseba.app.data.model.UserRole.VICE_PRESIDENT
-                                            )
-                                        ) {
+                                        if (currentRole.canManageFinance()) {
                                             transactionInitialType = "EXPENSE"
                                             showAddTransactionDialog = true
                                         }
                                     }
                                     "receive_chanda" -> {
-                                        if (currentRole in listOf(
-                                                com.mosqueseba.app.data.model.UserRole.TREASURER,
-                                                com.mosqueseba.app.data.model.UserRole.PRESIDENT,
-                                                com.mosqueseba.app.data.model.UserRole.VICE_PRESIDENT
-                                            )
-                                        ) {
+                                        if (currentRole.canManageFinance()) {
                                             showReceiveChandaDialog = true
                                         }
                                     }
                                     "schedule_meeting" -> {
-                                        if (currentRole in listOf(
-                                                com.mosqueseba.app.data.model.UserRole.GENERAL_SECRETARY,
-                                                com.mosqueseba.app.data.model.UserRole.ORGANIZING_SECRETARY,
-                                                com.mosqueseba.app.data.model.UserRole.PRESIDENT,
-                                                com.mosqueseba.app.data.model.UserRole.VICE_PRESIDENT
-                                            )
-                                        ) {
+                                        if (currentRole.canScheduleMeetings()) {
                                             showScheduleMeetingDialog = true
                                         }
                                     }
                                     "publish_notice" -> {
-                                        if (currentRole in listOf(
-                                                com.mosqueseba.app.data.model.UserRole.GENERAL_SECRETARY,
-                                                com.mosqueseba.app.data.model.UserRole.ORGANIZING_SECRETARY,
-                                                com.mosqueseba.app.data.model.UserRole.PRESIDENT,
-                                                com.mosqueseba.app.data.model.UserRole.VICE_PRESIDENT
-                                            )
-                                        ) {
+                                        if (currentRole.canPublishNotices()) {
                                             showPublishNoticeDialog = true
                                         }
                                     }
@@ -256,7 +268,9 @@ fun MosqueAppShell(
                                         if (idx != -1) currentTabIndex = idx
                                     }
                                     "finance", "transparency" -> {
-                                        val idx = currentNavItems.indexOfFirst { it.destinationKey == "finance" || it.destinationKey == "transparency" }
+                                        val idx = currentNavItems.indexOfFirst {
+                                            it.destinationKey == "finance" || it.destinationKey == "transparency" || it.destinationKey == "treasurer_report"
+                                        }
                                         if (idx != -1) currentTabIndex = idx
                                     }
                                     "pending_approval" -> {
@@ -300,7 +314,28 @@ fun MosqueAppShell(
                                         if (idx != -1) currentTabIndex = idx else overlaySubModule = "meetings"
                                     }
                                     "events" -> {
-                                        overlaySubModule = "events"
+                                        val idx = currentNavItems.indexOfFirst { it.destinationKey == "events" }
+                                        if (idx != -1) currentTabIndex = idx else overlaySubModule = "events"
+                                    }
+                                    "charter" -> {
+                                        val idx = currentNavItems.indexOfFirst { it.destinationKey == "charter" }
+                                        if (idx != -1) currentTabIndex = idx else overlaySubModule = "charter"
+                                    }
+                                    "cashbox" -> {
+                                        val idx = currentNavItems.indexOfFirst { it.destinationKey == "cashbox" }
+                                        if (idx != -1) currentTabIndex = idx else overlaySubModule = "cashbox"
+                                    }
+                                    "office_docs" -> {
+                                        val idx = currentNavItems.indexOfFirst { it.destinationKey == "office_docs" }
+                                        if (idx != -1) currentTabIndex = idx else overlaySubModule = "office_docs"
+                                    }
+                                    "sharia_advisory" -> {
+                                        val idx = currentNavItems.indexOfFirst { it.destinationKey == "sharia_advisory" }
+                                        if (idx != -1) currentTabIndex = idx else overlaySubModule = "sharia_advisory"
+                                    }
+                                    "publicity" -> {
+                                        val idx = currentNavItems.indexOfFirst { it.destinationKey == "publicity" }
+                                        if (idx != -1) currentTabIndex = idx else overlaySubModule = "publicity"
                                     }
                                     "audit" -> {
                                         overlaySubModule = "audit"
@@ -325,13 +360,7 @@ fun MosqueAppShell(
                         )
                 "members" -> MembersScreen(
                     viewModel = viewModel,
-                    onAddMemberClick = if (currentRole in listOf(
-                            com.mosqueseba.app.data.model.UserRole.GENERAL_SECRETARY,
-                            com.mosqueseba.app.data.model.UserRole.ORGANIZING_SECRETARY,
-                            com.mosqueseba.app.data.model.UserRole.PRESIDENT,
-                            com.mosqueseba.app.data.model.UserRole.VICE_PRESIDENT
-                        )
-                    ) { { showAddMemberDialog = true } } else null
+                    onAddMemberClick = if (currentRole.canManageMembers()) { { showAddMemberDialog = true } } else null
                 )
                 "committee" -> MembersScreen(
                     viewModel = viewModel,
@@ -339,23 +368,13 @@ fun MosqueAppShell(
                 )
                 "finance" -> FinanceScreen(
                     viewModel = viewModel,
-                    onAddIncomeClick = if (currentRole in listOf(
-                            com.mosqueseba.app.data.model.UserRole.TREASURER,
-                            com.mosqueseba.app.data.model.UserRole.PRESIDENT,
-                            com.mosqueseba.app.data.model.UserRole.VICE_PRESIDENT
-                        )
-                    ) {
+                    onAddIncomeClick = if (currentRole.canManageFinance()) {
                         {
                             transactionInitialType = "INCOME"
                             showAddTransactionDialog = true
                         }
                     } else null,
-                    onAddExpenseClick = if (currentRole in listOf(
-                            com.mosqueseba.app.data.model.UserRole.TREASURER,
-                            com.mosqueseba.app.data.model.UserRole.PRESIDENT,
-                            com.mosqueseba.app.data.model.UserRole.VICE_PRESIDENT
-                        )
-                    ) {
+                    onAddExpenseClick = if (currentRole.canManageFinance()) {
                         {
                             transactionInitialType = "EXPENSE"
                             showAddTransactionDialog = true
@@ -451,6 +470,12 @@ fun MosqueAppShell(
                     onOpenReceiveChanda = { showReceiveChandaDialog = true },
                     onOpenScheduleMeeting = { showScheduleMeetingDialog = true }
                 )
+                "charter", "cashbox", "office_docs", "sharia_advisory", "publicity", "events" -> MoreScreen(
+                    viewModel = viewModel,
+                    initialSubModule = destination,
+                    onOpenReceiveChanda = { showReceiveChandaDialog = true },
+                    onOpenScheduleMeeting = { showScheduleMeetingDialog = true }
+                )
                 else -> DashboardScreen(
                     viewModel = viewModel,
                     onNavigateToTab = { currentTabIndex = 0 },
@@ -467,7 +492,7 @@ fun MosqueAppShell(
     if (showAddMemberDialog) {
         AddMemberDialog(
             onDismiss = { showAddMemberDialog = false },
-            onConfirm = { nameBn, nameEn, mobile, email, nid, address, villageArea, roleCode, monthlyChanda ->
+            onConfirm = { nameBn, nameEn, mobile, email, nid, address, villageArea, roleCode, monthlyChanda, photoUrl, willingToProvideStaffMeals, salaryAmount, staffMealRequired ->
                 viewModel.addMember(
                     nameBn = nameBn,
                     nameEn = nameEn,
@@ -477,7 +502,11 @@ fun MosqueAppShell(
                     address = address,
                     villageArea = villageArea,
                     roleCode = roleCode,
-                    monthlyChanda = monthlyChanda
+                    monthlyChanda = monthlyChanda,
+                    photoUrl = photoUrl,
+                    willingToProvideStaffMeals = willingToProvideStaffMeals,
+                    salaryAmount = salaryAmount,
+                    staffMealRequired = staffMealRequired
                 )
             }
         )
@@ -518,6 +547,9 @@ fun MosqueAppShell(
     // Publish Notice Dialog
     if (showPublishNoticeDialog) {
         PublishNoticeDialog(
+            aiNoticeState = aiNoticeState,
+            onGenerateAiDraft = { instruction -> viewModel.draftNoticeWithAi(instruction) },
+            onClearAiDraft = { viewModel.clearAiNoticeState() },
             onDismiss = { showPublishNoticeDialog = false },
             onConfirm = { title, content, priority, isPinned ->
                 viewModel.publishNotice(
@@ -547,12 +579,22 @@ fun MosqueAppShell(
 
     // Notifications Dialog
     if (showNotificationDialog) {
-        NotificationsDialog(onDismiss = { showNotificationDialog = false })
+        NotificationsDialog(
+            pendingTransactions = pendingTransactions,
+            recentNotices = recentNotices,
+            upcomingMeetings = upcomingMeetings,
+            onDismiss = { showNotificationDialog = false }
+        )
     }
 }
 
 @Composable
-fun NotificationsDialog(onDismiss: () -> Unit) {
+fun NotificationsDialog(
+    pendingTransactions: List<TransactionEntity>,
+    recentNotices: List<NoticeEntity>,
+    upcomingMeetings: List<MeetingEntity>,
+    onDismiss: () -> Unit
+) {
     Dialog(onDismissRequest = onDismiss) {
         Card(
             modifier = Modifier
@@ -560,23 +602,51 @@ fun NotificationsDialog(onDismiss: () -> Unit) {
                 .padding(16.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
         ) {
-            Column(modifier = Modifier.padding(16.dp)) {
+            Column(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .verticalScroll(rememberScrollState())
+            ) {
                 Text(
                     text = "বিজ্ঞপ্তি ও বার্তা (Notifications)",
                     style = MaterialTheme.typography.titleLarge,
                     color = MosqueEmeraldDark
                 )
                 Spacer(modifier = Modifier.height(10.dp))
-                Text(
-                    text = "• জুমার দান বাক্সের নতুন লেনদেন অনুমোদনের জন্য অপেক্ষমান।",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                Spacer(modifier = Modifier.height(6.dp))
-                Text(
-                    text = "• আগামী ১৫ সেপ্টেম্বর বাদ আসর কার্যকরী কমিটির জরুরি সাধারণ সভা আহ্বান করা হয়েছে।",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                Spacer(modifier = Modifier.height(14.dp))
+
+                if (pendingTransactions.isEmpty() && recentNotices.isEmpty() && upcomingMeetings.isEmpty()) {
+                    Text(
+                        text = "বর্তমানে কোনো নতুন বিজ্ঞপ্তি বা অপেক্ষমান কাজ নেই।",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MosqueTextMuted
+                    )
+                } else {
+                    pendingTransactions.forEach { txn ->
+                        Text(
+                            text = "• অনুমোদন বাকি: ${txn.categoryNameBn} (৳${String.format("%,.0f", txn.amount)}) — ${txn.createdBy}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                    }
+                    upcomingMeetings.forEach { meeting ->
+                        Text(
+                            text = "• আসন্ন সভা: ${meeting.title} (${meeting.meetingDate})",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                    }
+                    recentNotices.forEach { notice ->
+                        Text(
+                            text = "• নোটিশ: ${notice.title}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MosqueTextSecondary
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
                 Button(
                     onClick = onDismiss,
                     modifier = Modifier.fillMaxWidth(),

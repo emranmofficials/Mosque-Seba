@@ -2,6 +2,7 @@ package com.mosqueseba.app.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -23,6 +24,52 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mosqueseba.app.data.model.UserRole
 import com.mosqueseba.app.ui.theme.*
+import java.time.DayOfWeek
+import java.time.LocalDate
+import java.time.chrono.HijrahDate
+import java.time.temporal.ChronoField
+
+fun toBengaliDigits(input: String): String {
+    val bnDigits = charArrayOf('০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯')
+    val sb = StringBuilder(input.length)
+    for (ch in input) {
+        if (ch in '0'..'9') sb.append(bnDigits[ch - '0']) else sb.append(ch)
+    }
+    return sb.toString()
+}
+
+fun formatCurrentHijriDateBn(): String {
+    val hijrah = HijrahDate.now()
+    val day = hijrah.get(ChronoField.DAY_OF_MONTH)
+    val month = hijrah.get(ChronoField.MONTH_OF_YEAR)
+    val year = hijrah.get(ChronoField.YEAR)
+    val hijriMonthsBn = listOf(
+        "মুহাররম", "সফর", "রবিউল আউয়াল", "রবিউস সানি",
+        "জমাদিউল আউয়াল", "জমাদিউস সানি", "রজব", "শাবান",
+        "রমজান", "শাওয়াল", "জিলকদ", "জিলহজ"
+    )
+    val monthName = hijriMonthsBn.getOrElse(month - 1) { "" }
+    return toBengaliDigits("$day $monthName $year হিজরি")
+}
+
+fun formatCurrentGregorianDateBn(): String {
+    val today = LocalDate.now()
+    val dayName = when (today.dayOfWeek) {
+        DayOfWeek.SATURDAY -> "শনিবার"
+        DayOfWeek.SUNDAY -> "রবিবার"
+        DayOfWeek.MONDAY -> "সোমবার"
+        DayOfWeek.TUESDAY -> "মঙ্গলবার"
+        DayOfWeek.WEDNESDAY -> "বুধবার"
+        DayOfWeek.THURSDAY -> "বৃহস্পতিবার"
+        DayOfWeek.FRIDAY -> "শুক্রবার"
+    }
+    val monthsBn = listOf(
+        "জানুয়ারি", "ফেব্রুয়ারি", "মার্চ", "এপ্রিল", "মে", "জুন",
+        "জুলাই", "আগস্ট", "সেপ্টেম্বর", "অক্টোবর", "নভেম্বর", "ডিসেম্বর"
+    )
+    val monthName = monthsBn.getOrElse(today.monthValue - 1) { "" }
+    return toBengaliDigits("$dayName, ${today.dayOfMonth} $monthName ${today.year}")
+}
 
 /**
  * Islamic Mehrab Arch Card Container
@@ -107,8 +154,8 @@ fun RubElHizbDivider(
 @Composable
 fun HijriDateBanner(
     mosqueName: String = "বায়তুল জান্নাত জামে মসজিদ",
-    hijriDate: String = "১৯ জমাদিউল আউয়াল ১৪৪৬ হিজরি",
-    gregorianDate: String = "সোমবার, ৯ নভেম্বর ২০২৬"
+    hijriDate: String = formatCurrentHijriDateBn(),
+    gregorianDate: String = formatCurrentGregorianDateBn()
 ) {
     Surface(
         color = Color(0xFF022C22),
@@ -178,36 +225,73 @@ fun HijriDateBanner(
 @Composable
 fun RoleWorkspaceHeader(
     currentRole: UserRole,
+    onDutiesClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val (title, subtitle, accentColor, icon) = when (currentRole) {
         UserRole.PRESIDENT, UserRole.VICE_PRESIDENT -> Quadruple(
-            "নির্বাহী পরিষদ ও সুপ্রিম কন্ট্রোল রুম",
-            "কমিটির সর্বোচ্চ সিদ্ধান্ত, ভাউচার অনুমোদন ও অডিট নিরীক্ষা",
+            "${currentRole.titleBn} — নির্বাহী সুপ্রিম কন্ট্রোল রুম",
+            currentRole.shortSummaryBn,
             RolePresidentAccent,
             Icons.Default.VerifiedUser
         )
-        UserRole.TREASURER -> Quadruple(
-            "বায়তুল মাল ও খতিয়ান হিসাব দফতর",
-            "আয়-ব্যয় লেজার, চাঁদা রেজিস্টার ও পে-রোল বিতরণ",
+        UserRole.TREASURER, UserRole.ASSISTANT_TREASURER -> Quadruple(
+            "${currentRole.titleBn} — বায়তুল মাল ও ব্যাংকিং দফতর",
+            currentRole.shortSummaryBn,
             RoleTreasurerAccent,
             Icons.Default.AccountBalanceWallet
         )
-        UserRole.GENERAL_SECRETARY, UserRole.ORGANIZING_SECRETARY, UserRole.EXECUTIVE_MEMBER -> Quadruple(
-            "প্রশাসনিক সচিবালয় ও রেজুলেশন সেল",
-            "সদস্য সমন্বয়, সভার কার্যবিবরণী ও নোটিশ জারি",
+        UserRole.GENERAL_SECRETARY, UserRole.ASSISTANT_SECRETARY, UserRole.ORGANIZING_SECRETARY -> Quadruple(
+            "${currentRole.titleBn} — প্রশাসনিক সচিবালয়",
+            currentRole.shortSummaryBn,
             RoleSecretaryAccent,
             Icons.Default.FolderShared
         )
-        UserRole.IMAM, UserRole.MUAZZIN, UserRole.KHADEM -> Quadruple(
-            "মসজিদ খেদমত ও নূরানী তালিম পোর্টাল",
-            "৫ ওয়াক্ত নামাজের জামাত, ডিউটি রোস্টার ও মেহমানদারি",
+        UserRole.PUBLICITY_SECRETARY -> Quadruple(
+            "প্রচার ও প্রকাশনা সেল",
+            currentRole.shortSummaryBn,
+            RolePublicityAccent,
+            Icons.Default.Campaign
+        )
+        UserRole.OFFICE_SECRETARY -> Quadruple(
+            "দপ্তর, দলিল ও চিঠিপত্র বিভাগ",
+            currentRole.shortSummaryBn,
+            RoleOfficeAccent,
+            Icons.Default.Archive
+        )
+        UserRole.WELFARE_EDUCATION_SECRETARY -> Quadruple(
+            "সমাজকল্যাণ ও ধর্মীয় শিক্ষা বিভাগ",
+            currentRole.shortSummaryBn,
+            RoleWelfareEduAccent,
+            Icons.Default.School
+        )
+        UserRole.EXECUTIVE_MEMBER -> Quadruple(
+            "কার্যনির্বাহী সদস্য — তদারকি ও সাক্ষ্য প্যানেল",
+            currentRole.shortSummaryBn,
+            RoleSecretaryAccent,
+            Icons.Default.Shield
+        )
+        UserRole.ADVISORY_BOARD -> Quadruple(
+            "সম্মানিত উপদেষ্টা পরিষদ",
+            currentRole.shortSummaryBn,
+            RoleAdvisoryAccent,
+            Icons.Default.AccountBalance
+        )
+        UserRole.IMAM -> Quadruple(
+            "খতিব ও ইমাম — পদাধিকারবলে শরিয়াহ উপদেষ্টা",
+            currentRole.shortSummaryBn,
+            RoleImamAccent,
+            Icons.Default.Mosque
+        )
+        UserRole.MUAZZIN, UserRole.KHADEM -> Quadruple(
+            "মসজিদ খেদমত ও নামাজ পরিচালনা পোর্টাল",
+            currentRole.shortSummaryBn,
             RoleImamAccent,
             Icons.Default.Mosque
         )
         UserRole.GENERAL_MEMBER -> Quadruple(
             "মুসুল্লি খেদমত ও স্বচ্ছ তহবিল পোর্টাল",
-            "জামাত ট্র্যাকিং, ব্যক্তিগত চাঁদা রসিদ ও দ্বীনি সেবা",
+            currentRole.shortSummaryBn,
             RoleMusalliAccent,
             Icons.Default.People
         )
@@ -217,7 +301,9 @@ fun RoleWorkspaceHeader(
         color = accentColor.copy(alpha = 0.08f),
         shape = RoundedCornerShape(14.dp),
         border = androidx.compose.foundation.BorderStroke(1.dp, accentColor.copy(alpha = 0.25f)),
-        modifier = modifier.fillMaxWidth()
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable { onDutiesClick() }
     ) {
         Row(
             modifier = Modifier.padding(12.dp),
@@ -241,7 +327,7 @@ fun RoleWorkspaceHeader(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = title,
-                    fontSize = 14.sp,
+                    fontSize = 13.sp,
                     fontWeight = FontWeight.Bold,
                     color = MosqueEmeraldDark
                 )
@@ -250,6 +336,19 @@ fun RoleWorkspaceHeader(
                     fontSize = 11.sp,
                     color = MosqueTextSecondary,
                     lineHeight = 15.sp
+                )
+            }
+            Spacer(modifier = Modifier.width(6.dp))
+            Surface(
+                shape = RoundedCornerShape(8.dp),
+                color = accentColor.copy(alpha = 0.16f)
+            ) {
+                Text(
+                    text = "দায়িত্ব",
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = accentColor,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                 )
             }
         }

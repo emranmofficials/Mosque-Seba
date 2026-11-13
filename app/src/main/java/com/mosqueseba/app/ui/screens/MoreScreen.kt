@@ -5,9 +5,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -25,6 +28,7 @@ import com.mosqueseba.app.data.local.entity.ChandaPaymentEntity
 import com.mosqueseba.app.data.local.entity.StaffEntity
 import com.mosqueseba.app.data.model.UserRole
 import com.mosqueseba.app.ui.components.OfficialReceiptDialog
+import com.mosqueseba.app.ui.components.toBengaliDigits
 import com.mosqueseba.app.ui.theme.*
 import com.mosqueseba.app.ui.viewmodel.MosqueViewModel
 
@@ -47,6 +51,8 @@ fun MoreScreen(
 
     val currentRole by viewModel.currentUserRole.collectAsState()
     val chandaPayments by viewModel.allChandaPayments.collectAsState()
+    val totalChandaCollected by viewModel.totalChandaCollected.collectAsState()
+    val allMembers by viewModel.allMembers.collectAsState()
     val activeStaff by viewModel.activeStaff.collectAsState()
     val auditLogs by viewModel.recentAuditLogs.collectAsState()
     val mosque by viewModel.mosque.collectAsState()
@@ -89,11 +95,16 @@ fun MoreScreen(
                         "roster" -> "ওয়াক্ত ও ইমাম-মুয়াজ্জিন ডিউটি রোস্টার"
                         "food" -> "ইমাম ও খাদেমদের খাবার শিডিউল"
                         "meetings" -> "কমিটি সভা ও এজেন্ডা রেজুলেশন"
-                        "welfare" -> "সমাজকল্যাণ ও যাকাত তহবিল"
+                        "welfare" -> "সমাজকল্যাণ, যাকাত, মেডিকেল ক্যাম্প ও ত্রাণ"
                         "events" -> "মাহফিল ও বিশেষ অনুষ্ঠান"
                         "prayer" -> "পূর্ণ নামাজের সময়সূচি ও ওয়াক্ত"
                         "audit" -> "স্বচ্ছতা ও সিস্টেম অডিট লগ"
                         "about" -> "মসজিদ পরিচিতি ও কমিটি"
+                        "charter" -> "আদর্শ কমিটি সনদ ও দায়িত্ব"
+                        "cashbox" -> "দান বাক্স (ক্যাশবক্স) ও ব্যাংক জমা"
+                        "office_docs" -> "দপ্তর, দলিল-চুক্তি ও চিঠিপত্র"
+                        "sharia_advisory" -> "শরিয়াহ পর্যালোচনা ও উপদেষ্টা পরিষদ"
+                        "publicity" -> "প্রচার, দেয়াল উক্তি ও স্মার্ট বোর্ড"
                         else -> "কমিটি পরিচালনা ও অন্যান্য ফিচার"
                     },
                     style = MaterialTheme.typography.titleLarge,
@@ -111,16 +122,33 @@ fun MoreScreen(
 
         // Sub-module routing
         when (selectedSubModule) {
+            "charter" -> {
+                CommitteeCharterScreen(viewModel = viewModel)
+            }
+            "cashbox" -> {
+                CashboxScreen(viewModel = viewModel)
+            }
+            "office_docs" -> {
+                OfficeDocumentsScreen(viewModel = viewModel)
+            }
+            "sharia_advisory" -> {
+                ShariaAdvisoryScreen(viewModel = viewModel)
+            }
+            "publicity" -> {
+                PublicitySmartBoardScreen(viewModel = viewModel)
+            }
             "madrasa" -> {
                 MadrasaScreen(viewModel = viewModel)
             }
             "chanda" -> {
                 // Chanda Ledger / My Chanda
                 val isGeneralMember = currentRole == UserRole.GENERAL_MEMBER
-                val canReceiveChanda = currentRole in listOf(UserRole.TREASURER, UserRole.PRESIDENT, UserRole.VICE_PRESIDENT)
+                val canReceiveChanda = currentRole.canManageFinance()
+                val savedMemberId = viewModel.sessionManager.getSavedMemberId()
                 val displayedPayments = if (isGeneralMember) {
-                    chandaPayments.take(2)
+                    chandaPayments.filter { it.memberId == savedMemberId }.ifEmpty { chandaPayments.take(2) }
                 } else chandaPayments
+                val myPaidTotal = displayedPayments.sumOf { it.amountPaid }
 
                 LazyColumn(
                     contentPadding = PaddingValues(14.dp),
@@ -147,7 +175,11 @@ fun MoreScreen(
                                         fontSize = 12.sp
                                     )
                                     Text(
-                                        if (isGeneralMember) "৳১,৫০০ (পরিশোধিত)" else "মোট আদায়: ৳৮,০০০",
+                                        if (isGeneralMember) {
+                                            "৳${String.format("%,.0f", myPaidTotal)} (পরিশোধিত)"
+                                        } else {
+                                            "মোট আদায়: ৳${String.format("%,.0f", totalChandaCollected)}"
+                                        },
                                         color = MosqueGold,
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 18.sp
@@ -232,7 +264,7 @@ fun MoreScreen(
             "staff" -> {
                 // Staff Directory & Payroll / Personal Staff Compensation
                 val isStaffRole = currentRole in listOf(UserRole.IMAM, UserRole.MUAZZIN, UserRole.KHADEM)
-                val canManageStaff = currentRole in listOf(UserRole.TREASURER, UserRole.PRESIDENT, UserRole.VICE_PRESIDENT)
+                val canManageStaff = currentRole.canManageFinance()
                 val displayedStaff = if (isStaffRole) {
                     activeStaff.filter {
                         when (currentRole) {
@@ -431,7 +463,7 @@ fun MoreScreen(
                                 fontWeight = FontWeight.Bold,
                                 color = MosqueEmeraldDark
                             )
-                            val canAssignRoster = currentRole in listOf(UserRole.PRESIDENT, UserRole.VICE_PRESIDENT, UserRole.GENERAL_SECRETARY, UserRole.IMAM)
+                            val canAssignRoster = currentRole.canScheduleMeetings() || currentRole == UserRole.IMAM
                             if (canAssignRoster) {
                                 Button(
                                     onClick = { showAddRosterDialog = true },
@@ -507,7 +539,7 @@ fun MoreScreen(
                                 fontWeight = FontWeight.Bold,
                                 color = MosqueEmeraldDark
                             )
-                            val canAssignFood = currentRole in listOf(UserRole.PRESIDENT, UserRole.VICE_PRESIDENT, UserRole.GENERAL_SECRETARY, UserRole.ORGANIZING_SECRETARY, UserRole.IMAM)
+                            val canAssignFood = currentRole.canScheduleMeetings() || currentRole == UserRole.IMAM
                             if (canAssignFood) {
                                 Button(
                                     onClick = { showAddFoodDialog = true },
@@ -601,7 +633,7 @@ fun MoreScreen(
                                         color = MosqueGold
                                     )
                                 }
-                                val canScheduleMeeting = currentRole in listOf(UserRole.PRESIDENT, UserRole.VICE_PRESIDENT, UserRole.GENERAL_SECRETARY, UserRole.ORGANIZING_SECRETARY)
+                                val canScheduleMeeting = currentRole.canScheduleMeetings()
                                 if (canScheduleMeeting) {
                                     Button(
                                         onClick = onOpenScheduleMeeting,
@@ -894,7 +926,7 @@ fun MoreScreen(
                                         color = MosqueGold
                                     )
                                 }
-                                val canAddEvent = currentRole in listOf(UserRole.PRESIDENT, UserRole.VICE_PRESIDENT, UserRole.GENERAL_SECRETARY, UserRole.ORGANIZING_SECRETARY)
+                                val canAddEvent = currentRole.canPublishNotices() || currentRole == UserRole.WELFARE_EDUCATION_SECRETARY
                                 if (canAddEvent) {
                                     Button(
                                         onClick = { showAddEventDialog = true },
@@ -1074,11 +1106,21 @@ fun MoreScreen(
 
                                 DetailItemRow("কমিটি আইডি", mosque?.committeeId ?: "MC-DHK-2024")
                                 DetailItemRow("ঠিকানা", mosque?.address ?: "মিরপুর-১০, ঢাকা")
-                                DetailItemRow("প্রতিষ্ঠা সাল", "১৯৯৮ ইং")
-                                DetailItemRow("কমিটির মেয়াদকাল", "২০২৪ — ২০২৬ খ্রি.")
-                                DetailItemRow("কমিটির সভাপতি", "মো: রফিকুল ইসলাম")
-                                DetailItemRow("সাধারণ সম্পাদক", "ইঞ্জি: আব্দুল্লাহ আল মামুন")
-                                DetailItemRow("কোষাধ্যক্ষ", "হাজী মো: আবুল কাসেম")
+                                DetailItemRow(
+                                    "প্রতিষ্ঠা সাল",
+                                    mosque?.establishedYear?.let { "${toBengaliDigits(it.toString())} ইং" } ?: "১৯৯৮ ইং"
+                                )
+                                DetailItemRow(
+                                    "কমিটির মেয়াদকাল",
+                                    mosque?.let { "${toBengaliDigits(it.committeeStartYear.toString())} — ${toBengaliDigits(it.committeeEndYear.toString())} খ্রি." }
+                                        ?: "২০২৪ — ২০২৬ খ্রি."
+                                )
+                                val presidentName = allMembers.firstOrNull { it.roleCode.equals("president", ignoreCase = true) }?.nameBn ?: "নির্ধারিত নয়"
+                                val gsName = allMembers.firstOrNull { it.roleCode.equals("general_secretary", ignoreCase = true) }?.nameBn ?: "নির্ধারিত নয়"
+                                val treasurerName = allMembers.firstOrNull { it.roleCode.equals("treasurer", ignoreCase = true) }?.nameBn ?: "নির্ধারিত নয়"
+                                DetailItemRow("কমিটির সভাপতি", presidentName)
+                                DetailItemRow("সাধারণ সম্পাদক", gsName)
+                                DetailItemRow("কোষাধ্যক্ষ", treasurerName)
                                 DetailItemRow("সিস্টেম স্ট্যাটাস", "সক্রিয় (Active Tenant)")
                                 DetailItemRow("অ্যাপ প্ল্যাটফর্ম", "মসজিদ সেবা (Mosque Seba)")
                                 DetailItemRow("অফিসিয়াল স্লোগান", "মসজিদের খেদমতে আধুনিক প্রযুক্তি, পরিচালনায় স্বচ্ছ আস্থা")
@@ -1095,7 +1137,16 @@ fun MoreScreen(
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     when (currentRole) {
-                        UserRole.TREASURER -> {
+                        UserRole.TREASURER, UserRole.ASSISTANT_TREASURER -> {
+                            item {
+                                OperationMenuItem(
+                                    title = "দান বাক্স (ক্যাশবক্স) ও ব্যাংক জমা",
+                                    description = "সাপ্তাহিক/মাসিক ক্যাশবক্স গণনা, সাক্ষী নিশ্চিতকরণ ও ব্যাংকে জমা",
+                                    icon = Icons.Default.Inventory2,
+                                    iconColor = MosqueGoldDeep,
+                                    onClick = { selectedSubModule = "cashbox" }
+                                )
+                            }
                             item {
                                 OperationMenuItem(
                                     title = "চাঁদা আদায় ও রসিদ রেজিস্টার",
@@ -1134,6 +1185,15 @@ fun MoreScreen(
                             }
                             item {
                                 OperationMenuItem(
+                                    title = "আদর্শ কমিটি সনদ ও দায়িত্ব",
+                                    description = "৩-স্তরীয় কমিটির ১৩টি পদের দায়িত্ব ও পোর্টফোলিও নির্দেশিকা",
+                                    icon = Icons.Default.VerifiedUser,
+                                    iconColor = MosqueEmeraldDark,
+                                    onClick = { selectedSubModule = "charter" }
+                                )
+                            }
+                            item {
+                                OperationMenuItem(
                                     title = "মসজিদ পরিচিতি ও কমিটি তথ্য",
                                     description = "কমিটি কাঠামো, ইতিহাস, প্রতিষ্ঠা সাল ও ঠিকানা",
                                     icon = Icons.Default.Mosque,
@@ -1142,7 +1202,81 @@ fun MoreScreen(
                                 )
                             }
                         }
-                        UserRole.GENERAL_SECRETARY, UserRole.ORGANIZING_SECRETARY, UserRole.EXECUTIVE_MEMBER -> {
+                        UserRole.GENERAL_SECRETARY, UserRole.ASSISTANT_SECRETARY -> {
+                            item {
+                                OperationMenuItem(
+                                    title = "দপ্তর, দলিল-চুক্তি ও চিঠিপত্র",
+                                    description = "ওয়াকফ দলিল, চুক্তি ও আগত-প্রেরিত চিঠির ফাইল রেজিস্টার",
+                                    icon = Icons.Default.FolderShared,
+                                    iconColor = RoleOfficeAccent,
+                                    onClick = { selectedSubModule = "office_docs" }
+                                )
+                            }
+                            item {
+                                OperationMenuItem(
+                                    title = "কমিটি সভা ও এজেন্ডা",
+                                    description = "আসন্ন মিটিং নির্ধারণ ও পূর্ববর্তী রেজুলেশন",
+                                    icon = Icons.Default.Event,
+                                    iconColor = MosqueGoldDeep,
+                                    onClick = { selectedSubModule = "meetings" }
+                                )
+                            }
+                            item {
+                                OperationMenuItem(
+                                    title = "আদর্শ কমিটি সনদ ও দায়িত্ব",
+                                    description = "৩-স্তরীয় কমিটির সকল পদ ও দায়িত্বের বিস্তারিত তালিকা",
+                                    icon = Icons.Default.VerifiedUser,
+                                    iconColor = MosqueEmeraldPrimary,
+                                    onClick = { selectedSubModule = "charter" }
+                                )
+                            }
+                            item {
+                                OperationMenuItem(
+                                    title = "সমাজকল্যাণ, মেডিকেল ক্যাম্প ও যাকাত",
+                                    description = "যাকাত ও ফেতরা বিতরণ, মেডিকেল ক্যাম্প এবং ত্রাণ তদারকি",
+                                    icon = Icons.Default.Favorite,
+                                    iconColor = MosqueEmeraldPrimary,
+                                    onClick = { selectedSubModule = "welfare" }
+                                )
+                            }
+                            item {
+                                OperationMenuItem(
+                                    title = "মাহফিল ও বিশেষ অনুষ্ঠান",
+                                    description = "বাৎসরিক ওয়াজ, শবে কদর, ইফতার মাহফিল ও বিশেষ আয়োজন",
+                                    icon = Icons.Default.Campaign,
+                                    iconColor = MosqueGoldDeep,
+                                    onClick = { selectedSubModule = "events" }
+                                )
+                            }
+                            item {
+                                OperationMenuItem(
+                                    title = "ওয়াক্ত ও নামাজের দায়িত্ব বণ্টন",
+                                    description = "ইমাম ও মুয়াজ্জিনদের ডিউটি রোস্টার তদারকি",
+                                    icon = Icons.Default.EventNote,
+                                    iconColor = MosqueGoldDeep,
+                                    onClick = { selectedSubModule = "roster" }
+                                )
+                            }
+                            item {
+                                OperationMenuItem(
+                                    title = "ইমাম ও খাদেমদের খাবার শিডিউল",
+                                    description = "দৈনিক খাবার বণ্টন ও দাতাদের তালিকা",
+                                    icon = Icons.Default.Restaurant,
+                                    iconColor = MosqueInfoBlue,
+                                    onClick = { selectedSubModule = "food" }
+                                )
+                            }
+                            item {
+                                OperationMenuItem(
+                                    title = "মসজিদ পরিচিতি ও কমিটি তথ্য",
+                                    description = "কমিটি কাঠামো, ইতিহাস, প্রতিষ্ঠা সাল ও ঠিকানা",
+                                    icon = Icons.Default.Mosque,
+                                    iconColor = MosqueEmeraldDark,
+                                    onClick = { selectedSubModule = "about" }
+                                )
+                            }
+                        }
+                        UserRole.ORGANIZING_SECRETARY -> {
                             item {
                                 OperationMenuItem(
                                     title = "কমিটি সভা ও এজেন্ডা",
@@ -1172,6 +1306,15 @@ fun MoreScreen(
                             }
                             item {
                                 OperationMenuItem(
+                                    title = "আদর্শ কমিটি সনদ ও দায়িত্ব",
+                                    description = "৩-স্তরীয় কমিটির সকল পদ ও দায়িত্বের বিস্তারিত তালিকা",
+                                    icon = Icons.Default.VerifiedUser,
+                                    iconColor = MosqueEmeraldPrimary,
+                                    onClick = { selectedSubModule = "charter" }
+                                )
+                            }
+                            item {
+                                OperationMenuItem(
                                     title = "পূর্ণ নামাজের সময়সূচি ও ওয়াক্ত",
                                     description = "আজান ও জামাতের বিস্তারিত সূচি ও ক্যালেন্ডার",
                                     icon = Icons.Default.AccessTime,
@@ -1189,7 +1332,316 @@ fun MoreScreen(
                                 )
                             }
                         }
-                        UserRole.IMAM, UserRole.MUAZZIN, UserRole.KHADEM -> {
+                        UserRole.PUBLICITY_SECRETARY -> {
+                            item {
+                                OperationMenuItem(
+                                    title = "প্রচার, দেয়াল উক্তি ও স্মার্ট বোর্ড",
+                                    description = "মসজিদের দেয়াল লিখন/উক্তি, দিকনির্দেশনা ও স্মার্ট বোর্ড প্রকাশনা",
+                                    icon = Icons.Default.ViewCarousel,
+                                    iconColor = RolePublicityAccent,
+                                    onClick = { selectedSubModule = "publicity" }
+                                )
+                            }
+                            item {
+                                OperationMenuItem(
+                                    title = "মাহফিল ও বিশেষ অনুষ্ঠান",
+                                    description = "শবে কদর, শবে বরাত, ঈদে মিলাদুন্নবী ও ওয়াজ মাহফিল প্রচার",
+                                    icon = Icons.Default.Celebration,
+                                    iconColor = MosqueGoldDeep,
+                                    onClick = { selectedSubModule = "events" }
+                                )
+                            }
+                            item {
+                                OperationMenuItem(
+                                    title = "আদর্শ কমিটি সনদ ও দায়িত্ব",
+                                    description = "৩-স্তরীয় কমিটির সকল পদ ও দায়িত্বের বিস্তারিত তালিকা",
+                                    icon = Icons.Default.VerifiedUser,
+                                    iconColor = MosqueEmeraldPrimary,
+                                    onClick = { selectedSubModule = "charter" }
+                                )
+                            }
+                            item {
+                                OperationMenuItem(
+                                    title = "পূর্ণ নামাজের সময়সূচি ও ওয়াক্ত",
+                                    description = "আজান ও জামাতের বিস্তারিত সূচি ও ক্যালেন্ডার",
+                                    icon = Icons.Default.AccessTime,
+                                    iconColor = MosqueEmeraldLight,
+                                    onClick = { selectedSubModule = "prayer" }
+                                )
+                            }
+                            item {
+                                OperationMenuItem(
+                                    title = "মসজিদ পরিচিতি ও কমিটি তথ্য",
+                                    description = "কমিটি কাঠামো, ইতিহাস, প্রতিষ্ঠা সাল ও ঠিকানা",
+                                    icon = Icons.Default.Mosque,
+                                    iconColor = MosqueEmeraldDark,
+                                    onClick = { selectedSubModule = "about" }
+                                )
+                            }
+                        }
+                        UserRole.OFFICE_SECRETARY -> {
+                            item {
+                                OperationMenuItem(
+                                    title = "দপ্তর, দলিল-চুক্তি ও চিঠিপত্র",
+                                    description = "ওয়াকফ দলিল, ইজারা চুক্তি, আগত চিঠি ও জবাব সংরক্ষণ",
+                                    icon = Icons.Default.FolderShared,
+                                    iconColor = RoleOfficeAccent,
+                                    onClick = { selectedSubModule = "office_docs" }
+                                )
+                            }
+                            item {
+                                OperationMenuItem(
+                                    title = "কমিটি সভা ও রেজুলেশন",
+                                    description = "মিটিংয়ের আলোচ্যসূচি ও রেজুলেশন খাতা",
+                                    icon = Icons.Default.Event,
+                                    iconColor = MosqueGoldDeep,
+                                    onClick = { selectedSubModule = "meetings" }
+                                )
+                            }
+                            item {
+                                OperationMenuItem(
+                                    title = "আদর্শ কমিটি সনদ ও দায়িত্ব",
+                                    description = "৩-স্তরীয় কমিটির সকল পদ ও দায়িত্বের বিস্তারিত তালিকা",
+                                    icon = Icons.Default.VerifiedUser,
+                                    iconColor = MosqueEmeraldPrimary,
+                                    onClick = { selectedSubModule = "charter" }
+                                )
+                            }
+                            item {
+                                OperationMenuItem(
+                                    title = "স্বচ্ছতা ও সিস্টেম অডিট লগ",
+                                    description = "সকল নথিপত্র ও প্রশাসনিক কার্যক্রমের অডিট লগ",
+                                    icon = Icons.Default.FactCheck,
+                                    iconColor = MosqueWarningAmber,
+                                    onClick = { selectedSubModule = "audit" }
+                                )
+                            }
+                            item {
+                                OperationMenuItem(
+                                    title = "মসজিদ পরিচিতি ও কমিটি তথ্য",
+                                    description = "কমিটি কাঠামো, ইতিহাস, প্রতিষ্ঠা সাল ও ঠিকানা",
+                                    icon = Icons.Default.Mosque,
+                                    iconColor = MosqueEmeraldDark,
+                                    onClick = { selectedSubModule = "about" }
+                                )
+                            }
+                        }
+                        UserRole.WELFARE_EDUCATION_SECRETARY -> {
+                            item {
+                                OperationMenuItem(
+                                    title = "সমাজকল্যাণ, মেডিকেল ক্যাম্প ও ত্রাণ",
+                                    description = "যাকাত-সদকা বিতরণ, ফ্রি মেডিকেল ক্যাম্প ও দুর্যোগ ত্রাণ",
+                                    icon = Icons.Default.Favorite,
+                                    iconColor = RoleWelfareEduAccent,
+                                    onClick = { selectedSubModule = "welfare" }
+                                )
+                            }
+                            item {
+                                OperationMenuItem(
+                                    title = "মক্তব, হিফজ ও নূরানী মাদরাসা",
+                                    description = "ধর্মীয় শিক্ষা কার্যক্রম, ছাত্র হাজিরা ও হিফজ মূল্যায়ন",
+                                    icon = Icons.Default.School,
+                                    iconColor = MosqueEmeraldPrimary,
+                                    onClick = { selectedSubModule = "madrasa" }
+                                )
+                            }
+                            item {
+                                OperationMenuItem(
+                                    title = "মাহফিল ও বিশেষ অনুষ্ঠান",
+                                    description = "ধর্মীয় ও শিক্ষামূলক প্রতিযোগিতা ও সেমিনার আয়োজন",
+                                    icon = Icons.Default.Campaign,
+                                    iconColor = MosqueGoldDeep,
+                                    onClick = { selectedSubModule = "events" }
+                                )
+                            }
+                            item {
+                                OperationMenuItem(
+                                    title = "আদর্শ কমিটি সনদ ও দায়িত্ব",
+                                    description = "৩-স্তরীয় কমিটির সকল পদ ও দায়িত্বের বিস্তারিত তালিকা",
+                                    icon = Icons.Default.VerifiedUser,
+                                    iconColor = MosqueEmeraldDark,
+                                    onClick = { selectedSubModule = "charter" }
+                                )
+                            }
+                            item {
+                                OperationMenuItem(
+                                    title = "মসজিদ পরিচিতি ও কমিটি তথ্য",
+                                    description = "কমিটি কাঠামো, ইতিহাস, প্রতিষ্ঠা সাল ও ঠিকানা",
+                                    icon = Icons.Default.Mosque,
+                                    iconColor = MosqueEmeraldDark,
+                                    onClick = { selectedSubModule = "about" }
+                                )
+                            }
+                        }
+                        UserRole.EXECUTIVE_MEMBER -> {
+                            item {
+                                OperationMenuItem(
+                                    title = "দান বাক্স (ক্যাশবক্স) সাক্ষী ও গণনা",
+                                    description = "দান বাক্স খোলা ও ক্রয়-বিক্রয়ে সাক্ষী হিসেবে স্বাক্ষর প্রদান",
+                                    icon = Icons.Default.Verified,
+                                    iconColor = MosqueGoldDeep,
+                                    onClick = { selectedSubModule = "cashbox" }
+                                )
+                            }
+                            item {
+                                OperationMenuItem(
+                                    title = "কমিটি সভা ও এজেন্ডা",
+                                    description = "বড় সিদ্ধান্ত ও উন্নয়ন প্রকল্পের সভায় অংশগ্রহণ",
+                                    icon = Icons.Default.Event,
+                                    iconColor = MosqueEmeraldPrimary,
+                                    onClick = { selectedSubModule = "meetings" }
+                                )
+                            }
+                            item {
+                                OperationMenuItem(
+                                    title = "জুমা, ঈদ শৃঙ্খলা ও অনুষ্ঠান",
+                                    description = "জামাত শৃঙ্খলা ও মাহফিল ব্যবস্থাপনায় সহায়তা",
+                                    icon = Icons.Default.Campaign,
+                                    iconColor = MosqueGoldDeep,
+                                    onClick = { selectedSubModule = "events" }
+                                )
+                            }
+                            item {
+                                OperationMenuItem(
+                                    title = "আদর্শ কমিটি সনদ ও দায়িত্ব",
+                                    description = "৩-স্তরীয় কমিটির সকল পদ ও দায়িত্বের বিস্তারিত তালিকা",
+                                    icon = Icons.Default.VerifiedUser,
+                                    iconColor = MosqueEmeraldDark,
+                                    onClick = { selectedSubModule = "charter" }
+                                )
+                            }
+                            item {
+                                OperationMenuItem(
+                                    title = "মসজিদ পরিচিতি ও কমিটি তথ্য",
+                                    description = "কমিটি কাঠামো, ইতিহাস, প্রতিষ্ঠা সাল ও ঠিকানা",
+                                    icon = Icons.Default.Mosque,
+                                    iconColor = MosqueEmeraldDark,
+                                    onClick = { selectedSubModule = "about" }
+                                )
+                            }
+                        }
+                        UserRole.ADVISORY_BOARD -> {
+                            item {
+                                OperationMenuItem(
+                                    title = "উপদেষ্টা পরিষদ কৌশলগত প্যানেল",
+                                    description = "সংকটকালীন সমাধান ও সম্প্রসারণ/বহুতল নির্মাণ পরামর্শ",
+                                    icon = Icons.Default.AccountBalance,
+                                    iconColor = RoleAdvisoryAccent,
+                                    onClick = { selectedSubModule = "sharia_advisory" }
+                                )
+                            }
+                            item {
+                                OperationMenuItem(
+                                    title = "স্বচ্ছতা ও সিস্টেম অডিট লগ",
+                                    description = "সকল আর্থিক অনুমোদন ও তহবিলের স্বচ্ছ অডিট পর্যবেক্ষণ",
+                                    icon = Icons.Default.FactCheck,
+                                    iconColor = MosqueWarningAmber,
+                                    onClick = { selectedSubModule = "audit" }
+                                )
+                            }
+                            item {
+                                OperationMenuItem(
+                                    title = "আদর্শ কমিটি সনদ ও দায়িত্ব",
+                                    description = "৩-স্তরীয় কমিটির সকল পদ ও দায়িত্বের বিস্তারিত তালিকা",
+                                    icon = Icons.Default.VerifiedUser,
+                                    iconColor = MosqueEmeraldPrimary,
+                                    onClick = { selectedSubModule = "charter" }
+                                )
+                            }
+                            item {
+                                OperationMenuItem(
+                                    title = "কমিটি সভা ও এজেন্ডা",
+                                    description = "কমিটি সভার আলোচ্যসূচি ও রেজুলেশন পর্যবেক্ষণ",
+                                    icon = Icons.Default.Event,
+                                    iconColor = MosqueGoldDeep,
+                                    onClick = { selectedSubModule = "meetings" }
+                                )
+                            }
+                            item {
+                                OperationMenuItem(
+                                    title = "মসজিদ পরিচিতি ও কমিটি তথ্য",
+                                    description = "কমিটি কাঠামো, ইতিহাস, প্রতিষ্ঠা সাল ও ঠিকানা",
+                                    icon = Icons.Default.Mosque,
+                                    iconColor = MosqueEmeraldDark,
+                                    onClick = { selectedSubModule = "about" }
+                                )
+                            }
+                        }
+                        UserRole.IMAM -> {
+                            item {
+                                OperationMenuItem(
+                                    title = "পদাধিকারবলে শরিয়াহ পর্যালোচনা",
+                                    description = "কমিটির সিদ্ধান্ত ইসলামিক নীতিমালার সাথে সামঞ্জস্যপূর্ণ যাচাই",
+                                    icon = Icons.Default.MenuBook,
+                                    iconColor = MosqueEmeraldPrimary,
+                                    onClick = { selectedSubModule = "sharia_advisory" }
+                                )
+                            }
+                            item {
+                                OperationMenuItem(
+                                    title = "ওয়াক্ত ও নামাজের দায়িত্ব বণ্টন",
+                                    description = "ইমাম ও মুয়াজ্জিনদের ৫ ওয়াক্তের ডিউটি রোস্টার ও পরিচালনা",
+                                    icon = Icons.Default.EventNote,
+                                    iconColor = MosqueGoldDeep,
+                                    onClick = { selectedSubModule = "roster" }
+                                )
+                            }
+                            item {
+                                OperationMenuItem(
+                                    title = "ইমাম ও খাদেমদের খাবার শিডিউল",
+                                    description = "দৈনিক দুপুর ও রাতের খাবার বণ্টন ও দায়িত্বপ্রাপ্ত দাতাদের তালিকা",
+                                    icon = Icons.Default.Restaurant,
+                                    iconColor = MosqueInfoBlue,
+                                    onClick = { selectedSubModule = "food" }
+                                )
+                            }
+                            item {
+                                OperationMenuItem(
+                                    title = "মাদরাসা ও মক্তব পরিচালনা",
+                                    description = "ছাত্র হাজিরা, হিফজ ট্র্যাকার ও তালিম মূল্যায়ন",
+                                    icon = Icons.Default.School,
+                                    iconColor = MosqueEmeraldPrimary,
+                                    onClick = { selectedSubModule = "madrasa" }
+                                )
+                            }
+                            item {
+                                OperationMenuItem(
+                                    title = "আদর্শ কমিটি সনদ ও দায়িত্ব",
+                                    description = "৩-স্তরীয় কমিটির সকল পদ ও দায়িত্বের বিস্তারিত তালিকা",
+                                    icon = Icons.Default.VerifiedUser,
+                                    iconColor = MosqueEmeraldDark,
+                                    onClick = { selectedSubModule = "charter" }
+                                )
+                            }
+                            item {
+                                OperationMenuItem(
+                                    title = "আমার দায়িত্ব ও বেতন বিবরণী",
+                                    description = "ব্যক্তিগত সার্ভিস রেকর্ড ও মাসিক বেতন স্ট্যাটাস",
+                                    icon = Icons.Default.Badge,
+                                    iconColor = MosqueInfoBlue,
+                                    onClick = { selectedSubModule = "staff" }
+                                )
+                            }
+                            item {
+                                OperationMenuItem(
+                                    title = "পূর্ণ নামাজের সময়সূচি ও ওয়াক্ত",
+                                    description = "আজান ও জামাতের বিস্তারিত সূচি ও ক্যালেন্ডার",
+                                    icon = Icons.Default.AccessTime,
+                                    iconColor = MosqueEmeraldLight,
+                                    onClick = { selectedSubModule = "prayer" }
+                                )
+                            }
+                            item {
+                                OperationMenuItem(
+                                    title = "মসজিদ পরিচিতি ও কমিটি তথ্য",
+                                    description = "কমিটি কাঠামো, ইতিহাস, প্রতিষ্ঠা সাল ও ঠিকানা",
+                                    icon = Icons.Default.Mosque,
+                                    iconColor = MosqueEmeraldDark,
+                                    onClick = { selectedSubModule = "about" }
+                                )
+                            }
+                        }
+                        UserRole.MUAZZIN, UserRole.KHADEM -> {
                             item {
                                 OperationMenuItem(
                                     title = "ওয়াক্ত ও নামাজের দায়িত্ব বণ্টন",
@@ -1257,6 +1709,15 @@ fun MoreScreen(
                             }
                             item {
                                 OperationMenuItem(
+                                    title = "আদর্শ কমিটি সনদ ও দায়িত্ব",
+                                    description = "মসজিদ পরিচালনা কমিটির সকল দায়িত্বশীল ও তাদের কর্তব্য",
+                                    icon = Icons.Default.VerifiedUser,
+                                    iconColor = MosqueEmeraldDark,
+                                    onClick = { selectedSubModule = "charter" }
+                                )
+                            }
+                            item {
+                                OperationMenuItem(
                                     title = "পূর্ণ নামাজের সময়সূচি ও ওয়াক্ত",
                                     description = "আজান ও জামাতের বিস্তারিত সূচি ও ক্যালেন্ডার",
                                     icon = Icons.Default.AccessTime,
@@ -1287,6 +1748,51 @@ fun MoreScreen(
                             // President & Vice President: Supervisory access to all operations
                             item {
                                 OperationMenuItem(
+                                    title = "আদর্শ কমিটি সনদ ও দায়িত্ব",
+                                    description = "৩-স্তরীয় কমিটির ১৩টি পদের দায়িত্ব ও পোর্টফোলিও তদারকি",
+                                    icon = Icons.Default.VerifiedUser,
+                                    iconColor = MosqueEmeraldDark,
+                                    onClick = { selectedSubModule = "charter" }
+                                )
+                            }
+                            item {
+                                OperationMenuItem(
+                                    title = "দান বাক্স (ক্যাশবক্স) ও ব্যাংক জমা",
+                                    description = "ক্যাশবক্স গণনা, সাক্ষী নিশ্চিতকরণ ও ব্যাংক জমার অনুমোদন",
+                                    icon = Icons.Default.Inventory2,
+                                    iconColor = MosqueGoldDeep,
+                                    onClick = { selectedSubModule = "cashbox" }
+                                )
+                            }
+                            item {
+                                OperationMenuItem(
+                                    title = "দপ্তর, দলিল-চুক্তি ও চিঠিপত্র",
+                                    description = "ওয়াকফ দলিল, চুক্তি ও আগত-প্রেরিত চিঠিপত্রের তদারকি",
+                                    icon = Icons.Default.FolderShared,
+                                    iconColor = RoleOfficeAccent,
+                                    onClick = { selectedSubModule = "office_docs" }
+                                )
+                            }
+                            item {
+                                OperationMenuItem(
+                                    title = "শরিয়াহ পর্যালোচনা ও উপদেষ্টা পরিষদ",
+                                    description = "ইমামের শরিয়াহ ফতোয়া/মতামত ও উপদেষ্টা পরিষদের দিকনির্দেশনা",
+                                    icon = Icons.Default.AccountBalance,
+                                    iconColor = RoleAdvisoryAccent,
+                                    onClick = { selectedSubModule = "sharia_advisory" }
+                                )
+                            }
+                            item {
+                                OperationMenuItem(
+                                    title = "প্রচার, দেয়াল উক্তি ও স্মার্ট বোর্ড",
+                                    description = "মসজিদের দেয়াল লিখন/উক্তি ও স্মার্ট নোটিশ বোর্ড পরিচালনা",
+                                    icon = Icons.Default.ViewCarousel,
+                                    iconColor = RolePublicityAccent,
+                                    onClick = { selectedSubModule = "publicity" }
+                                )
+                            }
+                            item {
+                                OperationMenuItem(
                                     title = "স্বচ্ছতা ও সিস্টেম অডিট লগ",
                                     description = "সকল আর্থিক অনুমোদন ও ডাটা পরিবর্তনের অপরিবর্তনীয় রেকর্ড",
                                     icon = Icons.Default.FactCheck,
@@ -1306,7 +1812,7 @@ fun MoreScreen(
                             item {
                                 OperationMenuItem(
                                     title = "সমাজকল্যাণ ও যাকাত তহবিল",
-                                    description = "যাকাত ও ফেতরা বিতরণ, দুস্থ সহায়তা এবং চিকিৎসা অনুদান অনুমোদন",
+                                    description = "যাকাত ও ফেতরা বিতরণ, মেডিকেল ক্যাম্প এবং ত্রাণ অনুমোদন",
                                     icon = Icons.Default.Favorite,
                                     iconColor = MosqueEmeraldPrimary,
                                     onClick = { selectedSubModule = "welfare" }
@@ -1395,6 +1901,9 @@ fun MoreScreen(
     selectedPaymentForReceipt?.let { payment ->
         OfficialReceiptDialog(
             payment = payment,
+            mosqueName = mosque?.nameBn ?: "বায়তুল জান্নাত জামে মসজিদ",
+            mosqueAddress = mosque?.address ?: "মিরপুর-১০, ঢাকা",
+            committeeId = mosque?.committeeId ?: "MC-DHK-2024",
             onDismiss = { selectedPaymentForReceipt = null }
         )
     }
@@ -1494,7 +2003,11 @@ fun MoreScreen(
                     .clip(RoundedCornerShape(16.dp)),
                 colors = CardDefaults.cardColors(containerColor = Color.White)
             ) {
-                Column(modifier = Modifier.padding(20.dp)) {
+                Column(
+                    modifier = Modifier
+                        .padding(20.dp)
+                        .verticalScroll(rememberScrollState())
+                ) {
                     Text(
                         text = "নতুন ওয়াক্ত দায়িত্ব বণ্টন",
                         style = MaterialTheme.typography.titleLarge,
@@ -1503,11 +2016,20 @@ fun MoreScreen(
                     )
                     Spacer(modifier = Modifier.height(10.dp))
                     Text(
-                        text = "দায়িত্বপ্রাপ্ত: ${selectedStaff.nameBn}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MosqueEmeraldPrimary
+                        text = "স্টাফ নির্বাচন করুন:",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MosqueTextSecondary
                     )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        items(activeStaff, key = { it.id }) { staff ->
+                            FilterChip(
+                                selected = selectedStaff.id == staff.id,
+                                onClick = { selectedStaff = staff },
+                                label = { Text("${staff.nameBn} (${staff.designationBn})", fontSize = 11.sp) }
+                            )
+                        }
+                    }
                     Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(
                         value = dayOfWeek,
@@ -1846,7 +2368,14 @@ fun AddWelfareDialog(
     var amount by remember { mutableStateOf("") }
     var remarks by remember { mutableStateOf("") }
 
-    val categories = listOf("জরুরি চিকিৎসা সহায়তা", "বিধবা ও এতিম ভাতা", "দরিদ্র শিক্ষা সহায়তা", "খাদ্য ও ত্রাণ সহায়তা")
+    val categories = listOf(
+        "জরুরি চিকিৎসা সহায়তা",
+        "বিধবা ও এতিম ভাতা",
+        "দরিদ্র শিক্ষা সহায়তা",
+        "খাদ্য ও ত্রাণ সহায়তা",
+        "ফ্রি মেডিকেল ক্যাম্প",
+        "দুর্যোগকালীন ত্রাণ"
+    )
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -1856,7 +2385,11 @@ fun AddWelfareDialog(
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(containerColor = Color.White)
         ) {
-            Column(modifier = Modifier.padding(18.dp)) {
+            Column(
+                modifier = Modifier
+                    .padding(18.dp)
+                    .verticalScroll(rememberScrollState())
+            ) {
                 Text(
                     text = "সমাজকল্যাণ ও যাকাত সহায়তা আবেদন",
                     style = MaterialTheme.typography.titleMedium,
@@ -1876,30 +2409,20 @@ fun AddWelfareDialog(
 
                 Text("সহায়তার খাত:", style = MaterialTheme.typography.labelMedium, color = MosqueTextSecondary)
                 Spacer(modifier = Modifier.height(4.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    categories.take(2).forEach { cat ->
-                        FilterChip(
-                            selected = category == cat,
-                            onClick = { category = cat },
-                            label = { Text(cat, fontSize = 11.sp) }
-                        )
+                categories.chunked(2).forEach { rowCats ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        rowCats.forEach { cat ->
+                            FilterChip(
+                                selected = category == cat,
+                                onClick = { category = cat },
+                                label = { Text(cat, fontSize = 11.sp) }
+                            )
+                        }
                     }
-                }
-                Spacer(modifier = Modifier.height(4.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    categories.drop(2).forEach { cat ->
-                        FilterChip(
-                            selected = category == cat,
-                            onClick = { category = cat },
-                            label = { Text(cat, fontSize = 11.sp) }
-                        )
-                    }
+                    Spacer(modifier = Modifier.height(4.dp))
                 }
                 Spacer(modifier = Modifier.height(8.dp))
 

@@ -10,6 +10,8 @@ class MosqueRepository(private val database: MosqueDatabase) {
 
     // Mosque
     val mosque: Flow<MosqueEntity?> = database.mosqueDao().getMosque()
+    fun getMosqueById(id: String): Flow<MosqueEntity?> = database.mosqueDao().getMosqueById(id)
+    suspend fun getMosqueByCommitteeId(committeeId: String): MosqueEntity? = database.mosqueDao().getMosqueByCommitteeId(committeeId)
     suspend fun updateMosque(mosque: MosqueEntity) = database.mosqueDao().insertOrUpdate(mosque)
 
     // Members
@@ -29,6 +31,8 @@ class MosqueRepository(private val database: MosqueDatabase) {
     }
 
     suspend fun getMemberByMobile(mobile: String): MemberEntity? = database.memberDao().getMemberByMobile(mobile)
+
+    suspend fun getMemberByEmail(email: String): MemberEntity? = database.memberDao().getMemberByEmail(email)
 
     suspend fun getPresident(): MemberEntity? = database.memberDao().getPresident()
 
@@ -98,6 +102,11 @@ class MosqueRepository(private val database: MosqueDatabase) {
     suspend fun addStaff(staff: StaffEntity) {
         database.staffDao().insertStaff(staff)
         logAudit("STAFF_ADDED", "নতুন কর্মচারী নিয়োগ: ${staff.nameBn} (${staff.designationBn})")
+    }
+
+    suspend fun updateStaff(staff: StaffEntity) {
+        database.staffDao().updateStaff(staff)
+        logAudit("STAFF_UPDATED", "কর্মচারী তথ্য হালনাগাদ: ${staff.nameBn} (${staff.designationBn})")
     }
 
     // Notices
@@ -215,6 +224,158 @@ class MosqueRepository(private val database: MosqueDatabase) {
     suspend fun addEvent(event: MosqueEventEntity) {
         database.eventDao().insertEvent(event)
         logAudit("EVENT_PROGRAM_CREATED", "নতুন মসজিদ অনুষ্ঠান: ${event.title} (${event.dateStr})")
+    }
+
+    // --- দান বাক্স (ক্যাশবক্স) সাক্ষী ও ব্যাংক জমা ---
+    val allCashboxRecords: Flow<List<CashboxRecordEntity>> = database.cashboxDao().getAllRecords()
+
+    suspend fun recordCashboxOpening(record: CashboxRecordEntity, actor: String) {
+        database.cashboxDao().insertRecord(record)
+        logAudit(
+            action = "CASHBOX_OPENED",
+            details = "${record.boxType} গণনা: ৳${record.countedAmount.toInt()} (সাক্ষী: ${record.witnessNames})",
+            actor = actor
+        )
+    }
+
+    suspend fun verifyCashboxAsWitness(record: CashboxRecordEntity, witnessName: String) {
+        val updatedWitnesses = if (record.witnessNames.contains(witnessName)) {
+            record.witnessNames
+        } else if (record.witnessNames.isBlank()) {
+            witnessName
+        } else {
+            "${record.witnessNames}, $witnessName"
+        }
+        val newStatus = if (record.depositStatus == "bank_deposited") "bank_deposited" else "witness_verified"
+        database.cashboxDao().updateRecord(
+            record.copy(
+                witnessNames = updatedWitnesses,
+                witnessVerified = true,
+                verifiedBy = witnessName,
+                depositStatus = newStatus
+            )
+        )
+        logAudit(
+            action = "CASHBOX_WITNESS_VERIFIED",
+            details = "৳${record.countedAmount.toInt()} দান বাক্স গণনায় সাক্ষ্য নিশ্চিত করেছেন $witnessName",
+            actor = witnessName
+        )
+    }
+
+    suspend fun markCashboxBankDeposited(
+        record: CashboxRecordEntity,
+        bankName: String,
+        slipNo: String,
+        actor: String
+    ) {
+        val alreadyDeposited = record.depositStatus == "bank_deposited"
+        database.cashboxDao().updateRecord(
+            record.copy(
+                bankName = bankName,
+                depositSlipNo = slipNo,
+                depositStatus = "bank_deposited"
+            )
+        )
+        if (!alreadyDeposited) {
+            val txn = TransactionEntity(
+                id = UUID.randomUUID().toString(),
+                transactionCode = "TXN-BOX-${record.id.takeLast(4).uppercase()}",
+                categoryNameBn = record.boxType,
+                type = "INCOME",
+                amount = record.countedAmount,
+                txnDate = record.collectionDate,
+                description = "${record.boxType} ব্যাংক জমা (ব্যাংক: $bankName, স্লিপ: $slipNo, সাক্ষী: ${record.witnessNames})",
+                sourceType = "cashbox_deposit",
+                sourceId = record.id,
+                createdBy = actor,
+                approvalStatus = "pending"
+            )
+            database.transactionDao().insertTransaction(txn)
+        }
+        logAudit(
+            action = "CASHBOX_BANK_DEPOSITED",
+            details = "৳${record.countedAmount.toInt()} ব্যাংকে জমা সম্পন্ন ($bankName, স্লিপ: $slipNo)",
+            actor = actor
+        )
+    }
+
+    // --- দপ্তর, দলিল-চুক্তি ও চিঠিপত্র ---
+    val allOfficeDocuments: Flow<List<OfficeDocumentEntity>> = database.officeDocumentDao().getAllDocuments()
+
+    suspend fun addOfficeDocument(doc: OfficeDocumentEntity, actor: String) {
+        database.officeDocumentDao().insertDocument(doc)
+        logAudit(
+            action = "OFFICE_DOC_RECORDED",
+            details = "দপ্তর নথি যুক্ত: ${doc.title} (${doc.category} - ${doc.docCode})",
+            actor = actor
+        )
+    }
+
+    suspend fun updateOfficeDocumentReply(
+        doc: OfficeDocumentEntity,
+        replyNote: String,
+        newStatus: String,
+        actor: String
+    ) {
+        database.officeDocumentDao().updateDocument(
+            doc.copy(replyNote = replyNote, status = newStatus)
+        )
+        logAudit(
+            action = "OFFICE_DOC_UPDATED",
+            details = "${doc.docCode} নথির অবস্থা হালনাগাদ: $newStatus",
+            actor = actor
+        )
+    }
+
+    // --- শরিয়াহ পর্যালোচনা ও উপদেষ্টা পরামর্শ ---
+    val allAdvisoryNotes: Flow<List<AdvisoryNoteEntity>> = database.advisoryNoteDao().getAllNotes()
+
+    suspend fun submitAdvisoryNote(note: AdvisoryNoteEntity) {
+        database.advisoryNoteDao().insertNote(note)
+        logAudit(
+            action = note.noteType,
+            details = "${note.topic} — ${note.shariaCompliance}",
+            actor = "${note.authorName} (${note.authorRoleTitle})"
+        )
+    }
+
+    suspend fun updateAdvisoryNoteStatus(note: AdvisoryNoteEntity, newStatus: String, actor: String) {
+        database.advisoryNoteDao().updateNote(note.copy(status = newStatus))
+        logAudit(
+            action = "ADVISORY_STATUS_UPDATED",
+            details = "${note.topic} স্ট্যাটাস '$newStatus' হিসেবে চিহ্নিত",
+            actor = actor
+        )
+    }
+
+    // --- প্রচার ও প্রকাশনা / স্মার্ট বোর্ড উক্তি ---
+    val allSmartBoardQuotes: Flow<List<SmartBoardQuoteEntity>> = database.smartBoardQuoteDao().getAllQuotes()
+
+    suspend fun addSmartBoardQuote(quote: SmartBoardQuoteEntity) {
+        database.smartBoardQuoteDao().insertQuote(quote)
+        logAudit(
+            action = "SMART_BOARD_UPDATED",
+            details = "স্মার্ট বোর্ড বার্তা যুক্ত: ${quote.title} (${quote.category})",
+            actor = quote.createdBy
+        )
+    }
+
+    suspend fun togglePinSmartBoardQuote(quote: SmartBoardQuoteEntity, actor: String) {
+        database.smartBoardQuoteDao().updateQuote(quote.copy(isPinned = !quote.isPinned))
+        logAudit(
+            action = "SMART_BOARD_PINNED",
+            details = "${quote.title} পিন অবস্থা পরিবর্তিত",
+            actor = actor
+        )
+    }
+
+    suspend fun deleteSmartBoardQuote(quote: SmartBoardQuoteEntity, actor: String) {
+        database.smartBoardQuoteDao().deleteQuote(quote)
+        logAudit(
+            action = "SMART_BOARD_DELETED",
+            details = "স্মার্ট বোর্ড বার্তা অপসারিত: ${quote.title}",
+            actor = actor
+        )
     }
 
     private suspend fun logAudit(action: String, details: String, actor: String = "কমিটি প্রশাসন") {

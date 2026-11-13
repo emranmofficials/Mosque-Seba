@@ -43,6 +43,10 @@ val RoleTreasurerAccent = Color(0xFF059669)     // Treasury Ledger Emerald
 val RoleSecretaryAccent = Color(0xFF2563EB)     // Secretariat Sapphire Blue
 val RoleImamAccent = Color(0xFF047857)          // Sanctuary Mihrab Green
 val RoleMusalliAccent = Color(0xFF0D9488)       // Devotional Teal
+val RolePublicityAccent = Color(0xFF7C3AED)     // Editorial & Publicity Violet
+val RoleOfficeAccent = Color(0xFF0369A1)        // Office Registry Deep Sky
+val RoleWelfareEduAccent = Color(0xFF15803D)    // Welfare & Madrasa Forest Green
+val RoleAdvisoryAccent = Color(0xFFB45309)      // Advisory Bronze Ochre
 
 // Premium Islamic Mehrab & Minaret Gradients
 val MosqueEmeraldGradient = Brush.linearGradient(

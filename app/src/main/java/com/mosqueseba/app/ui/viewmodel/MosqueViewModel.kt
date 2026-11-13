@@ -1,18 +1,46 @@
 package com.mosqueseba.app.ui.viewmodel
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.Firebase
+import com.google.firebase.ai.ai
+import com.google.firebase.ai.type.Schema
+import com.google.firebase.ai.type.generationConfig
 import com.mosqueseba.app.data.local.MosqueDatabase
+import com.mosqueseba.app.data.local.SessionManager
 import com.mosqueseba.app.data.local.entity.*
 import com.mosqueseba.app.data.model.UserRole
 import com.mosqueseba.app.data.repository.MosqueRepository
-import com.mosqueseba.app.data.local.SessionManager
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
+import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.*
 
+private const val TAG = "MosqueViewModel"
+
+sealed interface AiNoticeUiState {
+    data object Idle : AiNoticeUiState
+    data object Loading : AiNoticeUiState
+    data class Success(val title: String, val content: String) : AiNoticeUiState
+    data class Error(val message: String) : AiNoticeUiState
+}
+
+sealed interface AiSummaryUiState {
+    data object Idle : AiSummaryUiState
+    data object Loading : AiSummaryUiState
+    data class Streaming(val text: String) : AiSummaryUiState
+    data class Success(val text: String) : AiSummaryUiState
+    data class Error(val message: String) : AiSummaryUiState
+}
+
+@OptIn(ExperimentalCoroutinesApi::class)
 class MosqueViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository: MosqueRepository
@@ -37,75 +65,151 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
         _currentUserRole.value = role
     }
 
-    suspend fun loginWithCredentials(
+    private val _activeMosqueId = MutableStateFlow(sessionManager.getActiveMosqueId())
+
+    suspend fun loginPresidentWithEmail(
+        committeeId: String,
+        email: String,
+        pass: String,
+        rememberMe: Boolean = true
+    ): Pair<Boolean, String?> {
+        val cleanEmail = email.trim().lowercase()
+        val trimmedCommitteeId = committeeId.trim()
+
+        val matchedMosque = if (trimmedCommitteeId.isNotBlank()) {
+            repository.getMosqueByCommitteeId(trimmedCommitteeId)
+        } else {
+            repository.getMosqueById(_activeMosqueId.value).firstOrNull() ?: repository.mosque.firstOrNull()
+        }
+
+        if (trimmedCommitteeId.isNotBlank() && matchedMosque == null) {
+            return Pair(false, "প্রদত্ত কমিটি আইডি খুঁজে পাওয়া যায়নি।")
+        }
+
+        val member = repository.getMemberByEmail(cleanEmail)
+            ?: return Pair(false, "এই ইমেইল ঠিকানায় কোনো সভাপতি অ্যাকাউন্ট পাওয়া যায়নি।")
+
+        val role = UserRole.fromCode(member.roleCode)
+        if (role != UserRole.PRESIDENT) {
+            return Pair(false, "শুধুমাত্র সভাপতি ইমেইল ও পাসওয়ার্ড দিয়ে লগইন করতে পারবেন।")
+        }
+
+        val registeredPasswordCheck = sessionManager.verifyRegisteredPresidentPassword(cleanEmail, pass)
+        val isPasswordValid = registeredPasswordCheck ?: (pass == "123456")
+        if (!isPasswordValid) {
+            return Pair(false, "গোপন পাসওয়ার্ড সঠিক নয়।")
+        }
+
+        val resolvedMosqueId = matchedMosque?.id
+            ?: sessionManager.getRegisteredMosqueIdForEmail(cleanEmail)
+            ?: _activeMosqueId.value
+        _activeMosqueId.value = resolvedMosqueId
+        _currentUserRole.value = role
+        _isLoggedIn.value = true
+        sessionManager.saveSession(
+            role = role,
+            memberId = member.id,
+            memberName = member.nameBn,
+            committeeId = matchedMosque?.committeeId ?: trimmedCommitteeId.ifBlank { "MC-DHK-2024" },
+            mobile = member.mobile,
+            rememberMe = rememberMe,
+            mosqueId = resolvedMosqueId
+        )
+        return Pair(true, null)
+    }
+
+    suspend fun loginMemberWithMobile(
         committeeId: String,
         mobile: String,
         pass: String,
         rememberMe: Boolean = true
     ): Pair<Boolean, String?> {
         val cleanMobile = mobile.replace("-", "").replace(" ", "").trim()
-        val currentMosque = repository.mosque.firstOrNull()
-        val validCommitteeId = currentMosque?.committeeId ?: "MC-DHK-2024"
+        val trimmedCommitteeId = committeeId.trim()
+
+        val matchedMosque = if (trimmedCommitteeId.isNotBlank()) {
+            repository.getMosqueByCommitteeId(trimmedCommitteeId)
+        } else {
+            repository.getMosqueById(_activeMosqueId.value).firstOrNull() ?: repository.mosque.firstOrNull()
+        }
+
+        if (trimmedCommitteeId.isNotBlank() && matchedMosque == null) {
+            return Pair(false, "প্রদত্ত কমিটি আইডি খুঁজে পাওয়া যায়নি।")
+        }
 
         val member = repository.getMemberByMobile(cleanMobile)
-        if (member != null) {
-            val role = UserRole.fromCode(member.roleCode)
-            _currentUserRole.value = role
-            _isLoggedIn.value = true
-            sessionManager.saveSession(
-                role = role,
-                memberId = member.id,
-                memberName = member.nameBn,
-                committeeId = committeeId.ifBlank { validCommitteeId },
-                mobile = member.mobile,
-                rememberMe = rememberMe
-            )
-            return Pair(true, null)
+            ?: return Pair(false, "এই মোবাইল নম্বরে কোনো নিবন্ধিত সদস্য পাওয়া যায়নি।")
+
+        val role = UserRole.fromCode(member.roleCode)
+        if (role == UserRole.PRESIDENT) {
+            return Pair(false, "সভাপতি মোবাইল দিয়ে নয়, 'সভাপতি লগইন' ট্যাব থেকে ইমেইল ও পাসওয়ার্ড দিয়ে লগইন করুন।")
         }
 
-        // Demo credentials fallback by mobile patterns
-        val defaultRole = when {
-            cleanMobile.contains("71122") -> UserRole.PRESIDENT
-            cleanMobile.contains("71555") -> UserRole.TREASURER
-            cleanMobile.contains("91244") -> UserRole.GENERAL_SECRETARY
-            cleanMobile.contains("61177") -> UserRole.ORGANIZING_SECRETARY
-            cleanMobile.contains("81122") -> UserRole.IMAM
-            else -> UserRole.GENERAL_MEMBER
+        val digitsOnly = member.mobile.filter { it.isDigit() }
+        val expectedLast6 = digitsOnly.takeLast(6)
+        if (digitsOnly.length < 6 || pass.trim() != expectedLast6) {
+            return Pair(false, "পাসওয়ার্ড সঠিক নয়। আপনার মোবাইল নম্বরের শেষ ৬টি সংখ্যা দিন।")
         }
-        _currentUserRole.value = defaultRole
+
+        val resolvedMosqueId = matchedMosque?.id
+            ?: sessionManager.getRegisteredMosqueIdForMobile(cleanMobile)
+            ?: _activeMosqueId.value
+        _activeMosqueId.value = resolvedMosqueId
+        _currentUserRole.value = role
         _isLoggedIn.value = true
         sessionManager.saveSession(
-            role = defaultRole,
-            memberId = "mem-${defaultRole.code}",
-            memberName = if (defaultRole == UserRole.PRESIDENT) "মো: রফিকুল ইসলাম" else "সম্মানিত ব্যবহারকারী",
-            committeeId = committeeId.ifBlank { validCommitteeId },
-            mobile = mobile,
-            rememberMe = rememberMe
+            role = role,
+            memberId = member.id,
+            memberName = member.nameBn,
+            committeeId = matchedMosque?.committeeId ?: trimmedCommitteeId.ifBlank { "MC-DHK-2024" },
+            mobile = member.mobile,
+            rememberMe = rememberMe,
+            mosqueId = resolvedMosqueId
         )
         return Pair(true, null)
     }
 
+    suspend fun loginWithCredentials(
+        committeeId: String,
+        mobile: String,
+        pass: String,
+        rememberMe: Boolean = true
+    ): Pair<Boolean, String?> = loginMemberWithMobile(committeeId, mobile, pass, rememberMe)
+
     fun quickLoginAsRole(role: UserRole, rememberMe: Boolean = true) {
         _currentUserRole.value = role
         _isLoggedIn.value = true
-        val (name, mobile) = when (role) {
+        val matchedMember = allMembers.value.firstOrNull { it.roleCode.equals(role.code, ignoreCase = true) }
+        val (fallbackName, fallbackMobile) = when (role) {
             UserRole.PRESIDENT -> "মো: রফিকুল ইসলাম" to "01711-223344"
             UserRole.VICE_PRESIDENT -> "আলহাজ্ব আব্দুল বারী" to "01819-334455"
             UserRole.GENERAL_SECRETARY -> "ইঞ্জি: আব্দুল্লাহ আল মামুন" to "01912-445566"
+            UserRole.ASSISTANT_SECRETARY -> "মো: জাকির হোসেন" to "01716-334411"
             UserRole.TREASURER -> "হাজী মো: আবুল কাসেম" to "01715-556677"
+            UserRole.ASSISTANT_TREASURER -> "মো: নজরুল ইসলাম" to "01817-445522"
             UserRole.ORGANIZING_SECRETARY -> "মো: আসাদুজ্জামান" to "01611-778899"
-            UserRole.IMAM -> "মাওলানা হাফেজ ক্বারী মো: নুরুল ইসলাম" to "01811-223344"
-            UserRole.MUAZZIN -> "মো: বেলাল হোসেন" to "01922-334455"
-            UserRole.KHADEM -> "মো: আব্দুল কুদ্দুস" to "01733-445566"
-            else -> "মো: শাহজাহান আলী (মুসুল্লি)" to "01723-001122"
+            UserRole.PUBLICITY_SECRETARY -> "হাফেজ মাওলানা সাইফুল ইসলাম" to "01918-556633"
+            UserRole.OFFICE_SECRETARY -> "মো: তানভীর আহমেদ" to "01619-667744"
+            UserRole.WELFARE_EDUCATION_SECRETARY -> "মাওলানা আব্দুর রাজ্জাক" to "01720-778855"
+            UserRole.EXECUTIVE_MEMBER -> "ডা: তারিকুল ইসলাম" to "01552-889900"
+            UserRole.IMAM -> "মাওলানা মুফতি মিজানুর রহমান" to "01712-998877"
+            UserRole.ADVISORY_BOARD -> "আলহাজ্ব শামসুল হক চৌধুরী" to "01711-009988"
+            UserRole.MUAZZIN -> "কারী মো: ইসমাইল হোসেন" to "01823-887766"
+            UserRole.KHADEM -> "মো: মোস্তফা মিয়া" to "01934-776655"
+            UserRole.GENERAL_MEMBER -> "মো: শাহজাহান আলী" to "01723-001122"
         }
+        val name = matchedMember?.nameBn ?: fallbackName
+        val mobile = matchedMember?.mobile ?: fallbackMobile
+        val memberId = matchedMember?.id ?: "mem-${role.code}"
+        val activeMosque = mosque.value
         sessionManager.saveSession(
             role = role,
-            memberId = "mem-${role.code}",
+            memberId = memberId,
             memberName = name,
-            committeeId = "MC-DHK-2024",
+            committeeId = activeMosque?.committeeId ?: "MC-DHK-2024",
             mobile = mobile,
-            rememberMe = rememberMe
+            rememberMe = rememberMe,
+            mosqueId = activeMosque?.id ?: _activeMosqueId.value
         )
     }
 
@@ -116,18 +220,27 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
         presidentEmail: String,
         presidentNid: String,
         password: String,
+        presidentMonthlyChanda: Double = 0.0,
+        willingToProvideStaffMeals: Boolean = false,
+        presidentPhotoUri: String? = null,
         mosqueNameBn: String,
         mosqueNameEn: String,
         address: String,
         establishedYear: Int,
         startYear: Int,
-        endYear: Int
+        endYear: Int,
+        district: String = "",
+        upazila: String = "",
+        waqfRegNo: String = "",
+        capacity: Int? = null,
+        bankAccountInfo: String = "",
+        mosqueLogoUri: String? = null
     ): Result<String> {
         val committeeId = "MC-REG-${System.currentTimeMillis().toString().takeLast(4)}"
         val mosqueId = "mosque-${UUID.randomUUID().toString().take(8)}"
         val presidentId = "mem-${UUID.randomUUID().toString().take(8)}"
 
-        val mosque = MosqueEntity(
+        val mosqueEntity = MosqueEntity(
             id = mosqueId,
             committeeId = committeeId,
             nameBn = mosqueNameBn,
@@ -136,7 +249,13 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
             establishedYear = establishedYear,
             committeeStartYear = startYear,
             committeeEndYear = endYear,
-            status = "active"
+            status = "active",
+            district = district.trim(),
+            upazila = upazila.trim(),
+            waqfRegNo = waqfRegNo.trim(),
+            capacity = capacity,
+            bankAccountInfo = bankAccountInfo.trim(),
+            logoUrl = mosqueLogoUri
         )
 
         val president = MemberEntity(
@@ -148,15 +267,31 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
             email = presidentEmail,
             nid = presidentNid,
             address = address,
-            villageArea = address.substringBefore(",").ifBlank { "সদর" },
+            villageArea = upazila.trim().ifBlank { address.substringBefore(",").ifBlank { "সদর" } },
             roleCode = "president",
-            monthlyChanda = 2000.0,
+            monthlyChanda = presidentMonthlyChanda,
             joinDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date()),
-            status = "active"
+            photoUrl = presidentPhotoUri,
+            status = "active",
+            willingToProvideStaffMeals = willingToProvideStaffMeals
         )
 
-        val success = repository.registerNewMosqueAndPresident(mosque, president)
+        val success = repository.registerNewMosqueAndPresident(mosqueEntity, president)
         return if (success) {
+            sessionManager.saveRegisteredCredential(
+                mobile = presidentMobile,
+                committeeId = committeeId,
+                mosqueId = mosqueId,
+                password = password
+            )
+            sessionManager.saveRegisteredPresidentEmailCredential(
+                email = presidentEmail,
+                committeeId = committeeId,
+                mosqueId = mosqueId,
+                password = password
+            )
+            sessionManager.saveActiveMosqueId(mosqueId)
+            _activeMosqueId.value = mosqueId
             _currentUserRole.value = UserRole.PRESIDENT
             _isLoggedIn.value = true
             sessionManager.saveSession(
@@ -165,7 +300,8 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
                 memberName = presidentNameBn,
                 committeeId = committeeId,
                 mobile = presidentMobile,
-                rememberMe = true
+                rememberMe = true,
+                mosqueId = mosqueId
             )
             Result.success(committeeId)
         } else {
@@ -186,8 +322,146 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
 
 
     // Mosque
-    val mosque: StateFlow<MosqueEntity?> = repository.mosque
+    val mosque: StateFlow<MosqueEntity?> = _activeMosqueId
+        .flatMapLatest { id ->
+            repository.getMosqueById(id).flatMapLatest { byId ->
+                if (byId != null) flowOf(byId) else repository.mosque
+            }
+        }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    // --- Firebase AI Logic (Gemini 3.8 Flash) ---
+    private val noticeSchema = Schema.obj(
+        properties = mapOf(
+            "title" to Schema.string(description = "A concise, formal Bengali mosque notice title"),
+            "content" to Schema.string(description = "Professional Islamic-toned Bengali notice body starting with Bismillah and ending with Mosque Committee signature")
+        )
+    )
+
+    private val noticeDraftModel by lazy {
+        Firebase.ai.generativeModel(
+            modelName = "gemini-3.8-flash",
+            generationConfig = generationConfig {
+                responseMimeType = "application/json"
+                responseSchema = noticeSchema
+            }
+        )
+    }
+
+    private val summaryModel by lazy {
+        Firebase.ai.generativeModel("gemini-3.8-flash")
+    }
+
+    private val _aiNoticeState = MutableStateFlow<AiNoticeUiState>(AiNoticeUiState.Idle)
+    val aiNoticeState: StateFlow<AiNoticeUiState> = _aiNoticeState.asStateFlow()
+
+    private val _aiSummaryState = MutableStateFlow<AiSummaryUiState>(AiSummaryUiState.Idle)
+    val aiSummaryState: StateFlow<AiSummaryUiState> = _aiSummaryState.asStateFlow()
+
+    fun clearAiNoticeState() {
+        _aiNoticeState.value = AiNoticeUiState.Idle
+    }
+
+    fun clearAiSummaryState() {
+        _aiSummaryState.value = AiSummaryUiState.Idle
+    }
+
+    fun draftNoticeWithAi(instruction: String) {
+        val cleanInstruction = instruction.trim()
+        if (cleanInstruction.isBlank()) {
+            _aiNoticeState.value = AiNoticeUiState.Error("অনুগ্রহ করে নোটিশের সংক্ষিপ্ত নির্দেশনা লিখুন।")
+            return
+        }
+        val activeMosqueName = mosque.value?.nameBn ?: "বায়তুল জান্নাত জামে মসজিদ"
+        val activeMosqueAddress = mosque.value?.address ?: "ঢাকা"
+
+        viewModelScope.launch {
+            _aiNoticeState.value = AiNoticeUiState.Loading
+            try {
+                val prompt = """
+                    আপনি "$activeMosqueName" ($activeMosqueAddress)-এর দাপ্তরিক নোটিশ সহকারী।
+                    নিচের সংক্ষিপ্ত নির্দেশনা থেকে মুসল্লি ও কমিটির জন্য মার্জিত, ইসলামিক ও দাপ্তরিক বাংলায় একটি নোটিশের শিরোনাম (title) এবং বিস্তারিত নোটিশ (content) তৈরি করুন।
+                    বিস্তারিত নোটিশ "বিসমিল্লাহির রাহমানির রাহিম" দিয়ে শুরু করে "— মসজিদ পরিচালনা কমিটি, $activeMosqueName" দিয়ে শেষ করবেন।
+                    নির্দেশনা: $cleanInstruction
+                """.trimIndent()
+
+                val response = withTimeout(60_000L) {
+                    noticeDraftModel.generateContent(prompt)
+                }
+                val jsonString = response.text
+                if (jsonString.isNullOrBlank()) {
+                    _aiNoticeState.value = AiNoticeUiState.Error("জেমিনি মডেল থেকে কোনো খসড়া পাওয়া যায়নি।")
+                    return@launch
+                }
+                val json = JSONObject(jsonString)
+                val draftedTitle = json.getString("title")
+                val draftedContent = json.getString("content")
+                _aiNoticeState.value = AiNoticeUiState.Success(
+                    title = draftedTitle,
+                    content = draftedContent
+                )
+            } catch (e: TimeoutCancellationException) {
+                Log.e(TAG, "AI notice drafting timed out", e)
+                _aiNoticeState.value = AiNoticeUiState.Error("৬০ সেকেন্ডে কোনো উত্তর পাওয়া যায়নি। অনুগ্রহ করে আবার চেষ্টা করুন।")
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.e(TAG, "Firebase AI notice drafting failed", e)
+                _aiNoticeState.value = AiNoticeUiState.Error(
+                    e.localizedMessage ?: "এআই নোটিশ খসড়া তৈরি ব্যর্থ হয়েছে।"
+                )
+            }
+        }
+    }
+
+    fun generateFinanceSummaryWithAi() {
+        val activeMosqueName = mosque.value?.nameBn ?: "বায়তুল জান্নাত জামে মসজিদ"
+        val inc = totalIncome.value
+        val exp = totalExpense.value
+        val bal = netBalance.value
+        val pendingCount = pendingTransactions.value.size
+        val approvedCount = allTransactions.value.count { it.approvalStatus == "approved" }
+        val chanda = totalChandaCollected.value
+
+        viewModelScope.launch {
+            _aiSummaryState.value = AiSummaryUiState.Loading
+            val accumulated = StringBuilder()
+            try {
+                val prompt = """
+                    আপনি "$activeMosqueName"-এর স্বচ্ছ আর্থিক প্রতিবেদনের সহকারী।
+                    নিচের বাস্তব হিসাবের উপর ভিত্তি করে ৩-৪টি সংক্ষিপ্ত বুলেট পয়েন্টে বাংলায় একটি পরিচ্ছন্ন ও স্বচ্ছ আর্থিক সারসংক্ষেপ লিখুন (কোনো সংখ্যা বানাবেন না):
+                    - মোট অনুমোদিত আয়: ৳${String.format(Locale.US, "%,.0f", inc)}
+                    - মোট অনুমোদিত ব্যয়: ৳${String.format(Locale.US, "%,.0f", exp)}
+                    - বর্তমান নিট তহবিল ব্যালেন্স: ৳${String.format(Locale.US, "%,.0f", bal)}
+                    - মোট সদস্য চাঁদা আদায়: ৳${String.format(Locale.US, "%,.0f", chanda)}
+                    - অনুমোদিত লেনদেন: $approvedCount টি
+                    - অনুমোদনের অপেক্ষায়: $pendingCount টি
+                """.trimIndent()
+
+                withTimeout(60_000L) {
+                    summaryModel.generateContentStream(prompt).collect { chunk ->
+                        accumulated.append(chunk.text.orEmpty())
+                        _aiSummaryState.value = AiSummaryUiState.Streaming(accumulated.toString())
+                    }
+                }
+                if (accumulated.isNotBlank()) {
+                    _aiSummaryState.value = AiSummaryUiState.Success(accumulated.toString())
+                } else {
+                    _aiSummaryState.value = AiSummaryUiState.Error("এআই সারসংক্ষেপ খালি এসেছে।")
+                }
+            } catch (e: TimeoutCancellationException) {
+                Log.e(TAG, "AI finance summary timed out", e)
+                _aiSummaryState.value = AiSummaryUiState.Error("আর্থিক সারসংক্ষেপ তৈরিতে সময় শেষ হয়েছে।")
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.e(TAG, "Firebase AI finance summary failed", e)
+                _aiSummaryState.value = AiSummaryUiState.Error(
+                    e.localizedMessage ?: "আর্থিক সারসংক্ষেপ তৈরি ব্যর্থ হয়েছে।"
+                )
+            }
+        }
+    }
 
     // Members & search
     val allMembers: StateFlow<List<MemberEntity>> = repository.allMembers
@@ -238,11 +512,16 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
         address: String,
         villageArea: String,
         roleCode: String,
-        monthlyChanda: Double
+        monthlyChanda: Double,
+        photoUrl: String? = null,
+        willingToProvideStaffMeals: Boolean = false,
+        salaryAmount: Double = 0.0,
+        staffMealRequired: Boolean = true
     ) {
         viewModelScope.launch {
             val count = allMembers.value.size + 101
             val newCode = "MEM-$count"
+            val joinDateStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
             val member = MemberEntity(
                 id = UUID.randomUUID().toString(),
                 memberCode = newCode,
@@ -255,10 +534,30 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
                 villageArea = villageArea,
                 roleCode = roleCode,
                 monthlyChanda = monthlyChanda,
-                joinDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date()),
-                status = "active"
+                joinDate = joinDateStr,
+                photoUrl = photoUrl,
+                status = "active",
+                willingToProvideStaffMeals = willingToProvideStaffMeals
             )
             repository.addMember(member)
+
+            val isStaffRole = roleCode.equals("imam", ignoreCase = true) ||
+                roleCode.equals("muazzin", ignoreCase = true) ||
+                roleCode.equals("khadem", ignoreCase = true)
+            if (isStaffRole) {
+                val roleTitle = UserRole.fromCode(roleCode).titleBn
+                val staff = StaffEntity(
+                    id = "staff-${UUID.randomUUID().toString().take(8)}",
+                    nameBn = nameBn,
+                    roleCode = roleCode,
+                    designationBn = roleTitle,
+                    joinDate = joinDateStr,
+                    salaryAmount = if (salaryAmount > 0) salaryAmount else 12000.0,
+                    mealRequired = staffMealRequired,
+                    mobile = mobile
+                )
+                repository.addStaff(staff)
+            }
         }
     }
 
@@ -294,9 +593,9 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
             val dateStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
             val role = _currentUserRole.value
 
-            // Approval policy: President creates auto-approved; others or high amount pending
-            val status = if (role == UserRole.PRESIDENT && amount <= 50000) "approved" else "pending"
-            val approvedBy = if (status == "approved") "${role.titleBn}" else null
+            // Approval policy: President / Vice President creates auto-approved up to 50k; others pending
+            val status = if (role.canApproveFinance() && amount <= 50000) "approved" else "pending"
+            val approvedBy = if (status == "approved") role.titleBn else null
 
             val txn = TransactionEntity(
                 id = UUID.randomUUID().toString(),
@@ -330,6 +629,11 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
     val totalChandaCollected: StateFlow<Double> = repository.totalChandaCollected
         .map { it ?: 0.0 }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
+
+    val dueChanda: StateFlow<Double> = combine(allMembers, totalChandaCollected) { members, collected ->
+        val expectedMonthly = members.filter { it.status == "active" }.sumOf { it.monthlyChanda }
+        (expectedMonthly - collected).coerceAtLeast(0.0)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 
     fun recordChandaPayment(
         member: MemberEntity,
@@ -439,6 +743,15 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
 
     val studentCount: StateFlow<Int> = repository.studentCount
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
+
+    fun getAttendanceByDate(date: String): Flow<List<MadrasaAttendanceEntity>> =
+        repository.getAttendanceByDate(date)
+
+    fun recordAttendanceBatch(attendanceList: List<MadrasaAttendanceEntity>) {
+        viewModelScope.launch {
+            repository.recordAttendanceBatch(attendanceList)
+        }
+    }
 
     fun addStudent(
         nameBn: String,
@@ -647,6 +960,203 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
                 status = "upcoming"
             )
             repository.addEvent(event)
+        }
+    }
+
+    // --- Member Management Actions ---
+    fun updateMemberRole(member: MemberEntity, newRole: UserRole) {
+        viewModelScope.launch {
+            repository.updateMember(member.copy(roleCode = newRole.code))
+        }
+    }
+
+    fun updateMemberDetails(member: MemberEntity) {
+        viewModelScope.launch {
+            repository.updateMember(member)
+        }
+    }
+
+    fun toggleMemberStatus(member: MemberEntity) {
+        viewModelScope.launch {
+            val nextStatus = if (member.status == "active") "inactive" else "active"
+            repository.updateMember(member.copy(status = nextStatus))
+        }
+    }
+
+    fun deleteMember(member: MemberEntity) {
+        viewModelScope.launch {
+            repository.deleteMember(member)
+        }
+    }
+
+    fun updateStaffDetails(staff: StaffEntity) {
+        viewModelScope.launch {
+            repository.updateStaff(staff)
+        }
+    }
+
+    // --- দান বাক্স (ক্যাশবক্স) সাক্ষী ও ব্যাংক জমা ---
+    val allCashboxRecords: StateFlow<List<CashboxRecordEntity>> = repository.allCashboxRecords
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    fun recordCashboxOpening(
+        boxType: String,
+        countedAmount: Double,
+        witnessNames: String,
+        bankName: String,
+        depositSlipNo: String,
+        notes: String
+    ) {
+        viewModelScope.launch {
+            val role = _currentUserRole.value
+            val dateStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+            val hasBankDeposit = bankName.isNotBlank() && depositSlipNo.isNotBlank()
+            val record = CashboxRecordEntity(
+                id = "cb-${UUID.randomUUID().toString().take(8)}",
+                collectionDate = dateStr,
+                boxType = boxType,
+                countedAmount = countedAmount,
+                countedBy = role.titleBn,
+                witnessNames = witnessNames.ifBlank { "উপস্থিত কার্যনির্বাহী সদস্যবৃন্দ" },
+                witnessVerified = false,
+                bankName = bankName,
+                depositSlipNo = depositSlipNo,
+                depositStatus = if (hasBankDeposit) "bank_deposited" else "counted",
+                notes = notes
+            )
+            repository.recordCashboxOpening(record, role.titleBn)
+            if (hasBankDeposit) {
+                addTransaction(
+                    categoryNameBn = boxType,
+                    type = "INCOME",
+                    amount = countedAmount,
+                    description = "$boxType ব্যাংক জমা ($bankName, স্লিপ: $depositSlipNo, সাক্ষী: $witnessNames)",
+                    sourceType = "cashbox_deposit"
+                )
+            }
+        }
+    }
+
+    fun verifyCashboxAsWitness(record: CashboxRecordEntity) {
+        viewModelScope.launch {
+            val role = _currentUserRole.value
+            val actorName = allMembers.value.firstOrNull {
+                it.roleCode.equals(role.code, ignoreCase = true)
+            }?.nameBn ?: role.titleBn
+            repository.verifyCashboxAsWitness(record, "$actorName (${role.titleBn})")
+        }
+    }
+
+    fun markCashboxBankDeposited(record: CashboxRecordEntity, bankName: String, slipNo: String) {
+        viewModelScope.launch {
+            repository.markCashboxBankDeposited(
+                record = record,
+                bankName = bankName,
+                slipNo = slipNo,
+                actor = _currentUserRole.value.titleBn
+            )
+        }
+    }
+
+    // --- দপ্তর, দলিল-চুক্তি ও চিঠিপত্র ---
+    val allOfficeDocuments: StateFlow<List<OfficeDocumentEntity>> = repository.allOfficeDocuments
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    fun addOfficeDocument(
+        title: String,
+        category: String,
+        counterparty: String,
+        summary: String,
+        status: String
+    ) {
+        viewModelScope.launch {
+            val dateStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+            val num = allOfficeDocuments.value.size + 1
+            val doc = OfficeDocumentEntity(
+                id = "doc-${UUID.randomUUID().toString().take(8)}",
+                docCode = "DOC-${String.format(Locale.US, "%03d", num)}",
+                title = title,
+                category = category,
+                counterparty = counterparty,
+                docDate = dateStr,
+                summary = summary,
+                status = status,
+                recordedBy = _currentUserRole.value.titleBn
+            )
+            repository.addOfficeDocument(doc, _currentUserRole.value.titleBn)
+        }
+    }
+
+    fun updateOfficeDocumentReply(doc: OfficeDocumentEntity, replyNote: String, newStatus: String) {
+        viewModelScope.launch {
+            repository.updateOfficeDocumentReply(doc, replyNote, newStatus, _currentUserRole.value.titleBn)
+        }
+    }
+
+    // --- শরিয়াহ পর্যালোচনা ও উপদেষ্টা পরামর্শ ---
+    val allAdvisoryNotes: StateFlow<List<AdvisoryNoteEntity>> = repository.allAdvisoryNotes
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    fun submitAdvisoryNote(
+        noteType: String,
+        topic: String,
+        recommendation: String,
+        shariaCompliance: String
+    ) {
+        viewModelScope.launch {
+            val role = _currentUserRole.value
+            val authorName = allMembers.value.firstOrNull {
+                it.roleCode.equals(role.code, ignoreCase = true)
+            }?.nameBn ?: role.titleBn
+            val dateStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+            val note = AdvisoryNoteEntity(
+                id = "adv-${UUID.randomUUID().toString().take(8)}",
+                noteType = noteType,
+                topic = topic,
+                recommendation = recommendation,
+                authorName = authorName,
+                authorRoleTitle = role.titleBn,
+                shariaCompliance = shariaCompliance,
+                status = "পর্যালোচনাধীন",
+                createdDate = dateStr
+            )
+            repository.submitAdvisoryNote(note)
+        }
+    }
+
+    fun updateAdvisoryNoteStatus(note: AdvisoryNoteEntity, newStatus: String) {
+        viewModelScope.launch {
+            repository.updateAdvisoryNoteStatus(note, newStatus, _currentUserRole.value.titleBn)
+        }
+    }
+
+    // --- প্রচার ও প্রকাশনা / স্মার্ট বোর্ড উক্তি ---
+    val allSmartBoardQuotes: StateFlow<List<SmartBoardQuoteEntity>> = repository.allSmartBoardQuotes
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    fun addSmartBoardQuote(category: String, title: String, message: String, isPinned: Boolean) {
+        viewModelScope.launch {
+            val quote = SmartBoardQuoteEntity(
+                id = "sbq-${UUID.randomUUID().toString().take(8)}",
+                category = category,
+                title = title,
+                message = message,
+                isPinned = isPinned,
+                createdBy = _currentUserRole.value.titleBn
+            )
+            repository.addSmartBoardQuote(quote)
+        }
+    }
+
+    fun togglePinSmartBoardQuote(quote: SmartBoardQuoteEntity) {
+        viewModelScope.launch {
+            repository.togglePinSmartBoardQuote(quote, _currentUserRole.value.titleBn)
+        }
+    }
+
+    fun deleteSmartBoardQuote(quote: SmartBoardQuoteEntity) {
+        viewModelScope.launch {
+            repository.deleteSmartBoardQuote(quote, _currentUserRole.value.titleBn)
         }
     }
 }

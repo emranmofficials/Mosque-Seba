@@ -165,6 +165,111 @@ object DatabaseInitializer {
                 monthlyChanda = 1000.0,
                 joinDate = "2024-03-15",
                 status = "active"
+            ),
+            MemberEntity(
+                id = "mem-110",
+                memberCode = "MEM-110",
+                nameBn = "মো: জাকির হোসেন",
+                nameEn = "Md. Zakir Hossain",
+                mobile = "01716-334411",
+                email = "zakir.asstsec@example.com",
+                nid = "19852691234567899",
+                address = "বাড়ি-২২, ব্লক-এ",
+                villageArea = "মিরপুর",
+                roleCode = "assistant_secretary",
+                monthlyChanda = 1200.0,
+                joinDate = "2024-01-05",
+                status = "active"
+            ),
+            MemberEntity(
+                id = "mem-111",
+                memberCode = "MEM-111",
+                nameBn = "মো: নজরুল ইসলাম",
+                nameEn = "Md. Nazrul Islam",
+                mobile = "01817-445522",
+                email = "nazrul.assttr@example.com",
+                nid = "19832691234567900",
+                address = "বাড়ি-১৪, রোড-৪",
+                villageArea = "মিরপুর",
+                roleCode = "assistant_treasurer",
+                monthlyChanda = 1200.0,
+                joinDate = "2024-01-05",
+                status = "active"
+            ),
+            MemberEntity(
+                id = "mem-112",
+                memberCode = "MEM-112",
+                nameBn = "হাফেজ মাওলানা সাইফুল ইসলাম",
+                nameEn = "Hafez Mawlana Saiful Islam",
+                mobile = "01918-556633",
+                email = "saiful.pub@example.com",
+                nid = "19892691234567901",
+                address = "বাড়ি-৬, লেন-২",
+                villageArea = "মিরপুর",
+                roleCode = "publicity_secretary",
+                monthlyChanda = 1000.0,
+                joinDate = "2024-01-10",
+                status = "active"
+            ),
+            MemberEntity(
+                id = "mem-113",
+                memberCode = "MEM-113",
+                nameBn = "মো: তানভীর আহমেদ",
+                nameEn = "Md. Tanvir Ahmed",
+                mobile = "01619-667744",
+                email = "tanvir.office@example.com",
+                nid = "19872691234567902",
+                address = "বাড়ি-৩০, ব্লক-ডি",
+                villageArea = "মিরপুর",
+                roleCode = "office_secretary",
+                monthlyChanda = 1000.0,
+                joinDate = "2024-01-12",
+                status = "active"
+            ),
+            MemberEntity(
+                id = "mem-114",
+                memberCode = "MEM-114",
+                nameBn = "মাওলানা আব্দুর রাজ্জাক",
+                nameEn = "Mawlana Abdur Razzak",
+                mobile = "01720-778855",
+                email = "razzak.welfare@example.com",
+                nid = "19792691234567903",
+                address = "বাড়ি-১৮, ব্লক-বি",
+                villageArea = "মিরপুর",
+                roleCode = "welfare_education_secretary",
+                monthlyChanda = 1200.0,
+                joinDate = "2024-01-12",
+                status = "active"
+            ),
+            MemberEntity(
+                id = "mem-115",
+                memberCode = "MEM-115",
+                nameBn = "মাওলানা মুফতি মিজানুর রহমান",
+                nameEn = "Mufti Mizanur Rahman",
+                mobile = "01712-998877",
+                email = "imam.mizan@example.com",
+                nid = "19782691234567904",
+                address = "মসজিদ ইমাম কোয়ার্টার",
+                villageArea = "মিরপুর",
+                roleCode = "imam",
+                monthlyChanda = 1000.0,
+                joinDate = "2021-04-01",
+                status = "active"
+            ),
+            MemberEntity(
+                id = "mem-116",
+                memberCode = "MEM-116",
+                nameBn = "আলহাজ্ব শামসুল হক চৌধুরী",
+                nameEn = "Alhaj Shamsul Haque Chowdhury",
+                mobile = "01711-009988",
+                email = "shamsul.adv@example.com",
+                nid = "19582691234567905",
+                address = "বাড়ি-১, রোড-১, মিরপুর-১০",
+                villageArea = "মিরপুর",
+                roleCode = "advisory_board",
+                monthlyChanda = 3000.0,
+                joinDate = "2024-01-01",
+                status = "active"
             )
         )
         members.forEach { memberDao.insertMember(it) }
@@ -632,6 +737,138 @@ object DatabaseInitializer {
             )
         )
         events.forEach { eventDao.insertEvent(it) }
+
+        // 15. Cashbox Witness & Bank Deposit Records
+        val cashboxDao = database.cashboxDao()
+        val cashboxes = listOf(
+            CashboxRecordEntity(
+                id = "cb-001",
+                collectionDate = "2024-09-06",
+                boxType = "সাপ্তাহিক জুমার দান বাক্স",
+                countedAmount = 22500.0,
+                countedBy = "হাজী মো: আবুল কাসেম (কোষাধ্যক্ষ) ও মো: নজরুল ইসলাম",
+                witnessNames = "ডা: তারিকুল ইসলাম, মো: আসাদুজ্জামান",
+                witnessVerified = true,
+                verifiedBy = "ডা: তারিকুল ইসলাম (কার্যনির্বাহী সদস্য)",
+                bankName = "ইসলামী ব্যাংক বাংলাদেশ পিএলসি (মিরপুর শাখা)",
+                depositSlipNo = "IBBL-SLIP-98412",
+                depositStatus = "bank_deposited",
+                notes = "জুমার নামাজ শেষে মূল ফটকের ৩টি দান বাক্স খুলে উপস্থিত মুসল্লি ও সাক্ষীদের সামনে গণনা সম্পন্ন।"
+            ),
+            CashboxRecordEntity(
+                id = "cb-002",
+                collectionDate = "2024-09-13",
+                boxType = "মাসিক সিন্দুক ও দান বাক্স",
+                countedAmount = 18400.0,
+                countedBy = "মো: নজরুল ইসলাম (সহ-অর্থ সম্পাদক)",
+                witnessNames = "ডা: তারিকুল ইসলাম",
+                witnessVerified = false,
+                verifiedBy = null,
+                bankName = "",
+                depositSlipNo = "",
+                depositStatus = "counted",
+                notes = "মসজিদ অফিসে গণনাকৃত; কার্যনির্বাহী সদস্যের ডিজিটাল সাক্ষ্য ও ব্যাংক জমা প্রক্রিয়াধীন।"
+            )
+        )
+        cashboxes.forEach { cashboxDao.insertRecord(it) }
+
+        // 16. Office Documents & Correspondence Register (দপ্তর সম্পাদক)
+        val officeDocDao = database.officeDocumentDao()
+        val officeDocs = listOf(
+            OfficeDocumentEntity(
+                id = "doc-001",
+                docCode = "DOC-WAQF-001",
+                title = "মসজিদ মূল জমি ও ওয়াকফ এস্টেট দলিল",
+                category = "দলিল",
+                counterparty = "সাব-রেজিস্ট্রি অফিস, মিরপুর",
+                docDate = "1998-05-14",
+                summary = "১০ কাঠা জমির মূল ওয়াকফনামা ও সরকারি খতিয়ান সত্যায়িত কপি ভল্টে সংরক্ষিত।",
+                status = "সংরক্ষিত",
+                recordedBy = "মো: তানভীর আহমেদ (দপ্তর সম্পাদক)"
+            ),
+            OfficeDocumentEntity(
+                id = "doc-002",
+                docCode = "DOC-LTR-014",
+                title = "সিটি কর্পোরেশন হতে ওজুখানা ড্রেনেজ সংস্কার সংক্রান্ত চিঠি",
+                category = "আগত চিঠি",
+                counterparty = "ঢাকা উত্তর সিটি কর্পোরেশন (অঞ্চল-২)",
+                docDate = "2024-09-05",
+                summary = "মসজিদের সম্মুখভাগের ড্রেন ও পানি নিষ্কাশন সংযোগ উন্নয়ন বিষয়ে দাপ্তরিক পত্র।",
+                replyNote = "",
+                status = "জবাব অপেক্ষমান",
+                recordedBy = "মো: তানভীর আহমেদ (দপ্তর সম্পাদক)"
+            ),
+            OfficeDocumentEntity(
+                id = "doc-003",
+                docCode = "DOC-CNT-009",
+                title = "নতুন সোলার ও জেনারেটর রক্ষণাবেক্ষণ বার্ষিক চুক্তি",
+                category = "চুক্তি",
+                counterparty = "গ্রীন পাওয়ার টেকনোলজিস লি.",
+                docDate = "2024-08-20",
+                summary = "১ বছরের ফ্রি সার্ভিসিং ও জরুরি কারিগরি সহায়তা চুক্তিপত্র।",
+                status = "সংরক্ষিত",
+                recordedBy = "ইঞ্জি: আব্দুল্লাহ আল মামুন (সাধারণ সম্পাদক)"
+            )
+        )
+        officeDocs.forEach { officeDocDao.insertDocument(it) }
+
+        // 17. Sharia Review & Advisory Board Guidance
+        val advisoryDao = database.advisoryNoteDao()
+        val advisories = listOf(
+            AdvisoryNoteEntity(
+                id = "adv-001",
+                noteType = "SHARIA_REVIEW",
+                topic = "যাকাত ও ফিতরা তহবিল পৃথক খাতে সংরক্ষণ ও বণ্টন নীতিমালা",
+                recommendation = "সাধারণ দান বাক্সের অর্থ ও যাকাতের অর্থ সম্পূর্ণ আলাদা খাতে রাখতে হবে। যাকাতের অর্থ কেবল কোরআনে বর্ণিত ৮টি নির্ধারিত খাতে (মাসারিফে যাকাত) দরিদ্র ও অসহায়দের মালিকানায় হস্তান্তরযোগ্য—মসজিদ নির্মাণ বা সাধারণ বিলে ব্যয় করা যাবে না।",
+                authorName = "মাওলানা মুফতি মিজানুর রহমান",
+                authorRoleTitle = "পেশ ইমাম ও খতীব (পদাধিকারবলে সদস্য)",
+                shariaCompliance = "শরিয়াহ সম্মত",
+                status = "গৃহীত",
+                createdDate = "2024-09-04"
+            ),
+            AdvisoryNoteEntity(
+                id = "adv-002",
+                noteType = "ADVISORY_GUIDANCE",
+                topic = "৩য় ও ৪র্থ তলা সম্প্রসারণ নির্মাণকাজের ধাপ ও আর্থিক নিরাপত্তা",
+                recommendation = "বহুতল সম্প্রসারণ কাজের পূর্বে কাঠামোগত প্রকৌশল (Structural Assessment) সনদ সংগ্রহ এবং ধাপে ধাপে আলাদা 'নির্মাণ তহবিল' গঠন করে ঠিকাদারের সাথে লিখিত শর্তে কাজ শুরুর পরামর্শ প্রদান করা হলো।",
+                authorName = "আলহাজ্ব শামসুল হক চৌধুরী",
+                authorRoleTitle = "উপদেষ্টা পরিষদ",
+                shariaCompliance = "কৌশলগত পরামর্শ",
+                status = "পর্যালোচনাধীন",
+                createdDate = "2024-09-08"
+            )
+        )
+        advisories.forEach { advisoryDao.insertNote(it) }
+
+        // 18. Smart Board Wall Quotes & Publicity Announcements (প্রচার ও প্রকাশনা)
+        val smartQuoteDao = database.smartBoardQuoteDao()
+        val quotes = listOf(
+            SmartBoardQuoteEntity(
+                id = "sbq-001",
+                category = "দেয়াল উক্তি",
+                title = "মসজিদ আবাদকারীর মর্যাদা",
+                message = "যে ব্যক্তি আল্লাহর সন্তুষ্টির উদ্দেশ্যে মসজিদ নির্মাণ ও আবাদ করে, আল্লাহ তাআলা তার জন্য জান্নাতে গৃহ নির্মাণ করেন। (সহীহ বুখারী)",
+                isPinned = true,
+                createdBy = "হাফেজ মাওলানা সাইফুল ইসলাম (প্রচার সম্পাদক)"
+            ),
+            SmartBoardQuoteEntity(
+                id = "sbq-002",
+                category = "বিশেষ ধর্মীয় দিবস",
+                title = "পবিত্র ঈদে মিলাদুন্নবী (সা:) ও তাফসির মাহফিল প্রচার",
+                message = "আগামী ১২ রবিউল আউয়াল বা'দ মাগরিব সীরাতুন্নবী (সা:) ও দোয়া মাহফিল অনুষ্ঠিত হবে।",
+                isPinned = true,
+                createdBy = "হাফেজ মাওলানা সাইফুল ইসলাম (প্রচার সম্পাদক)"
+            ),
+            SmartBoardQuoteEntity(
+                id = "sbq-003",
+                category = "জুমার নির্দেশনা",
+                title = "জুমার দিনে কাতার সোজা ও মোবাইল সাইলেন্ট রাখার অনুরোধ",
+                message = "মসজিদে প্রবেশের পূর্বে অনুগ্রহ করে মোবাইল ফোন বন্ধ বা সাইলেন্ট রাখুন এবং সামনের কাতার পূর্ণ করুন।",
+                isPinned = false,
+                createdBy = "হাফেজ মাওলানা সাইফুল ইসলাম (প্রচার সম্পাদক)"
+            )
+        )
+        quotes.forEach { smartQuoteDao.insertQuote(it) }
     }
 }
 

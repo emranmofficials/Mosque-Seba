@@ -9,6 +9,12 @@ interface MosqueDao {
     @Query("SELECT * FROM mosques LIMIT 1")
     fun getMosque(): Flow<MosqueEntity?>
 
+    @Query("SELECT * FROM mosques WHERE id = :id LIMIT 1")
+    fun getMosqueById(id: String): Flow<MosqueEntity?>
+
+    @Query("SELECT * FROM mosques WHERE committeeId = :committeeId LIMIT 1")
+    suspend fun getMosqueByCommitteeId(committeeId: String): MosqueEntity?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertOrUpdate(mosque: MosqueEntity): Long
 }
@@ -23,6 +29,9 @@ interface MemberDao {
 
     @Query("SELECT * FROM members WHERE REPLACE(REPLACE(mobile, '-', ''), ' ', '') = REPLACE(REPLACE(:mobile, '-', ''), ' ', '') LIMIT 1")
     suspend fun getMemberByMobile(mobile: String): MemberEntity?
+
+    @Query("SELECT * FROM members WHERE LOWER(TRIM(email)) = LOWER(TRIM(:email)) LIMIT 1")
+    suspend fun getMemberByEmail(email: String): MemberEntity?
 
     @Query("SELECT * FROM members WHERE roleCode = 'president' LIMIT 1")
     suspend fun getPresident(): MemberEntity?
@@ -238,4 +247,57 @@ interface EventDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertEvent(event: MosqueEventEntity): Long
 }
+
+// --- দান বাক্স (ক্যাশবক্স), দপ্তর নথি, উপদেষ্টা/শরিয়াহ ও স্মার্ট বোর্ড DAOs ---
+@Dao
+interface CashboxDao {
+    @Query("SELECT * FROM cashbox_records ORDER BY createdAt DESC")
+    fun getAllRecords(): Flow<List<CashboxRecordEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertRecord(record: CashboxRecordEntity): Long
+
+    @Update
+    suspend fun updateRecord(record: CashboxRecordEntity): Int
+}
+
+@Dao
+interface OfficeDocumentDao {
+    @Query("SELECT * FROM office_documents ORDER BY createdAt DESC")
+    fun getAllDocuments(): Flow<List<OfficeDocumentEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertDocument(doc: OfficeDocumentEntity): Long
+
+    @Update
+    suspend fun updateDocument(doc: OfficeDocumentEntity): Int
+}
+
+@Dao
+interface AdvisoryNoteDao {
+    @Query("SELECT * FROM advisory_notes ORDER BY createdAt DESC")
+    fun getAllNotes(): Flow<List<AdvisoryNoteEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertNote(note: AdvisoryNoteEntity): Long
+
+    @Update
+    suspend fun updateNote(note: AdvisoryNoteEntity): Int
+}
+
+@Dao
+interface SmartBoardQuoteDao {
+    @Query("SELECT * FROM smart_board_quotes ORDER BY isPinned DESC, createdAt DESC")
+    fun getAllQuotes(): Flow<List<SmartBoardQuoteEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertQuote(quote: SmartBoardQuoteEntity): Long
+
+    @Update
+    suspend fun updateQuote(quote: SmartBoardQuoteEntity): Int
+
+    @Delete
+    suspend fun deleteQuote(quote: SmartBoardQuoteEntity): Int
+}
+
 

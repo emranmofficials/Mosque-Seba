@@ -7,9 +7,11 @@ import com.mosqueseba.app.data.model.UserRole
 class SessionManager(context: Context) {
 
     private val prefs: SharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+    private val credentialPrefs: SharedPreferences = context.getSharedPreferences(CRED_PREF_NAME, Context.MODE_PRIVATE)
 
     companion object {
         private const val PREF_NAME = "mosque_seba_session_prefs"
+        private const val CRED_PREF_NAME = "mosque_seba_credentials_prefs"
         private const val KEY_IS_LOGGED_IN = "key_is_logged_in"
         private const val KEY_ROLE_CODE = "key_role_code"
         private const val KEY_MEMBER_ID = "key_member_id"
@@ -17,6 +19,8 @@ class SessionManager(context: Context) {
         private const val KEY_COMMITTEE_ID = "key_committee_id"
         private const val KEY_MOBILE = "key_mobile"
         private const val KEY_REMEMBER_ME = "key_remember_me"
+        private const val KEY_ACTIVE_MOSQUE_ID = "key_active_mosque_id"
+        private const val DEFAULT_MOSQUE_ID = "mosque-001"
     }
 
     fun saveSession(
@@ -25,7 +29,8 @@ class SessionManager(context: Context) {
         memberName: String,
         committeeId: String,
         mobile: String,
-        rememberMe: Boolean = true
+        rememberMe: Boolean = true,
+        mosqueId: String = getActiveMosqueId()
     ) {
         prefs.edit().apply {
             putBoolean(KEY_IS_LOGGED_IN, true)
@@ -35,8 +40,59 @@ class SessionManager(context: Context) {
             putString(KEY_COMMITTEE_ID, committeeId)
             putString(KEY_MOBILE, mobile)
             putBoolean(KEY_REMEMBER_ME, rememberMe)
+            putString(KEY_ACTIVE_MOSQUE_ID, mosqueId)
             apply()
         }
+    }
+
+    fun saveActiveMosqueId(mosqueId: String) {
+        prefs.edit().putString(KEY_ACTIVE_MOSQUE_ID, mosqueId).apply()
+    }
+
+    fun getActiveMosqueId(): String =
+        prefs.getString(KEY_ACTIVE_MOSQUE_ID, DEFAULT_MOSQUE_ID) ?: DEFAULT_MOSQUE_ID
+
+    fun saveRegisteredCredential(mobile: String, committeeId: String, mosqueId: String, password: String) {
+        val cleanMobile = mobile.replace("-", "").replace(" ", "").trim()
+        credentialPrefs.edit().apply {
+            putString("pwd_$cleanMobile", password)
+            putString("cid_$cleanMobile", committeeId)
+            putString("mid_$cleanMobile", mosqueId)
+            apply()
+        }
+    }
+
+    fun saveRegisteredPresidentEmailCredential(email: String, committeeId: String, mosqueId: String, password: String) {
+        val cleanEmail = email.trim().lowercase()
+        if (cleanEmail.isBlank()) return
+        credentialPrefs.edit().apply {
+            putString("pwd_email_$cleanEmail", password)
+            putString("cid_email_$cleanEmail", committeeId)
+            putString("mid_email_$cleanEmail", mosqueId)
+            apply()
+        }
+    }
+
+    fun verifyRegisteredPassword(mobile: String, password: String): Boolean? {
+        val cleanMobile = mobile.replace("-", "").replace(" ", "").trim()
+        val saved = credentialPrefs.getString("pwd_$cleanMobile", null) ?: return null
+        return saved == password
+    }
+
+    fun verifyRegisteredPresidentPassword(email: String, password: String): Boolean? {
+        val cleanEmail = email.trim().lowercase()
+        val saved = credentialPrefs.getString("pwd_email_$cleanEmail", null) ?: return null
+        return saved == password
+    }
+
+    fun getRegisteredMosqueIdForMobile(mobile: String): String? {
+        val cleanMobile = mobile.replace("-", "").replace(" ", "").trim()
+        return credentialPrefs.getString("mid_$cleanMobile", null)
+    }
+
+    fun getRegisteredMosqueIdForEmail(email: String): String? {
+        val cleanEmail = email.trim().lowercase()
+        return credentialPrefs.getString("mid_email_$cleanEmail", null)
     }
 
     fun isLoggedIn(): Boolean {
@@ -58,6 +114,7 @@ class SessionManager(context: Context) {
     fun getSavedMobile(): String = prefs.getString(KEY_MOBILE, "01711-223344") ?: "01711-223344"
 
     fun clearSession() {
-        prefs.edit().clear().apply()
+        val currentMosque = getActiveMosqueId()
+        prefs.edit().clear().putString(KEY_ACTIVE_MOSQUE_ID, currentMosque).apply()
     }
 }

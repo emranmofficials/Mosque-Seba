@@ -29,9 +29,13 @@ import kotlinx.coroutines.launch
         DutyRosterEntity::class,
         FoodScheduleEntity::class,
         WelfareCaseEntity::class,
-        MosqueEventEntity::class
+        MosqueEventEntity::class,
+        CashboxRecordEntity::class,
+        OfficeDocumentEntity::class,
+        AdvisoryNoteEntity::class,
+        SmartBoardQuoteEntity::class
     ],
-    version = 3,
+    version = 5,
     exportSchema = false
 )
 abstract class MosqueDatabase : RoomDatabase() {
@@ -59,6 +63,12 @@ abstract class MosqueDatabase : RoomDatabase() {
     // Welfare & Events DAOs
     abstract fun welfareDao(): WelfareDao
     abstract fun eventDao(): EventDao
+
+    // Committee Operations DAOs
+    abstract fun cashboxDao(): CashboxDao
+    abstract fun officeDocumentDao(): OfficeDocumentDao
+    abstract fun advisoryNoteDao(): AdvisoryNoteDao
+    abstract fun smartBoardQuoteDao(): SmartBoardQuoteDao
 
 
     companion object {

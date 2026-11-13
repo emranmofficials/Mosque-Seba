@@ -1,9 +1,19 @@
 package com.mosqueseba.app.ui.screens
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -14,439 +24,1397 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import com.mosqueseba.app.data.local.entity.ChandaPaymentEntity
 import com.mosqueseba.app.data.local.entity.MemberEntity
+import com.mosqueseba.app.data.local.entity.StaffEntity
 import com.mosqueseba.app.data.model.UserRole
-import com.mosqueseba.app.ui.components.KpiCardItem
+import com.mosqueseba.app.ui.components.*
 import com.mosqueseba.app.ui.theme.*
 import com.mosqueseba.app.ui.viewmodel.MosqueViewModel
+
+private val SALARIED_ROLE_CODES = setOf("imam", "muazzin", "khadem")
+
+private data class SalariedMemberUiModel(
+    val key: String,
+    val staff: StaffEntity?,
+    val member: MemberEntity?,
+    val nameBn: String,
+    val roleCode: String,
+    val designationBn: String,
+    val mobile: String,
+    val joinDate: String,
+    val salaryAmount: Double,
+    val mealRequired: Boolean,
+    val photoUrl: String?,
+    val isPaidCurrentCycle: Boolean,
+    val paidCount: Int
+)
 
 @Composable
 fun MembersScreen(
     viewModel: MosqueViewModel,
     onAddMemberClick: (() -> Unit)? = null
 ) {
-    val members by viewModel.filteredMembers.collectAsState()
-    val totalCount by viewModel.memberCount.collectAsState()
-    val activeCount by viewModel.activeMemberCount.collectAsState()
+    val allMembers by viewModel.allMembers.collectAsState()
+    val allChandaPayments by viewModel.allChandaPayments.collectAsState()
+    val activeStaff by viewModel.activeStaff.collectAsState()
+    val allPayrolls by viewModel.allPayrolls.collectAsState()
+    val mosque by viewModel.mosque.collectAsState()
     val searchQuery by viewModel.memberSearchQuery.collectAsState()
     val selectedRoleFilter by viewModel.selectedRoleFilter.collectAsState()
+    val currentRole by viewModel.currentUserRole.collectAsState()
 
-    var selectedMemberForDetail by remember { mutableStateOf<MemberEntity?>(null) }
+    var selectedTabIndex by rememberSaveable { mutableIntStateOf(0) } // 0 = Chanda Members, 1 = Salaried Staff
+    var onlyDuesFilter by rememberSaveable { mutableStateOf(false) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MosqueBgLight)
-    ) {
-        // Sticky Top Section: KPIs and Search
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Color.White)
-                .padding(14.dp)
-        ) {
-            // KPI exactly 3 compact cards (PRD §7)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                KpiCardItem(
-                    modifier = Modifier.weight(1f),
-                    title = "মোট সদস্য",
-                    value = "$totalCount জন",
-                    subtext = "নিবন্ধিত",
-                    icon = Icons.Default.People,
-                    iconBg = MosqueEmeraldPrimary.copy(alpha = 0.1f),
-                    iconColor = MosqueEmeraldPrimary
-                )
-                KpiCardItem(
-                    modifier = Modifier.weight(1f),
-                    title = "সক্রিয় সদস্য",
-                    value = "$activeCount জন",
-                    subtext = "নিয়মিত",
-                    icon = Icons.Default.CheckCircle,
-                    iconBg = MosqueSuccessGreen.copy(alpha = 0.1f),
-                    iconColor = MosqueSuccessGreen
-                )
-                KpiCardItem(
-                    modifier = Modifier.weight(1f),
-                    title = "বকেয়া চাঁদা",
-                    value = "৳৩,৫০০",
-                    subtext = "চলতি মাস",
-                    icon = Icons.Default.PendingActions,
-                    iconBg = MosqueWarningAmber.copy(alpha = 0.1f),
-                    iconColor = MosqueWarningAmber
-                )
+    var activeProfileTarget by remember { mutableStateOf<MemberProfileTarget?>(null) }
+    var chandaTargetMember by remember { mutableStateOf<Pair<MemberEntity, Double>?>(null) }
+    var dueBreakdownMember by remember { mutableStateOf<MemberEntity?>(null) }
+    var depositHistoryMember by remember { mutableStateOf<MemberEntity?>(null) }
+    var receiptPreviewPayment by remember { mutableStateOf<ChandaPaymentEntity?>(null) }
+    var paySalaryTargetStaff by remember { mutableStateOf<StaffEntity?>(null) }
+
+    val activeCycleMonth = remember(allChandaPayments) {
+        allChandaPayments.firstOrNull()?.month ?: "সেপ্টেম্বর ২০২৪"
+    }
+
+    // Partition Chanda-paying members (non-staff)
+    val chandaMembersAll = remember(allMembers) {
+        allMembers.filter { it.roleCode.lowercase() !in SALARIED_ROLE_CODES }
+    }
+
+    // Build unified Salaried Staff list combining StaffEntity + any staff-role MemberEntity
+    val salariedMembersAll = remember(activeStaff, allMembers, allPayrolls, activeCycleMonth) {
+        val result = mutableListOf<SalariedMemberUiModel>()
+        val matchedMemberIds = mutableSetOf<String>()
+
+        activeStaff.forEach { st ->
+            val normStaffMobile = st.mobile.filter { it.isDigit() }
+            val linkedMember = allMembers.find { m ->
+                (normStaffMobile.isNotEmpty() && m.mobile.filter { it.isDigit() } == normStaffMobile) ||
+                    m.nameBn.trim() == st.nameBn.trim()
             }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Search Bar with exact placeholder "সদস্য খুঁজুন (নাম, মোবাইল, আইডি)"
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = { viewModel.setMemberSearchQuery(it) },
-                placeholder = { Text("সদস্য খুঁজুন (নাম, মোবাইল, আইডি)", fontSize = 13.sp) },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = "Search",
-                        tint = MosqueTextMuted
-                    )
-                },
-                trailingIcon = {
-                    if (searchQuery.isNotEmpty()) {
-                        IconButton(onClick = { viewModel.setMemberSearchQuery("") }) {
-                            Icon(Icons.Default.Clear, contentDescription = "Clear", tint = MosqueTextMuted)
-                        }
-                    }
-                },
-                shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MosqueEmeraldPrimary,
-                    unfocusedBorderColor = MosqueCardBorder
-                ),
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
+            if (linkedMember != null) matchedMemberIds.add(linkedMember.id)
+            val staffPayrolls = allPayrolls.filter { it.staffId == st.id }
+            val isPaid = staffPayrolls.any { it.month == activeCycleMonth || it.paymentStatus == "paid" }
+            result.add(
+                SalariedMemberUiModel(
+                    key = "staff-${st.id}",
+                    staff = st,
+                    member = linkedMember,
+                    nameBn = st.nameBn,
+                    roleCode = st.roleCode,
+                    designationBn = st.designationBn,
+                    mobile = st.mobile,
+                    joinDate = st.joinDate,
+                    salaryAmount = st.salaryAmount,
+                    mealRequired = st.mealRequired,
+                    photoUrl = linkedMember?.photoUrl,
+                    isPaidCurrentCycle = isPaid,
+                    paidCount = staffPayrolls.size
+                )
             )
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // Filter Chips + Add Button
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    modifier = Modifier.weight(1f)
-                ) {
-                    item {
-                        FilterChip(
-                            selected = selectedRoleFilter == null,
-                            onClick = { viewModel.setSelectedRoleFilter(null) },
-                            label = { Text("সকল") }
-                        )
-                    }
-                    item {
-                        FilterChip(
-                            selected = selectedRoleFilter == "president",
-                            onClick = { viewModel.setSelectedRoleFilter(if (selectedRoleFilter == "president") null else "president") },
-                            label = { Text("সভাপতি") }
-                        )
-                    }
-                    item {
-                        FilterChip(
-                            selected = selectedRoleFilter == "general_secretary",
-                            onClick = { viewModel.setSelectedRoleFilter(if (selectedRoleFilter == "general_secretary") null else "general_secretary") },
-                            label = { Text("সম্পাদক") }
-                        )
-                    }
-                    item {
-                        FilterChip(
-                            selected = selectedRoleFilter == "treasurer",
-                            onClick = { viewModel.setSelectedRoleFilter(if (selectedRoleFilter == "treasurer") null else "treasurer") },
-                            label = { Text("কোষাধ্যক্ষ") }
-                        )
-                    }
-                    item {
-                        FilterChip(
-                            selected = selectedRoleFilter == "general_member",
-                            onClick = { viewModel.setSelectedRoleFilter(if (selectedRoleFilter == "general_member") null else "general_member") },
-                            label = { Text("সাধারণ সদস্য") }
-                        )
-                    }
-                }
-
-                if (onAddMemberClick != null) {
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    // Context Action: Add Member
-                    Button(
-                        onClick = onAddMemberClick,
-                        shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.PersonAdd,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = "নতুন সদস্য",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-            }
         }
 
-        // Member List
-        LazyColumn(
-            contentPadding = PaddingValues(14.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-            modifier = Modifier.weight(1f)
+        allMembers
+            .filter { it.roleCode.lowercase() in SALARIED_ROLE_CODES && it.id !in matchedMemberIds }
+            .forEach { m ->
+                val role = UserRole.fromCode(m.roleCode)
+                result.add(
+                    SalariedMemberUiModel(
+                        key = "mem-staff-${m.id}",
+                        staff = null,
+                        member = m,
+                        nameBn = m.nameBn,
+                        roleCode = m.roleCode,
+                        designationBn = role.titleBn,
+                        mobile = m.mobile,
+                        joinDate = m.joinDate,
+                        salaryAmount = 0.0,
+                        mealRequired = true,
+                        photoUrl = m.photoUrl,
+                        isPaidCurrentCycle = false,
+                        paidCount = 0
+                    )
+                )
+            }
+        result
+    }
+
+    // Precompute Chanda paid/due per member
+    val memberChandaStats = remember(chandaMembersAll, allChandaPayments, activeCycleMonth) {
+        chandaMembersAll.associate { member ->
+            val payments = allChandaPayments.filter { it.memberId == member.id }
+            val paidCycle = payments.filter { it.month == activeCycleMonth }.sumOf { it.amountPaid }
+            val totalDeposited = payments.sumOf { it.amountPaid }
+            val due = (member.monthlyChanda - paidCycle).coerceAtLeast(0.0)
+            member.id to Triple(paidCycle, totalDeposited, due)
+        }
+    }
+
+    val totalChandaDeposited = remember(memberChandaStats) {
+        memberChandaStats.values.sumOf { it.second }
+    }
+    val totalChandaDue = remember(memberChandaStats) {
+        memberChandaStats.values.sumOf { it.third }
+    }
+    val totalMonthlyPayroll = remember(salariedMembersAll) {
+        salariedMembersAll.sumOf { it.salaryAmount }
+    }
+    val mealWillingCount = remember(allMembers) {
+        allMembers.count { it.willingToProvideStaffMeals }
+    }
+
+    // Filtered Chanda Members
+    val filteredChandaMembers = remember(
+        chandaMembersAll,
+        searchQuery,
+        selectedRoleFilter,
+        onlyDuesFilter,
+        memberChandaStats
+    ) {
+        chandaMembersAll.filter { member ->
+            val matchesQuery = searchQuery.isBlank() ||
+                member.nameBn.contains(searchQuery, ignoreCase = true) ||
+                member.nameEn.contains(searchQuery, ignoreCase = true) ||
+                member.memberCode.contains(searchQuery, ignoreCase = true) ||
+                member.mobile.contains(searchQuery)
+            val matchesRole = selectedRoleFilter == null ||
+                selectedRoleFilter in SALARIED_ROLE_CODES ||
+                member.roleCode.equals(selectedRoleFilter, ignoreCase = true)
+            val due = memberChandaStats[member.id]?.third ?: 0.0
+            val matchesDue = !onlyDuesFilter || due > 0.0
+            matchesQuery && matchesRole && matchesDue
+        }
+    }
+
+    // Filtered Salaried Members
+    val filteredSalariedMembers = remember(salariedMembersAll, searchQuery, selectedRoleFilter) {
+        salariedMembersAll.filter { item ->
+            val matchesQuery = searchQuery.isBlank() ||
+                item.nameBn.contains(searchQuery, ignoreCase = true) ||
+                item.designationBn.contains(searchQuery, ignoreCase = true) ||
+                item.mobile.contains(searchQuery)
+            val matchesRole = selectedRoleFilter == null ||
+                selectedRoleFilter !in SALARIED_ROLE_CODES ||
+                item.roleCode.equals(selectedRoleFilter, ignoreCase = true)
+            matchesQuery && matchesRole
+        }
+    }
+
+    // If a member profile page is active, show the Full-Screen Profile Page
+    val currentProfile = activeProfileTarget
+    if (currentProfile != null) {
+        MemberProfileScreen(
+            target = currentProfile,
+            viewModel = viewModel,
+            activeCycleMonth = activeCycleMonth,
+            onBack = { activeProfileTarget = null },
+            onOpenReceiveChanda = { member, suggestedAmt ->
+                chandaTargetMember = member to suggestedAmt
+            },
+            onOpenPaySalary = { staff ->
+                paySalaryTargetStaff = staff
+            }
+        )
+    } else {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MosqueBgLight)
         ) {
-            if (members.isEmpty()) {
-                item {
+            // 1. Islamic Emerald Header + 2-Tab Switcher + Dynamic KPI Summary
+            Surface(
+                color = Color.Transparent,
+                shadowElevation = 4.dp
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(MosqueEmeraldDarkGradient)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 14.dp, vertical = 12.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "সদস্য পরিষদ ও খেদমত তালিকা",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = Color.White
+                                )
+                                Text(
+                                    text = "মাসিক চাঁদা দাতা ও বেতনভুক্ত স্টাফ ব্যবস্থাপনা",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MosqueGoldLight.copy(alpha = 0.9f)
+                                )
+                            }
+
+                            if (onAddMemberClick != null) {
+                                Button(
+                                    onClick = onAddMemberClick,
+                                    shape = RoundedCornerShape(10.dp),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = MosqueGold,
+                                        contentColor = MosqueEmeraldDark
+                                    ),
+                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+                                    modifier = Modifier
+                                        .heightIn(min = 42.dp)
+                                        .testTag("add_member_button")
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.PersonAdd,
+                                        contentDescription = "নতুন সদস্য",
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(5.dp))
+                                    Text(
+                                        text = "নতুন সদস্য",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.ExtraBold
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        // Segmented 2-Tab Switcher (Gold-bordered pill)
+                        Surface(
+                            shape = RoundedCornerShape(14.dp),
+                            color = Color.Black.copy(alpha = 0.22f),
+                            border = BorderStroke(1.dp, MosqueGold.copy(alpha = 0.55f)),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(4.dp),
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                MemberCategoryTabButton(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .testTag("tab_chanda_members"),
+                                    selected = selectedTabIndex == 0,
+                                    title = "মাসিক চাঁদা দাতা",
+                                    countText = toBengaliDigits(chandaMembersAll.size.toString()),
+                                    icon = Icons.Default.Groups,
+                                    onClick = {
+                                        selectedTabIndex = 0
+                                        if (selectedRoleFilter in SALARIED_ROLE_CODES) {
+                                            viewModel.setSelectedRoleFilter(null)
+                                        }
+                                    }
+                                )
+                                MemberCategoryTabButton(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .testTag("tab_salaried_members"),
+                                    selected = selectedTabIndex == 1,
+                                    title = "বেতনভুক্ত সদস্য",
+                                    countText = toBengaliDigits(salariedMembersAll.size.toString()),
+                                    icon = Icons.Default.Badge,
+                                    onClick = {
+                                        selectedTabIndex = 1
+                                        onlyDuesFilter = false
+                                        if (selectedRoleFilter != null && selectedRoleFilter !in SALARIED_ROLE_CODES) {
+                                            viewModel.setSelectedRoleFilter(null)
+                                        }
+                                    }
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        // Dynamic 3-Metric Summary Strip
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            if (selectedTabIndex == 0) {
+                                HeaderSummaryPill(
+                                    modifier = Modifier.weight(1f),
+                                    label = "মোট দাতা",
+                                    value = "${toBengaliDigits(chandaMembersAll.size.toString())} জন",
+                                    accent = MosqueGoldLight
+                                )
+                                HeaderSummaryPill(
+                                    modifier = Modifier.weight(1f),
+                                    label = "মোট জমা",
+                                    value = "৳${toBengaliDigits(String.format("%,.0f", totalChandaDeposited))}",
+                                    accent = Color(0xFF6EE7B7)
+                                )
+                                HeaderSummaryPill(
+                                    modifier = Modifier.weight(1f),
+                                    label = "মোট বকেয়া",
+                                    value = "৳${toBengaliDigits(String.format("%,.0f", totalChandaDue))}",
+                                    accent = if (totalChandaDue > 0) Color(0xFFFCD34D) else Color(0xFF6EE7B7)
+                                )
+                            } else {
+                                HeaderSummaryPill(
+                                    modifier = Modifier.weight(1f),
+                                    label = "মোট স্টাফ",
+                                    value = "${toBengaliDigits(salariedMembersAll.size.toString())} জন",
+                                    accent = MosqueGoldLight
+                                )
+                                HeaderSummaryPill(
+                                    modifier = Modifier.weight(1f),
+                                    label = "মাসিক বেতন",
+                                    value = "৳${toBengaliDigits(String.format("%,.0f", totalMonthlyPayroll))}",
+                                    accent = Color(0xFF6EE7B7)
+                                )
+                                HeaderSummaryPill(
+                                    modifier = Modifier.weight(1f),
+                                    label = "খাবার দাতা",
+                                    value = "${toBengaliDigits(mealWillingCount.toString())} জন",
+                                    accent = MosqueGoldLight
+                                )
+                            }
+                        }
+                    }
+
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 40.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(
-                                imageVector = Icons.Default.SearchOff,
-                                contentDescription = null,
-                                tint = MosqueTextMuted,
-                                modifier = Modifier.size(48.dp)
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
+                            .height(2.5.dp)
+                            .background(IslamicGoldTrimGradient)
+                    )
+                }
+            }
+
+            // 2. Search & Role Filter Section
+            Surface(
+                color = Color.White,
+                shadowElevation = 1.dp,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 14.dp, vertical = 10.dp)
+                ) {
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = { viewModel.setMemberSearchQuery(it) },
+                        placeholder = {
                             Text(
-                                text = "কোনো সদস্য পাওয়া যায়নি",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MosqueTextMuted
+                                text = if (selectedTabIndex == 0) {
+                                    "চাঁদা দাতা খুঁজুন (নাম, মোবাইল, আইডি)"
+                                } else {
+                                    "বেতনভুক্ত সদস্য খুঁজুন (নাম, পদবি, মোবাইল)"
+                                },
+                                fontSize = 13.sp
                             )
+                        },
+                        leadingIcon = {
+                            Icon(Icons.Default.Search, contentDescription = "অনুসন্ধান", tint = MosqueEmeraldPrimary)
+                        },
+                        trailingIcon = {
+                            if (searchQuery.isNotEmpty()) {
+                                IconButton(onClick = { viewModel.setMemberSearchQuery("") }) {
+                                    Icon(Icons.Default.Clear, contentDescription = "মুছুন", tint = MosqueTextMuted)
+                                }
+                            }
+                        },
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MosqueEmeraldPrimary,
+                            unfocusedBorderColor = MosqueCardBorderGold
+                        ),
+                        singleLine = true,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("member_search_input")
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        if (selectedTabIndex == 0) {
+                            item {
+                                FilterChip(
+                                    selected = selectedRoleFilter == null && !onlyDuesFilter,
+                                    onClick = {
+                                        viewModel.setSelectedRoleFilter(null)
+                                        onlyDuesFilter = false
+                                    },
+                                    label = { Text("সকল (${toBengaliDigits(chandaMembersAll.size.toString())})", fontSize = 11.sp) }
+                                )
+                            }
+                            item {
+                                val dueCount = chandaMembersAll.count { (memberChandaStats[it.id]?.third ?: 0.0) > 0.0 }
+                                FilterChip(
+                                    selected = onlyDuesFilter,
+                                    onClick = { onlyDuesFilter = !onlyDuesFilter },
+                                    leadingIcon = {
+                                        Icon(
+                                            Icons.Default.WarningAmber,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(14.dp),
+                                            tint = if (onlyDuesFilter) Color.White else MosqueWarningAmber
+                                        )
+                                    },
+                                    label = { Text("বকেয়া আছে (${toBengaliDigits(dueCount.toString())})", fontSize = 11.sp) },
+                                    colors = FilterChipDefaults.filterChipColors(
+                                        selectedContainerColor = MosqueWarningAmber,
+                                        selectedLabelColor = Color.White
+                                    )
+                                )
+                            }
+                            val nonStaffRoles = UserRole.entries.filter { it.code !in SALARIED_ROLE_CODES }
+                            items(nonStaffRoles, key = { it.code }) { role ->
+                                FilterChip(
+                                    selected = selectedRoleFilter == role.code,
+                                    onClick = {
+                                        viewModel.setSelectedRoleFilter(
+                                            if (selectedRoleFilter == role.code) null else role.code
+                                        )
+                                    },
+                                    label = { Text("${role.emoji} ${role.titleBn}", fontSize = 11.sp) }
+                                )
+                            }
+                        } else {
+                            item {
+                                FilterChip(
+                                    selected = selectedRoleFilter == null,
+                                    onClick = { viewModel.setSelectedRoleFilter(null) },
+                                    label = { Text("সকল স্টাফ (${toBengaliDigits(salariedMembersAll.size.toString())})", fontSize = 11.sp) }
+                                )
+                            }
+                            val staffRoles = listOf(UserRole.IMAM, UserRole.MUAZZIN, UserRole.KHADEM)
+                            items(staffRoles, key = { it.code }) { role ->
+                                FilterChip(
+                                    selected = selectedRoleFilter == role.code,
+                                    onClick = {
+                                        viewModel.setSelectedRoleFilter(
+                                            if (selectedRoleFilter == role.code) null else role.code
+                                        )
+                                    },
+                                    label = { Text("${role.emoji} ${role.titleBn}", fontSize = 11.sp) }
+                                )
+                            }
                         }
                     }
                 }
-            } else {
-                items(members, key = { it.id }) { member ->
-                    MemberCard(
-                        member = member,
-                        onClick = { selectedMemberForDetail = member }
-                    )
+            }
+
+            // 3. Animated List Content
+            AnimatedContent(
+                targetState = selectedTabIndex,
+                transitionSpec = { fadeIn() togetherWith fadeOut() },
+                modifier = Modifier.weight(1f),
+                label = "MemberTabContent"
+            ) { tab ->
+                if (tab == 0) {
+                    LazyColumn(
+                        contentPadding = PaddingValues(14.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        if (filteredChandaMembers.isEmpty()) {
+                            item {
+                                EmptyMemberState(message = "কোনো চাঁদা দাতা সদস্য পাওয়া যায়নি")
+                            }
+                        } else {
+                            items(filteredChandaMembers, key = { it.id }) { member ->
+                                val stats = memberChandaStats[member.id] ?: Triple(0.0, 0.0, member.monthlyChanda)
+                                ChandaMemberCard(
+                                    member = member,
+                                    paidThisCycle = stats.first,
+                                    totalDeposited = stats.second,
+                                    dueAmount = stats.third,
+                                    canManageFinance = currentRole.canManageFinance(),
+                                    onCardClick = { activeProfileTarget = MemberProfileTarget.ChandaMember(member.id) },
+                                    onDueClick = { dueBreakdownMember = member },
+                                    onPaidClick = { depositHistoryMember = member },
+                                    onCollectClick = {
+                                        val suggested = if (stats.third > 0.0) stats.third else member.monthlyChanda
+                                        chandaTargetMember = member to suggested
+                                    },
+                                    modifier = Modifier.animateItem(
+                                        fadeInSpec = spring(stiffness = Spring.StiffnessMediumLow),
+                                        placementSpec = spring(stiffness = Spring.StiffnessMediumLow)
+                                    )
+                                )
+                            }
+                        }
+                    }
+                } else {
+                    LazyColumn(
+                        contentPadding = PaddingValues(14.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        if (filteredSalariedMembers.isEmpty()) {
+                            item {
+                                EmptyMemberState(message = "কোনো বেতনভুক্ত সদস্য পাওয়া যায়নি")
+                            }
+                        } else {
+                            items(filteredSalariedMembers, key = { it.key }) { staffItem ->
+                                SalariedMemberCard(
+                                    item = staffItem,
+                                    canManageFinance = currentRole.canManageFinance(),
+                                    onCardClick = {
+                                        activeProfileTarget = MemberProfileTarget.SalariedStaff(
+                                            staffId = staffItem.staff?.id,
+                                            memberId = staffItem.member?.id
+                                        )
+                                    },
+                                    onPaySalaryClick = {
+                                        staffItem.staff?.let { paySalaryTargetStaff = it }
+                                    },
+                                    modifier = Modifier.animateItem(
+                                        fadeInSpec = spring(stiffness = Spring.StiffnessMediumLow),
+                                        placementSpec = spring(stiffness = Spring.StiffnessMediumLow)
+                                    )
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
     }
 
-    // Member Details Dialog
-    selectedMemberForDetail?.let { member ->
-        MemberDetailDialog(
+    // --- Dialogs shared across MembersScreen & MemberProfileScreen ---
+
+    // 1. Collect Chanda Dialog for Specific Member
+    chandaTargetMember?.let { (member, suggestedAmt) ->
+        ReceiveChandaDialog(
+            members = allMembers,
+            preselectedMember = member,
+            defaultMonth = activeCycleMonth,
+            suggestedAmount = suggestedAmt,
+            onDismiss = { chandaTargetMember = null },
+            onConfirm = { targetMember, month, amount, method ->
+                viewModel.recordChandaPayment(
+                    member = targetMember,
+                    month = month,
+                    amount = amount,
+                    method = method
+                )
+            }
+        )
+    }
+
+    // 2. Due Breakdown Dialog (on tapping "বকেয়া" button)
+    dueBreakdownMember?.let { member ->
+        val stats = memberChandaStats[member.id] ?: Triple(0.0, 0.0, member.monthlyChanda)
+        MemberDueBreakdownDialog(
             member = member,
-            onDismiss = { selectedMemberForDetail = null }
+            activeCycleMonth = activeCycleMonth,
+            paidThisCycle = stats.first,
+            dueAmount = stats.third,
+            canCollect = currentRole.canManageFinance(),
+            onCollectNow = {
+                dueBreakdownMember = null
+                chandaTargetMember = member to (if (stats.third > 0) stats.third else member.monthlyChanda)
+            },
+            onDismiss = { dueBreakdownMember = null }
+        )
+    }
+
+    // 3. Deposit History Dialog (on tapping "জমা" button)
+    depositHistoryMember?.let { member ->
+        val payments = allChandaPayments.filter { it.memberId == member.id }
+        MemberDepositHistoryDialog(
+            member = member,
+            payments = payments,
+            onReceiptClick = { payment ->
+                depositHistoryMember = null
+                receiptPreviewPayment = payment
+            },
+            onDismiss = { depositHistoryMember = null }
+        )
+    }
+
+    // 4. Official Receipt Dialog
+    receiptPreviewPayment?.let { payment ->
+        OfficialReceiptDialog(
+            payment = payment,
+            mosqueName = mosque?.nameBn ?: "বায়তুল জান্নাত জামে মসজিদ",
+            mosqueAddress = mosque?.address ?: "মিরপুর-১০, ঢাকা",
+            committeeId = mosque?.committeeId ?: "MC-DHK-2024",
+            onDismiss = { receiptPreviewPayment = null }
+        )
+    }
+
+    // 5. Pay Staff Salary Dialog
+    paySalaryTargetStaff?.let { staff ->
+        PayStaffSalaryDialog(
+            staff = staff,
+            defaultMonth = activeCycleMonth,
+            onDismiss = { paySalaryTargetStaff = null },
+            onConfirm = { month, bonus ->
+                viewModel.disburseSalary(staff = staff, month = month, bonus = bonus)
+            }
         )
     }
 }
 
 @Composable
-fun MemberCard(
-    member: MemberEntity,
+private fun MemberCategoryTabButton(
+    modifier: Modifier = Modifier,
+    selected: Boolean,
+    title: String,
+    countText: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
     onClick: () -> Unit
 ) {
-    Card(
+    Surface(
         onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp, pressedElevation = 5.dp),
-        border = BorderStroke(1.dp, MosqueCardBorderSubtle)
+        modifier = modifier.heightIn(min = 44.dp),
+        shape = RoundedCornerShape(10.dp),
+        color = if (selected) MosqueGold else Color.Transparent
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(14.dp),
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Avatar with initials
-            Box(
-                modifier = Modifier
-                    .size(46.dp)
-                    .clip(CircleShape)
-                    .background(MosqueEmeraldLight.copy(alpha = 0.15f))
-                    .border(1.dp, MosqueEmeraldPrimary.copy(alpha = 0.3f), CircleShape),
-                contentAlignment = Alignment.Center
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = if (selected) MosqueEmeraldDark else Color.White.copy(alpha = 0.85f),
+                modifier = Modifier.size(16.dp)
+            )
+            Spacer(modifier = Modifier.width(5.dp))
+            Text(
+                text = title,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.ExtraBold,
+                color = if (selected) MosqueEmeraldDark else Color.White,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Surface(
+                shape = CircleShape,
+                color = if (selected) MosqueEmeraldDark else MosqueGold.copy(alpha = 0.25f)
             ) {
                 Text(
-                    text = member.nameBn.firstOrNull()?.toString() ?: "ম",
-                    style = MaterialTheme.typography.titleMedium,
+                    text = countText,
+                    fontSize = 10.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MosqueEmeraldDark
+                    color = if (selected) MosqueGoldLight else MosqueGoldLight,
+                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 1.dp)
                 )
             }
+        }
+    }
+}
 
-            Spacer(modifier = Modifier.width(12.dp))
-
-            // Details
-            Column(modifier = Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = member.nameBn,
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MosqueTextPrimary
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    // Role Badge
-                    val role = UserRole.fromCode(member.roleCode)
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(4.dp))
-                            .background(if (role.level <= 2) MosqueGoldLight else MosqueBgLight)
-                            .padding(horizontal = 6.dp, vertical = 1.dp)
-                    ) {
-                        Text(
-                            text = role.titleBn,
-                            style = MaterialTheme.typography.labelSmall,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = if (role.level <= 2) MosqueEmeraldDark else MosqueTextSecondary
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(2.dp))
-
-                Text(
-                    text = "আইডি: ${member.memberCode} • ${member.mobile}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MosqueTextSecondary
-                )
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "ঠিকানা: ${member.address}",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MosqueTextMuted,
-                        maxLines = 1,
-                        modifier = Modifier.weight(1f)
-                    )
-                    // Monthly Chanda Pill
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(MosqueSuccessGreen.copy(alpha = 0.1f))
-                            .padding(horizontal = 8.dp, vertical = 2.dp)
-                    ) {
-                        Text(
-                            text = "মাসিক ৳${member.monthlyChanda.toInt()}",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MosqueSuccessGreen,
-                            fontSize = 11.sp
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.width(6.dp))
-
-            Icon(
-                imageVector = Icons.Default.ChevronRight,
-                contentDescription = null,
-                tint = MosqueTextMuted,
-                modifier = Modifier.size(20.dp)
+@Composable
+private fun HeaderSummaryPill(
+    modifier: Modifier = Modifier,
+    label: String,
+    value: String,
+    accent: Color
+) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(10.dp),
+        color = Color.White.copy(alpha = 0.1f),
+        border = BorderStroke(0.8.dp, MosqueGold.copy(alpha = 0.35f))
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 7.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = label,
+                fontSize = 10.sp,
+                color = Color.White.copy(alpha = 0.8f),
+                maxLines = 1
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = value,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.ExtraBold,
+                color = accent,
+                maxLines = 1
             )
         }
     }
 }
 
 @Composable
-fun MemberDetailDialog(
+private fun ChandaMemberCard(
     member: MemberEntity,
-    onDismiss: () -> Unit
+    paidThisCycle: Double,
+    totalDeposited: Double,
+    dueAmount: Double,
+    canManageFinance: Boolean,
+    onCardClick: () -> Unit,
+    onDueClick: () -> Unit,
+    onPaidClick: () -> Unit,
+    onCollectClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    Dialog(onDismissRequest = onDismiss) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp)),
-            colors = CardDefaults.cardColors(containerColor = Color.White)
-        ) {
-            Column(
-                modifier = Modifier.padding(20.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                // Header Avatar
-                Box(
-                    modifier = Modifier
-                        .size(60.dp)
-                        .clip(CircleShape)
-                        .background(MosqueEmeraldPrimary),
-                    contentAlignment = Alignment.Center
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.985f else 1f,
+        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        label = "ChandaMemberCardScale"
+    )
+    val role = UserRole.fromCode(member.roleCode)
+    val photoBitmap = remember(member.photoUrl) { loadLocalThumbnail(member.photoUrl, 160) }
+    val isActive = member.status == "active"
+
+    Card(
+        onClick = onCardClick,
+        interactionSource = interactionSource,
+        modifier = modifier
+            .fillMaxWidth()
+            .scale(scale)
+            .testTag("chanda_member_card_${member.id}"),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp, pressedElevation = 5.dp),
+        border = BorderStroke(1.dp, MosqueCardBorderGold)
+    ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            // Subtle gold top line
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(2.dp)
+                    .background(IslamicGoldTrimGradient)
+            )
+
+            Column(modifier = Modifier.padding(12.dp)) {
+                // Top Info Row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = member.nameBn.firstOrNull()?.toString() ?: "ম",
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
+                    // Profile Avatar
+                    Box(contentAlignment = Alignment.BottomEnd) {
+                        Box(
+                            modifier = Modifier
+                                .size(50.dp)
+                                .clip(CircleShape)
+                                .background(MosqueEmeraldSoft)
+                                .border(1.5.dp, MosqueGold.copy(alpha = 0.8f), CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (photoBitmap != null) {
+                                Image(
+                                    bitmap = photoBitmap,
+                                    contentDescription = member.nameBn,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            } else {
+                                Text(
+                                    text = member.nameBn.firstOrNull()?.toString() ?: "স",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = MosqueEmeraldDark
+                                )
+                            }
+                        }
+                        Surface(
+                            shape = CircleShape,
+                            color = if (isActive) MosqueSuccessGreen else MosqueUrgentRed,
+                            border = BorderStroke(1.5.dp, Color.White),
+                            modifier = Modifier.size(12.dp)
+                        ) {}
+                    }
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    Column(modifier = Modifier.weight(1f)) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Text(
+                                text = member.nameBn,
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = MosqueEmeraldDark,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.weight(1f, fill = false)
+                            )
+                            Surface(
+                                shape = RoundedCornerShape(6.dp),
+                                color = if (role.level <= 2) MosqueGoldLight else MosqueEmeraldSoft
+                            ) {
+                                Text(
+                                    text = "${role.emoji} ${role.titleBn}",
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MosqueEmeraldDark,
+                                    maxLines = 1,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(3.dp))
+
+                        Text(
+                            text = "আইডি: ${toBengaliDigits(member.memberCode)} • ${toBengaliDigits(member.mobile)}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MosqueTextSecondary,
+                            fontSize = 12.sp
+                        )
+
+                        Spacer(modifier = Modifier.height(2.dp))
+
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Text(
+                                text = "ঠিকানা: ${member.address}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MosqueTextMuted,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.weight(1f, fill = false)
+                            )
+                            if (member.willingToProvideStaffMeals) {
+                                Surface(
+                                    shape = RoundedCornerShape(6.dp),
+                                    color = MosqueGoldSoft
+                                ) {
+                                    Text(
+                                        text = "🍽️ খাবার দাতা",
+                                        fontSize = 9.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MosqueGoldDeep,
+                                        modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Icon(
+                        imageVector = Icons.Default.ChevronRight,
+                        contentDescription = "বিস্তারিত প্রোফাইল",
+                        tint = MosqueGoldDeep,
+                        modifier = Modifier.size(20.dp)
                     )
                 }
 
                 Spacer(modifier = Modifier.height(10.dp))
+                HorizontalDivider(color = MosqueCardBorderSubtle)
+                Spacer(modifier = Modifier.height(8.dp))
 
-                Text(
-                    text = member.nameBn,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MosqueTextPrimary
-                )
-                Text(
-                    text = member.nameEn,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MosqueTextSecondary
-                )
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                val role = UserRole.fromCode(member.roleCode)
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(6.dp))
-                        .background(MosqueGoldLight)
-                        .padding(horizontal = 10.dp, vertical = 3.dp)
+                // Bottom Action Strip: বকেয়া বাটন | জমা বাটন | চাঁদা গ্রহণ বাটন
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = role.titleBn,
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MosqueEmeraldDark
+                    val hasDue = dueAmount > 0.0
+                    // 1. বকেয়া button
+                    Surface(
+                        onClick = onDueClick,
+                        shape = RoundedCornerShape(10.dp),
+                        color = if (hasDue) MosqueUrgentRed.copy(alpha = 0.08f) else MosqueSuccessGreen.copy(alpha = 0.08f),
+                        border = BorderStroke(
+                            1.dp,
+                            if (hasDue) MosqueUrgentRed.copy(alpha = 0.35f) else MosqueSuccessGreen.copy(alpha = 0.3f)
+                        ),
+                        modifier = Modifier
+                            .weight(1f)
+                            .heightIn(min = 42.dp)
+                            .testTag("member_due_button_${member.id}")
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 5.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Text(
+                                text = "বকেয়া",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = if (hasDue) MosqueUrgentRed else MosqueSuccessGreen
+                            )
+                            Text(
+                                text = "৳${toBengaliDigits(String.format("%,.0f", dueAmount))}",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = if (hasDue) MosqueUrgentRed else MosqueSuccessGreen
+                            )
+                        }
+                    }
+
+                    // 2. জমা button
+                    Surface(
+                        onClick = onPaidClick,
+                        shape = RoundedCornerShape(10.dp),
+                        color = MosqueEmeraldSoft,
+                        border = BorderStroke(1.dp, MosqueEmeraldPrimary.copy(alpha = 0.35f)),
+                        modifier = Modifier
+                            .weight(1f)
+                            .heightIn(min = 42.dp)
+                            .testTag("member_paid_button_${member.id}")
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 5.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Text(
+                                text = "জমা",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MosqueEmeraldDark
+                            )
+                            Text(
+                                text = "৳${toBengaliDigits(String.format("%,.0f", totalDeposited))}",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = MosqueEmeraldPrimary
+                            )
+                        }
+                    }
+
+                    // 3. চাঁদা গ্রহণ button
+                    if (canManageFinance) {
+                        Button(
+                            onClick = onCollectClick,
+                            shape = RoundedCornerShape(10.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MosqueEmeraldPrimary,
+                                contentColor = Color.White
+                            ),
+                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+                            modifier = Modifier
+                                .weight(1.2f)
+                                .heightIn(min = 42.dp)
+                                .testTag("member_collect_button_${member.id}")
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Payments,
+                                contentDescription = null,
+                                modifier = Modifier.size(15.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "চাঁদা গ্রহণ",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                maxLines = 1
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SalariedMemberCard(
+    item: SalariedMemberUiModel,
+    canManageFinance: Boolean,
+    onCardClick: () -> Unit,
+    onPaySalaryClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val role = UserRole.fromCode(item.roleCode)
+    val photoBitmap = remember(item.photoUrl) { loadLocalThumbnail(item.photoUrl, 160) }
+
+    Card(
+        onClick = onCardClick,
+        modifier = modifier
+            .fillMaxWidth()
+            .testTag("salaried_member_card_${item.key}"),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp, pressedElevation = 5.dp),
+        border = BorderStroke(1.dp, MosqueCardBorderGold)
+    ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(2.dp)
+                    .background(IslamicGoldTrimGradient)
+            )
+            Column(modifier = Modifier.padding(12.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(50.dp)
+                            .clip(CircleShape)
+                            .background(MosqueEmeraldSoft)
+                            .border(1.5.dp, MosqueGold.copy(alpha = 0.8f), CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (photoBitmap != null) {
+                            Image(
+                                bitmap = photoBitmap,
+                                contentDescription = item.nameBn,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        } else {
+                            Text(
+                                text = role.emoji,
+                                fontSize = 22.sp
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    Column(modifier = Modifier.weight(1f)) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Text(
+                                text = item.nameBn,
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = MosqueEmeraldDark,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.weight(1f, fill = false)
+                            )
+                            Surface(
+                                shape = RoundedCornerShape(6.dp),
+                                color = MosqueGoldLight
+                            ) {
+                                Text(
+                                    text = item.designationBn,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MosqueEmeraldDark,
+                                    maxLines = 1,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(3.dp))
+                        Text(
+                            text = "মোবাইল: ${toBengaliDigits(item.mobile)} • যোগদান: ${toBengaliDigits(item.joinDate)}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MosqueTextSecondary,
+                            fontSize = 11.5.sp
+                        )
+                    }
+
+                    Icon(
+                        imageVector = Icons.Default.ChevronRight,
+                        contentDescription = "বিস্তারিত প্রোফাইল",
+                        tint = MosqueGoldDeep,
+                        modifier = Modifier.size(20.dp)
                     )
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
-                HorizontalDivider()
+                Spacer(modifier = Modifier.height(10.dp))
+                HorizontalDivider(color = MosqueCardBorderSubtle)
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Surface(
+                        shape = RoundedCornerShape(10.dp),
+                        color = MosqueEmeraldSoft,
+                        border = BorderStroke(1.dp, MosqueEmeraldPrimary.copy(alpha = 0.3f)),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text("মাসিক বেতন", fontSize = 10.sp, color = MosqueTextSecondary)
+                            Text(
+                                text = "৳${toBengaliDigits(String.format("%,.0f", item.salaryAmount))}",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = MosqueEmeraldDark
+                            )
+                        }
+                    }
+
+                    Surface(
+                        shape = RoundedCornerShape(10.dp),
+                        color = if (item.isPaidCurrentCycle) MosqueSuccessGreen.copy(alpha = 0.1f) else MosqueGoldSoft,
+                        border = BorderStroke(
+                            1.dp,
+                            if (item.isPaidCurrentCycle) MosqueSuccessGreen.copy(alpha = 0.35f) else MosqueCardBorderGold
+                        ),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text("খাবার ও অবস্থা", fontSize = 10.sp, color = MosqueTextSecondary)
+                            Text(
+                                text = if (item.isPaidCurrentCycle) "বেতন পরিশোধিত" else if (item.mealRequired) "খাবার প্রযোজ্য" else "সক্রিয় স্টাফ",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (item.isPaidCurrentCycle) MosqueSuccessGreen else MosqueGoldDeep,
+                                maxLines = 1
+                            )
+                        }
+                    }
+
+                    if (canManageFinance && item.staff != null) {
+                        Button(
+                            onClick = onPaySalaryClick,
+                            shape = RoundedCornerShape(10.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary),
+                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+                            modifier = Modifier
+                                .weight(1.1f)
+                                .heightIn(min = 42.dp)
+                        ) {
+                            Text("বেতন দিন", fontSize = 11.sp, fontWeight = FontWeight.ExtraBold)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun EmptyMemberState(message: String) {
+    MehrabArchCard(
+        backgroundColor = Color.White,
+        borderColor = MosqueCardBorderSubtle
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(
+                imageVector = Icons.Default.SearchOff,
+                contentDescription = null,
+                tint = MosqueTextMuted,
+                modifier = Modifier.size(46.dp)
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MosqueTextSecondary,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+    }
+}
+
+@Composable
+private fun MemberDueBreakdownDialog(
+    member: MemberEntity,
+    activeCycleMonth: String,
+    paidThisCycle: Double,
+    dueAmount: Double,
+    canCollect: Boolean,
+    onCollectNow: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        MehrabArchCard(
+            backgroundColor = Color.White,
+            borderColor = MosqueCardBorderGold
+        ) {
+            Column(modifier = Modifier.padding(18.dp)) {
+                Text(
+                    text = "বকেয়া চাঁদার বিবরণ",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = MosqueEmeraldDark
+                )
+                Text(
+                    text = "${member.nameBn} (${toBengaliDigits(member.memberCode)})",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MosqueTextSecondary
+                )
                 Spacer(modifier = Modifier.height(12.dp))
+                HorizontalDivider(color = MosqueCardBorderSubtle)
+                Spacer(modifier = Modifier.height(10.dp))
 
-                DetailItemRow("সদস্য কোড", member.memberCode)
-                DetailItemRow("মোবাইল", member.mobile)
-                DetailItemRow("ইমেইল", member.email.ifBlank { "প্রযোজ্য নয়" })
-                DetailItemRow("জাতীয় পরিচয়পত্র", member.nid)
-                DetailItemRow("বাসার ঠিকানা", member.address)
-                DetailItemRow("মাসিক চাঁদার অঙ্গীকার", "৳${member.monthlyChanda.toInt()}")
-                DetailItemRow("যোগদানের তারিখ", member.joinDate)
-                DetailItemRow("বর্তমান স্থিতি", if (member.status == "active") "সক্রিয় সদস্য" else "নিষ্ক্রিয়")
+                DueStatRow("হিসাবকৃত মাস", activeCycleMonth)
+                DueStatRow("মাসিক নির্ধারিত চাঁদা", "৳${toBengaliDigits(String.format("%,.0f", member.monthlyChanda))}")
+                DueStatRow("চলতি মাসে জমা", "৳${toBengaliDigits(String.format("%,.0f", paidThisCycle))}", MosqueSuccessGreen)
+                DueStatRow(
+                    label = "বর্তমান বকেয়া",
+                    value = "৳${toBengaliDigits(String.format("%,.0f", dueAmount))}",
+                    valueColor = if (dueAmount > 0) MosqueUrgentRed else MosqueSuccessGreen
+                )
 
-                Spacer(modifier = Modifier.height(18.dp))
+                Spacer(modifier = Modifier.height(16.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    OutlinedButton(onClick = onDismiss, modifier = Modifier.heightIn(min = 48.dp)) {
+                        Text("বন্ধ করুন")
+                    }
+                    if (canCollect) {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Button(
+                            onClick = onCollectNow,
+                            colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary),
+                            modifier = Modifier.heightIn(min = 48.dp)
+                        ) {
+                            Text("চাঁদা গ্রহণ করুন", fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
 
+@Composable
+private fun MemberDepositHistoryDialog(
+    member: MemberEntity,
+    payments: List<ChandaPaymentEntity>,
+    onReceiptClick: (ChandaPaymentEntity) -> Unit,
+    onDismiss: () -> Unit
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        MehrabArchCard(
+            backgroundColor = Color.White,
+            borderColor = MosqueCardBorderGold
+        ) {
+            Column(modifier = Modifier.padding(18.dp)) {
+                Text(
+                    text = "চাঁদা জমার রসিদ তালিকা",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = MosqueEmeraldDark
+                )
+                Text(
+                    text = "${member.nameBn} • মোট ${toBengaliDigits(payments.size.toString())} টি রসিদ",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MosqueTextSecondary
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                HorizontalDivider(color = MosqueCardBorderSubtle)
+                Spacer(modifier = Modifier.height(10.dp))
+
+                if (payments.isEmpty()) {
+                    Text(
+                        text = "এখনো কোনো চাঁদা জমা হয়নি",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MosqueTextMuted,
+                        modifier = Modifier.padding(vertical = 16.dp)
+                    )
+                } else {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        payments.take(6).forEach { p ->
+                            Surface(
+                                onClick = { onReceiptClick(p) },
+                                shape = RoundedCornerShape(10.dp),
+                                color = MosqueBgLight,
+                                border = BorderStroke(1.dp, MosqueCardBorderGold),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(10.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = "${p.month} (${toBengaliDigits(p.receiptCode)})",
+                                            style = MaterialTheme.typography.labelLarge,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MosqueEmeraldDark
+                                        )
+                                        Text(
+                                            text = toBengaliDigits(p.paidAt),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MosqueTextMuted
+                                        )
+                                    }
+                                    Text(
+                                        text = "৳${toBengaliDigits(String.format("%,.0f", p.amountPaid))}",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.ExtraBold,
+                                        color = MosqueSuccessGreen
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
                 Button(
                     onClick = onDismiss,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 48.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary)
                 ) {
                     Text("বন্ধ করুন")
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun DueStatRow(
+    label: String,
+    value: String,
+    valueColor: Color = MosqueTextPrimary
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(text = label, style = MaterialTheme.typography.bodySmall, color = MosqueTextSecondary)
+        Text(text = value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = valueColor)
     }
 }
 

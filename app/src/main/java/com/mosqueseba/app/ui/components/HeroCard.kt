@@ -1,23 +1,42 @@
 package com.mosqueseba.app.ui.components
 
+import android.widget.Toast
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Verified
+import androidx.compose.material.icons.filled.VerifiedUser
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.mosqueseba.app.R
 import com.mosqueseba.app.data.local.entity.MosqueEntity
+import com.mosqueseba.app.data.model.UserRole
 import com.mosqueseba.app.ui.theme.*
 
 @Composable
@@ -25,6 +44,9 @@ fun HeroCard(mosque: MosqueEntity?) {
     val nameBn = mosque?.nameBn ?: "বায়তুল জান্নাত জামে মসজিদ"
     val address = mosque?.address ?: "মিরপুর-১০, ঢাকা-১২১৬"
     val committeeId = mosque?.committeeId ?: "MC-DHK-2024"
+    val establishedBn = toBengaliDigits((mosque?.establishedYear ?: 1998).toString())
+    val startYearBn = toBengaliDigits((mosque?.committeeStartYear ?: 2024).toString())
+    val endYearBn = toBengaliDigits((mosque?.committeeEndYear ?: 2026).toString())
 
     MehrabArchCard(
         modifier = Modifier.fillMaxWidth(),
@@ -68,7 +90,7 @@ fun HeroCard(mosque: MosqueEntity?) {
 
                     // Established badge
                     Text(
-                        text = "স্থাপিত: ১৯৯৮ ইং",
+                        text = "স্থাপিত: $establishedBn ইং",
                         style = MaterialTheme.typography.labelSmall,
                         color = Color.White.copy(alpha = 0.85f)
                     )
@@ -115,7 +137,7 @@ fun HeroCard(mosque: MosqueEntity?) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "মেয়াদ: ২০২৪ — ২০২৬ খ্রি.",
+                        text = "মেয়াদ: $startYearBn — $endYearBn খ্রি.",
                         style = MaterialTheme.typography.labelSmall,
                         color = Color.White.copy(alpha = 0.9f)
                     )
@@ -126,6 +148,233 @@ fun HeroCard(mosque: MosqueEntity?) {
                         fontWeight = FontWeight.SemiBold
                     )
                 }
+            }
+        }
+    }
+}
+
+/**
+ * Compact Unified Executive Hero Card for President Dashboard — slim height, zero duplicate info, animated feedback.
+ */
+@Composable
+fun ExecutiveMosqueHeroCard(
+    mosque: MosqueEntity?,
+    currentRole: UserRole,
+    onDutiesClick: () -> Unit
+) {
+    val context = LocalContext.current
+    @Suppress("DEPRECATION")
+    val clipboardManager = LocalClipboardManager.current
+
+    val nameBn = mosque?.nameBn ?: "বায়তুল জান্নাত জামে মসজিদ"
+    val baseAddress = mosque?.address ?: "মিরপুর-১০, ঢাকা-১২১৬"
+    val fullAddress = remember(baseAddress, mosque?.upazila, mosque?.district) {
+        val extra = listOf(mosque?.upazila.orEmpty(), mosque?.district.orEmpty())
+            .filter { it.isNotBlank() && !baseAddress.contains(it, ignoreCase = true) }
+        if (extra.isNotEmpty()) "$baseAddress (${extra.joinToString(", ")})" else baseAddress
+    }
+    val committeeId = mosque?.committeeId ?: "MC-DHK-2024"
+    val establishedBn = toBengaliDigits((mosque?.establishedYear ?: 1998).toString())
+    val startYearBn = toBengaliDigits((mosque?.committeeStartYear ?: 2024).toString())
+    val endYearBn = toBengaliDigits((mosque?.committeeEndYear ?: 2026).toString())
+    val hijriDate = remember { formatCurrentHijriDateBn() }
+    val mosqueLogoBitmap = remember(mosque?.logoUrl) { loadLocalThumbnail(mosque?.logoUrl, 256) }
+
+    var copied by remember { mutableStateOf(false) }
+    LaunchedEffect(copied) {
+        if (copied) {
+            kotlinx.coroutines.delay(1600)
+            copied = false
+        }
+    }
+
+    MehrabArchCard(
+        modifier = Modifier.fillMaxWidth(),
+        backgroundColor = Color.Transparent,
+        borderColor = MosqueGold.copy(alpha = 0.6f),
+        elevation = 4.dp
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(MosqueEmeraldDarkGradient)
+                .padding(horizontal = 14.dp, vertical = 11.dp)
+        ) {
+            // Row 1: Compact Hijri Date & Bismillah on one slim strip
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Surface(
+                    color = MosqueGold.copy(alpha = 0.16f),
+                    shape = RoundedCornerShape(6.dp),
+                    border = BorderStroke(0.7.dp, MosqueGold.copy(alpha = 0.4f))
+                ) {
+                    Text(
+                        text = "🌙 $hijriDate",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MosqueGoldLight,
+                        modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp)
+                    )
+                }
+
+                Text(
+                    text = "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MosqueGoldLight
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Row 2: Official Logo + Mosque Name + Address + Duties Pill
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(46.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .border(1.5.dp, MosqueGoldGradient, RoundedCornerShape(12.dp))
+                        .background(Color.White)
+                        .padding(if (mosqueLogoBitmap != null) 2.dp else 5.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (mosqueLogoBitmap != null) {
+                        Image(
+                            bitmap = mosqueLogoBitmap,
+                            contentDescription = "মসজিদের অফিসিয়াল লোগো",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clip(RoundedCornerShape(10.dp))
+                        )
+                    } else {
+                        Image(
+                            painter = painterResource(id = R.drawable.app_logo),
+                            contentDescription = "মসজিদের অফিসিয়াল লোগো",
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(10.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = nameBn,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = Color.White,
+                        fontWeight = FontWeight.ExtraBold,
+                        maxLines = 1
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.LocationOn,
+                            contentDescription = null,
+                            tint = MosqueGold,
+                            modifier = Modifier.size(12.dp)
+                        )
+                        Spacer(modifier = Modifier.width(3.dp))
+                        Text(
+                            text = fullAddress,
+                            fontSize = 11.sp,
+                            color = Color.White.copy(alpha = 0.86f),
+                            maxLines = 1
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(6.dp))
+
+                // Compact Role Duties Button
+                Surface(
+                    onClick = onDutiesClick,
+                    shape = RoundedCornerShape(8.dp),
+                    color = MosqueGold,
+                    modifier = Modifier.testTag("president_duties_strip_button")
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.VerifiedUser,
+                            contentDescription = "দায়িত্ব তালিকা",
+                            tint = MosqueEmeraldDark,
+                            modifier = Modifier.size(13.dp)
+                        )
+                        Spacer(modifier = Modifier.width(3.dp))
+                        Text(
+                            text = "দায়িত্ব",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = MosqueEmeraldDark
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Row 3: Slim Footer Strip — Copyable Committee ID + Established & Tenure
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Color.White.copy(alpha = 0.1f))
+                    .padding(horizontal = 8.dp, vertical = 5.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(6.dp))
+                        .clickable {
+                            clipboardManager.setText(AnnotatedString(committeeId))
+                            copied = true
+                            Toast.makeText(context, "কমিটি আইডি ($committeeId) কপি করা হয়েছে", Toast.LENGTH_SHORT).show()
+                        }
+                        .padding(horizontal = 4.dp, vertical = 2.dp)
+                        .testTag("hero_copy_committee_id_button")
+                ) {
+                    AnimatedContent(
+                        targetState = copied,
+                        transitionSpec = {
+                            (fadeIn(tween(180)) + scaleIn(initialScale = 0.85f)) togetherWith
+                                (fadeOut(tween(140)) + scaleOut(targetScale = 0.85f))
+                        },
+                        label = "CopyCommitteeIdAnim"
+                    ) { isCopied ->
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = if (isCopied) Icons.Default.CheckCircle else Icons.Default.ContentCopy,
+                                contentDescription = "কমিটি আইডি কপি করুন",
+                                tint = if (isCopied) MosqueGreenAccent else MosqueGold,
+                                modifier = Modifier.size(13.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = if (isCopied) "কপি হয়েছে" else "আইডি: $committeeId",
+                                fontSize = 11.sp,
+                                color = if (isCopied) MosqueGreenAccent else MosqueGoldLight,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+
+                Text(
+                    text = "স্থাপিত $establishedBn • মেয়াদ $startYearBn–$endYearBn",
+                    fontSize = 10.sp,
+                    color = Color.White.copy(alpha = 0.85f)
+                )
             }
         }
     }
