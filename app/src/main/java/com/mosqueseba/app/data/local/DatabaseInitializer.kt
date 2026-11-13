@@ -270,6 +270,36 @@ object DatabaseInitializer {
                 monthlyChanda = 3000.0,
                 joinDate = "2024-01-01",
                 status = "active"
+            ),
+            MemberEntity(
+                id = "mem-117",
+                memberCode = "MEM-117",
+                nameBn = "কারী মো: ইসমাইল হোসেন",
+                nameEn = "Qari Md. Ismail Hossain",
+                mobile = "01823-887766",
+                email = "",
+                nid = "",
+                address = "মসজিদ মুয়াজ্জিন কোয়ার্টার",
+                villageArea = "মিরপুর",
+                roleCode = "muazzin",
+                monthlyChanda = 0.0,
+                joinDate = "2022-06-15",
+                status = "active"
+            ),
+            MemberEntity(
+                id = "mem-118",
+                memberCode = "MEM-118",
+                nameBn = "মো: মোস্তফা মিয়া",
+                nameEn = "Md. Mostafa Mia",
+                mobile = "01934-776655",
+                email = "",
+                nid = "",
+                address = "মসজিদ খাদেম কোয়ার্টার",
+                villageArea = "মিরপুর",
+                roleCode = "khadem",
+                monthlyChanda = 0.0,
+                joinDate = "2020-01-10",
+                status = "active"
             )
         )
         members.forEach { memberDao.insertMember(it) }
@@ -280,7 +310,7 @@ object DatabaseInitializer {
                 id = "staff-01",
                 nameBn = "মাওলানা মুফতি মিজানুর রহমান",
                 roleCode = "imam",
-                designationBn = "পেশ ইমাম ও খতীব",
+                designationBn = "পেশ ইমাম ও খতিব",
                 employmentType = "full_time",
                 joinDate = "2021-04-01",
                 salaryAmount = 28000.0,
@@ -388,7 +418,7 @@ object DatabaseInitializer {
             TransactionEntity(
                 id = "txn-006",
                 transactionCode = "TXN-2024-006",
-                categoryNameBn = "মসজিদ রক্ষণাবেক্ষণ ও ওয়াসরুম",
+                categoryNameBn = "মসজিদ রক্ষণাবেক্ষণ ও অজুখানা",
                 type = "EXPENSE",
                 amount = 4800.0,
                 txnDate = "2024-09-04",
@@ -493,7 +523,7 @@ object DatabaseInitializer {
             NoticeEntity(
                 id = "not-001",
                 title = "পবিত্র ঈদে মিলাদুন্নবী (সা:) উপলক্ষে বিশেষ আলোচনা ও দোয়া মাহফিল",
-                content = "সম্মানিত এলাকাবাসী ও মুসল্লিয়ানে কেরাম, আগামী ১২ রবিউল আউয়াল পবিত্র ঈদে মিলাদুন্নবী (সা:) উপলক্ষে বা’দ এশা মসজিদে এক বিশেষ আলোচনা সভা ও দোয়া মাহফিলের আয়োজন করা হয়েছে। প্রধান আলোচক হিসেবে উপস্থিত থাকবেন প্রখ্যাত আলেমে দ্বীন। আপনারা সকলে সপরিবারে আমন্ত্রিত।",
+                content = "সম্মানিত এলাকাবাসী ও মুসল্লিয়ানে কেরাম, আগামী ১২ রবিউল আউয়াল পবিত্র ঈদে মিলাদুন্নবী (সা:) উপলক্ষে বাদ এশা মসজিদে এক বিশেষ আলোচনা সভা ও দোয়া মাহফিলের আয়োজন করা হয়েছে। প্রধান আলোচক হিসেবে উপস্থিত থাকবেন প্রখ্যাত আলেমে দ্বীন। আপনারা সকলে সপরিবারে আমন্ত্রিত।",
                 priority = "important",
                 isPinned = true,
                 publishDate = "০৫ সেপ্টেম্বর ২০২৪",
@@ -525,7 +555,7 @@ object DatabaseInitializer {
             MeetingEntity(
                 id = "mtg-001",
                 title = "মাসিক কার্যনির্বাহী কমিটি ও হিসাব পর্যালোচনা সভা",
-                meetingDate = "১৫ সেপ্টেম্বর ২০২৪, বা’দ মাগরিব",
+                meetingDate = "১৫ সেপ্টেম্বর ২০২৪, বাদ মাগরিব",
                 location = "মসজিদ কমিটি কার্যালয় (২য় তলা)",
                 agenda = "১. আগস্ট মাসের আয়-ব্যয় হিসাব অনুমোদন, ২. আসন্ন রবিউল আউয়াল মাহফিল প্রস্তুতি, ৩. জেনারেটর ব্যাটারি বাজেট অনুমোদন।",
                 status = "upcoming"
@@ -533,7 +563,7 @@ object DatabaseInitializer {
             MeetingEntity(
                 id = "mtg-002",
                 title = "মসজিদ সম্প্রসারণ ও হিফজখানা তদারকি সভা",
-                meetingDate = "২৫ সেপ্টেম্বর ২০২৪, বা’দ এশা",
+                meetingDate = "২৫ সেপ্টেম্বর ২০২৪, বাদ এশা",
                 location = "মসজিদ মূল হলরুম",
                 agenda = "হিফজখানার নতুন শিক্ষক নিয়োগ ও শিক্ষার্থীদের খাবার ব্যবস্থাপনা বাজেট পর্যালোচনা।",
                 status = "scheduled"
@@ -649,7 +679,7 @@ object DatabaseInitializer {
             DutyRosterEntity(
                 id = "rost-002",
                 staffId = "stf-002",
-                staffNameBn = "হাফেজ ক্বারী নূরুল হক",
+                staffNameBn = "হাফেজ কারী নূরুল হক",
                 dayOfWeek = "শুক্রবার (জুমআ)",
                 prayerName = "জুমআ",
                 roleTitle = "আজান ও সানি আজান",
@@ -717,7 +747,7 @@ object DatabaseInitializer {
                 id = "event-001",
                 title = "বাৎসরিক তাফসিরুল কুরআন ও ওয়াজ মাহফিল",
                 dateStr = "২০২৪-১০-১৫",
-                timeStr = "বা’দ আছর হতে রাত ১১টা",
+                timeStr = "বাদ আসর হতে রাত ১১টা",
                 speakerOrGuest = "মুফতি ড. মিজানুর রহমান আল-আজহারী",
                 venue = "মসজিদ প্রাঙ্গণ ও সংলগ্ন ময়দান",
                 budget = 120000.0,
@@ -789,7 +819,7 @@ object DatabaseInitializer {
             OfficeDocumentEntity(
                 id = "doc-002",
                 docCode = "DOC-LTR-014",
-                title = "সিটি কর্পোরেশন হতে ওজুখানা ড্রেনেজ সংস্কার সংক্রান্ত চিঠি",
+                title = "সিটি কর্পোরেশন হতে অজুখানা ড্রেনেজ সংস্কার সংক্রান্ত চিঠি",
                 category = "আগত চিঠি",
                 counterparty = "ঢাকা উত্তর সিটি কর্পোরেশন (অঞ্চল-২)",
                 docDate = "2024-09-05",
@@ -803,7 +833,7 @@ object DatabaseInitializer {
                 docCode = "DOC-CNT-009",
                 title = "নতুন সোলার ও জেনারেটর রক্ষণাবেক্ষণ বার্ষিক চুক্তি",
                 category = "চুক্তি",
-                counterparty = "গ্রীন পাওয়ার টেকনোলজিস লি.",
+                counterparty = "গ্রিন পাওয়ার টেকনোলজিস লি.",
                 docDate = "2024-08-20",
                 summary = "১ বছরের ফ্রি সার্ভিসিং ও জরুরি কারিগরি সহায়তা চুক্তিপত্র।",
                 status = "সংরক্ষিত",
@@ -819,9 +849,9 @@ object DatabaseInitializer {
                 id = "adv-001",
                 noteType = "SHARIA_REVIEW",
                 topic = "যাকাত ও ফিতরা তহবিল পৃথক খাতে সংরক্ষণ ও বণ্টন নীতিমালা",
-                recommendation = "সাধারণ দান বাক্সের অর্থ ও যাকাতের অর্থ সম্পূর্ণ আলাদা খাতে রাখতে হবে। যাকাতের অর্থ কেবল কোরআনে বর্ণিত ৮টি নির্ধারিত খাতে (মাসারিফে যাকাত) দরিদ্র ও অসহায়দের মালিকানায় হস্তান্তরযোগ্য—মসজিদ নির্মাণ বা সাধারণ বিলে ব্যয় করা যাবে না।",
+                recommendation = "সাধারণ দান বাক্সের অর্থ ও যাকাতের অর্থ সম্পূর্ণ আলাদা খাতে রাখতে হবে। যাকাতের অর্থ কেবল কুরআনে বর্ণিত ৮টি নির্ধারিত খাতে (মাসারিফে যাকাত) দরিদ্র ও অসহায়দের মালিকানায় হস্তান্তরযোগ্য—মসজিদ নির্মাণ বা সাধারণ বিলে ব্যয় করা যাবে না।",
                 authorName = "মাওলানা মুফতি মিজানুর রহমান",
-                authorRoleTitle = "পেশ ইমাম ও খতীব (পদাধিকারবলে সদস্য)",
+                authorRoleTitle = "পেশ ইমাম ও খতিব (পদাধিকারবলে সদস্য)",
                 shariaCompliance = "শরিয়াহ সম্মত",
                 status = "গৃহীত",
                 createdDate = "2024-09-04"
@@ -847,7 +877,7 @@ object DatabaseInitializer {
                 id = "sbq-001",
                 category = "দেয়াল উক্তি",
                 title = "মসজিদ আবাদকারীর মর্যাদা",
-                message = "যে ব্যক্তি আল্লাহর সন্তুষ্টির উদ্দেশ্যে মসজিদ নির্মাণ ও আবাদ করে, আল্লাহ তাআলা তার জন্য জান্নাতে গৃহ নির্মাণ করেন। (সহীহ বুখারী)",
+                message = "যে ব্যক্তি আল্লাহর সন্তুষ্টির উদ্দেশ্যে মসজিদ নির্মাণ ও আবাদ করে, আল্লাহ তাআলা তার জন্য জান্নাতে গৃহ নির্মাণ করেন। (সহিহ বুখারি)",
                 isPinned = true,
                 createdBy = "হাফেজ মাওলানা সাইফুল ইসলাম (প্রচার সম্পাদক)"
             ),
@@ -855,7 +885,7 @@ object DatabaseInitializer {
                 id = "sbq-002",
                 category = "বিশেষ ধর্মীয় দিবস",
                 title = "পবিত্র ঈদে মিলাদুন্নবী (সা:) ও তাফসির মাহফিল প্রচার",
-                message = "আগামী ১২ রবিউল আউয়াল বা'দ মাগরিব সীরাতুন্নবী (সা:) ও দোয়া মাহফিল অনুষ্ঠিত হবে।",
+                message = "আগামী ১২ রবিউল আউয়াল বাদ মাগরিব সীরাতুন্নবী (সা:) ও দোয়া মাহফিল অনুষ্ঠিত হবে।",
                 isPinned = true,
                 createdBy = "হাফেজ মাওলানা সাইফুল ইসলাম (প্রচার সম্পাদক)"
             ),

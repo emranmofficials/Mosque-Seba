@@ -50,17 +50,26 @@ fun MemberProfileScreen(
     target: MemberProfileTarget,
     viewModel: MosqueViewModel,
     activeCycleMonth: String,
+    isOwnProfile: Boolean = false,
+    showBackButton: Boolean = true,
+    onOpenMosqueProfile: (() -> Unit)? = null,
     onBack: () -> Unit,
     onOpenReceiveChanda: (MemberEntity, Double) -> Unit,
     onOpenPaySalary: (StaffEntity) -> Unit
 ) {
-    BackHandler { onBack() }
+    BackHandler(enabled = showBackButton) { onBack() }
 
     val context = LocalContext.current
     val allMembers by viewModel.allMembers.collectAsState()
     val allChandaPayments by viewModel.allChandaPayments.collectAsState()
+    val allTransactions by viewModel.allTransactions.collectAsState()
     val activeStaff by viewModel.activeStaff.collectAsState()
     val allPayrolls by viewModel.allPayrolls.collectAsState()
+    val allDutyRosters by viewModel.allDutyRosters.collectAsState()
+    val allFoodSchedules by viewModel.allFoodSchedules.collectAsState()
+    val allEvents by viewModel.allEvents.collectAsState()
+    val allAdvisoryNotes by viewModel.allAdvisoryNotes.collectAsState()
+    val recentAuditLogs by viewModel.recentAuditLogs.collectAsState()
     val mosque by viewModel.mosque.collectAsState()
     val currentRole by viewModel.currentUserRole.collectAsState()
     val savedMemberId = remember { viewModel.sessionManager.getSavedMemberId() }
@@ -94,7 +103,8 @@ fun MemberProfileScreen(
                     ?: resolvedMember?.let { m ->
                         val normMobile = m.mobile.filter { it.isDigit() }
                         activeStaff.find {
-                            (normMobile.isNotEmpty() && it.mobile.filter { c -> c.isDigit() } == normMobile) ||
+                            it.id == "staff-${m.id}" ||
+                                (normMobile.isNotEmpty() && it.mobile.filter { c -> c.isDigit() } == normMobile) ||
                                 it.nameBn.trim() == m.nameBn.trim()
                         }
                     }
@@ -118,7 +128,7 @@ fun MemberProfileScreen(
         resolvedMember?.let { m -> allChandaPayments.filter { it.memberId == m.id } } ?: emptyList()
     }
     val paidThisCycle = remember(memberPayments, activeCycleMonth) {
-        memberPayments.filter { it.month == activeCycleMonth }.sumOf { it.amountPaid }
+        memberPayments.sumOf { ChandaMonthUtils.amountForMonth(it, activeCycleMonth) }
     }
     val totalDeposited = remember(memberPayments) {
         memberPayments.sumOf { it.amountPaid }
@@ -126,16 +136,88 @@ fun MemberProfileScreen(
     val monthlyCommitment = resolvedMember?.monthlyChanda ?: 0.0
     val dueThisCycle = (monthlyCommitment - paidThisCycle).coerceAtLeast(0.0)
 
+    // General Ledger Transactions related to this member (createdBy / approvedBy / description)
+    val memberTransactions = remember(allTransactions, displayNameBn, displayCode) {
+        val cleanName = displayNameBn.trim()
+        val cleanCode = displayCode.trim()
+        allTransactions.filter { txn ->
+            (cleanName.isNotBlank() && (
+                txn.createdBy.contains(cleanName, ignoreCase = true) ||
+                    (txn.approvedBy?.contains(cleanName, ignoreCase = true) == true) ||
+                    txn.description.contains(cleanName, ignoreCase = true)
+                )) ||
+                (cleanCode.length >= 4 && txn.description.contains(cleanCode, ignoreCase = true))
+        }
+    }
+
     // Staff payroll stats
     val staffPayrolls = remember(allPayrolls, resolvedStaff?.id) {
         resolvedStaff?.let { st -> allPayrolls.filter { it.staffId == st.id } } ?: emptyList()
     }
 
+    // Individual Member/Staff Duty Roster History
+    val memberDutyRosters = remember(allDutyRosters, resolvedStaff?.id, displayNameBn) {
+        val cleanName = displayNameBn.trim()
+        allDutyRosters.filter { roster ->
+            (resolvedStaff != null && roster.staffId == resolvedStaff.id) ||
+                (cleanName.isNotBlank() && roster.staffNameBn.trim().equals(cleanName, ignoreCase = true))
+        }
+    }
+
+    // Individual Food Schedule (Jagir) History (donor for non-salaried, receiver for salaried)
+    val memberFoodSchedules = remember(allFoodSchedules, isSalaried, displayNameBn, displayMobile, displayDesignation, displayRole) {
+        val cleanName = displayNameBn.trim()
+        val normDigits = displayMobile.filter { it.isDigit() }
+        allFoodSchedules.filter { food ->
+            if (isSalaried) {
+                val matchesRoleKeyword = when (displayRole) {
+                    UserRole.IMAM -> food.receiverStaffName.contains("ইমাম", ignoreCase = true)
+                    UserRole.MUAZZIN -> food.receiverStaffName.contains("মুয়াজ্জিন", ignoreCase = true) ||
+                        food.receiverStaffName.contains("মুয়াজ্জিন", ignoreCase = true)
+                    UserRole.KHADEM -> food.receiverStaffName.contains("খাদেম", ignoreCase = true)
+                    else -> false
+                }
+                (cleanName.isNotBlank() && food.receiverStaffName.contains(cleanName, ignoreCase = true)) ||
+                    (displayDesignation.isNotBlank() && food.receiverStaffName.contains(displayDesignation, ignoreCase = true)) ||
+                    matchesRoleKeyword
+            } else {
+                (cleanName.isNotBlank() && food.providerName.contains(cleanName, ignoreCase = true)) ||
+                    (normDigits.length >= 6 && food.providerMobile.filter { it.isDigit() } == normDigits)
+            }
+        }
+    }
+
+    // Individual Events / Advisory / Audit Activity History
+    val memberEvents = remember(allEvents, displayNameBn) {
+        val cleanName = displayNameBn.trim()
+        if (cleanName.isBlank()) emptyList()
+        else allEvents.filter { ev ->
+            ev.volunteerLead.contains(cleanName, ignoreCase = true) ||
+                ev.speakerOrGuest.contains(cleanName, ignoreCase = true)
+        }
+    }
+
+    val memberAdvisoryNotes = remember(allAdvisoryNotes, displayNameBn) {
+        val cleanName = displayNameBn.trim()
+        if (cleanName.isBlank()) emptyList()
+        else allAdvisoryNotes.filter { note ->
+            note.authorName.contains(cleanName, ignoreCase = true)
+        }
+    }
+
+    val memberAuditLogs = remember(recentAuditLogs, displayNameBn, displayCode) {
+        val cleanName = displayNameBn.trim()
+        val cleanCode = displayCode.trim()
+        recentAuditLogs.filter { log ->
+            (cleanName.isNotBlank() && (log.details.contains(cleanName, ignoreCase = true) || log.actor.contains(cleanName, ignoreCase = true))) ||
+                (cleanCode.length >= 4 && log.details.contains(cleanCode, ignoreCase = true))
+        }
+    }
+
+    var selectedHistoryFilter by remember { mutableIntStateOf(0) } // 0=সব, 1=লেনদেন, 2=খাবার, 3=দায়িত্ব ও কার্যক্রম
+
     var selectedReceiptForDialog by remember { mutableStateOf<ChandaPaymentEntity?>(null) }
     var showEditMemberDialog by remember { mutableStateOf(false) }
-    var showEditStaffSalaryDialog by remember { mutableStateOf(false) }
-    var showDeleteConfirmDialog by remember { mutableStateOf(false) }
-    var roleMenuExpanded by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -160,20 +242,28 @@ fun MemberProfileScreen(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        IconButton(
-                            onClick = onBack,
-                            modifier = Modifier.testTag("profile_back_button")
-                        ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "ফিরে যান",
-                                tint = Color.White
-                            )
+                        if (showBackButton) {
+                            IconButton(
+                                onClick = onBack,
+                                modifier = Modifier.testTag("profile_back_button")
+                            ) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = "ফিরে যান",
+                                    tint = Color.White
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(4.dp))
+                        } else {
+                            Spacer(modifier = Modifier.width(8.dp))
                         }
-                        Spacer(modifier = Modifier.width(4.dp))
                         Column {
                             Text(
-                                text = if (isSalaried) "বেতনভুক্ত সদস্য প্রোফাইল" else "সদস্য বিস্তারিত প্রোফাইল",
+                                text = when {
+                                    isOwnProfile -> "আমার নিজস্ব প্রোফাইল"
+                                    isSalaried -> "বেতনভুক্ত সদস্য প্রোফাইল"
+                                    else -> "সদস্য বিস্তারিত প্রোফাইল"
+                                },
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.ExtraBold,
                                 color = Color.White
@@ -186,12 +276,9 @@ fun MemberProfileScreen(
                         }
                     }
 
-                    if (canManageMembers && (resolvedMember != null || resolvedStaff != null)) {
+                    if ((canManageMembers || isOwnProfile) && (resolvedMember != null || resolvedStaff != null)) {
                         IconButton(
-                            onClick = {
-                                if (resolvedMember != null) showEditMemberDialog = true
-                                else if (resolvedStaff != null) showEditStaffSalaryDialog = true
-                            },
+                            onClick = { showEditMemberDialog = true },
                             modifier = Modifier.testTag("profile_edit_button")
                         ) {
                             Icon(
@@ -331,73 +418,146 @@ fun MemberProfileScreen(
 
                         Spacer(modifier = Modifier.height(14.dp))
 
-                        // Quick Action Row: Call + Collect Chanda / Pay Salary
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            if (displayMobile.isNotBlank()) {
-                                OutlinedButton(
-                                    onClick = {
-                                        val dialIntent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:$displayMobile"))
-                                        context.startActivity(dialIntent)
-                                    },
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .heightIn(min = 48.dp)
-                                        .testTag("profile_call_button"),
-                                    shape = RoundedCornerShape(12.dp),
-                                    border = BorderStroke(1.dp, MosqueEmeraldPrimary)
-                                ) {
-                                    Icon(
-                                        Icons.Default.Call,
-                                        contentDescription = null,
-                                        tint = MosqueEmeraldPrimary,
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text("কল করুন", color = MosqueEmeraldPrimary, fontWeight = FontWeight.Bold)
+                        // Quick Action Row: Self Profile vs Member Directory View
+                        if (isOwnProfile) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                if (resolvedMember != null || resolvedStaff != null) {
+                                    Button(
+                                        onClick = { showEditMemberDialog = true },
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .heightIn(min = 48.dp)
+                                            .testTag("my_profile_edit_info_button"),
+                                        shape = RoundedCornerShape(12.dp),
+                                        colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Edit,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text("নিজ তথ্য সম্পাদনা", fontWeight = FontWeight.Bold)
+                                    }
+                                }
+                                if (onOpenMosqueProfile != null) {
+                                    OutlinedButton(
+                                        onClick = onOpenMosqueProfile,
+                                        shape = RoundedCornerShape(12.dp),
+                                        border = BorderStroke(1.dp, MosqueGoldDeep.copy(alpha = 0.65f)),
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .heightIn(min = 48.dp)
+                                            .testTag("my_profile_to_mosque_button")
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Mosque,
+                                            contentDescription = null,
+                                            tint = MosqueEmeraldDark,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text("মসজিদের প্রোফাইল", color = MosqueEmeraldDark, fontWeight = FontWeight.Bold)
+                                    }
+                                }
+                            }
+                        } else {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                if (displayMobile.isNotBlank()) {
+                                    OutlinedButton(
+                                        onClick = {
+                                            val dialIntent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:$displayMobile"))
+                                            context.startActivity(dialIntent)
+                                        },
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .heightIn(min = 48.dp)
+                                            .testTag("profile_call_button"),
+                                        shape = RoundedCornerShape(12.dp),
+                                        border = BorderStroke(1.dp, MosqueEmeraldPrimary)
+                                    ) {
+                                        Icon(
+                                            Icons.Default.Call,
+                                            contentDescription = null,
+                                            tint = MosqueEmeraldPrimary,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text("কল করুন", color = MosqueEmeraldPrimary, fontWeight = FontWeight.Bold)
+                                    }
+                                }
+
+                                if (!isSalaried && resolvedMember != null && canManageFinance) {
+                                    Button(
+                                        onClick = {
+                                            val suggested = if (dueThisCycle > 0) dueThisCycle else resolvedMember.monthlyChanda
+                                            onOpenReceiveChanda(resolvedMember, suggested)
+                                        },
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .heightIn(min = 48.dp)
+                                            .testTag("profile_collect_chanda_button"),
+                                        shape = RoundedCornerShape(12.dp),
+                                        colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary)
+                                    ) {
+                                        Icon(
+                                            Icons.Default.Payments,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text("চাঁদা গ্রহণ", fontWeight = FontWeight.Bold)
+                                    }
+                                } else if (isSalaried && resolvedStaff != null && canManageFinance) {
+                                    Button(
+                                        onClick = { onOpenPaySalary(resolvedStaff) },
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .heightIn(min = 48.dp)
+                                            .testTag("profile_pay_salary_button"),
+                                        shape = RoundedCornerShape(12.dp),
+                                        colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary)
+                                    ) {
+                                        Icon(
+                                            Icons.Default.AccountBalanceWallet,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text("বেতন পরিশোধ", fontWeight = FontWeight.Bold)
+                                    }
                                 }
                             }
 
-                            if (!isSalaried && resolvedMember != null && canManageFinance) {
-                                Button(
-                                    onClick = {
-                                        val suggested = if (dueThisCycle > 0) dueThisCycle else resolvedMember.monthlyChanda
-                                        onOpenReceiveChanda(resolvedMember, suggested)
-                                    },
+                            if (canManageMembers && (resolvedMember != null || resolvedStaff != null)) {
+                                Spacer(modifier = Modifier.height(10.dp))
+                                OutlinedButton(
+                                    onClick = { showEditMemberDialog = true },
                                     modifier = Modifier
-                                        .weight(1f)
+                                        .fillMaxWidth()
                                         .heightIn(min = 48.dp)
-                                        .testTag("profile_collect_chanda_button"),
+                                        .testTag("profile_open_edit_page_button"),
                                     shape = RoundedCornerShape(12.dp),
-                                    colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary)
+                                    border = BorderStroke(1.dp, MosqueGoldDeep.copy(alpha = 0.7f)),
+                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MosqueEmeraldDark)
                                 ) {
                                     Icon(
-                                        Icons.Default.Payments,
+                                        imageVector = Icons.Default.Edit,
                                         contentDescription = null,
+                                        tint = MosqueGoldDeep,
                                         modifier = Modifier.size(18.dp)
                                     )
                                     Spacer(modifier = Modifier.width(6.dp))
-                                    Text("চাঁদা গ্রহণ", fontWeight = FontWeight.Bold)
-                                }
-                            } else if (isSalaried && resolvedStaff != null && canManageFinance) {
-                                Button(
-                                    onClick = { onOpenPaySalary(resolvedStaff) },
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .heightIn(min = 48.dp)
-                                        .testTag("profile_pay_salary_button"),
-                                    shape = RoundedCornerShape(12.dp),
-                                    colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary)
-                                ) {
-                                    Icon(
-                                        Icons.Default.AccountBalanceWallet,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(18.dp)
+                                    Text(
+                                        text = "তথ্য সম্পাদনা ও প্রশাসনিক নিয়ন্ত্রণ",
+                                        fontWeight = FontWeight.Bold
                                     )
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text("বেতন পরিশোধ", fontWeight = FontWeight.Bold)
                                 }
                             }
                         }
@@ -405,77 +565,101 @@ fun MemberProfileScreen(
                 }
             }
 
-            // 2. Financial Summary Strip (Chanda or Salary)
-            item {
-                if (!isSalaried) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        ProfileStatBox(
-                            modifier = Modifier.weight(1f),
-                            label = "মাসিক চাঁদা",
-                            value = if (monthlyCommitment > 0) {
-                                "৳${toBengaliDigits(String.format("%,.0f", monthlyCommitment))}"
-                            } else "ঐচ্ছিক",
-                            accent = MosqueEmeraldPrimary
-                        )
-                        ProfileStatBox(
-                            modifier = Modifier.weight(1f),
-                            label = "মোট জমা",
-                            value = "৳${toBengaliDigits(String.format("%,.0f", totalDeposited))}",
-                            accent = MosqueSuccessGreen
-                        )
-                        ProfileStatBox(
-                            modifier = Modifier.weight(1f),
-                            label = "চলতি বকেয়া",
-                            value = "৳${toBengaliDigits(String.format("%,.0f", dueThisCycle))}",
-                            accent = if (dueThisCycle > 0) MosqueUrgentRed else MosqueSuccessGreen
-                        )
-                    }
-                } else {
-                    val salaryVal = resolvedStaff?.salaryAmount ?: 0.0
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        ProfileStatBox(
-                            modifier = Modifier.weight(1f),
-                            label = "মাসিক বেতন",
-                            value = "৳${toBengaliDigits(String.format("%,.0f", salaryVal))}",
-                            accent = MosqueEmeraldPrimary
-                        )
-                        ProfileStatBox(
-                            modifier = Modifier.weight(1f),
-                            label = "খাবার সুবিধা",
-                            value = if (resolvedStaff?.mealRequired != false) "প্রযোজ্য" else "প্রযোজ্য নয়",
-                            accent = MosqueGoldDeep
-                        )
-                        ProfileStatBox(
-                            modifier = Modifier.weight(1f),
-                            label = "বেতন রসিদ",
-                            value = "${toBengaliDigits(staffPayrolls.size.toString())} বার",
-                            accent = MosqueSuccessGreen
-                        )
+            // 2. Financial Summary Strip (shown when viewing member directory profiles, omitted on own profile to keep zero history)
+            if (!isOwnProfile) {
+                item {
+                    if (!isSalaried) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            ProfileStatBox(
+                                modifier = Modifier.weight(1f),
+                                label = "মাসিক চাঁদা",
+                                value = if (monthlyCommitment > 0) {
+                                    "৳${toBengaliDigits(String.format("%,.0f", monthlyCommitment))}"
+                                } else "ঐচ্ছিক",
+                                accent = MosqueEmeraldPrimary
+                            )
+                            ProfileStatBox(
+                                modifier = Modifier.weight(1f),
+                                label = "মোট জমা",
+                                value = "৳${toBengaliDigits(String.format("%,.0f", totalDeposited))}",
+                                accent = MosqueSuccessGreen
+                            )
+                            ProfileStatBox(
+                                modifier = Modifier.weight(1f),
+                                label = "চলতি বকেয়া",
+                                value = "৳${toBengaliDigits(String.format("%,.0f", dueThisCycle))}",
+                                accent = if (dueThisCycle > 0) MosqueUrgentRed else MosqueSuccessGreen
+                            )
+                        }
+                    } else {
+                        val salaryVal = resolvedStaff?.salaryAmount ?: 0.0
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            ProfileStatBox(
+                                modifier = Modifier.weight(1f),
+                                label = "মাসিক বেতন",
+                                value = "৳${toBengaliDigits(String.format("%,.0f", salaryVal))}",
+                                accent = MosqueEmeraldPrimary
+                            )
+                            ProfileStatBox(
+                                modifier = Modifier.weight(1f),
+                                label = "খাবার সুবিধা",
+                                value = if (resolvedStaff?.mealRequired != false) "প্রযোজ্য" else "প্রযোজ্য নয়",
+                                accent = MosqueGoldDeep
+                            )
+                            ProfileStatBox(
+                                modifier = Modifier.weight(1f),
+                                label = "বেতন রসিদ",
+                                value = "${toBengaliDigits(staffPayrolls.size.toString())} বার",
+                                accent = MosqueSuccessGreen
+                            )
+                        }
                     }
                 }
             }
 
             // 3. Personal & Mosque Information
             item {
-                RubElHizbDivider(title = "ব্যক্তিগত ও সাংগঠনিক তথ্য")
+                RubElHizbDivider(title = if (isOwnProfile) "আমার ব্যক্তিগত ও সাংগঠনিক তথ্য" else "ব্যক্তিগত ও সাংগঠনিক তথ্য")
                 MehrabArchCard(
                     backgroundColor = Color.White,
                     borderColor = MosqueCardBorderGold
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         ProfileInfoRow("সদস্য / স্টাফ কোড", toBengaliDigits(displayCode))
+                        ProfileInfoRow("পদবি", displayDesignation)
                         ProfileInfoRow("কমিটির স্তর", displayRole.tier.titleBn)
                         ProfileInfoRow("মোবাইল নম্বর", toBengaliDigits(displayMobile.ifBlank { "প্রযোজ্য নয়" }))
+                        if (isOwnProfile) {
+                            if (isSalaried) {
+                                val salaryVal = resolvedStaff?.salaryAmount ?: 0.0
+                                ProfileInfoRow(
+                                    label = "মাসিক বেতন ভাতা",
+                                    value = "৳${toBengaliDigits(String.format("%,.0f", salaryVal))}",
+                                    valueColor = MosqueEmeraldPrimary
+                                )
+                            } else {
+                                ProfileInfoRow(
+                                    label = "নির্ধারিত মাসিক চাঁদা",
+                                    value = if (monthlyCommitment > 0) {
+                                        "৳${toBengaliDigits(String.format("%,.0f", monthlyCommitment))}"
+                                    } else "ঐচ্ছিক / সাধারণ",
+                                    valueColor = MosqueEmeraldPrimary
+                                )
+                            }
+                        }
                         if (resolvedMember != null) {
                             ProfileInfoRow("ইমেইল", resolvedMember.email.ifBlank { "প্রযোজ্য নয়" })
                             ProfileInfoRow("জাতীয় পরিচয়পত্র", toBengaliDigits(resolvedMember.nid.ifBlank { "প্রযোজ্য নয়" }))
-                            ProfileInfoRow("বাসার ঠিকানা", resolvedMember.address.ifBlank { "প্রযোজ্য নয়" })
+                            val effectiveAddress = resolvedMember.address.ifBlank {
+                                if (!isSalaried) (mosque?.address ?: "") else ""
+                            }
+                            ProfileInfoRow("বাসার ঠিকানা", effectiveAddress.ifBlank { "প্রযোজ্য নয়" })
                             ProfileInfoRow("এলাকা / মহল্লা", resolvedMember.villageArea.ifBlank { "প্রযোজ্য নয়" })
                             ProfileInfoRow("যোগদানের তারিখ", toBengaliDigits(resolvedMember.joinDate))
                             if (!isSalaried) {
@@ -489,7 +673,7 @@ fun MemberProfileScreen(
                             ProfileInfoRow("নিয়োগের ধরন", if (resolvedStaff.employmentType == "full_time") "পূর্ণকালীন" else "খণ্ডকালীন")
                             ProfileInfoRow("যোগদানের তারিখ", toBengaliDigits(resolvedStaff.joinDate))
                             ProfileInfoRow(
-                                label = "খাবার ব্যবস্থা (জায়গীর)",
+                                label = "খাবার ব্যবস্থা (জায়গির)",
                                 value = if (resolvedStaff.mealRequired) "মসজিদ/সদস্যের মাধ্যমে নির্ধারিত" else "প্রযোজ্য নয়"
                             )
                         }
@@ -497,31 +681,158 @@ fun MemberProfileScreen(
                 }
             }
 
-            // 4. Payment / Payroll History
+            // 3B. Role Duties & Responsibilities Card (Always visible on Own Profile, also helpful on Member Profile)
             item {
-                RubElHizbDivider(
-                    title = if (isSalaried) "বেতন পরিশোধের ইতিহাস" else "চাঁদা জমার রসিদ সমূহ"
-                )
+                RubElHizbDivider(title = if (isOwnProfile) "আমার পদবি ও নির্ধারিত দায়িত্বসমূহ" else "পদবি ও দায়িত্বসমূহ")
+                MehrabArchCard(
+                    backgroundColor = Color.White,
+                    borderColor = MosqueCardBorderGold
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Surface(
+                            color = MosqueGoldSoft,
+                            shape = RoundedCornerShape(10.dp),
+                            border = BorderStroke(0.8.dp, MosqueCardBorderGold),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(modifier = Modifier.padding(12.dp)) {
+                                Text(
+                                    text = "${displayRole.emoji} ${displayRole.titleBn}",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = MosqueEmeraldDark
+                                )
+                                Spacer(modifier = Modifier.height(3.dp))
+                                Text(
+                                    text = displayRole.shortSummaryBn,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MosqueTextSecondary,
+                                    lineHeight = 18.sp
+                                )
+                            }
+                        }
+
+                        displayRole.dutiesBn.forEachIndexed { idx, duty ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.Top
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(22.dp)
+                                        .clip(CircleShape)
+                                        .background(MosqueEmeraldSoft),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = toBengaliDigits((idx + 1).toString()),
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.ExtraBold,
+                                        color = MosqueEmeraldPrimary
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Text(
+                                    text = duty,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MosqueTextPrimary,
+                                    lineHeight = 20.sp,
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                            if (idx < displayRole.dutiesBn.lastIndex) {
+                                HorizontalDivider(color = MosqueCardBorderSubtle.copy(alpha = 0.6f))
+                            }
+                        }
+                    }
+                }
             }
 
-            if (!isSalaried) {
-                if (memberPayments.isEmpty()) {
+            // 4. Individual Member History (Shown ONLY when viewing others in directory, NEVER on own profile)
+            if (!isOwnProfile) {
+            item {
+                RubElHizbDivider(title = "লেনদেন ও খাবারের ইতিহাস")
+                val totalTxnCount = memberPayments.size + staffPayrolls.size + memberTransactions.size
+                val totalFoodCount = memberFoodSchedules.size
+                val totalActivityCount = memberDutyRosters.size + memberEvents.size + memberAdvisoryNotes.size + memberAuditLogs.size
+                val totalHistoryCount = totalTxnCount + totalFoodCount + totalActivityCount
+
+                val filterTabs = listOf(
+                    "সব (${toBengaliDigits(totalHistoryCount.toString())})",
+                    "লেনদেন (${toBengaliDigits(totalTxnCount.toString())})",
+                    "খাবার (${toBengaliDigits(totalFoodCount.toString())})",
+                    "দায়িত্ব ও কার্যক্রম (${toBengaliDigits(totalActivityCount.toString())})"
+                )
+
+                androidx.compose.foundation.lazy.LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    items(filterTabs.size) { index ->
+                        val isSelected = selectedHistoryFilter == index
+                        FilterChip(
+                            selected = isSelected,
+                            onClick = { selectedHistoryFilter = index },
+                            label = {
+                                Text(
+                                    text = filterTabs[index],
+                                    fontSize = 11.5.sp,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                                )
+                            },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = MosqueEmeraldPrimary,
+                                selectedLabelColor = Color.White,
+                                containerColor = Color.White,
+                                labelColor = MosqueTextPrimary
+                            ),
+                            border = BorderStroke(
+                                1.dp,
+                                if (isSelected) MosqueEmeraldPrimary else MosqueCardBorderGold
+                            )
+                        )
+                    }
+                }
+            }
+
+            // 4A. Transaction History (Chanda Receipts + Staff Payroll + Ledger Transactions)
+            if (selectedHistoryFilter == 0 || selectedHistoryFilter == 1) {
+                item {
+                    Text(
+                        text = "লেনদেন ইতিহাস",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = MosqueEmeraldDark,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
+
+                if (memberPayments.isEmpty() && staffPayrolls.isEmpty() && memberTransactions.isEmpty()) {
                     item {
                         MehrabArchCard(backgroundColor = Color.White, borderColor = MosqueCardBorderSubtle) {
                             Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(20.dp),
+                                    .padding(18.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                Icon(Icons.AutoMirrored.Filled.ReceiptLong, contentDescription = null, tint = MosqueTextMuted, modifier = Modifier.size(32.dp))
+                                Icon(Icons.AutoMirrored.Filled.ReceiptLong, contentDescription = null, tint = MosqueTextMuted, modifier = Modifier.size(30.dp))
                                 Spacer(modifier = Modifier.height(6.dp))
-                                Text("এখনো কোনো চাঁদা জমার রসিদ পাওয়া যায়নি", style = MaterialTheme.typography.bodySmall, color = MosqueTextMuted)
+                                Text(
+                                    text = if (isSalaried) "এখনো কোনো বেতন বা লেনদেন রেকর্ড পাওয়া যায়নি" else "এখনো কোনো চাঁদা বা লেনদেন ইতিহাস পাওয়া যায়নি",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MosqueTextMuted
+                                )
                             }
                         }
                     }
                 } else {
-                    items(memberPayments, key = { it.id }) { payment ->
+                    items(memberPayments, key = { "chanda-${it.id}" }) { payment ->
                         Card(
                             onClick = { selectedReceiptForDialog = payment },
                             shape = RoundedCornerShape(14.dp),
@@ -555,7 +866,13 @@ fun MemberProfileScreen(
                                             color = MosqueEmeraldDark
                                         )
                                         Text(
-                                            text = "মাধ্যম: ${if (payment.method == "cash") "নগদ" else "মোবাইল ব্যাংকিং"} • ${toBengaliDigits(payment.paidAt)}",
+                                            text = "মাধ্যম: ${
+                                                when (payment.method) {
+                                                    "cash" -> "নগদ"
+                                                    "online" -> "ব্যাংক/অনলাইন"
+                                                    else -> "মোবাইল ব্যাংকিং"
+                                                }
+                                            } • ${toBengaliDigits(payment.paidAt)}",
                                             style = MaterialTheme.typography.labelSmall,
                                             color = MosqueTextSecondary
                                         )
@@ -579,25 +896,8 @@ fun MemberProfileScreen(
                             }
                         }
                     }
-                }
-            } else {
-                if (staffPayrolls.isEmpty()) {
-                    item {
-                        MehrabArchCard(backgroundColor = Color.White, borderColor = MosqueCardBorderSubtle) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(20.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Icon(Icons.Default.AccountBalanceWallet, contentDescription = null, tint = MosqueTextMuted, modifier = Modifier.size(32.dp))
-                                Spacer(modifier = Modifier.height(6.dp))
-                                Text("এখনো পে-রোল এন্ট্রি রেকর্ড করা হয়নি", style = MaterialTheme.typography.bodySmall, color = MosqueTextMuted)
-                            }
-                        }
-                    }
-                } else {
-                    items(staffPayrolls, key = { it.id }) { payroll ->
+
+                    items(staffPayrolls, key = { "payroll-${it.id}" }) { payroll ->
                         Card(
                             shape = RoundedCornerShape(14.dp),
                             colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -642,114 +942,143 @@ fun MemberProfileScreen(
                             }
                         }
                     }
+
+                    items(memberTransactions, key = { "txn-${it.id}" }) { txn ->
+                        val isIncome = txn.type == "INCOME"
+                        val accent = if (isIncome) MosqueSuccessGreen else MosqueUrgentRed
+                        val statusBadge = when (txn.approvalStatus) {
+                            "approved" -> "অনুমোদিত"
+                            "rejected" -> "বাতিল"
+                            else -> "অপেক্ষমাণ"
+                        }
+                        ProfileHistoryEntryCard(
+                            icon = if (isIncome) Icons.Default.ArrowDownward else Icons.Default.ArrowUpward,
+                            accentColor = accent,
+                            title = "${txn.categoryNameBn} • ৳${toBengaliDigits(String.format("%,.0f", txn.amount))}",
+                            subtitle = "${txn.description} • ${toBengaliDigits(txn.txnDate)} (${toBengaliDigits(txn.transactionCode)})",
+                            badgeText = statusBadge
+                        )
+                    }
                 }
             }
 
-            // 5. Admin / President Control Panel
-            if (canManageMembers && resolvedMember != null) {
+            // 4B. Dedicated Food Schedule (Jagir) History
+            if (selectedHistoryFilter == 0 || selectedHistoryFilter == 2) {
                 item {
-                    RubElHizbDivider(title = "প্রশাসনিক নিয়ন্ত্রণ")
-                    MehrabArchCard(
-                        backgroundColor = Color.White,
-                        borderColor = MosqueCardBorderGold
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            // Role change dropdown
-                            Box(modifier = Modifier.fillMaxWidth()) {
-                                OutlinedButton(
-                                    onClick = { roleMenuExpanded = true },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .heightIn(min = 48.dp),
-                                    shape = RoundedCornerShape(10.dp),
-                                    border = BorderStroke(1.dp, MosqueEmeraldPrimary)
-                                ) {
-                                    Icon(Icons.Default.AdminPanelSettings, contentDescription = null, tint = MosqueEmeraldPrimary, modifier = Modifier.size(18.dp))
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text("পদবি পরিবর্তন / দায়িত্ব বণ্টন", color = MosqueEmeraldPrimary, fontWeight = FontWeight.Bold)
-                                }
-                                DropdownMenu(
-                                    expanded = roleMenuExpanded,
-                                    onDismissRequest = { roleMenuExpanded = false },
-                                    modifier = Modifier.heightIn(max = 320.dp)
-                                ) {
-                                    UserRole.entries.forEach { targetRole ->
-                                        DropdownMenuItem(
-                                            text = { Text("${targetRole.emoji} ${targetRole.titleBn}", fontSize = 13.sp) },
-                                            onClick = {
-                                                viewModel.updateMemberRole(resolvedMember, targetRole)
-                                                roleMenuExpanded = false
-                                            }
-                                        )
-                                    }
-                                }
-                            }
+                    Text(
+                        text = if (isSalaried) "খাবার (জায়গির) গ্রহণের ইতিহাস" else "খাবার (জায়গির) প্রদানের ইতিহাস",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = MosqueEmeraldDark,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
 
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                if (memberFoodSchedules.isEmpty()) {
+                    item {
+                        MehrabArchCard(backgroundColor = Color.White, borderColor = MosqueCardBorderSubtle) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(18.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                OutlinedButton(
-                                    onClick = { showEditMemberDialog = true },
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .heightIn(min = 48.dp),
-                                    shape = RoundedCornerShape(10.dp)
-                                ) {
-                                    Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(16.dp))
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text("সম্পাদনা", fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                                }
-
-                                val isSelfAccount = resolvedMember.id == savedMemberId ||
-                                    (currentRole == UserRole.PRESIDENT && resolvedMember.roleCode == "president")
-                                if (!isSelfAccount) {
-                                    OutlinedButton(
-                                        onClick = { viewModel.toggleMemberStatus(resolvedMember) },
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .heightIn(min = 48.dp),
-                                        shape = RoundedCornerShape(10.dp),
-                                        colors = ButtonDefaults.outlinedButtonColors(
-                                            contentColor = if (isActive) MosqueWarningAmber else MosqueSuccessGreen
-                                        )
-                                    ) {
-                                        Icon(
-                                            imageVector = if (isActive) Icons.Default.PauseCircle else Icons.Default.CheckCircle,
-                                            contentDescription = null,
-                                            modifier = Modifier.size(16.dp)
-                                        )
-                                        Spacer(modifier = Modifier.width(4.dp))
-                                        Text(
-                                            text = if (isActive) "নিষ্ক্রিয় করুন" else "সক্রিয় করুন",
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 12.sp
-                                        )
-                                    }
-                                }
+                                Icon(Icons.Default.Restaurant, contentDescription = null, tint = MosqueTextMuted, modifier = Modifier.size(30.dp))
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text(
+                                    text = when {
+                                        isSalaried -> "এখনো কোনো খাবার গ্রহণের ইতিহাস পাওয়া যায়নি"
+                                        resolvedMember?.willingToProvideStaffMeals == true ->
+                                            "খাবার প্রদানে সম্মত — এখনো কোনো নির্ধারিত তারিখ রেকর্ড করা হয়নি"
+                                        else -> "এখনো কোনো খাবার (জায়গির) প্রদানের ইতিহাস নেই"
+                                    },
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MosqueTextMuted
+                                )
                             }
+                        }
+                    }
+                } else {
+                    items(memberFoodSchedules, key = { "food-${it.id}" }) { food ->
+                        val statusLabel = when (food.status) {
+                            "delivered" -> "সম্পন্ন"
+                            "cancelled" -> "বাতিল"
+                            else -> "নির্ধারিত"
+                        }
+                        ProfileHistoryEntryCard(
+                            icon = Icons.Default.Restaurant,
+                            accentColor = MosqueGoldDeep,
+                            title = if (isSalaried) {
+                                "${food.mealType} খাবার গ্রহণ (${food.providerName})"
+                            } else {
+                                "${food.mealType} খাবার প্রদান (${food.receiverStaffName})"
+                            },
+                            subtitle = "তারিখ: ${toBengaliDigits(food.dateStr)} • মোবাইল: ${toBengaliDigits(food.providerMobile)}",
+                            badgeText = statusLabel
+                        )
+                    }
+                }
+            }
 
-                            val isSelfPresident = resolvedMember.id == savedMemberId ||
-                                (currentRole == UserRole.PRESIDENT && resolvedMember.roleCode == "president")
-                            if (!isSelfPresident) {
-                                TextButton(
-                                    onClick = { showDeleteConfirmDialog = true },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .heightIn(min = 48.dp),
-                                    colors = ButtonDefaults.textButtonColors(contentColor = MosqueUrgentRed)
-                                ) {
-                                    Icon(Icons.Default.DeleteForever, contentDescription = null, modifier = Modifier.size(18.dp))
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text("সদস্য তালিকা থেকে অপসারণ করুন", fontWeight = FontWeight.Bold)
-                                }
+            // 4C. Duty Roster, Events, Advisory Notes & Activity Audit Logs
+            if (selectedHistoryFilter == 0 || selectedHistoryFilter == 3) {
+                if (selectedHistoryFilter == 3 && memberDutyRosters.isEmpty() && memberEvents.isEmpty() && memberAdvisoryNotes.isEmpty() && memberAuditLogs.isEmpty()) {
+                    item {
+                        MehrabArchCard(backgroundColor = Color.White, borderColor = MosqueCardBorderSubtle) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(18.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Icon(Icons.Default.History, contentDescription = null, tint = MosqueTextMuted, modifier = Modifier.size(30.dp))
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text("এখনো কোনো দায়িত্ব রোস্টার, ইভেন্ট বা কার্যক্রম লগ নেই", style = MaterialTheme.typography.bodySmall, color = MosqueTextMuted)
                             }
                         }
                     }
                 }
+
+                items(memberDutyRosters, key = { "roster-${it.id}" }) { roster ->
+                    ProfileHistoryEntryCard(
+                        icon = Icons.Default.Schedule,
+                        accentColor = MosqueEmeraldPrimary,
+                        title = "${roster.roleTitle} (${roster.prayerName})",
+                        subtitle = "দিন: ${roster.dayOfWeek}" + if (roster.notes.isNotBlank()) " • ${roster.notes}" else "",
+                        badgeText = "রোস্টার"
+                    )
+                }
+
+                items(memberEvents, key = { "event-${it.id}" }) { ev ->
+                    ProfileHistoryEntryCard(
+                        icon = Icons.Default.Event,
+                        accentColor = MosqueEmeraldDark,
+                        title = ev.title,
+                        subtitle = "${toBengaliDigits(ev.dateStr)} • ${ev.timeStr} • স্থান: ${ev.venue}",
+                        badgeText = "ইভেন্ট"
+                    )
+                }
+
+                items(memberAdvisoryNotes, key = { "adv-${it.id}" }) { note ->
+                    ProfileHistoryEntryCard(
+                        icon = Icons.Default.Forum,
+                        accentColor = MosqueGoldDeep,
+                        title = note.topic,
+                        subtitle = "${note.recommendation.take(80)} • ${toBengaliDigits(note.createdDate)}",
+                        badgeText = note.status
+                    )
+                }
+
+                items(memberAuditLogs, key = { "audit-${it.id}" }) { log ->
+                    ProfileHistoryEntryCard(
+                        icon = Icons.Default.History,
+                        accentColor = MosqueTextSecondary,
+                        title = log.action,
+                        subtitle = "${log.details} • ${toBengaliDigits(log.timestamp)}",
+                        badgeText = "লগ"
+                    )
+                }
+            }
             }
 
             item { Spacer(modifier = Modifier.height(20.dp)) }
@@ -767,15 +1096,56 @@ fun MemberProfileScreen(
         )
     }
 
-    // Edit Member Dialog
-    if (showEditMemberDialog && resolvedMember != null) {
+    // Edit Member / Staff Dialog (Includes Role/Responsibility & Administrative Controls)
+    if (showEditMemberDialog && (resolvedMember != null || resolvedStaff != null)) {
+        val isSelfAccount = isOwnProfile ||
+            (resolvedMember != null && resolvedMember.id == savedMemberId) ||
+            (currentRole == UserRole.PRESIDENT && resolvedMember?.roleCode == "president")
         AddMemberDialog(
             initialMember = resolvedMember,
             initialStaff = resolvedStaff,
+            defaultMosqueAddress = mosque?.address ?: "",
+            isActiveStatus = isActive,
+            canManageAdministrativeControls = canManageMembers && !isSelfAccount,
+            canEditRoleAndSalary = canManageMembers && !isSelfAccount,
+            onToggleStatus = {
+                if (resolvedMember != null) {
+                    viewModel.toggleMemberStatus(resolvedMember)
+                } else if (resolvedStaff != null) {
+                    viewModel.toggleStaffStatus(resolvedStaff)
+                }
+            },
+            onDeleteMember = {
+                if (resolvedMember != null) {
+                    viewModel.deleteMember(resolvedMember)
+                } else if (resolvedStaff != null) {
+                    viewModel.removeStaff(resolvedStaff)
+                }
+                onBack()
+            },
             onDismiss = { showEditMemberDialog = false },
             onConfirm = { nameBn, nameEn, mobile, email, nid, address, villageArea, roleCode, monthlyChanda, photoUrl, willingToProvideStaffMeals, salaryAmount, staffMealRequired ->
-                viewModel.updateMemberDetails(
-                    resolvedMember.copy(
+                if (resolvedMember != null) {
+                    viewModel.updateMemberDetails(
+                        member = resolvedMember.copy(
+                            nameBn = nameBn,
+                            nameEn = nameEn,
+                            mobile = mobile,
+                            email = email,
+                            nid = nid,
+                            address = address,
+                            villageArea = villageArea,
+                            roleCode = roleCode,
+                            monthlyChanda = monthlyChanda,
+                            photoUrl = photoUrl,
+                            willingToProvideStaffMeals = willingToProvideStaffMeals
+                        ),
+                        salaryAmount = salaryAmount,
+                        staffMealRequired = staffMealRequired
+                    )
+                } else if (resolvedStaff != null) {
+                    viewModel.promoteStaffAndUpdateDetails(
+                        staff = resolvedStaff,
                         nameBn = nameBn,
                         nameEn = nameEn,
                         mobile = mobile,
@@ -786,101 +1156,10 @@ fun MemberProfileScreen(
                         roleCode = roleCode,
                         monthlyChanda = monthlyChanda,
                         photoUrl = photoUrl,
-                        willingToProvideStaffMeals = willingToProvideStaffMeals
+                        willingToProvideStaffMeals = willingToProvideStaffMeals,
+                        salaryAmount = salaryAmount,
+                        staffMealRequired = staffMealRequired
                     )
-                )
-                resolvedStaff?.let { st ->
-                    viewModel.updateStaffDetails(
-                        st.copy(
-                            nameBn = nameBn,
-                            mobile = mobile,
-                            roleCode = roleCode,
-                            designationBn = UserRole.fromCode(roleCode).titleBn,
-                            salaryAmount = if (salaryAmount > 0) salaryAmount else st.salaryAmount,
-                            mealRequired = staffMealRequired
-                        )
-                    )
-                }
-            }
-        )
-    }
-
-    // Edit Staff Salary Dialog (if no linked MemberEntity)
-    if (showEditStaffSalaryDialog && resolvedStaff != null) {
-        var newSalary by remember(resolvedStaff.id) { mutableStateOf(resolvedStaff.salaryAmount.toInt().toString()) }
-        var newMobile by remember(resolvedStaff.id) { mutableStateOf(resolvedStaff.mobile) }
-        var mealRequired by remember(resolvedStaff.id) { mutableStateOf(resolvedStaff.mealRequired) }
-        Dialog(onDismissRequest = { showEditStaffSalaryDialog = false }) {
-            MehrabArchCard(backgroundColor = Color.White, borderColor = MosqueCardBorderGold) {
-                Column(modifier = Modifier.padding(18.dp)) {
-                    Text("বেতনভুক্ত স্টাফ তথ্য হালনাগাদ", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MosqueEmeraldDark)
-                    Spacer(modifier = Modifier.height(10.dp))
-                    OutlinedTextField(
-                        value = newMobile,
-                        onValueChange = { newMobile = it },
-                        label = { Text("মোবাইল নম্বর") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedTextField(
-                        value = newSalary,
-                        onValueChange = { newSalary = it.filter { c -> c.isDigit() } },
-                        label = { Text("মাসিক বেতন (৳)") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Checkbox(checked = mealRequired, onCheckedChange = { mealRequired = it })
-                        Text("খাবার সুবিধা প্রযোজ্য", style = MaterialTheme.typography.bodySmall)
-                    }
-                    Spacer(modifier = Modifier.height(14.dp))
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                        TextButton(onClick = { showEditStaffSalaryDialog = false }) { Text("বাতিল") }
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Button(
-                            onClick = {
-                                viewModel.updateStaffDetails(
-                                    resolvedStaff.copy(
-                                        mobile = newMobile.trim(),
-                                        salaryAmount = newSalary.toDoubleOrNull() ?: resolvedStaff.salaryAmount,
-                                        mealRequired = mealRequired
-                                    )
-                                )
-                                showEditStaffSalaryDialog = false
-                            },
-                            colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary)
-                        ) {
-                            Text("সংরক্ষণ")
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    // Delete Confirmation Dialog
-    if (showDeleteConfirmDialog && resolvedMember != null) {
-        AlertDialog(
-            onDismissRequest = { showDeleteConfirmDialog = false },
-            title = { Text("সদস্য অপসারণ নিশ্চিত করুন", fontWeight = FontWeight.Bold) },
-            text = { Text("আপনি কি নিশ্চিতভাবে \"${resolvedMember.nameBn}\"-কে সদস্য তালিকা থেকে অপসারণ করতে চান?") },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        viewModel.deleteMember(resolvedMember)
-                        showDeleteConfirmDialog = false
-                        onBack()
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = MosqueUrgentRed)
-                ) {
-                    Text("হ্যাঁ, অপসারণ করুন")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDeleteConfirmDialog = false }) {
-                    Text("বাতিল")
                 }
             }
         )
@@ -951,3 +1230,79 @@ private fun ProfileInfoRow(
     }
     HorizontalDivider(color = MosqueCardBorderSubtle.copy(alpha = 0.7f))
 }
+
+@Composable
+private fun ProfileHistoryEntryCard(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    accentColor: Color,
+    title: String,
+    subtitle: String,
+    badgeText: String
+) {
+    Card(
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        border = BorderStroke(1.dp, MosqueCardBorderGold),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(14.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(38.dp)
+                        .clip(CircleShape)
+                        .background(accentColor.copy(alpha = 0.12f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = accentColor,
+                        modifier = Modifier.size(19.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(10.dp))
+                Column {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MosqueEmeraldDark
+                    )
+                    if (subtitle.isNotBlank()) {
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = subtitle,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MosqueTextSecondary
+                        )
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.width(8.dp))
+            Surface(
+                color = accentColor.copy(alpha = 0.12f),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Text(
+                    text = badgeText,
+                    style = MaterialTheme.typography.labelSmall,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = accentColor,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                )
+            }
+        }
+    }
+}
+

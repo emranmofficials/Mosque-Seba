@@ -112,7 +112,8 @@ data class MeetingEntity(
     val meetingDate: String,
     val location: String,
     val agenda: String,
-    val status: String = "upcoming"
+    val status: String = "upcoming",
+    val resolution: String = ""
 )
 
 @Entity(tableName = "audit_logs")

@@ -88,7 +88,10 @@ fun MembersScreen(
     var paySalaryTargetStaff by remember { mutableStateOf<StaffEntity?>(null) }
 
     val activeCycleMonth = remember(allChandaPayments) {
-        allChandaPayments.firstOrNull()?.month ?: "সেপ্টেম্বর ২০২৪"
+        ChandaMonthUtils.resolveLatestSingleMonth(
+            allChandaPayments.map { it.month },
+            "সেপ্টেম্বর ২০২৪"
+        )
     }
 
     // Partition Chanda-paying members (non-staff)
@@ -158,7 +161,7 @@ fun MembersScreen(
     val memberChandaStats = remember(chandaMembersAll, allChandaPayments, activeCycleMonth) {
         chandaMembersAll.associate { member ->
             val payments = allChandaPayments.filter { it.memberId == member.id }
-            val paidCycle = payments.filter { it.month == activeCycleMonth }.sumOf { it.amountPaid }
+            val paidCycle = payments.sumOf { ChandaMonthUtils.amountForMonth(it, activeCycleMonth) }
             val totalDeposited = payments.sumOf { it.amountPaid }
             val due = (member.monthlyChanda - paidCycle).coerceAtLeast(0.0)
             member.id to Triple(paidCycle, totalDeposited, due)
@@ -546,6 +549,7 @@ fun MembersScreen(
                                 val stats = memberChandaStats[member.id] ?: Triple(0.0, 0.0, member.monthlyChanda)
                                 ChandaMemberCard(
                                     member = member,
+                                    defaultMosqueAddress = mosque?.address ?: "",
                                     paidThisCycle = stats.first,
                                     totalDeposited = stats.second,
                                     dueAmount = stats.third,
@@ -608,16 +612,21 @@ fun MembersScreen(
     chandaTargetMember?.let { (member, suggestedAmt) ->
         ReceiveChandaDialog(
             members = allMembers,
+            allPayments = allChandaPayments,
             preselectedMember = member,
             defaultMonth = activeCycleMonth,
             suggestedAmount = suggestedAmt,
             onDismiss = { chandaTargetMember = null },
-            onConfirm = { targetMember, month, amount, method ->
+            onConfirm = { targetMember, month, amount, method, monthCount ->
                 viewModel.recordChandaPayment(
                     member = targetMember,
                     month = month,
                     amount = amount,
-                    method = method
+                    method = method,
+                    selectedMonthCount = monthCount,
+                    onRecorded = { createdPayment ->
+                        receiptPreviewPayment = createdPayment
+                    }
                 )
             }
         )
@@ -667,12 +676,13 @@ fun MembersScreen(
 
     // 5. Pay Staff Salary Dialog
     paySalaryTargetStaff?.let { staff ->
-        PayStaffSalaryDialog(
+        PaySalaryFormDialog(
             staff = staff,
             defaultMonth = activeCycleMonth,
             onDismiss = { paySalaryTargetStaff = null },
             onConfirm = { month, bonus ->
                 viewModel.disburseSalary(staff = staff, month = month, bonus = bonus)
+                paySalaryTargetStaff = null
             }
         )
     }
@@ -768,6 +778,7 @@ private fun HeaderSummaryPill(
 @Composable
 private fun ChandaMemberCard(
     member: MemberEntity,
+    defaultMosqueAddress: String,
     paidThisCycle: Double,
     totalDeposited: Double,
     dueAmount: Double,
@@ -896,8 +907,9 @@ private fun ChandaMemberCard(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
+                            val cardAddress = member.address.ifBlank { defaultMosqueAddress }.ifBlank { "প্রযোজ্য নয়" }
                             Text(
-                                text = "ঠিকানা: ${member.address}",
+                                text = "ঠিকানা: $cardAddress",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MosqueTextMuted,
                                 maxLines = 1,

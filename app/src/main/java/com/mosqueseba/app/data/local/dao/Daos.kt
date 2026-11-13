@@ -117,6 +117,9 @@ interface NoticeDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertNotice(notice: NoticeEntity): Long
 
+    @Update
+    suspend fun updateNotice(notice: NoticeEntity): Int
+
     @Delete
     suspend fun deleteNotice(notice: NoticeEntity): Int
 }
@@ -128,6 +131,12 @@ interface MeetingDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertMeeting(meeting: MeetingEntity): Long
+
+    @Update
+    suspend fun updateMeeting(meeting: MeetingEntity): Int
+
+    @Delete
+    suspend fun deleteMeeting(meeting: MeetingEntity): Int
 }
 
 @Dao

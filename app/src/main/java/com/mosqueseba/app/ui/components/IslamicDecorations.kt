@@ -226,6 +226,7 @@ fun HijriDateBanner(
 fun RoleWorkspaceHeader(
     currentRole: UserRole,
     onDutiesClick: () -> Unit = {},
+    onProfileClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val (title, subtitle, accentColor, icon) = when (currentRole) {
@@ -236,7 +237,7 @@ fun RoleWorkspaceHeader(
             Icons.Default.VerifiedUser
         )
         UserRole.TREASURER, UserRole.ASSISTANT_TREASURER -> Quadruple(
-            "${currentRole.titleBn} — বায়তুল মাল ও ব্যাংকিং দফতর",
+            "${currentRole.titleBn} — বায়তুল মাল ও ব্যাংকিং দপ্তর",
             currentRole.shortSummaryBn,
             RoleTreasurerAccent,
             Icons.Default.AccountBalanceWallet
@@ -290,7 +291,7 @@ fun RoleWorkspaceHeader(
             Icons.Default.Mosque
         )
         UserRole.GENERAL_MEMBER -> Quadruple(
-            "মুসুল্লি খেদমত ও স্বচ্ছ তহবিল পোর্টাল",
+            "মুসল্লি খেদমত ও স্বচ্ছ তহবিল পোর্টাল",
             currentRole.shortSummaryBn,
             RoleMusalliAccent,
             Icons.Default.People
@@ -339,17 +340,37 @@ fun RoleWorkspaceHeader(
                 )
             }
             Spacer(modifier = Modifier.width(6.dp))
-            Surface(
-                shape = RoundedCornerShape(8.dp),
-                color = accentColor.copy(alpha = 0.16f)
+            Column(
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                Text(
-                    text = "দায়িত্ব",
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = accentColor,
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                )
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = accentColor.copy(alpha = 0.16f)
+                ) {
+                    Text(
+                        text = "দায়িত্ব",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = accentColor,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
+                }
+                if (onProfileClick != null) {
+                    Surface(
+                        onClick = onProfileClick,
+                        shape = RoundedCornerShape(8.dp),
+                        color = MosqueEmeraldPrimary
+                    ) {
+                        Text(
+                            text = "আমার প্রোফাইল",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        )
+                    }
+                }
             }
         }
     }

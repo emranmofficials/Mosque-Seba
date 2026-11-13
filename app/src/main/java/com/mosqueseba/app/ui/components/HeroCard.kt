@@ -40,7 +40,10 @@ import com.mosqueseba.app.data.model.UserRole
 import com.mosqueseba.app.ui.theme.*
 
 @Composable
-fun HeroCard(mosque: MosqueEntity?) {
+fun HeroCard(
+    mosque: MosqueEntity?,
+    onMosqueProfileClick: (() -> Unit)? = null
+) {
     val nameBn = mosque?.nameBn ?: "বায়তুল জান্নাত জামে মসজিদ"
     val address = mosque?.address ?: "মিরপুর-১০, ঢাকা-১২১৬"
     val committeeId = mosque?.committeeId ?: "MC-DHK-2024"
@@ -49,7 +52,13 @@ fun HeroCard(mosque: MosqueEntity?) {
     val endYearBn = toBengaliDigits((mosque?.committeeEndYear ?: 2026).toString())
 
     MehrabArchCard(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .then(
+                if (onMosqueProfileClick != null) {
+                    Modifier.clickable(onClick = onMosqueProfileClick)
+                } else Modifier
+            ),
         backgroundColor = Color.Transparent,
         borderColor = MosqueCardBorderGold.copy(alpha = 0.5f),
         elevation = 4.dp
@@ -142,7 +151,7 @@ fun HeroCard(mosque: MosqueEntity?) {
                         color = Color.White.copy(alpha = 0.9f)
                     )
                     Text(
-                        text = "কার্যনির্বাহী পরিষদ • সক্রিয়",
+                        text = if (onMosqueProfileClick != null) "মসজিদ প্রোফাইল ›" else "কার্যনির্বাহী পরিষদ • সক্রিয়",
                         style = MaterialTheme.typography.labelSmall,
                         color = MosqueGoldLight,
                         fontWeight = FontWeight.SemiBold
@@ -160,7 +169,9 @@ fun HeroCard(mosque: MosqueEntity?) {
 fun ExecutiveMosqueHeroCard(
     mosque: MosqueEntity?,
     currentRole: UserRole,
-    onDutiesClick: () -> Unit
+    showHijriDate: Boolean = true,
+    onDutiesClick: () -> Unit,
+    onMosqueProfileClick: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
     @Suppress("DEPRECATION")
@@ -203,21 +214,23 @@ fun ExecutiveMosqueHeroCard(
             // Row 1: Compact Hijri Date & Bismillah on one slim strip
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement = if (showHijriDate) Arrangement.SpaceBetween else Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Surface(
-                    color = MosqueGold.copy(alpha = 0.16f),
-                    shape = RoundedCornerShape(6.dp),
-                    border = BorderStroke(0.7.dp, MosqueGold.copy(alpha = 0.4f))
-                ) {
-                    Text(
-                        text = "🌙 $hijriDate",
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MosqueGoldLight,
-                        modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp)
-                    )
+                if (showHijriDate) {
+                    Surface(
+                        color = MosqueGold.copy(alpha = 0.16f),
+                        shape = RoundedCornerShape(6.dp),
+                        border = BorderStroke(0.7.dp, MosqueGold.copy(alpha = 0.4f))
+                    ) {
+                        Text(
+                            text = "🌙 $hijriDate",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MosqueGoldLight,
+                            modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp)
+                        )
+                    }
                 }
 
                 Text(
@@ -235,58 +248,70 @@ fun ExecutiveMosqueHeroCard(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(
+                Row(
                     modifier = Modifier
-                        .size(46.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .border(1.5.dp, MosqueGoldGradient, RoundedCornerShape(12.dp))
-                        .background(Color.White)
-                        .padding(if (mosqueLogoBitmap != null) 2.dp else 5.dp),
-                    contentAlignment = Alignment.Center
+                        .weight(1f)
+                        .clip(RoundedCornerShape(10.dp))
+                        .then(
+                            if (onMosqueProfileClick != null) {
+                                Modifier.clickable(onClick = onMosqueProfileClick)
+                            } else Modifier
+                        ),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    if (mosqueLogoBitmap != null) {
-                        Image(
-                            bitmap = mosqueLogoBitmap,
-                            contentDescription = "মসজিদের অফিসিয়াল লোগো",
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .clip(RoundedCornerShape(10.dp))
-                        )
-                    } else {
-                        Image(
-                            painter = painterResource(id = R.drawable.app_logo),
-                            contentDescription = "মসজিদের অফিসিয়াল লোগো",
-                            modifier = Modifier.fillMaxSize()
-                        )
+                    Box(
+                        modifier = Modifier
+                            .size(46.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .border(1.5.dp, MosqueGoldGradient, RoundedCornerShape(12.dp))
+                            .background(Color.White)
+                            .padding(if (mosqueLogoBitmap != null) 2.dp else 5.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (mosqueLogoBitmap != null) {
+                            Image(
+                                bitmap = mosqueLogoBitmap,
+                                contentDescription = "মসজিদের অফিসিয়াল লোগো",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .clip(RoundedCornerShape(10.dp))
+                            )
+                        } else {
+                            Image(
+                                painter = painterResource(id = R.drawable.app_logo),
+                                contentDescription = "মসজিদের অফিসিয়াল লোগো",
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
                     }
-                }
 
-                Spacer(modifier = Modifier.width(10.dp))
+                    Spacer(modifier = Modifier.width(10.dp))
 
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = nameBn,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = Color.White,
-                        fontWeight = FontWeight.ExtraBold,
-                        maxLines = 1
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.LocationOn,
-                            contentDescription = null,
-                            tint = MosqueGold,
-                            modifier = Modifier.size(12.dp)
-                        )
-                        Spacer(modifier = Modifier.width(3.dp))
+                    Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = fullAddress,
-                            fontSize = 11.sp,
-                            color = Color.White.copy(alpha = 0.86f),
+                            text = nameBn,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = Color.White,
+                            fontWeight = FontWeight.ExtraBold,
                             maxLines = 1
                         )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.LocationOn,
+                                contentDescription = null,
+                                tint = MosqueGold,
+                                modifier = Modifier.size(12.dp)
+                            )
+                            Spacer(modifier = Modifier.width(3.dp))
+                            Text(
+                                text = fullAddress,
+                                fontSize = 11.sp,
+                                color = Color.White.copy(alpha = 0.86f),
+                                maxLines = 1
+                            )
+                        }
                     }
                 }
 
@@ -371,9 +396,16 @@ fun ExecutiveMosqueHeroCard(
                 }
 
                 Text(
-                    text = "স্থাপিত $establishedBn • মেয়াদ $startYearBn–$endYearBn",
+                    text = if (onMosqueProfileClick != null) "প্রোফাইল › ($establishedBn • $startYearBn–$endYearBn)" else "স্থাপিত $establishedBn • মেয়াদ $startYearBn–$endYearBn",
                     fontSize = 10.sp,
-                    color = Color.White.copy(alpha = 0.85f)
+                    color = MosqueGoldLight.copy(alpha = 0.92f),
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = if (onMosqueProfileClick != null) {
+                        Modifier
+                            .clip(RoundedCornerShape(6.dp))
+                            .clickable(onClick = onMosqueProfileClick)
+                            .padding(horizontal = 4.dp, vertical = 2.dp)
+                    } else Modifier
                 )
             }
         }

@@ -22,7 +22,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.mosqueseba.app.BuildConfig
 import com.mosqueseba.app.R
+import com.mosqueseba.app.ui.components.toBengaliDigits
 import com.mosqueseba.app.ui.theme.*
 import kotlinx.coroutines.delay
 
@@ -215,7 +217,7 @@ fun SplashScreen(
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "সংস্করণ ১.০.৬ • অফিসিয়াল প্রডাকশন এডিশন",
+                text = "সংস্করণ ${toBengaliDigits(BuildConfig.VERSION_NAME)} • অফিসিয়াল সংস্করণ",
                 fontSize = 10.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = MosqueGold.copy(alpha = 0.8f)

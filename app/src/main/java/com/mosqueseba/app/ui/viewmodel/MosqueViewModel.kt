@@ -65,6 +65,99 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
         _currentUserRole.value = role
     }
 
+    private val _notificationsEnabled = MutableStateFlow(sessionManager.isNotificationsEnabled())
+    val notificationsEnabled: StateFlow<Boolean> = _notificationsEnabled.asStateFlow()
+
+    private val _showHijriBanner = MutableStateFlow(sessionManager.isHijriBannerVisible())
+    val showHijriBanner: StateFlow<Boolean> = _showHijriBanner.asStateFlow()
+
+    private val _rememberMeEnabled = MutableStateFlow(sessionManager.isRememberMeEnabled())
+    val rememberMeEnabled: StateFlow<Boolean> = _rememberMeEnabled.asStateFlow()
+
+    private val _readNotificationIds = MutableStateFlow(sessionManager.getReadNotificationIds())
+    val readNotificationIds: StateFlow<Set<String>> = _readNotificationIds.asStateFlow()
+
+    fun setNotificationsEnabled(enabled: Boolean) {
+        sessionManager.setNotificationsEnabled(enabled)
+        _notificationsEnabled.value = enabled
+    }
+
+    fun setShowHijriBanner(visible: Boolean) {
+        sessionManager.setHijriBannerVisible(visible)
+        _showHijriBanner.value = visible
+    }
+
+    fun setRememberMeEnabled(enabled: Boolean) {
+        sessionManager.setRememberMeEnabled(enabled)
+        _rememberMeEnabled.value = enabled
+    }
+
+    fun markNotificationAsRead(notificationId: String) {
+        sessionManager.markNotificationRead(notificationId)
+        _readNotificationIds.value = sessionManager.getReadNotificationIds()
+    }
+
+    fun markAllNotificationsAsRead(notificationIds: Collection<String>) {
+        sessionManager.markAllNotificationsRead(notificationIds)
+        _readNotificationIds.value = sessionManager.getReadNotificationIds()
+    }
+
+    fun changeCurrentUserPassword(
+        currentPassword: String,
+        newPassword: String
+    ): Pair<Boolean, String> {
+        val trimmedCurrent = currentPassword.trim()
+        val trimmedNew = newPassword.trim()
+        if (trimmedNew.length < 6) {
+            return Pair(false, "নতুন পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।")
+        }
+
+        val role = _currentUserRole.value
+        val activeMosque = mosque.value
+        val committeeId = activeMosque?.committeeId ?: sessionManager.getSavedCommitteeId()
+        val mosqueId = activeMosque?.id ?: _activeMosqueId.value
+
+        val member = allMembers.value.firstOrNull {
+            it.id == sessionManager.getSavedMemberId() && role == sessionManager.getSavedRole()
+        } ?: allMembers.value.firstOrNull { it.roleCode.equals(role.code, ignoreCase = true) }
+
+        val email = member?.email?.trim()?.lowercase().orEmpty()
+        val mobile = member?.mobile?.ifBlank { sessionManager.getSavedMobile() } ?: sessionManager.getSavedMobile()
+
+        return if (role == UserRole.PRESIDENT && email.isNotBlank()) {
+            val savedCheck = sessionManager.verifyRegisteredPresidentPassword(email, trimmedCurrent)
+            val isValid = savedCheck ?: (trimmedCurrent == "123456")
+            if (!isValid) {
+                Pair(false, "বর্তমান পাসওয়ার্ড সঠিক নয়।")
+            } else {
+                sessionManager.saveRegisteredPresidentEmailCredential(
+                    email = email,
+                    committeeId = committeeId,
+                    mosqueId = mosqueId,
+                    password = trimmedNew
+                )
+                Pair(true, "পাসওয়ার্ড সফলভাবে পরিবর্তন করা হয়েছে।")
+            }
+        } else {
+            val cleanMobile = mobile.replace("-", "").replace(" ", "").trim()
+            val digitsOnly = cleanMobile.filter { it.isDigit() }
+            val defaultPass = digitsOnly.takeLast(6)
+            val savedCheck = sessionManager.verifyRegisteredPassword(cleanMobile, trimmedCurrent)
+            val isValid = savedCheck ?: (digitsOnly.length >= 6 && trimmedCurrent == defaultPass)
+            if (!isValid) {
+                Pair(false, "বর্তমান পাসওয়ার্ড সঠিক নয়।")
+            } else {
+                sessionManager.saveRegisteredCredential(
+                    mobile = cleanMobile,
+                    committeeId = committeeId,
+                    mosqueId = mosqueId,
+                    password = trimmedNew
+                )
+                Pair(true, "পাসওয়ার্ড সফলভাবে পরিবর্তন করা হয়েছে।")
+            }
+        }
+    }
+
     private val _activeMosqueId = MutableStateFlow(sessionManager.getActiveMosqueId())
 
     suspend fun loginPresidentWithEmail(
@@ -147,8 +240,10 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
 
         val digitsOnly = member.mobile.filter { it.isDigit() }
         val expectedLast6 = digitsOnly.takeLast(6)
-        if (digitsOnly.length < 6 || pass.trim() != expectedLast6) {
-            return Pair(false, "পাসওয়ার্ড সঠিক নয়। আপনার মোবাইল নম্বরের শেষ ৬টি সংখ্যা দিন।")
+        val savedPasswordCheck = sessionManager.verifyRegisteredPassword(cleanMobile, pass.trim())
+        val isPasswordValid = savedPasswordCheck ?: (digitsOnly.length >= 6 && pass.trim() == expectedLast6)
+        if (!isPasswordValid) {
+            return Pair(false, "পাসওয়ার্ড সঠিক নয়। আপনার নির্ধারিত পাসওয়ার্ড বা মোবাইল নম্বরের শেষ ৬টি সংখ্যা দিন।")
         }
 
         val resolvedMosqueId = matchedMosque?.id
@@ -316,6 +411,7 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
 
     fun logout() {
         sessionManager.clearSession()
+        _readNotificationIds.value = emptySet()
         _isLoggedIn.value = false
         _currentUserRole.value = UserRole.GENERAL_MEMBER
     }
@@ -519,11 +615,14 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
         staffMealRequired: Boolean = true
     ) {
         viewModelScope.launch {
-            val count = allMembers.value.size + 101
-            val newCode = "MEM-$count"
+            val maxNum = allMembers.value.mapNotNull {
+                it.memberCode.removePrefix("MEM-").toIntOrNull()
+            }.maxOrNull() ?: 100
+            val newCode = "MEM-${maxNum + 1}"
             val joinDateStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+            val memberId = UUID.randomUUID().toString()
             val member = MemberEntity(
-                id = UUID.randomUUID().toString(),
+                id = memberId,
                 memberCode = newCode,
                 nameBn = nameBn,
                 nameEn = nameEn,
@@ -540,24 +639,11 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
                 willingToProvideStaffMeals = willingToProvideStaffMeals
             )
             repository.addMember(member)
-
-            val isStaffRole = roleCode.equals("imam", ignoreCase = true) ||
-                roleCode.equals("muazzin", ignoreCase = true) ||
-                roleCode.equals("khadem", ignoreCase = true)
-            if (isStaffRole) {
-                val roleTitle = UserRole.fromCode(roleCode).titleBn
-                val staff = StaffEntity(
-                    id = "staff-${UUID.randomUUID().toString().take(8)}",
-                    nameBn = nameBn,
-                    roleCode = roleCode,
-                    designationBn = roleTitle,
-                    joinDate = joinDateStr,
-                    salaryAmount = if (salaryAmount > 0) salaryAmount else 12000.0,
-                    mealRequired = staffMealRequired,
-                    mobile = mobile
-                )
-                repository.addStaff(staff)
-            }
+            syncStaffForMember(
+                member = member,
+                salaryAmount = salaryAmount,
+                staffMealRequired = staffMealRequired
+            )
         }
     }
 
@@ -585,7 +671,8 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
         type: String,
         amount: Double,
         description: String,
-        sourceType: String = "manual"
+        sourceType: String = "manual",
+        paymentMethod: String = "cash"
     ) {
         viewModelScope.launch {
             val nextNum = allTransactions.value.size + 1
@@ -596,6 +683,7 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
             // Approval policy: President / Vice President creates auto-approved up to 50k; others pending
             val status = if (role.canApproveFinance() && amount <= 50000) "approved" else "pending"
             val approvedBy = if (status == "approved") role.titleBn else null
+            val resolvedSourceType = if (sourceType == "manual") "manual_$paymentMethod" else sourceType
 
             val txn = TransactionEntity(
                 id = UUID.randomUUID().toString(),
@@ -605,7 +693,7 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
                 amount = amount,
                 txnDate = dateStr,
                 description = description,
-                sourceType = sourceType,
+                sourceType = resolvedSourceType,
                 createdBy = role.titleBn,
                 approvedBy = approvedBy,
                 approvalStatus = status
@@ -639,28 +727,33 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
         member: MemberEntity,
         month: String,
         amount: Double,
-        method: String
+        method: String,
+        selectedMonthCount: Int = 1,
+        onRecorded: ((ChandaPaymentEntity) -> Unit)? = null
     ) {
         viewModelScope.launch {
             val rcpNum = allChandaPayments.value.size + 101
             val rcpCode = "RCP-2024-$rcpNum"
             val qrCode = "VER-MC-DHK-2024-$rcpNum-${UUID.randomUUID().toString().take(6).uppercase()}"
             val paidAtStr = SimpleDateFormat("yyyy-MM-dd hh:mm a", Locale.getDefault()).format(Date())
+            val monthCount = selectedMonthCount.coerceAtLeast(1)
+            val expectedDue = (member.monthlyChanda * monthCount).coerceAtLeast(member.monthlyChanda)
             val payment = ChandaPaymentEntity(
                 id = UUID.randomUUID().toString(),
                 memberId = member.id,
                 memberNameBn = member.nameBn,
                 month = month,
-                amountDue = member.monthlyChanda,
+                amountDue = expectedDue,
                 amountPaid = amount,
                 method = method,
-                status = if (amount >= member.monthlyChanda) "paid" else "partial",
+                status = if (amount >= expectedDue) "paid" else "partial",
                 receiptCode = rcpCode,
                 qrVerificationCode = qrCode,
                 receivedBy = _currentUserRole.value.titleBn,
                 paidAt = paidAtStr
             )
             repository.recordChandaPayment(payment)
+            onRecorded?.invoke(payment)
         }
     }
 
@@ -709,6 +802,33 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
+    fun updateNotice(
+        notice: NoticeEntity,
+        title: String,
+        content: String,
+        priority: String,
+        isPinned: Boolean
+    ) {
+        viewModelScope.launch {
+            val updated = notice.copy(
+                title = title,
+                content = content,
+                priority = priority,
+                isPinned = isPinned
+            )
+            repository.updateNotice(updated)
+        }
+    }
+
+    fun togglePinNotice(notice: NoticeEntity) {
+        viewModelScope.launch {
+            val updated = notice.copy(isPinned = !notice.isPinned)
+            val action = if (updated.isPinned) "NOTICE_PINNED" else "NOTICE_UNPINNED"
+            val details = if (updated.isPinned) "নোটিশ পিন করা হয়েছে: ${notice.title}" else "নোটিশ আনপিন করা হয়েছে: ${notice.title}"
+            repository.updateNotice(updated, action, details)
+        }
+    }
+
     fun deleteNotice(notice: NoticeEntity) {
         viewModelScope.launch {
             repository.deleteNotice(notice)
@@ -730,6 +850,59 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
                 status = "upcoming"
             )
             repository.addMeeting(meeting)
+        }
+    }
+
+    fun updateMeeting(
+        meeting: MeetingEntity,
+        title: String,
+        dateStr: String,
+        location: String,
+        agenda: String
+    ) {
+        viewModelScope.launch {
+            val updated = meeting.copy(
+                title = title,
+                meetingDate = dateStr,
+                location = location,
+                agenda = agenda
+            )
+            repository.updateMeeting(updated)
+        }
+    }
+
+    fun toggleMeetingStatus(meeting: MeetingEntity) {
+        viewModelScope.launch {
+            val nextStatus = if (meeting.status == "completed") "upcoming" else "completed"
+            val updated = meeting.copy(status = nextStatus)
+            val action = if (nextStatus == "completed") "MEETING_COMPLETED" else "MEETING_REOPENED"
+            val details = if (nextStatus == "completed") "সভা সম্পন্ন হিসেবে চিহ্নিত: ${meeting.title}" else "সভা পুনরায় আসন্ন হিসেবে চিহ্নিত: ${meeting.title}"
+            repository.updateMeeting(updated, action, details)
+        }
+    }
+
+    fun saveMeetingResolution(
+        meeting: MeetingEntity,
+        resolution: String,
+        markCompleted: Boolean
+    ) {
+        viewModelScope.launch {
+            val nextStatus = if (markCompleted) "completed" else meeting.status
+            val updated = meeting.copy(
+                resolution = resolution.trim(),
+                status = nextStatus
+            )
+            repository.updateMeeting(
+                updated,
+                auditAction = "MEETING_RESOLUTION_SAVED",
+                auditDetails = "সভার সিদ্ধান্ত/কার্যবিবরণী সংরক্ষিত: ${meeting.title}"
+            )
+        }
+    }
+
+    fun deleteMeeting(meeting: MeetingEntity) {
+        viewModelScope.launch {
+            repository.deleteMeeting(meeting)
         }
     }
 
@@ -963,35 +1136,210 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
-    // --- Member Management Actions ---
-    fun updateMemberRole(member: MemberEntity, newRole: UserRole) {
-        viewModelScope.launch {
-            repository.updateMember(member.copy(roleCode = newRole.code))
+    // --- Member Management Actions (Permanent ID & Safe Role Switching) ---
+    private suspend fun syncStaffForMember(
+        member: MemberEntity,
+        salaryAmount: Double = 0.0,
+        staffMealRequired: Boolean = true
+    ) {
+        val isStaffRole = member.roleCode.equals("imam", ignoreCase = true) ||
+            member.roleCode.equals("muazzin", ignoreCase = true) ||
+            member.roleCode.equals("khadem", ignoreCase = true)
+        val normMobile = member.mobile.filter { it.isDigit() }
+        val existingStaff = activeStaff.value.find { st ->
+            st.id == "staff-${member.id}" ||
+                (normMobile.length >= 6 && st.mobile.filter { it.isDigit() } == normMobile) ||
+                st.nameBn.trim() == member.nameBn.trim()
+        }
+        val memberActive = member.status == "active"
+
+        if (isStaffRole) {
+            val roleTitle = UserRole.fromCode(member.roleCode).titleBn
+            if (existingStaff != null) {
+                repository.updateStaff(
+                    existingStaff.copy(
+                        nameBn = member.nameBn,
+                        mobile = member.mobile,
+                        roleCode = member.roleCode,
+                        designationBn = roleTitle,
+                        salaryAmount = if (salaryAmount > 0) salaryAmount else existingStaff.salaryAmount,
+                        mealRequired = staffMealRequired,
+                        isActive = memberActive
+                    )
+                )
+            } else {
+                repository.addStaff(
+                    StaffEntity(
+                        id = "staff-${member.id}",
+                        nameBn = member.nameBn,
+                        roleCode = member.roleCode,
+                        designationBn = roleTitle,
+                        joinDate = member.joinDate,
+                        salaryAmount = if (salaryAmount > 0) salaryAmount else 12000.0,
+                        mealRequired = staffMealRequired,
+                        mobile = member.mobile,
+                        isActive = memberActive
+                    )
+                )
+            }
+        } else if (existingStaff != null && existingStaff.isActive) {
+            repository.updateStaff(existingStaff.copy(isActive = false))
         }
     }
 
-    fun updateMemberDetails(member: MemberEntity) {
+    fun updateMemberRole(member: MemberEntity, newRole: UserRole) {
+        viewModelScope.launch {
+            val updated = member.copy(roleCode = newRole.code)
+            repository.updateMember(updated)
+            syncStaffForMember(updated)
+        }
+    }
+
+    fun updateMemberDetails(
+        member: MemberEntity,
+        salaryAmount: Double = 0.0,
+        staffMealRequired: Boolean = true
+    ) {
         viewModelScope.launch {
             repository.updateMember(member)
+            syncStaffForMember(
+                member = member,
+                salaryAmount = salaryAmount,
+                staffMealRequired = staffMealRequired
+            )
         }
     }
 
     fun toggleMemberStatus(member: MemberEntity) {
         viewModelScope.launch {
             val nextStatus = if (member.status == "active") "inactive" else "active"
-            repository.updateMember(member.copy(status = nextStatus))
+            val updated = member.copy(status = nextStatus)
+            repository.updateMember(updated)
+            syncStaffForMember(updated)
         }
     }
 
     fun deleteMember(member: MemberEntity) {
         viewModelScope.launch {
             repository.deleteMember(member)
+            val normMobile = member.mobile.filter { it.isDigit() }
+            activeStaff.value.find { st ->
+                st.id == "staff-${member.id}" ||
+                    (normMobile.length >= 6 && st.mobile.filter { it.isDigit() } == normMobile) ||
+                    st.nameBn.trim() == member.nameBn.trim()
+            }?.let { st ->
+                repository.updateStaff(st.copy(isActive = false))
+            }
         }
     }
 
     fun updateStaffDetails(staff: StaffEntity) {
         viewModelScope.launch {
             repository.updateStaff(staff)
+        }
+    }
+
+    fun updateMosqueDetails(updated: MosqueEntity) {
+        viewModelScope.launch {
+            repository.updateMosqueProfile(updated, _currentUserRole.value.titleBn)
+        }
+    }
+
+    fun promoteStaffAndUpdateDetails(
+        staff: StaffEntity,
+        nameBn: String,
+        nameEn: String,
+        mobile: String,
+        email: String,
+        nid: String,
+        address: String,
+        villageArea: String,
+        roleCode: String,
+        monthlyChanda: Double,
+        photoUrl: String?,
+        willingToProvideStaffMeals: Boolean,
+        salaryAmount: Double,
+        staffMealRequired: Boolean
+    ) {
+        viewModelScope.launch {
+            val normMobile = mobile.filter { it.isDigit() }
+            val existingMember = allMembers.value.find { m ->
+                (normMobile.length >= 6 && m.mobile.filter { it.isDigit() } == normMobile) ||
+                    m.nameBn.trim() == staff.nameBn.trim()
+            }
+            val member = if (existingMember != null) {
+                existingMember.copy(
+                    nameBn = nameBn,
+                    nameEn = nameEn,
+                    mobile = mobile,
+                    email = email,
+                    nid = nid,
+                    address = address,
+                    villageArea = villageArea,
+                    roleCode = roleCode,
+                    monthlyChanda = monthlyChanda,
+                    photoUrl = photoUrl,
+                    willingToProvideStaffMeals = willingToProvideStaffMeals
+                )
+            } else {
+                val maxNum = allMembers.value.mapNotNull {
+                    it.memberCode.removePrefix("MEM-").toIntOrNull()
+                }.maxOrNull() ?: 100
+                MemberEntity(
+                    id = UUID.randomUUID().toString(),
+                    memberCode = "MEM-${maxNum + 1}",
+                    nameBn = nameBn,
+                    nameEn = nameEn,
+                    mobile = mobile,
+                    email = email,
+                    nid = nid,
+                    address = address,
+                    villageArea = villageArea,
+                    roleCode = roleCode,
+                    monthlyChanda = monthlyChanda,
+                    joinDate = staff.joinDate,
+                    photoUrl = photoUrl,
+                    status = if (staff.isActive) "active" else "inactive",
+                    willingToProvideStaffMeals = willingToProvideStaffMeals
+                )
+            }
+            if (existingMember != null) {
+                repository.updateMember(member)
+            } else {
+                repository.addMember(member)
+            }
+
+            val isStaffRole = roleCode.equals("imam", ignoreCase = true) ||
+                roleCode.equals("muazzin", ignoreCase = true) ||
+                roleCode.equals("khadem", ignoreCase = true)
+            if (isStaffRole) {
+                val roleTitle = UserRole.fromCode(roleCode).titleBn
+                repository.updateStaff(
+                    staff.copy(
+                        nameBn = nameBn,
+                        mobile = mobile,
+                        roleCode = roleCode,
+                        designationBn = roleTitle,
+                        salaryAmount = if (salaryAmount > 0) salaryAmount else staff.salaryAmount,
+                        mealRequired = staffMealRequired,
+                        isActive = member.status == "active"
+                    )
+                )
+            } else {
+                repository.updateStaff(staff.copy(isActive = false))
+            }
+        }
+    }
+
+    fun toggleStaffStatus(staff: StaffEntity) {
+        viewModelScope.launch {
+            repository.updateStaff(staff.copy(isActive = !staff.isActive))
+        }
+    }
+
+    fun removeStaff(staff: StaffEntity) {
+        viewModelScope.launch {
+            repository.updateStaff(staff.copy(isActive = false))
         }
     }
 

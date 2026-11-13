@@ -174,7 +174,7 @@ enum class UserRole(
     ),
     IMAM(
         code = "imam",
-        titleBn = "পেশ ইমাম ও খতীব (পদাধিকারবলে)",
+        titleBn = "পেশ ইমাম ও খতিব (পদাধিকারবলে)",
         level = 3,
         tier = CommitteeTier.GENERAL_ADVISORY,
         emoji = "🕌",
@@ -269,6 +269,9 @@ enum class UserRole(
 
     fun canManageWelfareEducation(): Boolean =
         this == PRESIDENT || this == VICE_PRESIDENT || this == GENERAL_SECRETARY || this == WELFARE_EDUCATION_SECRETARY || this == IMAM
+
+    fun canEditMosqueProfile(): Boolean =
+        this == PRESIDENT || this == VICE_PRESIDENT || this == GENERAL_SECRETARY
 
     companion object {
         fun fromCode(code: String): UserRole =

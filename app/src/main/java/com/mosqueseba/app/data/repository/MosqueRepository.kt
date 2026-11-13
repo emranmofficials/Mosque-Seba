@@ -14,6 +14,11 @@ class MosqueRepository(private val database: MosqueDatabase) {
     suspend fun getMosqueByCommitteeId(committeeId: String): MosqueEntity? = database.mosqueDao().getMosqueByCommitteeId(committeeId)
     suspend fun updateMosque(mosque: MosqueEntity) = database.mosqueDao().insertOrUpdate(mosque)
 
+    suspend fun updateMosqueProfile(mosque: MosqueEntity, actor: String) {
+        database.mosqueDao().insertOrUpdate(mosque)
+        logAudit("MOSQUE_PROFILE_UPDATED", "মসজিদের প্রোফাইল ও তথ্য হালনাগাদ: ${mosque.nameBn}", actor)
+    }
+
     // Members
     val allMembers: Flow<List<MemberEntity>> = database.memberDao().getAllMembers()
     val activeMembers: Flow<List<MemberEntity>> = database.memberDao().getActiveMembers()
@@ -88,7 +93,7 @@ class MosqueRepository(private val database: MosqueDatabase) {
             amount = payment.amountPaid,
             txnDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date()),
             description = "${payment.memberNameBn}-এর ${payment.month}-এর চাঁদা আদায় (রসিদ: ${payment.receiptCode})",
-            sourceType = "chanda_payment",
+            sourceType = "chanda_${payment.method}",
             sourceId = payment.id,
             createdBy = payment.receivedBy,
             approvalStatus = "approved"
@@ -116,6 +121,15 @@ class MosqueRepository(private val database: MosqueDatabase) {
         logAudit("NOTICE_PUBLISHED", "নোটিশ প্রকাশ: ${notice.title}")
     }
 
+    suspend fun updateNotice(
+        notice: NoticeEntity,
+        auditAction: String = "NOTICE_UPDATED",
+        auditDetails: String = "নোটিশ হালনাগাদ: ${notice.title}"
+    ) {
+        database.noticeDao().updateNotice(notice)
+        logAudit(auditAction, auditDetails)
+    }
+
     suspend fun deleteNotice(notice: NoticeEntity) {
         database.noticeDao().deleteNotice(notice)
         logAudit("NOTICE_DELETED", "নোটিশ মুছে ফেলা হয়েছে: ${notice.title}")
@@ -126,6 +140,20 @@ class MosqueRepository(private val database: MosqueDatabase) {
     suspend fun addMeeting(meeting: MeetingEntity) {
         database.meetingDao().insertMeeting(meeting)
         logAudit("MEETING_CREATED", "নতুন সভা নির্ধারিত: ${meeting.title}")
+    }
+
+    suspend fun updateMeeting(
+        meeting: MeetingEntity,
+        auditAction: String = "MEETING_UPDATED",
+        auditDetails: String = "সভার তথ্য হালনাগাদ: ${meeting.title}"
+    ) {
+        database.meetingDao().updateMeeting(meeting)
+        logAudit(auditAction, auditDetails)
+    }
+
+    suspend fun deleteMeeting(meeting: MeetingEntity) {
+        database.meetingDao().deleteMeeting(meeting)
+        logAudit("MEETING_DELETED", "সভা বাতিল/মুছে ফেলা হয়েছে: ${meeting.title}")
     }
 
     // --- মাদরাসা মডিউল (PRD §16–§24) ---

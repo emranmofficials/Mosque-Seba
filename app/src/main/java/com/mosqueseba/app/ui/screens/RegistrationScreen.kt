@@ -490,7 +490,7 @@ fun RegistrationScreen(
                                         }
                                         Spacer(modifier = Modifier.height(4.dp))
                                         Text(
-                                            text = "দায়িত্বশীল হিসেবে জায়গীর/খাবার ব্যবস্থাপনায় আপনার সম্মতি নিশ্চিত করুন",
+                                            text = "দায়িত্বশীল হিসেবে জায়গির/খাবার ব্যবস্থাপনায় আপনার সম্মতি নিশ্চিত করুন",
                                             style = MaterialTheme.typography.labelSmall,
                                             color = MosqueTextSecondary
                                         )
@@ -1128,7 +1128,7 @@ fun RegistrationScreen(
                                     Button(
                                         onClick = {
                                             if (!agreeToTerms) {
-                                                errorMessage = "শর্তাবলীতে সম্মত হওয়া আবশ্যক।"
+                                                errorMessage = "শর্তাবলিতে সম্মত হওয়া আবশ্যক।"
                                                 return@Button
                                             }
                                             isSubmitting = true

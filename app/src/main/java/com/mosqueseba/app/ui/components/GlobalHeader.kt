@@ -21,8 +21,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mosqueseba.app.R
@@ -34,14 +36,17 @@ import java.io.File
 fun GlobalHeader(
     currentRole: UserRole,
     memberName: String? = null,
+    mosqueName: String? = null,
     mosqueLogoUrl: String? = null,
     userPhotoUrl: String? = null,
     notificationCount: Int = 0,
     onRoleSelected: (UserRole) -> Unit,
     onNotificationClick: () -> Unit,
+    onMosqueProfileClick: () -> Unit = {},
+    onUserProfileClick: () -> Unit = {},
+    onAvatarClick: () -> Unit = {},
     onLogout: (() -> Unit)? = null
 ) {
-    var showProfileMenu by remember { mutableStateOf(false) }
 
     Surface(
         color = Color.Transparent,
@@ -56,11 +61,11 @@ fun GlobalHeader(
                 modifier = Modifier
                     .fillMaxWidth()
                     .statusBarsPadding()
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                    .padding(horizontal = 14.dp, vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                // Left: App Logo & User Info
+                // Left: Clickable Mosque Logo + User Name/Role + Mosque Profile Chip
                 val resolvedName = memberName?.takeIf { it.isNotBlank() } ?: when (currentRole) {
                     UserRole.PRESIDENT -> "মো: রফিকুল ইসলাম"
                     UserRole.VICE_PRESIDENT -> "আলহাজ্ব আব্দুল বারী"
@@ -85,58 +90,117 @@ fun GlobalHeader(
                     modifier = Modifier.weight(1f)
                 ) {
                     val mosqueLogoBitmap = remember(mosqueLogoUrl) { loadLocalThumbnail(mosqueLogoUrl, 192) }
-                    // Official Mosque Logo
-                    if (mosqueLogoBitmap != null) {
-                        Image(
-                            bitmap = mosqueLogoBitmap,
-                            contentDescription = "মসজিদের অফিসিয়াল লোগো",
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier
-                                .size(44.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .border(1.dp, MosqueGold.copy(alpha = 0.7f), RoundedCornerShape(12.dp))
-                                .background(Color.White)
-                        )
-                    } else {
-                        Image(
-                            painter = painterResource(id = R.drawable.app_logo),
-                            contentDescription = "Mosque Seba Logo",
-                            modifier = Modifier
-                                .size(44.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(Color.White.copy(alpha = 0.15f))
-                        )
+                    // Official Mosque Logo -> Opens Mosque Profile
+                    Surface(
+                        onClick = onMosqueProfileClick,
+                        shape = RoundedCornerShape(12.dp),
+                        color = if (mosqueLogoBitmap != null) Color.White else Color.White.copy(alpha = 0.15f),
+                        border = androidx.compose.foundation.BorderStroke(
+                            1.dp,
+                            MosqueGold.copy(alpha = 0.75f)
+                        ),
+                        modifier = Modifier
+                            .size(46.dp)
+                            .testTag("header_mosque_profile_button")
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            if (mosqueLogoBitmap != null) {
+                                Image(
+                                    bitmap = mosqueLogoBitmap,
+                                    contentDescription = mosqueName?.takeIf { it.isNotBlank() } ?: "মসজিদের প্রোফাইল দেখুন",
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            } else {
+                                Image(
+                                    painter = painterResource(id = R.drawable.app_logo),
+                                    contentDescription = mosqueName?.takeIf { it.isNotBlank() } ?: "মসজিদের প্রোফাইল দেখুন",
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(4.dp)
+                                )
+                            }
+                        }
                     }
 
                     Spacer(modifier = Modifier.width(10.dp))
 
-                    Column {
+                    Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = resolvedName,
                             style = MaterialTheme.typography.titleMedium,
                             color = Color.White,
                             fontWeight = FontWeight.Bold,
-                            maxLines = 1
-                        )
-
-                        // Role Badge
-                        Box(
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
                             modifier = Modifier
                                 .clip(RoundedCornerShape(6.dp))
-                                .background(MosqueGold)
-                                .padding(horizontal = 8.dp, vertical = 2.dp)
+                                .clickable(onClick = onUserProfileClick)
+                                .testTag("header_user_name_button")
+                        )
+
+                        Spacer(modifier = Modifier.height(2.dp))
+
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(5.dp)
                         ) {
-                            Text(
-                                text = currentRole.titleBn,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MosqueEmeraldDark,
-                                fontWeight = FontWeight.ExtraBold
-                            )
+                            // Role Badge -> Opens User's Own Profile
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .background(MosqueGold)
+                                    .clickable(onClick = onUserProfileClick)
+                                    .padding(horizontal = 7.dp, vertical = 2.dp)
+                            ) {
+                                Text(
+                                    text = currentRole.titleBn,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MosqueEmeraldDark,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+
+                            // Mosque Profile quick pill
+                            Surface(
+                                onClick = onMosqueProfileClick,
+                                shape = RoundedCornerShape(6.dp),
+                                color = Color.White.copy(alpha = 0.14f),
+                                border = androidx.compose.foundation.BorderStroke(
+                                    0.7.dp,
+                                    MosqueGoldLight.copy(alpha = 0.6f)
+                                ),
+                                modifier = Modifier.testTag("header_mosque_chip")
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Mosque,
+                                        contentDescription = "মসজিদের প্রোফাইল",
+                                        tint = MosqueGoldLight,
+                                        modifier = Modifier.size(11.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(3.dp))
+                                    Text(
+                                        text = "মসজিদ",
+                                        fontSize = 10.sp,
+                                        color = MosqueGoldLight,
+                                        fontWeight = FontWeight.Bold,
+                                        maxLines = 1
+                                    )
+                                }
+                            }
                         }
                     }
                 }
 
-                // Right: Notification Bell + User Avatar
+                Spacer(modifier = Modifier.width(6.dp))
+
+                // Right: Notification Bell + User Avatar (Profile & Mosque Menu)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     // Notification bell
                     IconButton(
@@ -144,7 +208,8 @@ fun GlobalHeader(
                         modifier = Modifier
                             .clip(CircleShape)
                             .background(MosqueEmeraldLight)
-                            .size(36.dp)
+                            .size(38.dp)
+                            .testTag("header_notifications_button")
                     ) {
                         BadgedBox(
                             badge = {
@@ -160,7 +225,7 @@ fun GlobalHeader(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Notifications,
-                                contentDescription = "Notifications",
+                                contentDescription = "বিজ্ঞপ্তি ও বার্তা",
                                 tint = Color.White,
                                 modifier = Modifier.size(20.dp)
                             )
@@ -169,94 +234,31 @@ fun GlobalHeader(
 
                     Spacer(modifier = Modifier.width(8.dp))
 
-                    // User Avatar & Profile Menu
+                    // User Avatar -> Opens Account, Profiles & Settings Hub
                     val userPhotoBitmap = remember(userPhotoUrl) { loadLocalThumbnail(userPhotoUrl, 192) }
-                    Box {
-                        Surface(
-                            onClick = { showProfileMenu = true },
-                            shape = CircleShape,
-                            color = MosqueEmeraldLight,
-                            border = androidx.compose.foundation.BorderStroke(1.5.dp, MosqueGold),
-                            modifier = Modifier.size(38.dp)
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                if (userPhotoBitmap != null) {
-                                    Image(
-                                        bitmap = userPhotoBitmap,
-                                        contentDescription = "User Avatar",
-                                        contentScale = ContentScale.Crop,
-                                        modifier = Modifier.fillMaxSize()
-                                    )
-                                } else {
-                                    Icon(
-                                        imageVector = Icons.Default.Person,
-                                        contentDescription = "User Avatar",
-                                        tint = MosqueGoldLight,
-                                        modifier = Modifier.size(22.dp)
-                                    )
-                                }
-                            }
-                        }
-
-                        DropdownMenu(
-                            expanded = showProfileMenu,
-                            onDismissRequest = { showProfileMenu = false },
-                            shape = RoundedCornerShape(16.dp),
-                            containerColor = Color.White
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(3.dp)
-                                    .background(IslamicGoldTrimGradient)
-                            )
-                            Column(
-                                modifier = Modifier
-                                    .padding(horizontal = 14.dp, vertical = 10.dp)
-                            ) {
-                                Text(
-                                    text = resolvedName,
-                                    style = MaterialTheme.typography.titleSmall,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MosqueEmeraldDark
+                    Surface(
+                        onClick = onAvatarClick,
+                        shape = CircleShape,
+                        color = MosqueEmeraldLight,
+                        border = androidx.compose.foundation.BorderStroke(1.5.dp, MosqueGold),
+                        modifier = Modifier
+                            .size(40.dp)
+                            .testTag("header_user_avatar_button")
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            if (userPhotoBitmap != null) {
+                                Image(
+                                    bitmap = userPhotoBitmap,
+                                    contentDescription = "অ্যাকাউন্ট, প্রোফাইল ও সেটিংস",
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.fillMaxSize()
                                 )
-                                Spacer(modifier = Modifier.height(2.dp))
-                                Text(
-                                    text = "${currentRole.emoji} ${currentRole.titleBn}",
-                                    style = MaterialTheme.typography.labelMedium,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = MosqueEmeraldPrimary
-                                )
-                                Text(
-                                    text = currentRole.tier.titleBn,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MosqueTextMuted,
-                                    fontSize = 11.sp
-                                )
-                            }
-                            if (onLogout != null) {
-                                HorizontalDivider(color = MosqueCardBorderSubtle)
-                                DropdownMenuItem(
-                                    leadingIcon = {
-                                        Icon(
-                                            imageVector = Icons.Default.Logout,
-                                            contentDescription = null,
-                                            tint = MosqueUrgentRed,
-                                            modifier = Modifier.size(18.dp)
-                                        )
-                                    },
-                                    text = {
-                                        Text(
-                                            text = "লগআউট করুন",
-                                            fontWeight = FontWeight.Bold,
-                                            color = MosqueUrgentRed,
-                                            fontSize = 13.sp
-                                        )
-                                    },
-                                    onClick = {
-                                        showProfileMenu = false
-                                        onLogout()
-                                    }
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Default.Person,
+                                    contentDescription = "অ্যাকাউন্ট, প্রোফাইল ও সেটিংস",
+                                    tint = MosqueGoldLight,
+                                    modifier = Modifier.size(22.dp)
                                 )
                             }
                         }

@@ -20,6 +20,9 @@ class SessionManager(context: Context) {
         private const val KEY_MOBILE = "key_mobile"
         private const val KEY_REMEMBER_ME = "key_remember_me"
         private const val KEY_ACTIVE_MOSQUE_ID = "key_active_mosque_id"
+        private const val KEY_NOTIFICATIONS_ENABLED = "key_notifications_enabled"
+        private const val KEY_SHOW_HIJRI_BANNER = "key_show_hijri_banner"
+        private const val KEY_READ_NOTIFICATION_IDS = "key_read_notification_ids"
         private const val DEFAULT_MOSQUE_ID = "mosque-001"
     }
 
@@ -54,6 +57,7 @@ class SessionManager(context: Context) {
 
     fun saveRegisteredCredential(mobile: String, committeeId: String, mosqueId: String, password: String) {
         val cleanMobile = mobile.replace("-", "").replace(" ", "").trim()
+        if (cleanMobile.isBlank()) return
         credentialPrefs.edit().apply {
             putString("pwd_$cleanMobile", password)
             putString("cid_$cleanMobile", committeeId)
@@ -100,6 +104,38 @@ class SessionManager(context: Context) {
         return rememberMe && prefs.getBoolean(KEY_IS_LOGGED_IN, false)
     }
 
+    fun isRememberMeEnabled(): Boolean = prefs.getBoolean(KEY_REMEMBER_ME, true)
+
+    fun setRememberMeEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_REMEMBER_ME, enabled).apply()
+    }
+
+    fun isNotificationsEnabled(): Boolean = prefs.getBoolean(KEY_NOTIFICATIONS_ENABLED, true)
+
+    fun setNotificationsEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_NOTIFICATIONS_ENABLED, enabled).apply()
+    }
+
+    fun isHijriBannerVisible(): Boolean = prefs.getBoolean(KEY_SHOW_HIJRI_BANNER, true)
+
+    fun setHijriBannerVisible(visible: Boolean) {
+        prefs.edit().putBoolean(KEY_SHOW_HIJRI_BANNER, visible).apply()
+    }
+
+    fun getReadNotificationIds(): Set<String> =
+        prefs.getStringSet(KEY_READ_NOTIFICATION_IDS, emptySet())?.toSet() ?: emptySet()
+
+    fun markNotificationRead(notificationId: String) {
+        val updated = getReadNotificationIds() + notificationId
+        prefs.edit().putStringSet(KEY_READ_NOTIFICATION_IDS, updated).apply()
+    }
+
+    fun markAllNotificationsRead(notificationIds: Collection<String>) {
+        if (notificationIds.isEmpty()) return
+        val updated = getReadNotificationIds() + notificationIds
+        prefs.edit().putStringSet(KEY_READ_NOTIFICATION_IDS, updated).apply()
+    }
+
     fun getSavedRole(): UserRole {
         val code = prefs.getString(KEY_ROLE_CODE, UserRole.PRESIDENT.code) ?: UserRole.PRESIDENT.code
         return UserRole.fromCode(code)
@@ -115,6 +151,13 @@ class SessionManager(context: Context) {
 
     fun clearSession() {
         val currentMosque = getActiveMosqueId()
-        prefs.edit().clear().putString(KEY_ACTIVE_MOSQUE_ID, currentMosque).apply()
+        val notif = isNotificationsEnabled()
+        val hijri = isHijriBannerVisible()
+        prefs.edit()
+            .clear()
+            .putString(KEY_ACTIVE_MOSQUE_ID, currentMosque)
+            .putBoolean(KEY_NOTIFICATIONS_ENABLED, notif)
+            .putBoolean(KEY_SHOW_HIJRI_BANNER, hijri)
+            .apply()
     }
 }

@@ -88,7 +88,7 @@ fun DashboardKpiGrid(
                 c1 = KpiSpec("নগদ ও ব্যাংক তহবিল", "৳${String.format(Locale.getDefault(), "%,.0f", netBalance)}", "বর্তমান নেট ক্যাশ স্থিতি", Icons.Default.AccountBalanceWallet, MosqueSuccessGreen, "finance"),
                 c2 = KpiSpec("দান বাক্স (ক্যাশবক্স)", "${toBengaliDigits(cashboxCount.toString())} টি গণনা", "${toBengaliDigits(pendingCashboxWitnessCount.toString())} টি সাক্ষ্য বাকি", Icons.Default.Inventory2, MosqueGoldDeep, "cashbox"),
                 c3 = KpiSpec("বকেয়া চাঁদা রেজিস্টার", "৳${String.format(Locale.getDefault(), "%,.0f", dueChanda)}", "চলতি মাস আদায়যোগ্য", Icons.Default.PendingActions, MosqueWarningAmber, "treasurer_chanda"),
-                c4 = KpiSpec("স্টাফ বেতন ও পে-রোল", "${toBengaliDigits(staffCount.toString())} জন স্টাফ", "অপেক্ষমান ভাউচার ${toBengaliDigits(pendingItems.toString())}টি", Icons.Default.Badge, MosqueEmeraldPrimary, "treasurer_payroll"),
+                c4 = KpiSpec("স্টাফ বেতন ও পে-রোল", "${toBengaliDigits(staffCount.toString())} জন স্টাফ", "অপেক্ষমাণ ভাউচার ${toBengaliDigits(pendingItems.toString())}টি", Icons.Default.Badge, MosqueEmeraldPrimary, "treasurer_payroll"),
                 onKpiClick = onKpiClick
             )
         }
@@ -104,7 +104,7 @@ fun DashboardKpiGrid(
         UserRole.OFFICE_SECRETARY -> {
             KpiTwoByTwo(
                 c1 = KpiSpec("দপ্তর ও দলিল ফাইল", "${toBengaliDigits(officeDocCount.toString())} টি নথি", "ওয়াকফ দলিল ও চুক্তিপত্র", Icons.Default.FolderShared, RoleOfficeAccent, "office_docs"),
-                c2 = KpiSpec("জবাব অপেক্ষমান চিঠি", "${toBengaliDigits(pendingReplyDocCount.toString())} টি পত্র", "দাপ্তরিক জবাব প্রস্তুত", Icons.Default.MarkEmailUnread, MosqueWarningAmber, "office_docs"),
+                c2 = KpiSpec("জবাব অপেক্ষমাণ চিঠি", "${toBengaliDigits(pendingReplyDocCount.toString())} টি পত্র", "দাপ্তরিক জবাব প্রস্তুত", Icons.Default.MarkEmailUnread, MosqueWarningAmber, "office_docs"),
                 c3 = KpiSpec("আসন্ন কমিটি সভা", nextMeetingTitleDate, nextMeetingSubtitle, Icons.Default.EventAvailable, MosqueEmeraldPrimary, "meetings"),
                 c4 = KpiSpec("নিবন্ধিত সদস্য", "${toBengaliDigits(totalMembers.toString())} জন", "কমিটি ও সাধারণ তালিকা", Icons.Default.Groups, MosqueInfoBlue, "members"),
                 onKpiClick = onKpiClick
@@ -115,7 +115,7 @@ fun DashboardKpiGrid(
                 c1 = KpiSpec("মক্তব ও হিফজ শিক্ষার্থী", "${toBengaliDigits(studentCount.toString())} জন ছাত্র", "হাজিরা ও তালিম তদারকি", Icons.Default.School, RoleWelfareEduAccent, "madrasa"),
                 c2 = KpiSpec("যাকাত ও সমাজকল্যাণ", "${toBengaliDigits(welfareCount.toString())} টি আবেদন", "চিকিৎসা, ক্যাম্প ও ত্রাণ", Icons.Default.VolunteerActivism, MosqueSuccessGreen, "welfare"),
                 c3 = KpiSpec("প্রকাশিত নোটিশ", "${toBengaliDigits(noticeCount.toString())} টি বিজ্ঞপ্তি", "কমিটি সার্কুলার", Icons.Default.Campaign, MosqueGoldDeep, "notices"),
-                c4 = KpiSpec("কমিটি সনদ ও স্তর", "১৬ টি পদবি", "৩-স্তরীয় দায়িত্ব কাঠামো", Icons.Default.VerifiedUser, MosqueInfoBlue, "charter"),
+                c4 = KpiSpec("কমিটি সনদ ও স্তর", "১৬টি পদবি", "১৩ কমিটি + ৩ স্টাফ/মুসল্লি", Icons.Default.VerifiedUser, MosqueInfoBlue, "charter"),
                 onKpiClick = onKpiClick
             )
         }
@@ -132,7 +132,7 @@ fun DashboardKpiGrid(
             KpiTwoByTwo(
                 c1 = KpiSpec("উপদেষ্টা ও শরিয়াহ লগ", "${toBengaliDigits(advisoryCount.toString())} টি পরামর্শ", "সংকট ও নির্মাণ নির্দেশনা", Icons.Default.AccountBalance, RoleAdvisoryAccent, "sharia_advisory"),
                 c2 = KpiSpec("মসজিদ ফান্ড স্থিতি", "৳${String.format(Locale.getDefault(), "%,.0f", netBalance)}", "স্বচ্ছ আর্থিক অবস্থান", Icons.Default.AccountBalanceWallet, MosqueSuccessGreen, "transparency"),
-                c3 = KpiSpec("নিবন্ধিত সদস্য", "${toBengaliDigits(totalMembers.toString())} জন", "কমিটি ও মুসুল্লি পরিষদ", Icons.Default.Groups, MosqueEmeraldPrimary, "members"),
+                c3 = KpiSpec("নিবন্ধিত সদস্য", "${toBengaliDigits(totalMembers.toString())} জন", "কমিটি ও মুসল্লি পরিষদ", Icons.Default.Groups, MosqueEmeraldPrimary, "members"),
                 c4 = KpiSpec("আদর্শ কমিটি সনদ", "৩-স্তরীয় পর্ষদ", "দায়িত্ব ও গঠনতন্ত্র", Icons.Default.VerifiedUser, MosqueInfoBlue, "charter"),
                 onKpiClick = onKpiClick
             )

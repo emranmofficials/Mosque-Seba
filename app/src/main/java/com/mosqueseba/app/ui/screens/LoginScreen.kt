@@ -531,7 +531,7 @@ fun LoginScreen(
                             modifier = Modifier.weight(1f)
                         )
                         QuickRoleChip(
-                            label = "👥 সাধারণ মুসুল্লি",
+                            label = "👥 সাধারণ মুসল্লি",
                             onClick = {
                                 viewModel.quickLoginAsRole(UserRole.GENERAL_MEMBER, rememberMe)
                                 onLoginSuccess()

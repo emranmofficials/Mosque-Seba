@@ -66,6 +66,7 @@ fun DashboardScreen(
     val allAdvisoryNotes by viewModel.allAdvisoryNotes.collectAsState()
     val allSmartBoardQuotes by viewModel.allSmartBoardQuotes.collectAsState()
     val currentRole by viewModel.currentUserRole.collectAsState()
+    val showHijriBanner by viewModel.showHijriBanner.collectAsState()
 
     var showDutiesDialog by remember { mutableStateOf(false) }
 
@@ -93,7 +94,9 @@ fun DashboardScreen(
                     ExecutiveMosqueHeroCard(
                         mosque = mosque,
                         currentRole = currentRole,
-                        onDutiesClick = { showDutiesDialog = true }
+                        showHijriDate = showHijriBanner,
+                        onDutiesClick = { showDutiesDialog = true },
+                        onMosqueProfileClick = { onOpenDialog("mosque_profile") }
                     )
                 }
             }
@@ -266,23 +269,29 @@ fun DashboardScreen(
             }
         } else {
             // 0. Islamic Hijri Date & Bismillah Sanctuary Banner
-            item {
-                HijriDateBanner(
-                    mosqueName = mosque?.nameBn ?: "বায়তুল জান্নাত জামে মসজিদ"
-                )
+            if (showHijriBanner) {
+                item {
+                    HijriDateBanner(
+                        mosqueName = mosque?.nameBn ?: "বায়তুল জান্নাত জামে মসজিদ"
+                    )
+                }
             }
 
-            // 0.1 Official Role Workspace Badge (Tap for Duties Checklist)
+            // 0.1 Official Role Workspace Badge (Tap for Duties Checklist or My Profile)
             item {
                 RoleWorkspaceHeader(
                     currentRole = currentRole,
-                    onDutiesClick = { showDutiesDialog = true }
+                    onDutiesClick = { showDutiesDialog = true },
+                    onProfileClick = { onOpenDialog("my_profile") }
                 )
             }
 
             // 1. Hero Card
             item {
-                HeroCard(mosque = mosque)
+                HeroCard(
+                    mosque = mosque,
+                    onMosqueProfileClick = { onOpenDialog("mosque_profile") }
+                )
             }
 
             // 1.1 Vice President Pending Voucher Approval Hotline
@@ -335,9 +344,12 @@ fun DashboardScreen(
                 }
             }
 
-            // 2. Smart Board (Dynamic Quotes + Hijri Date + Prayer)
+            // 2. Smart Board (Dynamic Quotes)
             item {
-                SmartBoardCard(quotes = allSmartBoardQuotes)
+                SmartBoardCard(
+                    quotes = allSmartBoardQuotes,
+                    includeDateAndPrayerSlides = false
+                )
             }
 
             // 3. Prayer Schedule Card
@@ -837,7 +849,7 @@ fun PresidentPendingVouchersCard(
                     Spacer(modifier = Modifier.width(8.dp))
                     Column {
                         Text(
-                            text = "নির্বাহী অনুমোদন ডেক্স (${pendingTransactions.size}টি ভাউচার)",
+                            text = "নির্বাহী অনুমোদন ডেস্ক (${pendingTransactions.size}টি ভাউচার)",
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
                             color = MosqueEmeraldDark
@@ -938,7 +950,7 @@ fun MusalliDevotionalCard(
             }
             Spacer(modifier = Modifier.height(6.dp))
             Text(
-                text = "«مَنْ بَنَى مَسْجِدًا لِلَّهِ بَنَى اللَّهُ لَهُ فِي الْجَنَّةِ مِثْلَهُ»\n\"যে ব্যক্তি আল্লাহর সন্তুষ্টির উদ্দেশ্যে একটি মসজিদ নির্মাণ করে বা তাতে শরিক হয়, আল্লাহ তার জন্য জান্নাতে একটি প্রাসাদ নির্মাণ করেন।\" — (সহীহ বুখারী: ৪৫০)",
+                text = "«مَنْ بَنَى مَسْجِدًا لِلَّهِ بَنَى اللَّهُ لَهُ فِي الْجَنَّةِ مِثْلَهُ»\n\"যে ব্যক্তি আল্লাহর সন্তুষ্টির উদ্দেশ্যে একটি মসজিদ নির্মাণ করে বা তাতে শরিক হয়, আল্লাহ তার জন্য জান্নাতে একটি প্রাসাদ নির্মাণ করেন।\" — (সহিহ বুখারি: ৪৫০)",
                 fontSize = 12.sp,
                 color = MosqueTextSecondary,
                 lineHeight = 18.sp
