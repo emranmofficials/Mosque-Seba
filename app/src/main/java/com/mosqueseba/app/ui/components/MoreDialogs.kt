@@ -49,6 +49,7 @@ fun ExecutiveFormDialogShell(
     onConfirmClick: () -> Unit,
     content: @Composable ColumnScope.() -> Unit
 ) {
+    val isDark = LocalIsDarkTheme.current
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
@@ -59,8 +60,8 @@ fun ExecutiveFormDialogShell(
                 .widthIn(max = 560.dp)
                 .imePadding()
                 .padding(horizontal = 16.dp, vertical = 20.dp),
-            backgroundColor = MosqueBgLight,
-            borderColor = MosqueCardBorderGold,
+            backgroundColor = if (isDark) MosqueNightSurface else MosqueBgLight,
+            borderColor = if (isDark) MosqueNightBorder else MosqueCardBorderGold,
             elevation = 8.dp
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
@@ -167,11 +168,11 @@ fun ExecutiveFormDialogShell(
                     content()
                 }
 
-                HorizontalDivider(color = MosqueCardBorderGold)
+                HorizontalDivider(color = if (isDark) MosqueNightBorder else MosqueCardBorderGold)
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Color.White)
+                        .background(if (isDark) MosqueNightSurface else Color.White)
                         .padding(horizontal = 16.dp, vertical = 12.dp),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
@@ -220,10 +221,11 @@ fun MoreFormSection(
     icon: ImageVector,
     content: @Composable ColumnScope.() -> Unit
 ) {
+    val isDark = LocalIsDarkTheme.current
     Surface(
         shape = RoundedCornerShape(14.dp),
-        color = Color.White,
-        border = BorderStroke(1.dp, MosqueCardBorderGold),
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else MosqueCardBorderGold),
         shadowElevation = 1.dp,
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -251,7 +253,7 @@ fun MoreFormSection(
                     text = title,
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.ExtraBold,
-                    color = MosqueEmeraldDark
+                    color = if (isDark) MosqueGoldLight else MosqueEmeraldDark
                 )
             }
             content()

@@ -62,20 +62,21 @@ fun LoginScreen(
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var showHelpDialog by remember { mutableStateOf(false) }
 
+    val isDark = LocalIsDarkTheme.current
     val fieldColors = OutlinedTextFieldDefaults.colors(
         focusedBorderColor = MosqueEmeraldPrimary,
-        unfocusedBorderColor = MosqueCardBorder,
+        unfocusedBorderColor = if (isDark) MosqueNightBorder else MosqueCardBorder,
         focusedLabelColor = MosqueEmeraldPrimary,
         unfocusedLabelColor = MosqueTextSecondary,
         cursorColor = MosqueEmeraldPrimary,
-        focusedContainerColor = Color.White,
-        unfocusedContainerColor = MosqueBgLight.copy(alpha = 0.45f)
+        focusedContainerColor = MaterialTheme.colorScheme.surface,
+        unfocusedContainerColor = if (isDark) MosqueNightSurfaceVariant.copy(alpha = 0.5f) else MosqueBgLight.copy(alpha = 0.45f)
     )
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MosqueBgLight)
+            .background(MaterialTheme.colorScheme.background)
     ) {
         // Sanctuary Header Banner matching RegistrationScreen & GlobalHeader
         Surface(
@@ -171,8 +172,8 @@ fun LoginScreen(
             // Segmented Pill Tab Selector
             Surface(
                 shape = RoundedCornerShape(14.dp),
-                color = Color.White,
-                border = BorderStroke(1.dp, MosqueCardBorderGold),
+                color = MaterialTheme.colorScheme.surface,
+                border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else MosqueCardBorderGold),
                 shadowElevation = 2.dp,
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -794,10 +795,11 @@ fun QuickRoleChip(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val isDark = LocalIsDarkTheme.current
     Surface(
         shape = RoundedCornerShape(10.dp),
-        color = MosqueBgLight,
-        border = BorderStroke(1.dp, MosqueCardBorderGold),
+        color = if (isDark) MosqueNightSurfaceVariant else MosqueBgLight,
+        border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else MosqueCardBorderGold),
         modifier = modifier
             .heightIn(min = 48.dp)
             .clip(RoundedCornerShape(10.dp))
@@ -821,7 +823,7 @@ fun QuickRoleChip(
                 text = label,
                 fontSize = 11.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = MosqueEmeraldDark,
+                color = if (isDark) MosqueGoldLight else MosqueEmeraldDark,
                 textAlign = TextAlign.Center,
                 maxLines = 1,
                 overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis

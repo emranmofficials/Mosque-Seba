@@ -55,6 +55,8 @@ fun MosqueConfirmDialog(
     onDismiss: () -> Unit
 ) {
     val accentColor = if (isDestructive) MosqueUrgentRed else MosqueEmeraldPrimary
+    val isDark = LocalIsDarkTheme.current
+    val dialogBg = if (isDark) MosqueNightSurface else MaterialTheme.colorScheme.surface
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
@@ -64,8 +66,8 @@ fun MosqueConfirmDialog(
                 .fillMaxWidth()
                 .widthIn(max = 420.dp)
                 .padding(horizontal = 20.dp),
-            backgroundColor = Color.White,
-            borderColor = if (isDestructive) MosqueUrgentRed.copy(alpha = 0.45f) else MosqueCardBorderGold,
+            backgroundColor = dialogBg,
+            borderColor = if (isDestructive) MosqueUrgentRed.copy(alpha = 0.45f) else if (isDark) MosqueNightBorder else MosqueCardBorderGold,
             elevation = 8.dp
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
@@ -120,17 +122,17 @@ fun MosqueConfirmDialog(
                 ) {
                     Surface(
                         shape = RoundedCornerShape(12.dp),
-                        color = if (isDestructive) MosqueUrgentRed.copy(alpha = 0.06f) else MosqueBgLight,
+                        color = if (isDestructive) MosqueUrgentRed.copy(alpha = 0.08f) else if (isDark) MosqueNightSurfaceVariant else MosqueBgLight,
                         border = BorderStroke(
                             1.dp,
-                            if (isDestructive) MosqueUrgentRed.copy(alpha = 0.22f) else MosqueCardBorderGold
+                            if (isDestructive) MosqueUrgentRed.copy(alpha = 0.28f) else if (isDark) MosqueNightBorder else MosqueCardBorderGold
                         ),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
                             text = message,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MosqueTextPrimary,
+                            color = MaterialTheme.colorScheme.onSurface,
                             lineHeight = 20.sp,
                             modifier = Modifier.padding(14.dp)
                         )
@@ -149,7 +151,7 @@ fun MosqueConfirmDialog(
                         ) {
                             Text(
                                 text = dismissText,
-                                color = MosqueTextSecondary,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontWeight = FontWeight.Bold,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis

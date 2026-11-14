@@ -135,20 +135,21 @@ fun RegistrationScreen(
         }
     }
 
+    val isDark = LocalIsDarkTheme.current
     val fieldColors = OutlinedTextFieldDefaults.colors(
         focusedBorderColor = MosqueEmeraldPrimary,
-        unfocusedBorderColor = MosqueCardBorder,
+        unfocusedBorderColor = if (isDark) MosqueNightBorder else MosqueCardBorder,
         focusedLabelColor = MosqueEmeraldPrimary,
         unfocusedLabelColor = MosqueTextSecondary,
         cursorColor = MosqueEmeraldPrimary,
-        focusedContainerColor = Color.White,
-        unfocusedContainerColor = MosqueBgLight.copy(alpha = 0.45f)
+        focusedContainerColor = MaterialTheme.colorScheme.surface,
+        unfocusedContainerColor = if (isDark) MosqueNightSurfaceVariant.copy(alpha = 0.5f) else MosqueBgLight.copy(alpha = 0.45f)
     )
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MosqueBgLight)
+            .background(MaterialTheme.colorScheme.background)
     ) {
         // Sanctuary Header Banner matching GlobalHeader & LoginScreen
         Surface(
@@ -896,8 +897,8 @@ fun RegistrationScreen(
                                 // Mosque Summary Box
                                 Surface(
                                     shape = RoundedCornerShape(14.dp),
-                                    color = MosqueBgLight,
-                                    border = BorderStroke(1.dp, MosqueCardBorderGold),
+                                    color = MaterialTheme.colorScheme.surface,
+                                    border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else MosqueCardBorderGold),
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
                                     Column(modifier = Modifier.padding(14.dp)) {
@@ -972,8 +973,8 @@ fun RegistrationScreen(
                                 // President Summary Box
                                 Surface(
                                     shape = RoundedCornerShape(14.dp),
-                                    color = MosqueBgLight,
-                                    border = BorderStroke(1.dp, MosqueCardBorderGold),
+                                    color = MaterialTheme.colorScheme.surface,
+                                    border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else MosqueCardBorderGold),
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
                                     Column(modifier = Modifier.padding(14.dp)) {
@@ -1194,10 +1195,11 @@ private fun PresidentPhotoUploadBanner(
     onUploadClick: () -> Unit,
     onClearClick: () -> Unit
 ) {
+    val isDark = LocalIsDarkTheme.current
     Surface(
         shape = RoundedCornerShape(16.dp),
-        color = MosqueBgLight,
-        border = BorderStroke(1.dp, MosqueCardBorderGold),
+        color = if (isDark) MosqueNightSurfaceVariant else MosqueBgLight,
+        border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else MosqueCardBorderGold),
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(
@@ -1328,10 +1330,11 @@ private fun MosqueOfficialLogoUploadBanner(
     onUploadClick: () -> Unit,
     onClearClick: () -> Unit
 ) {
+    val isDark = LocalIsDarkTheme.current
     Surface(
         shape = RoundedCornerShape(16.dp),
-        color = MosqueBgLight,
-        border = BorderStroke(1.dp, MosqueCardBorderGold),
+        color = if (isDark) MosqueNightSurfaceVariant else MosqueBgLight,
+        border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else MosqueCardBorderGold),
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(
@@ -1486,7 +1489,7 @@ fun SummaryRow(label: String, value: String) {
 @Composable
 fun RegistrationStepper(currentStep: Int) {
     Surface(
-        color = Color.White,
+        color = MaterialTheme.colorScheme.surface,
         shadowElevation = 2.dp
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
@@ -1510,6 +1513,7 @@ fun RegistrationStepper(currentStep: Int) {
 
 @Composable
 fun StepItem(number: Int, title: String, isActive: Boolean, isCurrent: Boolean) {
+    val isDark = LocalIsDarkTheme.current
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Box(
             modifier = Modifier
@@ -1519,7 +1523,7 @@ fun StepItem(number: Int, title: String, isActive: Boolean, isCurrent: Boolean) 
                     when {
                         isCurrent -> MosqueEmeraldPrimary
                         isActive -> MosqueSuccessGreen
-                        else -> Color(0xFFE2E8F0)
+                        else -> if (isDark) MosqueNightSurfaceVariant else Color(0xFFE2E8F0)
                     }
                 )
                 .then(
@@ -1547,19 +1551,20 @@ fun StepItem(number: Int, title: String, isActive: Boolean, isCurrent: Boolean) 
             text = title,
             fontSize = 11.sp,
             fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Medium,
-            color = if (isCurrent) MosqueEmeraldDark else MosqueTextSecondary
+            color = if (isCurrent) (if (isDark) MosqueGoldLight else MosqueEmeraldDark) else MosqueTextSecondary
         )
     }
 }
 
 @Composable
 fun StepDivider(isDone: Boolean) {
+    val isDark = LocalIsDarkTheme.current
     Box(
         modifier = Modifier
             .width(54.dp)
             .height(2.5.dp)
             .clip(RoundedCornerShape(2.dp))
-            .background(if (isDone) MosqueSuccessGreen else MosqueCardBorder)
+            .background(if (isDone) MosqueSuccessGreen else if (isDark) MosqueNightBorder else MosqueCardBorder)
     )
 }
 
@@ -1570,14 +1575,15 @@ private fun MealChoiceButton(
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
+    val isDark = LocalIsDarkTheme.current
     Surface(
         onClick = onClick,
         modifier = modifier.heightIn(min = 48.dp),
         shape = RoundedCornerShape(10.dp),
-        color = if (selected) MosqueEmeraldPrimary else Color.White,
+        color = if (selected) MosqueEmeraldPrimary else MaterialTheme.colorScheme.surface,
         border = BorderStroke(
             width = 1.dp,
-            color = if (selected) MosqueEmeraldPrimary else MosqueCardBorder
+            color = if (selected) MosqueEmeraldPrimary else if (isDark) MosqueNightBorder else MosqueCardBorder
         )
     ) {
         Row(
@@ -1598,7 +1604,7 @@ private fun MealChoiceButton(
                 text = label,
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-                color = if (selected) Color.White else MosqueTextPrimary
+                color = if (selected) Color.White else MaterialTheme.colorScheme.onSurface
             )
         }
     }

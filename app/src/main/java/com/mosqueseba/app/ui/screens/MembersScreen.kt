@@ -1394,9 +1394,11 @@ private fun SalariedMemberCard(
 
 @Composable
 private fun EmptyMemberState(message: String) {
+    val isDark = LocalIsDarkTheme.current
+    val cardBorder = if (isDark) MosqueNightBorder else MosqueCardBorderSubtle
     MehrabArchCard(
-        backgroundColor = Color.White,
-        borderColor = MosqueCardBorderSubtle
+        backgroundColor = MaterialTheme.colorScheme.surface,
+        borderColor = cardBorder
     ) {
         Column(
             modifier = Modifier
@@ -1407,14 +1409,14 @@ private fun EmptyMemberState(message: String) {
             Icon(
                 imageVector = Icons.Default.SearchOff,
                 contentDescription = null,
-                tint = MosqueTextMuted,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(46.dp)
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = message,
                 style = MaterialTheme.typography.bodyMedium,
-                color = MosqueTextSecondary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontWeight = FontWeight.SemiBold
             )
         }
@@ -1431,25 +1433,26 @@ private fun MemberDueBreakdownDialog(
     onCollectNow: () -> Unit,
     onDismiss: () -> Unit
 ) {
+    val isDark = LocalIsDarkTheme.current
     Dialog(onDismissRequest = onDismiss) {
         MehrabArchCard(
-            backgroundColor = Color.White,
-            borderColor = MosqueCardBorderGold
+            backgroundColor = MaterialTheme.colorScheme.surface,
+            borderColor = if (isDark) MosqueNightBorder else MosqueCardBorderGold
         ) {
             Column(modifier = Modifier.padding(18.dp)) {
                 Text(
                     text = "বকেয়া চাঁদার বিবরণ",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.ExtraBold,
-                    color = MosqueEmeraldDark
+                    color = if (isDark) MosqueGoldLight else MosqueEmeraldDark
                 )
                 Text(
                     text = "${member.nameBn} (${toBengaliDigits(member.memberCode)})",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MosqueTextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(modifier = Modifier.height(12.dp))
-                HorizontalDivider(color = MosqueCardBorderSubtle)
+                HorizontalDivider(color = if (isDark) MosqueNightBorder else MosqueCardBorderSubtle)
                 Spacer(modifier = Modifier.height(10.dp))
 
                 DueStatRow("হিসাবকৃত মাস", activeCycleMonth)
@@ -1492,32 +1495,33 @@ private fun MemberDepositHistoryDialog(
     onReceiptClick: (ChandaPaymentEntity) -> Unit,
     onDismiss: () -> Unit
 ) {
+    val isDark = LocalIsDarkTheme.current
     Dialog(onDismissRequest = onDismiss) {
         MehrabArchCard(
-            backgroundColor = Color.White,
-            borderColor = MosqueCardBorderGold
+            backgroundColor = MaterialTheme.colorScheme.surface,
+            borderColor = if (isDark) MosqueNightBorder else MosqueCardBorderGold
         ) {
             Column(modifier = Modifier.padding(18.dp)) {
                 Text(
                     text = "চাঁদা জমার রসিদ তালিকা",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.ExtraBold,
-                    color = MosqueEmeraldDark
+                    color = if (isDark) MosqueGoldLight else MosqueEmeraldDark
                 )
                 Text(
                     text = "${member.nameBn} • মোট ${toBengaliDigits(payments.size.toString())} টি রসিদ",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MosqueTextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(modifier = Modifier.height(12.dp))
-                HorizontalDivider(color = MosqueCardBorderSubtle)
+                HorizontalDivider(color = if (isDark) MosqueNightBorder else MosqueCardBorderSubtle)
                 Spacer(modifier = Modifier.height(10.dp))
 
                 if (payments.isEmpty()) {
                     Text(
                         text = "এখনো কোনো চাঁদা জমা হয়নি",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MosqueTextMuted,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(vertical = 16.dp)
                     )
                 } else {
@@ -1526,8 +1530,8 @@ private fun MemberDepositHistoryDialog(
                             Surface(
                                 onClick = { onReceiptClick(p) },
                                 shape = RoundedCornerShape(10.dp),
-                                color = MosqueBgLight,
-                                border = BorderStroke(1.dp, MosqueCardBorderGold),
+                                color = if (isDark) MosqueNightSurfaceVariant else MosqueBgLight,
+                                border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else MosqueCardBorderGold),
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 Row(
@@ -1542,12 +1546,12 @@ private fun MemberDepositHistoryDialog(
                                             text = "${p.month} (${toBengaliDigits(p.receiptCode)})",
                                             style = MaterialTheme.typography.labelLarge,
                                             fontWeight = FontWeight.Bold,
-                                            color = MosqueEmeraldDark
+                                            color = if (isDark) MosqueGoldLight else MosqueEmeraldDark
                                         )
                                         Text(
                                             text = toBengaliDigits(p.paidAt),
                                             style = MaterialTheme.typography.labelSmall,
-                                            color = MosqueTextMuted
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
                                     }
                                     Text(
@@ -1581,16 +1585,17 @@ private fun MemberDepositHistoryDialog(
 private fun DueStatRow(
     label: String,
     value: String,
-    valueColor: Color = MosqueTextPrimary
+    valueColor: Color = Color.Unspecified
 ) {
+    val resolvedValueColor = if (valueColor == Color.Unspecified) MaterialTheme.colorScheme.onSurface else valueColor
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(text = label, style = MaterialTheme.typography.bodySmall, color = MosqueTextSecondary)
-        Text(text = value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = valueColor)
+        Text(text = label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(text = value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = resolvedValueColor)
     }
 }
 
@@ -1605,13 +1610,13 @@ fun DetailItemRow(label: String, value: String) {
         Text(
             text = label,
             style = MaterialTheme.typography.bodySmall,
-            color = MosqueTextMuted
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Text(
             text = value,
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.SemiBold,
-            color = MosqueTextPrimary
+            color = MaterialTheme.colorScheme.onSurface
         )
     }
 }

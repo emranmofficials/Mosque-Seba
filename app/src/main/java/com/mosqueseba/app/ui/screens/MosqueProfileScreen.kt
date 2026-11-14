@@ -126,10 +126,12 @@ fun MosqueProfileScreen(
         activeStaff.firstOrNull { it.roleCode.equals("imam", ignoreCase = true) }
     }
 
+    val isDark = LocalIsDarkTheme.current
+
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MosqueBgLight)
+            .background(MaterialTheme.colorScheme.background)
     ) {
         if (showTopBar) {
             Surface(
@@ -214,8 +216,8 @@ fun MosqueProfileScreen(
             // 1. Sanctuary Hero Card
             item {
                 MehrabArchCard(
-                    backgroundColor = Color.White,
-                    borderColor = MosqueCardBorderGold,
+                    backgroundColor = MaterialTheme.colorScheme.surface,
+                    borderColor = if (isDark) MosqueNightBorder else MosqueCardBorderGold,
                     elevation = 4.dp
                 ) {
                     Column(
@@ -264,7 +266,7 @@ fun MosqueProfileScreen(
                             text = nameBn,
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.ExtraBold,
-                            color = MosqueEmeraldDark
+                            color = if (isDark) MosqueGoldLight else MosqueEmeraldDark
                         )
 
                         Spacer(modifier = Modifier.height(8.dp))
@@ -303,7 +305,7 @@ fun MosqueProfileScreen(
                                         Icon(
                                             imageVector = if (copied) Icons.Default.CheckCircle else Icons.Default.ContentCopy,
                                             contentDescription = "কমিটি আইডি কপি করুন",
-                                            tint = if (copied) MosqueSuccessGreen else MosqueEmeraldDark,
+                                            tint = if (copied) MosqueSuccessGreen else if (isDark) MosqueGoldLight else MosqueEmeraldDark,
                                             modifier = Modifier.size(14.dp)
                                         )
                                         Spacer(modifier = Modifier.width(5.dp))
@@ -311,7 +313,7 @@ fun MosqueProfileScreen(
                                             text = if (copied) "আইডি কপি হয়েছে" else "আইডি: $committeeId",
                                             style = MaterialTheme.typography.labelMedium,
                                             fontWeight = FontWeight.Bold,
-                                            color = MosqueEmeraldDark
+                                            color = if (isDark) MosqueGoldLight else MosqueEmeraldDark
                                         )
                                     }
                                 }
@@ -422,11 +424,11 @@ fun MosqueProfileScreen(
                                 Icon(
                                     imageVector = Icons.Default.AccountCircle,
                                     contentDescription = null,
-                                    tint = MosqueEmeraldDark,
+                                    tint = if (isDark) MosqueGoldLight else MosqueEmeraldDark,
                                     modifier = Modifier.size(18.dp)
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
-                                Text("আমার নিজস্ব প্রোফাইল দেখুন", color = MosqueEmeraldDark, fontWeight = FontWeight.Bold)
+                                Text("আমার নিজস্ব প্রোফাইল দেখুন", color = if (isDark) MosqueGoldLight else MosqueEmeraldDark, fontWeight = FontWeight.Bold)
                             }
                         }
                     }
@@ -464,8 +466,8 @@ fun MosqueProfileScreen(
             item {
                 Card(
                     shape = RoundedCornerShape(14.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    border = BorderStroke(1.dp, MosqueCardBorderGold),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else MosqueCardBorderGold),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
@@ -481,7 +483,7 @@ fun MosqueProfileScreen(
                                 text = "মসজিদের মৌলিক ও প্রশাসনিক তথ্য",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = MosqueEmeraldDark
+                                color = if (isDark) MosqueGoldLight else MosqueEmeraldDark
                             )
                         }
 
@@ -509,8 +511,8 @@ fun MosqueProfileScreen(
             item {
                 Card(
                     shape = RoundedCornerShape(14.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    border = BorderStroke(1.dp, MosqueCardBorderGold),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else MosqueCardBorderGold),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
@@ -526,7 +528,7 @@ fun MosqueProfileScreen(
                                 text = "প্রধান দায়িত্বশীলবৃন্দ",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = MosqueEmeraldDark
+                                color = if (isDark) MosqueGoldLight else MosqueEmeraldDark
                             )
                         }
 
@@ -608,11 +610,12 @@ private fun MosqueStatPill(
     value: String,
     accent: Color
 ) {
+    val isDark = LocalIsDarkTheme.current
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(14.dp),
-        color = Color.White,
-        border = BorderStroke(1.dp, MosqueCardBorderGold)
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else MosqueCardBorderGold)
     ) {
         Column(
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 12.dp),
@@ -670,7 +673,7 @@ private fun OfficeholderRow(
                     text = name,
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
-                    color = MosqueEmeraldDark
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 if (mobile.isNotBlank()) {
                     Text(
@@ -780,8 +783,8 @@ private fun EditMosqueProfileDialog(
                     )
                 },
                 shape = RoundedCornerShape(12.dp),
-                color = MosqueBgLight,
-                border = BorderStroke(1.dp, MosqueCardBorderGold),
+                color = if (LocalIsDarkTheme.current) MosqueNightSurfaceVariant else MosqueBgLight,
+                border = BorderStroke(1.dp, if (LocalIsDarkTheme.current) MosqueNightBorder else MosqueCardBorderGold),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Row(

@@ -137,68 +137,77 @@ fun MadrasaScreen(viewModel: MosqueViewModel, initialTab: Int = 0) {
                         }
                     }
 
-                    items(students, key = { it.id }) { student ->
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                            border = BorderStroke(1.dp, cardBorder)
-                        ) {
-                            Column(modifier = Modifier.padding(14.dp)) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Column {
-                                        Text(
-                                            text = student.nameBn,
-                                            style = MaterialTheme.typography.titleMedium,
-                                            fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colorScheme.onSurface
-                                        )
-                                        Text(
-                                            text = "${student.className} • রোল/আইডি: ${toBengaliDigits(student.studentCode)}",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.primary,
-                                            fontWeight = FontWeight.SemiBold
-                                        )
-                                    }
-                                    Box(
-                                        modifier = Modifier
-                                            .clip(RoundedCornerShape(6.dp))
-                                            .background(MosqueSuccessGreen.copy(alpha = 0.12f))
-                                            .padding(horizontal = 8.dp, vertical = 2.dp)
+                    if (students.isEmpty()) {
+                        item {
+                            EmptyStateCard(
+                                icon = Icons.Default.School,
+                                message = "বর্তমানে কোনো শিক্ষার্থী ভর্তি নেই। নতুন শিক্ষার্থী ভর্তি করতে উপরের বাটনে চাপ দিন।"
+                            )
+                        }
+                    } else {
+                        items(students, key = { it.id }) { student ->
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                                border = BorderStroke(1.dp, cardBorder)
+                            ) {
+                                Column(modifier = Modifier.padding(14.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Text(
-                                            text = "নিয়মিত",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = MosqueSuccessGreen,
-                                            fontWeight = FontWeight.Bold
-                                        )
+                                        Column {
+                                            Text(
+                                                text = student.nameBn,
+                                                style = MaterialTheme.typography.titleMedium,
+                                                fontWeight = FontWeight.Bold,
+                                                color = MaterialTheme.colorScheme.onSurface
+                                            )
+                                            Text(
+                                                text = "${student.className} • রোল/আইডি: ${toBengaliDigits(student.studentCode)}",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.primary,
+                                                fontWeight = FontWeight.SemiBold
+                                            )
+                                        }
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(6.dp))
+                                                .background(MosqueSuccessGreen.copy(alpha = 0.12f))
+                                                .padding(horizontal = 8.dp, vertical = 2.dp)
+                                        ) {
+                                            Text(
+                                                text = "নিয়মিত",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MosqueSuccessGreen,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
                                     }
-                                }
 
-                                Spacer(modifier = Modifier.height(8.dp))
-                                HorizontalDivider(color = cardBorder)
-                                Spacer(modifier = Modifier.height(8.dp))
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    HorizontalDivider(color = cardBorder)
+                                    Spacer(modifier = Modifier.height(8.dp))
 
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Column {
-                                        Text("অভিভাবক: ${student.guardianName}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                        Text("মোবাইল: ${toBengaliDigits(student.guardianMobile)}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                    }
-                                    Column(horizontalAlignment = Alignment.End) {
-                                        Text("মাসিক ফি", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                        Text(
-                                            text = "৳${toBengaliDigits(student.monthlyFee.toInt().toString())}",
-                                            style = MaterialTheme.typography.titleMedium,
-                                            fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colorScheme.primary
-                                        )
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Column {
+                                            Text("অভিভাবক: ${student.guardianName}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            Text("মোবাইল: ${toBengaliDigits(student.guardianMobile)}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        }
+                                        Column(horizontalAlignment = Alignment.End) {
+                                            Text("মাসিক ফি", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            Text(
+                                                text = "৳${toBengaliDigits(student.monthlyFee.toInt().toString())}",
+                                                style = MaterialTheme.typography.titleMedium,
+                                                fontWeight = FontWeight.Bold,
+                                                color = MaterialTheme.colorScheme.primary
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -240,7 +249,15 @@ fun MadrasaScreen(viewModel: MosqueViewModel, initialTab: Int = 0) {
                         }
                     }
 
-                    items(hifzList, key = { it.id }) { hfz ->
+                    if (hifzList.isEmpty()) {
+                        item {
+                            EmptyStateCard(
+                                icon = Icons.Default.AutoStories,
+                                message = "হিফজুল কুরআনের কোনো দৈনিক সবক রেকর্ড পাওয়া যায়নি।"
+                            )
+                        }
+                    } else {
+                        items(hifzList, key = { it.id }) { hfz ->
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
@@ -348,8 +365,16 @@ fun MadrasaScreen(viewModel: MosqueViewModel, initialTab: Int = 0) {
                         }
                     }
 
-                    items(feePayments, key = { it.id }) { fee ->
-                        Card(
+                    if (feePayments.isEmpty()) {
+                        item {
+                            EmptyStateCard(
+                                icon = Icons.Default.Payments,
+                                message = "এখনো কোনো মাদরাসা ফি আদায়ের রেকর্ড পাওয়া যায়নি।"
+                            )
+                        }
+                    } else {
+                        items(feePayments, key = { it.id }) { fee ->
+                            Card(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp),
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -396,6 +421,7 @@ fun MadrasaScreen(viewModel: MosqueViewModel, initialTab: Int = 0) {
                                 }
                             }
                         }
+                    }
                     }
                 }
             }

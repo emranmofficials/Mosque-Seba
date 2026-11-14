@@ -170,6 +170,7 @@ fun AddMemberDialog(
         else -> Icons.Default.Person
     }
 
+    val isDark = LocalIsDarkTheme.current
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
@@ -180,8 +181,8 @@ fun AddMemberDialog(
                 .widthIn(max = 560.dp)
                 .imePadding()
                 .padding(horizontal = 16.dp, vertical = 20.dp),
-            backgroundColor = MosqueBgLight,
-            borderColor = MosqueCardBorderGold,
+            backgroundColor = if (isDark) MosqueNightSurface else MosqueBgLight,
+            borderColor = if (isDark) MosqueNightBorder else MosqueCardBorderGold,
             elevation = 8.dp
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
@@ -822,11 +823,11 @@ fun AddMemberDialog(
                 }
 
                 // Sticky Footer Action Bar
-                HorizontalDivider(color = MosqueCardBorderGold)
+                HorizontalDivider(color = if (isDark) MosqueNightBorder else MosqueCardBorderGold)
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Color.White)
+                        .background(if (isDark) MosqueNightSurface else Color.White)
                         .padding(horizontal = 16.dp, vertical = 12.dp),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
@@ -1049,6 +1050,7 @@ fun AddTransactionDialog(
     val accentColor = if (isIncome) MosqueEmeraldPrimary else MosqueUrgentRed
     val enteredAmount = amountText.toDoubleOrNull() ?: 0.0
 
+    val isDark = LocalIsDarkTheme.current
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
@@ -1059,8 +1061,8 @@ fun AddTransactionDialog(
                 .widthIn(max = 560.dp)
                 .heightIn(max = 740.dp)
                 .imePadding(),
-            backgroundColor = MosqueBgLight,
-            borderColor = MosqueCardBorderGold,
+            backgroundColor = if (isDark) MosqueNightSurface else MosqueBgLight,
+            borderColor = if (isDark) MosqueNightBorder else MosqueCardBorderGold,
             elevation = 8.dp
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
@@ -1383,11 +1385,11 @@ fun AddTransactionDialog(
                 }
 
                 // Sticky Footer
-                HorizontalDivider(color = MosqueCardBorderGold)
+                HorizontalDivider(color = if (isDark) MosqueNightBorder else MosqueCardBorderGold)
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Color.White)
+                        .background(if (isDark) MosqueNightSurface else Color.White)
                         .padding(horizontal = 16.dp, vertical = 12.dp),
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                     verticalAlignment = Alignment.CenterVertically
@@ -1568,6 +1570,7 @@ fun ReceiveChandaDialog(
 
     val enteredAmount = amountText.toDoubleOrNull() ?: 0.0
 
+    val isDark = LocalIsDarkTheme.current
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
@@ -1578,8 +1581,8 @@ fun ReceiveChandaDialog(
                 .widthIn(max = 560.dp)
                 .heightIn(max = 760.dp)
                 .imePadding(),
-            backgroundColor = MosqueBgLight,
-            borderColor = MosqueCardBorderGold,
+            backgroundColor = if (isDark) MosqueNightSurface else MosqueBgLight,
+            borderColor = if (isDark) MosqueNightBorder else MosqueCardBorderGold,
             elevation = 8.dp
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
@@ -2276,11 +2279,11 @@ fun ReceiveChandaDialog(
                 }
 
                 // Sticky Footer Actions
-                HorizontalDivider(color = MosqueCardBorderGold)
+                HorizontalDivider(color = if (isDark) MosqueNightBorder else MosqueCardBorderGold)
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Color.White)
+                        .background(if (isDark) MosqueNightSurface else Color.White)
                         .padding(horizontal = 16.dp, vertical = 12.dp),
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                     verticalAlignment = Alignment.CenterVertically
@@ -2743,6 +2746,7 @@ fun PublishNoticeDialog(
         onDispose { onClearAiDraft() }
     }
 
+    val isDark = LocalIsDarkTheme.current
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
@@ -2753,8 +2757,8 @@ fun PublishNoticeDialog(
                 .widthIn(max = 560.dp)
                 .imePadding()
                 .padding(horizontal = 16.dp, vertical = 20.dp),
-            backgroundColor = MosqueBgLight,
-            borderColor = MosqueCardBorderGold,
+            backgroundColor = if (isDark) MosqueNightSurface else MosqueBgLight,
+            borderColor = if (isDark) MosqueNightBorder else MosqueCardBorderGold,
             elevation = 8.dp
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
@@ -3195,11 +3199,11 @@ fun PublishNoticeDialog(
                 }
 
                 // Sticky Footer Action Bar
-                HorizontalDivider(color = MosqueCardBorderGold)
+                HorizontalDivider(color = if (isDark) MosqueNightBorder else MosqueCardBorderGold)
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Color.White)
+                        .background(if (isDark) MosqueNightSurface else Color.White)
                         .padding(horizontal = 16.dp, vertical = 12.dp),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
@@ -3337,6 +3341,7 @@ fun ScheduleMeetingDialog(
         "মক্তব কক্ষ"
     )
 
+    val isDark = LocalIsDarkTheme.current
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
@@ -3347,8 +3352,8 @@ fun ScheduleMeetingDialog(
                 .widthIn(max = 560.dp)
                 .imePadding()
                 .padding(horizontal = 16.dp, vertical = 20.dp),
-            backgroundColor = MosqueBgLight,
-            borderColor = MosqueCardBorderGold,
+            backgroundColor = if (isDark) MosqueNightSurface else MosqueBgLight,
+            borderColor = if (isDark) MosqueNightBorder else MosqueCardBorderGold,
             elevation = 8.dp
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
@@ -3594,11 +3599,11 @@ fun ScheduleMeetingDialog(
                 }
 
                 // Sticky Footer Action Bar
-                HorizontalDivider(color = MosqueCardBorderGold)
+                HorizontalDivider(color = if (isDark) MosqueNightBorder else MosqueCardBorderGold)
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Color.White)
+                        .background(if (isDark) MosqueNightSurface else Color.White)
                         .padding(horizontal = 16.dp, vertical = 12.dp),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
@@ -3666,6 +3671,7 @@ fun MeetingResolutionDialog(
     var markCompleted by remember(meeting.id) { mutableStateOf(true) }
     var resolutionError by remember { mutableStateOf<String?>(null) }
 
+    val isDark = LocalIsDarkTheme.current
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
@@ -3676,8 +3682,8 @@ fun MeetingResolutionDialog(
                 .widthIn(max = 560.dp)
                 .imePadding()
                 .padding(horizontal = 16.dp, vertical = 20.dp),
-            backgroundColor = MosqueBgLight,
-            borderColor = MosqueCardBorderGold,
+            backgroundColor = if (isDark) MosqueNightSurface else MosqueBgLight,
+            borderColor = if (isDark) MosqueNightBorder else MosqueCardBorderGold,
             elevation = 8.dp
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
@@ -3850,11 +3856,11 @@ fun MeetingResolutionDialog(
                 }
 
                 // Sticky Footer Action Bar
-                HorizontalDivider(color = MosqueCardBorderGold)
+                HorizontalDivider(color = if (isDark) MosqueNightBorder else MosqueCardBorderGold)
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Color.White)
+                        .background(if (isDark) MosqueNightSurface else Color.White)
                         .padding(horizontal = 16.dp, vertical = 12.dp),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
