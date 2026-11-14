@@ -129,7 +129,7 @@ fun SplashScreen(
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.app_logo),
-                    contentDescription = "Mosque Seba Logo",
+                    contentDescription = "মসজিদ সেবা লোগো",
                     modifier = Modifier.fillMaxSize()
                 )
             }
@@ -158,7 +158,7 @@ fun SplashScreen(
                         .background(MosqueGold.copy(alpha = 0.6f))
                 )
                 Text(
-                    text = "  MOSQUE SEBA  ",
+                    text = "  ডিজিটাল ব্যবস্থাপনা  ",
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Bold,
                     color = MosqueGold,

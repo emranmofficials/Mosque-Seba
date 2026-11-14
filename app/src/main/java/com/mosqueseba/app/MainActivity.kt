@@ -41,7 +41,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         setContent {
-            MosqueCommitteeTheme {
+            val darkModeEnabled by viewModel.darkModeEnabled.collectAsState()
+            MosqueCommitteeTheme(darkTheme = darkModeEnabled) {
                 var currentScreen by remember { mutableStateOf(AppScreen.SPLASH) }
 
                 BackHandler(enabled = currentScreen == AppScreen.REGISTRATION) {
@@ -132,6 +133,7 @@ fun MosqueAppShell(
     val allEvents by viewModel.allEvents.collectAsState()
     val allDutyRosters by viewModel.allDutyRosters.collectAsState()
     val allFoodSchedules by viewModel.allFoodSchedules.collectAsState()
+    val allWelfareCases by viewModel.allWelfareCases.collectAsState()
     val notificationsEnabled by viewModel.notificationsEnabled.collectAsState()
     val readNotificationIds by viewModel.readNotificationIds.collectAsState()
     val activeCycleMonth = remember(allChandaPayments) {
@@ -184,6 +186,7 @@ fun MosqueAppShell(
     val roleNotificationItems = remember(
         currentRole,
         savedMemberId,
+        currentMember,
         pendingTransactions,
         allCashboxRecords,
         allOfficeDocuments,
@@ -193,11 +196,13 @@ fun MosqueAppShell(
         allEvents,
         allDutyRosters,
         allFoodSchedules,
-        allChandaPayments
+        allChandaPayments,
+        allWelfareCases
     ) {
         buildRoleNotificationItems(
             role = currentRole,
             savedMemberId = savedMemberId,
+            currentMember = currentMember,
             pendingTransactions = pendingTransactions,
             cashboxRecords = allCashboxRecords,
             officeDocuments = allOfficeDocuments,
@@ -207,7 +212,8 @@ fun MosqueAppShell(
             events = allEvents,
             dutyRosters = allDutyRosters,
             foodSchedules = allFoodSchedules,
-            chandaPayments = allChandaPayments
+            chandaPayments = allChandaPayments,
+            welfareCases = allWelfareCases
         )
     }
     val unreadNotificationCount = remember(roleNotificationItems, readNotificationIds) {
@@ -251,68 +257,92 @@ fun MosqueAppShell(
     var chandaReceiptPreview by remember { mutableStateOf<ChandaPaymentEntity?>(null) }
     var showPublishNoticeDialog by remember { mutableStateOf(false) }
     var showScheduleMeetingDialog by remember { mutableStateOf(false) }
+    var openFinanceReportRequest by remember { mutableIntStateOf(0) }
+    var openFinancePendingRequest by remember { mutableIntStateOf(0) }
 
-    Scaffold(
-        topBar = {
-            GlobalHeader(
-                currentRole = currentRole,
-                memberName = currentMemberName,
-                mosqueName = mosque?.nameBn,
-                mosqueLogoUrl = mosque?.logoUrl,
-                userPhotoUrl = currentMember?.photoUrl,
-                notificationCount = notificationCount,
-                onRoleSelected = { viewModel.setUserRole(it) },
-                onNotificationClick = {
-                    overlayUserProfile = null
-                    overlaySubModule = null
-                    showAccountHub = false
-                    showNotificationsPage = true
-                },
-                onMosqueProfileClick = {
-                    overlayUserProfile = null
-                    showAccountHub = false
-                    showNotificationsPage = false
-                    overlaySubModule = "about"
-                },
-                onUserProfileClick = {
-                    overlaySubModule = null
-                    showAccountHub = false
-                    showNotificationsPage = false
-                    val target = currentUserProfileTarget
-                    if (target != null) {
-                        overlayUserProfile = target
-                    } else {
-                        Toast.makeText(context, "ব্যক্তিগত প্রোফাইল তথ্য লোড হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন।", Toast.LENGTH_SHORT).show()
-                    }
-                },
-                onAvatarClick = {
-                    overlayUserProfile = null
-                    overlaySubModule = null
-                    showNotificationsPage = false
-                    showAccountHub = true
-                },
-                onLogout = onLogout
-            )
-        },
-        bottomBar = {
-            NavigationBottomBar(
-                currentTabIndex = currentTabIndex,
-                currentRole = currentRole,
-                onTabSelected = { 
-                    currentTabIndex = it
-                    overlaySubModule = null
-                    overlayUserProfile = null
-                    showAccountHub = false
-                    showNotificationsPage = false
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        val isExpandedScreen = maxWidth >= 600.dp
+        Scaffold(
+            topBar = {
+                GlobalHeader(
+                    currentRole = currentRole,
+                    memberName = currentMemberName,
+                    mosqueName = mosque?.nameBn,
+                    mosqueLogoUrl = mosque?.logoUrl,
+                    userPhotoUrl = currentMember?.photoUrl,
+                    notificationCount = notificationCount,
+                    onRoleSelected = { viewModel.setUserRole(it) },
+                    onNotificationClick = {
+                        overlayUserProfile = null
+                        overlaySubModule = null
+                        showAccountHub = false
+                        showNotificationsPage = true
+                    },
+                    onMosqueProfileClick = {
+                        overlayUserProfile = null
+                        showAccountHub = false
+                        showNotificationsPage = false
+                        overlaySubModule = "about"
+                    },
+                    onUserProfileClick = {
+                        overlaySubModule = null
+                        showAccountHub = false
+                        showNotificationsPage = false
+                        val target = currentUserProfileTarget
+                        if (target != null) {
+                            overlayUserProfile = target
+                        } else {
+                            Toast.makeText(context, "ব্যক্তিগত প্রোফাইল তথ্য লোড হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন।", Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    onAvatarClick = {
+                        overlayUserProfile = null
+                        overlaySubModule = null
+                        showNotificationsPage = false
+                        showAccountHub = true
+                    },
+                    onLogout = onLogout
+                )
+            },
+            bottomBar = {
+                if (!isExpandedScreen) {
+                    NavigationBottomBar(
+                        currentTabIndex = currentTabIndex,
+                        currentRole = currentRole,
+                        onTabSelected = {
+                            currentTabIndex = it
+                            overlaySubModule = null
+                            overlayUserProfile = null
+                            showAccountHub = false
+                            showNotificationsPage = false
+                        }
+                    )
                 }
-            )
-        }
-    ) { innerPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-        ) {
+            }
+        ) { innerPadding ->
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+            ) {
+                if (isExpandedScreen) {
+                    MosqueNavigationRail(
+                        currentTabIndex = currentTabIndex,
+                        currentRole = currentRole,
+                        onTabSelected = {
+                            currentTabIndex = it
+                            overlaySubModule = null
+                            overlayUserProfile = null
+                            showAccountHub = false
+                            showNotificationsPage = false
+                        }
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                ) {
             if (overlayUserProfile != null) {
                 MemberProfileScreen(
                     target = overlayUserProfile!!,
@@ -356,6 +386,7 @@ fun MosqueAppShell(
                     onOpenReceiveChanda = { showReceiveChandaDialog = true },
                     onOpenScheduleMeeting = { showScheduleMeetingDialog = true },
                     onOpenPublishNotice = { showPublishNoticeDialog = true },
+                    onOpenAddMember = { showAddMemberDialog = true },
                     onOpenMyProfile = {
                         overlaySubModule = null
                         currentUserProfileTarget?.let { overlayUserProfile = it }
@@ -372,6 +403,7 @@ fun MosqueAppShell(
                                 it.destinationKey == "finance" || it.destinationKey == "treasurer_report" || it.destinationKey == "transparency"
                             }
                             "meetings" -> currentNavItems.indexOfFirst { it.destinationKey == "secretary_meetings" }
+                            "welfare" -> currentNavItems.indexOfFirst { it.destinationKey == "welfare" || it.destinationKey == "secretary_welfare" }
                             "chanda" -> currentNavItems.indexOfFirst { it.destinationKey == "my_chanda" || it.destinationKey == "treasurer_chanda" }
                             else -> currentNavItems.indexOfFirst { it.destinationKey == moduleKey }
                         }
@@ -448,21 +480,28 @@ fun MosqueAppShell(
                                     }
                                     "members" -> {
                                         val idx = currentNavItems.indexOfFirst { it.destinationKey == "members" || it.destinationKey == "committee" }
-                                        if (idx != -1) currentTabIndex = idx
+                                        if (idx != -1) currentTabIndex = idx else overlaySubModule = "members"
                                     }
                                     "finance", "transparency" -> {
                                         val idx = currentNavItems.indexOfFirst {
                                             it.destinationKey == "finance" || it.destinationKey == "transparency" || it.destinationKey == "treasurer_report"
                                         }
-                                        if (idx != -1) currentTabIndex = idx
+                                        if (idx != -1) {
+                                            currentTabIndex = idx
+                                        } else {
+                                            overlaySubModule = if (dialogKey == "finance" && currentRole.canManageFinance()) "finance" else "transparency"
+                                        }
                                     }
                                     "pending_approval" -> {
                                         val idx = currentNavItems.indexOfFirst { it.destinationKey == "finance" }
-                                        if (idx != -1) currentTabIndex = idx
+                                        if (idx != -1) {
+                                            currentTabIndex = idx
+                                            openFinancePendingRequest++
+                                        }
                                     }
                                     "notices", "view_notices" -> {
                                         val idx = currentNavItems.indexOfFirst { it.destinationKey == "notices" }
-                                        if (idx != -1) currentTabIndex = idx
+                                        if (idx != -1) currentTabIndex = idx else overlaySubModule = "notices"
                                     }
                                     "my_chanda", "view_receipt" -> {
                                         val idx = currentNavItems.indexOfFirst { it.destinationKey == "my_chanda" }
@@ -534,8 +573,9 @@ fun MosqueAppShell(
                                     "audit" -> {
                                         overlaySubModule = "audit"
                                     }
-                                    "view_prayers", "prayers" -> {
-                                        overlaySubModule = "prayer"
+                                    "view_prayers", "prayers", "prayer" -> {
+                                        val idx = currentNavItems.indexOfFirst { it.destinationKey == "prayer" }
+                                        if (idx != -1) currentTabIndex = idx else overlaySubModule = "prayer"
                                     }
                                     "treasurer_payroll" -> {
                                         val idx = currentNavItems.indexOfFirst { it.destinationKey == "treasurer_payroll" }
@@ -543,7 +583,10 @@ fun MosqueAppShell(
                                     }
                                     "treasurer_report" -> {
                                         val idx = currentNavItems.indexOfFirst { it.destinationKey == "treasurer_report" || it.destinationKey == "finance" }
-                                        if (idx != -1) currentTabIndex = idx
+                                        if (idx != -1) {
+                                            currentTabIndex = idx
+                                            openFinanceReportRequest++
+                                        }
                                     }
                                     "treasurer_chanda" -> {
                                         val idx = currentNavItems.indexOfFirst { it.destinationKey == "treasurer_chanda" }
@@ -576,7 +619,11 @@ fun MosqueAppShell(
                             showAddTransactionDialog = true
                         }
                     } else null,
-                    isReadOnlyTransparencyMode = false
+                    isReadOnlyTransparencyMode = false,
+                    openReportTrigger = openFinanceReportRequest,
+                    onReportTriggerConsumed = { openFinanceReportRequest = 0 },
+                    openPendingTabTrigger = openFinancePendingRequest,
+                    onPendingTabTriggerConsumed = { openFinancePendingRequest = 0 }
                 )
                 "transparency" -> FinanceScreen(
                     viewModel = viewModel,
@@ -584,11 +631,9 @@ fun MosqueAppShell(
                     onAddExpenseClick = null,
                     isReadOnlyTransparencyMode = true
                 )
-                "treasurer_chanda" -> MoreScreen(
+                "treasurer_chanda" -> MembersScreen(
                     viewModel = viewModel,
-                    initialSubModule = "chanda",
-                    onOpenReceiveChanda = { showReceiveChandaDialog = true },
-                    onOpenScheduleMeeting = { showScheduleMeetingDialog = true }
+                    onAddMemberClick = if (currentRole.canManageMembers()) { { showAddMemberDialog = true } } else null
                 )
                 "treasurer_payroll" -> MoreScreen(
                     viewModel = viewModel,
@@ -635,6 +680,7 @@ fun MosqueAppShell(
                     onOpenReceiveChanda = { showReceiveChandaDialog = true },
                     onOpenScheduleMeeting = { showScheduleMeetingDialog = true },
                     onOpenPublishNotice = { showPublishNoticeDialog = true },
+                    onOpenAddMember = { showAddMemberDialog = true },
                     onOpenMyProfile = {
                         currentUserProfileTarget?.let { overlayUserProfile = it }
                     }
@@ -697,7 +743,7 @@ fun MosqueAppShell(
                     onOpenReceiveChanda = { showReceiveChandaDialog = true },
                     onOpenScheduleMeeting = { showScheduleMeetingDialog = true }
                 )
-                "charter", "cashbox", "office_docs", "sharia_advisory", "publicity", "events" -> MoreScreen(
+                "charter", "cashbox", "office_docs", "sharia_advisory", "publicity", "events", "prayer" -> MoreScreen(
                     viewModel = viewModel,
                     initialSubModule = destination,
                     onOpenReceiveChanda = { showReceiveChandaDialog = true },
@@ -710,6 +756,8 @@ fun MosqueAppShell(
                 )
             }
         }
+    }
+    }
     }
     }
     }
@@ -736,6 +784,11 @@ fun MosqueAppShell(
                     salaryAmount = salaryAmount,
                     staffMealRequired = staffMealRequired
                 )
+                Toast.makeText(
+                    context,
+                    "$nameBn-কে সদস্য তালিকায় যুক্ত করা হয়েছে।",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         )
     }
@@ -757,6 +810,12 @@ fun MosqueAppShell(
                     description = description,
                     paymentMethod = method
                 )
+                val typeLabel = if (type == "INCOME") "আয়" else "ব্যয়"
+                Toast.makeText(
+                    context,
+                    "৳${toBengaliDigits(amount.toInt().toString())} $typeLabel এন্ট্রি সংরক্ষিত হয়েছে।",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         )
     }
@@ -782,6 +841,11 @@ fun MosqueAppShell(
                     selectedMonthCount = monthCount,
                     onRecorded = { createdPayment ->
                         chandaReceiptPreview = createdPayment
+                        Toast.makeText(
+                            context,
+                            "৳${toBengaliDigits(amount.toInt().toString())} চাঁদা গৃহীত হয়েছে এবং স্বয়ংক্রিয়ভাবে মোট আয়ের সাথে যুক্ত হয়েছে।",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 )
                 chandaPreselectedTarget = null
@@ -795,8 +859,20 @@ fun MosqueAppShell(
             staff = staff,
             defaultMonth = activeCycleMonth,
             onDismiss = { paySalaryTargetStaff = null },
-            onConfirm = { month, bonus ->
-                viewModel.disburseSalary(staff = staff, month = month, bonus = bonus)
+            onConfirm = { month, bonus, paymentMethod ->
+                viewModel.disburseSalary(
+                    staff = staff,
+                    month = month,
+                    bonus = bonus,
+                    paymentMethod = paymentMethod,
+                    onDisbursed = { payroll ->
+                        Toast.makeText(
+                            context,
+                            "${staff.nameBn}-এর বেতন ৳${toBengaliDigits(payroll.netSalary.toInt().toString())} পরিশোধিত এবং স্বয়ংক্রিয়ভাবে মোট ব্যয়ের সাথে যুক্ত হয়েছে।",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                )
                 paySalaryTargetStaff = null
             }
         )
@@ -808,6 +884,7 @@ fun MosqueAppShell(
             mosqueName = mosque?.nameBn ?: "বায়তুল জান্নাত জামে মসজিদ",
             mosqueAddress = mosque?.address ?: "মিরপুর-১০, ঢাকা",
             committeeId = mosque?.committeeId ?: "MC-DHK-2024",
+            mosqueLogoUrl = mosque?.logoUrl,
             onDismiss = { chandaReceiptPreview = null }
         )
     }
@@ -826,6 +903,11 @@ fun MosqueAppShell(
                     priority = priority,
                     isPinned = isPinned
                 )
+                Toast.makeText(
+                    context,
+                    "নোটিশটি সফলভাবে প্রকাশিত হয়েছে।",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         )
     }
@@ -841,6 +923,11 @@ fun MosqueAppShell(
                     location = location,
                     agenda = agenda
                 )
+                Toast.makeText(
+                    context,
+                    "কমিটি সভা সফলভাবে নির্ধারিত হয়েছে।",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         )
     }

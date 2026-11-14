@@ -66,6 +66,7 @@ fun AccountHubScreen(
     val notificationsEnabled by viewModel.notificationsEnabled.collectAsState()
     val showHijriBanner by viewModel.showHijriBanner.collectAsState()
     val rememberMeEnabled by viewModel.rememberMeEnabled.collectAsState()
+    val darkModeEnabled by viewModel.darkModeEnabled.collectAsState()
 
     var showChangePasswordDialog by remember { mutableStateOf(false) }
     var showHelplineGuideDialog by remember { mutableStateOf(false) }
@@ -85,7 +86,7 @@ fun AccountHubScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MosqueBgLight)
+            .background(MaterialTheme.colorScheme.background)
     ) {
         // 1. Emerald-Gold Header
         Surface(
@@ -141,11 +142,17 @@ fun AccountHubScreen(
             }
         }
 
-        LazyColumn(
-            contentPadding = PaddingValues(14.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = Modifier.fillMaxSize()
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.TopCenter
         ) {
+            LazyColumn(
+                contentPadding = PaddingValues(14.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .widthIn(max = 840.dp)
+            ) {
             // Section 1: Mosque Profile (Primary — contains User Profile inside details)
             item {
                 AccountSectionTitle(title = "মসজিদের প্রোফাইল", icon = Icons.Default.Mosque)
@@ -290,11 +297,28 @@ fun AccountHubScreen(
             item {
                 Card(
                     shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                     border = BorderStroke(1.dp, MosqueCardBorderGold),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(modifier = Modifier.padding(vertical = 4.dp)) {
+                        AccountSettingSwitchRow(
+                            icon = Icons.Default.DarkMode,
+                            iconColor = MosqueGoldDeep,
+                            title = "আই-কমফোর্ট ডার্ক মোড (নাইট থিম)",
+                            subtitle = "ফজর ও এশার সময় চোখের আরামের জন্য গাঢ় সবুজ ডার্ক থিম",
+                            checked = darkModeEnabled,
+                            testTag = "setting_dark_mode_switch",
+                            onCheckedChange = {
+                                viewModel.setDarkModeEnabled(it)
+                                Toast.makeText(
+                                    context,
+                                    if (it) "ডার্ক মোড চালু করা হয়েছে।" else "লাইট মোড চালু করা হয়েছে।",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        )
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f), modifier = Modifier.padding(horizontal = 14.dp))
                         AccountSettingSwitchRow(
                             icon = Icons.Default.NotificationsActive,
                             iconColor = MosqueEmeraldPrimary,
@@ -304,7 +328,7 @@ fun AccountHubScreen(
                             testTag = "setting_notifications_switch",
                             onCheckedChange = { viewModel.setNotificationsEnabled(it) }
                         )
-                        HorizontalDivider(color = MosqueCardBorderSubtle, modifier = Modifier.padding(horizontal = 14.dp))
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f), modifier = Modifier.padding(horizontal = 14.dp))
                         AccountSettingSwitchRow(
                             icon = Icons.Default.CalendarMonth,
                             iconColor = MosqueGoldDeep,
@@ -314,11 +338,11 @@ fun AccountHubScreen(
                             testTag = "setting_hijri_banner_switch",
                             onCheckedChange = { viewModel.setShowHijriBanner(it) }
                         )
-                        HorizontalDivider(color = MosqueCardBorderSubtle, modifier = Modifier.padding(horizontal = 14.dp))
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f), modifier = Modifier.padding(horizontal = 14.dp))
                         AccountSettingSwitchRow(
                             icon = Icons.Default.VerifiedUser,
                             iconColor = MosqueInfoBlue,
-                            title = "স্বয়ংক্রিয় লগইন সেশন (Remember Me)",
+                            title = "স্বয়ংক্রিয় লগইন সেশন (মনে রাখুন)",
                             subtitle = "অ্যাপ বন্ধ করলেও পরবর্তী প্রবেশে সেশন সংরক্ষণ রাখুন",
                             checked = rememberMeEnabled,
                             testTag = "setting_remember_me_switch",
@@ -336,7 +360,7 @@ fun AccountHubScreen(
             item {
                 Card(
                     shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                     border = BorderStroke(1.dp, MosqueCardBorderGold),
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -359,7 +383,7 @@ fun AccountHubScreen(
             item {
                 Card(
                     shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                     border = BorderStroke(1.dp, MosqueCardBorderGold),
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -375,7 +399,7 @@ fun AccountHubScreen(
                                 context.startActivity(dialIntent)
                             }
                         )
-                        HorizontalDivider(color = MosqueCardBorderSubtle, modifier = Modifier.padding(horizontal = 14.dp))
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f), modifier = Modifier.padding(horizontal = 14.dp))
                         AccountActionRow(
                             icon = Icons.Default.Email,
                             iconColor = MosqueInfoBlue,
@@ -394,7 +418,7 @@ fun AccountHubScreen(
                                 }
                             }
                         )
-                        HorizontalDivider(color = MosqueCardBorderSubtle, modifier = Modifier.padding(horizontal = 14.dp))
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f), modifier = Modifier.padding(horizontal = 14.dp))
                         AccountActionRow(
                             icon = Icons.AutoMirrored.Filled.HelpOutline,
                             iconColor = MosqueGoldDeep,
@@ -415,17 +439,17 @@ fun AccountHubScreen(
             item {
                 Card(
                     shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                     border = BorderStroke(1.dp, MosqueCardBorderGold),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(modifier = Modifier.padding(vertical = 4.dp)) {
                         AccountActionRow(
                             icon = Icons.Default.Mosque,
-                            iconColor = MosqueEmeraldDark,
-                            title = "মসজিদ সেবা (Mosque Seba)",
+                            iconColor = MaterialTheme.colorScheme.primary,
+                            title = "মসজিদ সেবা",
                             subtitle = "ভার্শন ${toBengaliDigits(BuildConfig.VERSION_NAME)} • বিল্ড ${toBengaliDigits(BuildConfig.VERSION_CODE.toString())}",
-                            badgeText = "v${BuildConfig.VERSION_NAME}",
+                            badgeText = "সংস্করণ ${toBengaliDigits(BuildConfig.VERSION_NAME)}",
                             testTag = "account_hub_about_app",
                             onClick = { showAboutAppDialog = true }
                         )
@@ -465,6 +489,7 @@ fun AccountHubScreen(
 
             item { Spacer(modifier = Modifier.height(20.dp)) }
         }
+        }
     }
 
     if (showChangePasswordDialog) {
@@ -498,38 +523,19 @@ fun AccountHubScreen(
     }
 
     if (showLogoutConfirmDialog) {
-        AlertDialog(
-            onDismissRequest = { showLogoutConfirmDialog = false },
-            title = {
-                Text(
-                    text = "লগআউট নিশ্চিত করুন",
-                    fontWeight = FontWeight.Bold,
-                    color = MosqueEmeraldDark
-                )
+        MosqueConfirmDialog(
+            title = "লগআউট নিশ্চিত করুন",
+            message = "আপনি কি নিশ্চিতভাবে বর্তমান অ্যাকাউন্ট থেকে লগআউট করে লগইন স্ক্রিনে ফিরে যেতে চান?",
+            confirmText = "হ্যাঁ, লগআউট করুন",
+            isDestructive = true,
+            icon = Icons.AutoMirrored.Filled.Logout,
+            confirmTag = "confirm_logout_button",
+            onConfirm = {
+                showLogoutConfirmDialog = false
+                Toast.makeText(context, "অ্যাকাউন্ট থেকে লগআউট সম্পন্ন হয়েছে।", Toast.LENGTH_SHORT).show()
+                onLogout()
             },
-            text = {
-                Text(
-                    text = "আপনি কি নিশ্চিতভাবে বর্তমান অ্যাকাউন্ট থেকে লগআউট করে লগইন স্ক্রিনে ফিরে যেতে চান?",
-                    color = MosqueTextSecondary
-                )
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        showLogoutConfirmDialog = false
-                        onLogout()
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = MosqueUrgentRed),
-                    modifier = Modifier.testTag("confirm_logout_button")
-                ) {
-                    Text("হ্যাঁ, লগআউট করুন", fontWeight = FontWeight.Bold)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showLogoutConfirmDialog = false }) {
-                    Text("বাতিল", color = MosqueTextSecondary, fontWeight = FontWeight.SemiBold)
-                }
-            }
+            onDismiss = { showLogoutConfirmDialog = false }
         )
     }
 }
@@ -539,6 +545,7 @@ private fun AccountSectionTitle(
     title: String,
     icon: ImageVector
 ) {
+    val primaryColor = MaterialTheme.colorScheme.primary
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.padding(horizontal = 2.dp, vertical = 2.dp)
@@ -546,7 +553,7 @@ private fun AccountSectionTitle(
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = MosqueEmeraldPrimary,
+            tint = primaryColor,
             modifier = Modifier.size(17.dp)
         )
         Spacer(modifier = Modifier.width(6.dp))
@@ -554,7 +561,7 @@ private fun AccountSectionTitle(
             text = title,
             style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.ExtraBold,
-            color = MosqueEmeraldDark
+            color = primaryColor
         )
     }
 }
@@ -580,7 +587,7 @@ private fun AccountSettingSwitchRow(
             modifier = Modifier
                 .size(38.dp)
                 .clip(RoundedCornerShape(10.dp))
-                .background(iconColor.copy(alpha = 0.12f)),
+                .background(iconColor.copy(alpha = 0.14f)),
             contentAlignment = Alignment.Center
         ) {
             Icon(
@@ -596,12 +603,12 @@ private fun AccountSettingSwitchRow(
                 text = title,
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
-                color = MosqueEmeraldDark
+                color = MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.labelSmall,
-                color = MosqueTextSecondary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 lineHeight = 15.sp
             )
         }
@@ -628,6 +635,7 @@ private fun AccountActionRow(
     testTag: String,
     onClick: () -> Unit
 ) {
+    val isDark = LocalIsDarkTheme.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -641,7 +649,7 @@ private fun AccountActionRow(
             modifier = Modifier
                 .size(38.dp)
                 .clip(RoundedCornerShape(10.dp))
-                .background(iconColor.copy(alpha = 0.12f)),
+                .background(iconColor.copy(alpha = 0.14f)),
             contentAlignment = Alignment.Center
         ) {
             Icon(
@@ -657,25 +665,25 @@ private fun AccountActionRow(
                 text = title,
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
-                color = MosqueEmeraldDark
+                color = MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.labelSmall,
-                color = MosqueTextSecondary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 lineHeight = 15.sp
             )
         }
         if (badgeText != null) {
             Surface(
-                color = MosqueEmeraldSoft,
+                color = if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft,
                 shape = RoundedCornerShape(8.dp)
             ) {
                 Text(
                     text = badgeText,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MosqueEmeraldPrimary,
+                    color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                 )
             }
@@ -684,7 +692,7 @@ private fun AccountActionRow(
         Icon(
             imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
             contentDescription = null,
-            tint = MosqueTextMuted
+            tint = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }
@@ -703,193 +711,114 @@ private fun ChangePasswordDialog(
     var showNew by remember { mutableStateOf(false) }
     var errorText by remember { mutableStateOf<String?>(null) }
 
-    Dialog(
-        onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false)
-    ) {
-        MehrabArchCard(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 18.dp),
-            backgroundColor = MosqueBgLight,
-            borderColor = MosqueCardBorderGold,
-            elevation = 8.dp
-        ) {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(MosqueEmeraldDarkGradient)
-                        .padding(horizontal = 16.dp, vertical = 14.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column {
-                            Text(
-                                text = "পাসওয়ার্ড পরিবর্তন",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = Color.White
-                            )
-                            Text(
-                                text = currentRole.titleBn,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MosqueGoldLight
-                            )
-                        }
-                        IconButton(onClick = onDismiss) {
-                            Icon(Icons.Default.Close, contentDescription = "বন্ধ করুন", tint = Color.White)
-                        }
-                    }
-                }
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(2.dp)
-                        .background(IslamicGoldTrimGradient)
-                )
-
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    Surface(
-                        color = MosqueGoldSoft,
-                        shape = RoundedCornerShape(10.dp),
-                        border = BorderStroke(1.dp, MosqueCardBorderGold)
-                    ) {
-                        Text(
-                            text = if (currentRole == UserRole.PRESIDENT) {
-                                "ডিফল্ট পাসওয়ার্ড পরিবর্তন না করে থাকলে বর্তমান পাসওয়ার্ড হিসেবে ১২৩৪৫৬ দিন।"
-                            } else {
-                                "আগে পরিবর্তন না করে থাকলে বর্তমান পাসওয়ার্ড হিসেবে আপনার মোবাইল নম্বরের শেষ ৬টি সংখ্যা দিন।"
-                            },
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MosqueEmeraldDark,
-                            lineHeight = 16.sp,
-                            modifier = Modifier.padding(10.dp)
-                        )
-                    }
-
-                    if (errorText != null) {
-                        Surface(
-                            color = MosqueUrgentRed.copy(alpha = 0.08f),
-                            shape = RoundedCornerShape(10.dp),
-                            border = BorderStroke(1.dp, MosqueUrgentRed.copy(alpha = 0.4f))
-                        ) {
-                            Text(
-                                text = errorText!!,
-                                color = MosqueUrgentRed,
-                                style = MaterialTheme.typography.bodySmall,
-                                fontWeight = FontWeight.SemiBold,
-                                modifier = Modifier.padding(10.dp)
-                            )
-                        }
-                    }
-
-                    OutlinedTextField(
-                        value = currentPassword,
-                        onValueChange = { currentPassword = it; errorText = null },
-                        label = { Text("বর্তমান পাসওয়ার্ড *") },
-                        visualTransformation = if (showCurrent) VisualTransformation.None else PasswordVisualTransformation(),
-                        trailingIcon = {
-                            IconButton(onClick = { showCurrent = !showCurrent }) {
-                                Icon(
-                                    imageVector = if (showCurrent) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                    contentDescription = "পাসওয়ার্ড দেখুন বা লুকান"
-                                )
-                            }
-                        },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                        singleLine = true,
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("change_password_current_input")
-                    )
-
-                    OutlinedTextField(
-                        value = newPassword,
-                        onValueChange = { newPassword = it; errorText = null },
-                        label = { Text("নতুন পাসওয়ার্ড (কমপক্ষে ৬ অক্ষর) *") },
-                        visualTransformation = if (showNew) VisualTransformation.None else PasswordVisualTransformation(),
-                        trailingIcon = {
-                            IconButton(onClick = { showNew = !showNew }) {
-                                Icon(
-                                    imageVector = if (showNew) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                    contentDescription = "নতুন পাসওয়ার্ড দেখুন বা লুকান"
-                                )
-                            }
-                        },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                        singleLine = true,
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("change_password_new_input")
-                    )
-
-                    OutlinedTextField(
-                        value = confirmPassword,
-                        onValueChange = { confirmPassword = it; errorText = null },
-                        label = { Text("নতুন পাসওয়ার্ড নিশ্চিত করুন *") },
-                        visualTransformation = if (showNew) VisualTransformation.None else PasswordVisualTransformation(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                        singleLine = true,
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("change_password_confirm_input")
-                    )
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        OutlinedButton(
-                            onClick = onDismiss,
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier
-                                .weight(0.9f)
-                                .heightIn(min = 48.dp)
-                        ) {
-                            Text("বাতিল", color = MosqueTextSecondary, fontWeight = FontWeight.Bold)
-                        }
-                        Button(
-                            onClick = {
-                                when {
-                                    currentPassword.isBlank() -> errorText = "বর্তমান পাসওয়ার্ড লিখুন।"
-                                    newPassword.trim().length < 6 -> errorText = "নতুন পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।"
-                                    newPassword != confirmPassword -> errorText = "নতুন পাসওয়ার্ড দুটি মিলছে না।"
-                                    else -> {
-                                        val (ok, msg) = onSubmit(currentPassword, newPassword)
-                                        if (ok) {
-                                            onSuccess(msg)
-                                        } else {
-                                            errorText = msg
-                                        }
-                                    }
-                                }
-                            },
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary),
-                            modifier = Modifier
-                                .weight(1.3f)
-                                .heightIn(min = 48.dp)
-                                .testTag("change_password_save_button")
-                        ) {
-                            Text("সংরক্ষণ করুন", fontWeight = FontWeight.ExtraBold)
-                        }
+    ExecutiveFormDialogShell(
+        title = "পাসওয়ার্ড পরিবর্তন",
+        subtitle = currentRole.titleBn,
+        icon = Icons.Default.LockReset,
+        confirmText = "সংরক্ষণ করুন",
+        confirmTag = "change_password_save_button",
+        errorBanner = errorText,
+        onDismiss = onDismiss,
+        onConfirmClick = {
+            when {
+                currentPassword.isBlank() -> errorText = "বর্তমান পাসওয়ার্ড লিখুন।"
+                newPassword.trim().length < 6 -> errorText = "নতুন পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।"
+                newPassword != confirmPassword -> errorText = "নতুন পাসওয়ার্ড দুটি মিলছে না।"
+                else -> {
+                    val (ok, msg) = onSubmit(currentPassword, newPassword)
+                    if (ok) {
+                        onSuccess(msg)
+                    } else {
+                        errorText = msg
                     }
                 }
             }
+        }
+    ) {
+        Surface(
+            color = MosqueGoldSoft,
+            shape = RoundedCornerShape(10.dp),
+            border = BorderStroke(1.dp, MosqueCardBorderGold),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                text = if (currentRole == UserRole.PRESIDENT) {
+                    "ডিফল্ট পাসওয়ার্ড পরিবর্তন না করে থাকলে বর্তমান পাসওয়ার্ড হিসেবে ১২৩৪৫৬ দিন।"
+                } else {
+                    "আগে পরিবর্তন না করে থাকলে বর্তমান পাসওয়ার্ড হিসেবে আপনার মোবাইল নম্বরের শেষ ৬টি সংখ্যা দিন।"
+                },
+                style = MaterialTheme.typography.labelSmall,
+                color = MosqueEmeraldDark,
+                lineHeight = 16.sp,
+                modifier = Modifier.padding(10.dp)
+            )
+        }
+
+        MoreFormSection(title = "নিরাপত্তা ও পাসওয়ার্ড তথ্য", icon = Icons.Default.Key) {
+            OutlinedTextField(
+                value = currentPassword,
+                onValueChange = { currentPassword = it; errorText = null },
+                label = { Text("বর্তমান পাসওয়ার্ড *") },
+                visualTransformation = if (showCurrent) VisualTransformation.None else PasswordVisualTransformation(),
+                trailingIcon = {
+                    IconButton(
+                        onClick = { showCurrent = !showCurrent },
+                        modifier = Modifier.minimumInteractiveComponentSize()
+                    ) {
+                        Icon(
+                            imageVector = if (showCurrent) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                            contentDescription = "পাসওয়ার্ড দেখুন বা লুকান"
+                        )
+                    }
+                },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                singleLine = true,
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("change_password_current_input")
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            OutlinedTextField(
+                value = newPassword,
+                onValueChange = { newPassword = it; errorText = null },
+                label = { Text("নতুন পাসওয়ার্ড (কমপক্ষে ৬ অক্ষর) *") },
+                visualTransformation = if (showNew) VisualTransformation.None else PasswordVisualTransformation(),
+                trailingIcon = {
+                    IconButton(
+                        onClick = { showNew = !showNew },
+                        modifier = Modifier.minimumInteractiveComponentSize()
+                    ) {
+                        Icon(
+                            imageVector = if (showNew) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                            contentDescription = "নতুন পাসওয়ার্ড দেখুন বা লুকান"
+                        )
+                    }
+                },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                singleLine = true,
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("change_password_new_input")
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            OutlinedTextField(
+                value = confirmPassword,
+                onValueChange = { confirmPassword = it; errorText = null },
+                label = { Text("নতুন পাসওয়ার্ড নিশ্চিত করুন *") },
+                visualTransformation = if (showNew) VisualTransformation.None else PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                singleLine = true,
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("change_password_confirm_input")
+            )
         }
     }
 }
@@ -1025,7 +954,7 @@ private fun AboutAppDialog(
                 }
                 Spacer(modifier = Modifier.height(10.dp))
                 Text(
-                    text = "মসজিদ সেবা (Mosque Seba)",
+                    text = "মসজিদ সেবা",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.ExtraBold,
                     color = MosqueEmeraldDark

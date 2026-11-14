@@ -47,6 +47,7 @@ enum class NotificationCategory(val labelBn: String) {
 sealed interface NotificationActionTarget {
     data class PendingTransaction(val transaction: TransactionEntity) : NotificationActionTarget
     data class UnverifiedCashbox(val record: CashboxRecordEntity) : NotificationActionTarget
+    data class TomorrowFoodApproval(val foodSchedule: FoodScheduleEntity) : NotificationActionTarget
     data class NoticeDetail(val notice: NoticeEntity) : NotificationActionTarget
     data class OpenModule(val moduleKey: String) : NotificationActionTarget
 }
@@ -75,6 +76,7 @@ private enum class NotificationFilter(val labelBn: String) {
 fun buildRoleNotificationItems(
     role: UserRole,
     savedMemberId: String?,
+    currentMember: MemberEntity? = null,
     pendingTransactions: List<TransactionEntity>,
     cashboxRecords: List<CashboxRecordEntity>,
     officeDocuments: List<OfficeDocumentEntity>,
@@ -84,7 +86,8 @@ fun buildRoleNotificationItems(
     events: List<MosqueEventEntity>,
     dutyRosters: List<DutyRosterEntity>,
     foodSchedules: List<FoodScheduleEntity>,
-    chandaPayments: List<ChandaPaymentEntity>
+    chandaPayments: List<ChandaPaymentEntity>,
+    welfareCases: List<WelfareCaseEntity> = emptyList()
 ): List<RoleNotificationItem> {
     val items = mutableListOf<RoleNotificationItem>()
 
@@ -95,8 +98,8 @@ fun buildRoleNotificationItems(
                 RoleNotificationItem(
                     id = "txn_${txn.id}",
                     title = "ভাউচার অনুমোদন বাকি: ${txn.categoryNameBn}",
-                    summary = "পরিমাণ: ৳${String.format(Locale.getDefault(), "%,.0f", txn.amount)} • প্রস্তাবক: ${txn.createdBy}",
-                    metaLine = "${txn.txnDate} • কোড: ${txn.transactionCode}",
+                    summary = "পরিমাণ: ৳${toBengaliDigits(String.format(Locale.getDefault(), "%,.0f", txn.amount))} • প্রস্তাবক: ${txn.createdBy}",
+                    metaLine = "${toBengaliDigits(txn.txnDate)} • কোড: ${txn.transactionCode}",
                     badgeText = if (role.canApproveFinance()) "অনুমোদন প্রয়োজন" else "অপেক্ষমাণ",
                     isUrgent = true,
                     category = NotificationCategory.ACTION_REQUIRED,
@@ -115,8 +118,8 @@ fun buildRoleNotificationItems(
                 RoleNotificationItem(
                     id = "cb_witness_${record.id}",
                     title = "দান বাক্স সাক্ষী যাচাই: ${record.boxType}",
-                    summary = "গণনাকৃত ৳${String.format(Locale.getDefault(), "%,.0f", record.countedAmount)} • গণনাকারী: ${record.countedBy}",
-                    metaLine = record.collectionDate,
+                    summary = "গণনাকৃত ৳${toBengaliDigits(String.format(Locale.getDefault(), "%,.0f", record.countedAmount))} • গণনাকারী: ${record.countedBy}",
+                    metaLine = toBengaliDigits(record.collectionDate),
                     badgeText = if (role.canWitnessCashbox()) "সাক্ষী নিশ্চিত করুন" else "সাক্ষী বাকি",
                     isUrgent = true,
                     category = NotificationCategory.ACTION_REQUIRED,
@@ -132,8 +135,8 @@ fun buildRoleNotificationItems(
                     RoleNotificationItem(
                         id = "cb_bank_${record.id}",
                         title = "ব্যাংক জমা বাকি: ${record.boxType}",
-                        summary = "৳${String.format(Locale.getDefault(), "%,.0f", record.countedAmount)} সাক্ষী দ্বারা যাচাইকৃত, ব্যাংকে জমা অপেক্ষমাণ",
-                        metaLine = record.collectionDate,
+                        summary = "৳${toBengaliDigits(String.format(Locale.getDefault(), "%,.0f", record.countedAmount))} সাক্ষী দ্বারা যাচাইকৃত, ব্যাংকে জমা অপেক্ষমাণ",
+                        metaLine = toBengaliDigits(record.collectionDate),
                         badgeText = "ব্যাংক জমা",
                         isUrgent = false,
                         category = NotificationCategory.ACTION_REQUIRED,
@@ -171,6 +174,7 @@ fun buildRoleNotificationItems(
             UserRole.PRESIDENT,
             UserRole.VICE_PRESIDENT,
             UserRole.GENERAL_SECRETARY,
+            UserRole.ASSISTANT_SECRETARY,
             UserRole.IMAM,
             UserRole.ADVISORY_BOARD
         )
@@ -189,6 +193,32 @@ fun buildRoleNotificationItems(
                     icon = Icons.Default.Balance,
                     accentColor = RoleAdvisoryAccent,
                     target = NotificationActionTarget.OpenModule("sharia_advisory")
+                )
+            )
+        }
+    }
+
+    // 4B. Pending Welfare & Zakat Disbursements
+    if (role in listOf(
+            UserRole.PRESIDENT,
+            UserRole.VICE_PRESIDENT,
+            UserRole.GENERAL_SECRETARY,
+            UserRole.WELFARE_EDUCATION_SECRETARY
+        )
+    ) {
+        welfareCases.filter { it.status != "disbursed" }.forEach { wCase ->
+            items.add(
+                RoleNotificationItem(
+                    id = "welfare_${wCase.id}",
+                    title = "সমাজকল্যাণ বিতরণ বাকি: ${wCase.beneficiaryName}",
+                    summary = "${wCase.category} • বরাদ্দ: ৳${toBengaliDigits(wCase.amountApproved.toInt().toString())}",
+                    metaLine = "${toBengaliDigits(wCase.applicationDate)} • ${toBengaliDigits(wCase.mobile)}",
+                    badgeText = "বিতরণ অপেক্ষায়",
+                    isUrgent = role == UserRole.WELFARE_EDUCATION_SECRETARY,
+                    category = NotificationCategory.ACTION_REQUIRED,
+                    icon = Icons.Default.VolunteerActivism,
+                    accentColor = RoleWelfareEduAccent,
+                    target = NotificationActionTarget.OpenModule("welfare")
                 )
             )
         }
@@ -256,6 +286,70 @@ fun buildRoleNotificationItems(
         )
     }
 
+    // 7B. 1-Day-Ahead Food Schedule Confirmation (Any Member Assigned for Tomorrow)
+    val isoFmt = java.text.SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH)
+    val todayCal = java.util.Calendar.getInstance()
+    val todayIso = isoFmt.format(todayCal.time)
+    val tomorrowIso = (todayCal.clone() as java.util.Calendar).apply {
+        add(java.util.Calendar.DAY_OF_YEAR, 1)
+    }.let { isoFmt.format(it.time) }
+    val normalizeDigits: (String) -> String = { raw ->
+        val bn = charArrayOf('০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯')
+        buildString(raw.length) {
+            for (ch in raw) {
+                val idx = bn.indexOf(ch)
+                append(if (idx >= 0) ('0' + idx) else ch)
+            }
+        }.trim()
+    }
+
+    val myMobileDigits = currentMember?.mobile?.filter { it.isDigit() }.orEmpty()
+    val myNameClean = currentMember?.nameBn?.trim().orEmpty()
+    if (myNameClean.isNotBlank() || myMobileDigits.length >= 6) {
+        foodSchedules.filter { food ->
+            val foodDate = normalizeDigits(food.dateStr)
+            val foodDigits = normalizeDigits(food.providerMobile).filter { it.isDigit() }
+            val matchesMember = (myMobileDigits.length >= 6 && foodDigits == myMobileDigits) ||
+                (myNameClean.isNotBlank() && food.providerName.trim().equals(myNameClean, ignoreCase = true))
+            foodDate == tomorrowIso && food.status == "scheduled" && matchesMember
+        }.forEach { food ->
+            items.add(
+                RoleNotificationItem(
+                    id = "food_tomorrow_${food.id}_${food.providerName}",
+                    title = "আগামীকাল খাবারের দায়িত্ব: ${food.receiverStaffName}",
+                    summary = "আগামীকাল (${toBengaliDigits(food.dateStr)}) আপনাকে ${food.receiverStaffName}-এর সারাদিনের খাবার দিতে হবে। সম্মতি বা অপারগতা জানান।",
+                    metaLine = "১ দিন আগে রিমাইন্ডার • দাতা: ${food.providerName}",
+                    badgeText = "সম্মতি প্রয়োজন",
+                    isUrgent = true,
+                    category = NotificationCategory.ACTION_REQUIRED,
+                    icon = Icons.Default.Restaurant,
+                    accentColor = MosqueGoldDeep,
+                    target = NotificationActionTarget.TomorrowFoodApproval(food)
+                )
+            )
+        }
+    }
+
+    // 7C. Unassigned Rejected Food Slots Alert for Managers & Imam
+    if (role.canScheduleMeetings() || role == UserRole.IMAM) {
+        foodSchedules.filter { it.status == "rejected" }.forEach { food ->
+            items.add(
+                RoleNotificationItem(
+                    id = "food_rejected_${food.id}",
+                    title = "খাবারের বিকল্প দাতা প্রয়োজন (${toBengaliDigits(food.dateStr)})",
+                    summary = "${food.providerName} অপারগতা জানিয়েছেন (${food.receiverStaffName}) — দ্রুত বিকল্প দাতা নির্ধারণ করুন।",
+                    metaLine = toBengaliDigits(food.dateStr),
+                    badgeText = "বিকল্প প্রয়োজন",
+                    isUrgent = true,
+                    category = NotificationCategory.ACTION_REQUIRED,
+                    icon = Icons.Default.WarningAmber,
+                    accentColor = MosqueUrgentRed,
+                    target = NotificationActionTarget.OpenModule("food")
+                )
+            )
+        }
+    }
+
     // 8. Staff Duty & Meal Schedule Alerts (Imam, Muazzin, Khadem)
     if (role in listOf(UserRole.IMAM, UserRole.MUAZZIN, UserRole.KHADEM)) {
         dutyRosters.take(2).forEach { roster ->
@@ -274,18 +368,38 @@ fun buildRoleNotificationItems(
                 )
             )
         }
-        foodSchedules.take(2).forEach { food ->
+        val activeFoods = foodSchedules
+            .filter { it.status == "scheduled" || it.status == "approved" }
+            .filter { food ->
+                when (role) {
+                    UserRole.IMAM -> food.receiverStaffName.contains("ইমাম", ignoreCase = true)
+                    UserRole.MUAZZIN -> food.receiverStaffName.contains("মুয়াজ্জিন", ignoreCase = true) ||
+                        food.receiverStaffName.contains("মুয়াজ্জিন", ignoreCase = true)
+                    UserRole.KHADEM -> food.receiverStaffName.contains("খাদেম", ignoreCase = true)
+                    else -> true
+                }
+            }
+            .sortedBy { normalizeDigits(it.dateStr) }
+            .take(3)
+        activeFoods.forEach { food ->
+            val normDate = normalizeDigits(food.dateStr)
+            val isToday = normDate == todayIso
+            val statusTxt = if (food.status == "approved") "সম্মত" else "অপেক্ষমাণ"
             items.add(
                 RoleNotificationItem(
                     id = "food_${food.id}",
-                    title = "খাবার শিডিউল (${food.mealType}): ${food.receiverStaffName}",
-                    summary = "দাতা: ${food.providerName} (${food.providerMobile})",
-                    metaLine = food.dateStr,
-                    badgeText = "খাবার ব্যবস্থা",
-                    isUrgent = false,
+                    title = if (isToday) {
+                        "আজকের খাবার: ${food.providerName}"
+                    } else {
+                        "খাবার শিডিউল (${toBengaliDigits(food.dateStr)}): ${food.providerName}"
+                    },
+                    summary = "দাতা: ${food.providerName} (${toBengaliDigits(food.providerMobile)}) • স্ট্যাটাস: $statusTxt",
+                    metaLine = toBengaliDigits(food.dateStr),
+                    badgeText = if (isToday) "আজকের খাবার" else "খাবার ব্যবস্থা",
+                    isUrgent = isToday,
                     category = NotificationCategory.PERSONAL,
                     icon = Icons.Default.Restaurant,
-                    accentColor = MosqueInfoBlue,
+                    accentColor = if (isToday) MosqueEmeraldPrimary else MosqueInfoBlue,
                     target = NotificationActionTarget.OpenModule("food")
                 )
             )
@@ -302,8 +416,8 @@ fun buildRoleNotificationItems(
                 RoleNotificationItem(
                     id = "chanda_${pay.id}",
                     title = "চাঁদা রসিদ সংগৃহীত (${pay.month})",
-                    summary = "পরিশোধিত ৳${String.format(Locale.getDefault(), "%,.0f", pay.amountPaid)} • রসিদ: ${pay.receiptCode}",
-                    metaLine = pay.paidAt,
+                    summary = "পরিশোধিত ৳${toBengaliDigits(String.format(Locale.getDefault(), "%,.0f", pay.amountPaid))} • রসিদ: ${toBengaliDigits(pay.receiptCode)}",
+                    metaLine = toBengaliDigits(pay.paidAt),
                     badgeText = "ডিজিটাল রসিদ",
                     isUrgent = false,
                     category = NotificationCategory.PERSONAL,
@@ -340,11 +454,20 @@ fun NotificationsScreen(
     val dutyRosters by viewModel.allDutyRosters.collectAsState()
     val foodSchedules by viewModel.allFoodSchedules.collectAsState()
     val chandaPayments by viewModel.allChandaPayments.collectAsState()
+    val welfareCases by viewModel.allWelfareCases.collectAsState()
+    val allMembers by viewModel.allMembers.collectAsState()
     val savedMemberId = remember(currentRole) { viewModel.sessionManager.getSavedMemberId() }
+    val savedRole = remember(currentRole) { viewModel.sessionManager.getSavedRole() }
+    val currentMember = remember(currentRole, allMembers, savedRole, savedMemberId) {
+        allMembers.firstOrNull { it.id == savedMemberId && currentRole == savedRole }
+            ?: allMembers.firstOrNull { it.roleCode.equals(currentRole.code, ignoreCase = true) }
+    }
+    val context = androidx.compose.ui.platform.LocalContext.current
 
     val allItems = remember(
         currentRole,
         savedMemberId,
+        currentMember,
         pendingTransactions,
         cashboxRecords,
         officeDocuments,
@@ -354,11 +477,13 @@ fun NotificationsScreen(
         events,
         dutyRosters,
         foodSchedules,
-        chandaPayments
+        chandaPayments,
+        welfareCases
     ) {
         buildRoleNotificationItems(
             role = currentRole,
             savedMemberId = savedMemberId,
+            currentMember = currentMember,
             pendingTransactions = pendingTransactions,
             cashboxRecords = cashboxRecords,
             officeDocuments = officeDocuments,
@@ -368,7 +493,8 @@ fun NotificationsScreen(
             events = events,
             dutyRosters = dutyRosters,
             foodSchedules = foodSchedules,
-            chandaPayments = chandaPayments
+            chandaPayments = chandaPayments,
+            welfareCases = welfareCases
         )
     }
 
@@ -395,7 +521,8 @@ fun NotificationsScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MosqueBgLight)
+            .background(MaterialTheme.colorScheme.background),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // 1. Emerald-Gold Header
         Surface(
@@ -511,7 +638,7 @@ fun NotificationsScreen(
 
         // 2. Filter Chips Bar
         Surface(
-            color = Color.White,
+            color = MaterialTheme.colorScheme.surface,
             shadowElevation = 1.dp,
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -539,8 +666,8 @@ fun NotificationsScreen(
                             )
                         },
                         colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = MosqueEmeraldSoft,
-                            selectedLabelColor = MosqueEmeraldDark
+                            selectedContainerColor = if (LocalIsDarkTheme.current) MosqueEmeraldPrimary else MosqueEmeraldSoft,
+                            selectedLabelColor = if (LocalIsDarkTheme.current) Color.White else MosqueEmeraldDark
                         ),
                         modifier = Modifier.testTag("notifications_filter_${filter.name.lowercase()}")
                     )
@@ -552,13 +679,18 @@ fun NotificationsScreen(
         LazyColumn(
             contentPadding = PaddingValues(14.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
+                .widthIn(max = 840.dp)
         ) {
             if (!notificationsEnabled) {
                 item {
+                    val isDarkBanner = LocalIsDarkTheme.current
                     Card(
                         shape = RoundedCornerShape(14.dp),
-                        colors = CardDefaults.cardColors(containerColor = MosqueGoldSoft),
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (isDarkBanner) MosqueNightSurfaceVariant else MosqueGoldSoft
+                        ),
                         border = BorderStroke(1.dp, MosqueGoldDeep.copy(alpha = 0.45f)),
                         modifier = Modifier.fillMaxWidth()
                     ) {
@@ -576,7 +708,7 @@ fun NotificationsScreen(
                                 Icon(
                                     imageVector = Icons.Default.NotificationsOff,
                                     contentDescription = null,
-                                    tint = MosqueGoldDeep,
+                                    tint = if (isDarkBanner) MosqueGold else MosqueGoldDeep,
                                     modifier = Modifier.size(18.dp)
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
@@ -584,14 +716,14 @@ fun NotificationsScreen(
                                     text = "হেডার নোটিফিকেশন ব্যাজ সেটিংস থেকে বন্ধ রাখা আছে।",
                                     style = MaterialTheme.typography.bodySmall,
                                     fontWeight = FontWeight.SemiBold,
-                                    color = MosqueEmeraldDark
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                             }
                             TextButton(
                                 onClick = { viewModel.setNotificationsEnabled(true) },
                                 modifier = Modifier.testTag("notifications_enable_badge_button")
                             ) {
-                                Text("চালু করুন", fontWeight = FontWeight.ExtraBold, color = MosqueEmeraldPrimary)
+                                Text("চালু করুন", fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.primary)
                             }
                         }
                     }
@@ -600,8 +732,9 @@ fun NotificationsScreen(
 
             if (filteredItems.isEmpty()) {
                 item {
+                    val isDarkEmpty = LocalIsDarkTheme.current
                     MehrabArchCard(
-                        backgroundColor = Color.White,
+                        backgroundColor = MaterialTheme.colorScheme.surface,
                         borderColor = MosqueCardBorderGold,
                         elevation = 2.dp,
                         modifier = Modifier.fillMaxWidth()
@@ -616,13 +749,13 @@ fun NotificationsScreen(
                                 modifier = Modifier
                                     .size(58.dp)
                                     .clip(CircleShape)
-                                    .background(MosqueEmeraldSoft),
+                                    .background(if (isDarkEmpty) MosqueNightSurfaceVariant else MosqueEmeraldSoft),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.NotificationsNone,
                                     contentDescription = null,
-                                    tint = MosqueEmeraldPrimary,
+                                    tint = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.size(30.dp)
                                 )
                             }
@@ -635,13 +768,13 @@ fun NotificationsScreen(
                                 },
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = MosqueEmeraldDark
+                                color = MaterialTheme.colorScheme.primary
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
                                 text = "মসজিদের নতুন নোটিশ, সভা বা আর্থিক অনুমোদনের তথ্য এলে এখানে দেখা যাবে।",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MosqueTextMuted
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
@@ -658,6 +791,7 @@ fun NotificationsScreen(
                             when (val target = item.target) {
                                 is NotificationActionTarget.PendingTransaction -> onNavigateToModule("finance")
                                 is NotificationActionTarget.UnverifiedCashbox -> onNavigateToModule("cashbox")
+                                is NotificationActionTarget.TomorrowFoodApproval -> onNavigateToModule("food")
                                 is NotificationActionTarget.NoticeDetail -> selectedNoticeForDialog = target.notice
                                 is NotificationActionTarget.OpenModule -> onNavigateToModule(target.moduleKey)
                             }
@@ -673,6 +807,26 @@ fun NotificationsScreen(
                         onVerifyCashbox = { record ->
                             viewModel.markNotificationAsRead(item.id)
                             viewModel.verifyCashboxAsWitness(record)
+                        },
+                        onApproveFood = { food ->
+                            viewModel.markNotificationAsRead(item.id)
+                            viewModel.approveFoodSchedule(food)
+                            android.widget.Toast.makeText(
+                                context,
+                                "আগামীকালের খাবারের দায়িত্বে আপনার সম্মতি নিশ্চিত হয়েছে।",
+                                android.widget.Toast.LENGTH_SHORT
+                            ).show()
+                        },
+                        onRejectFood = { food ->
+                            viewModel.markNotificationAsRead(item.id)
+                            viewModel.rejectFoodSchedule(food) { reassignedTo ->
+                                val msg = if (reassignedTo != null) {
+                                    "অপারগতা জানানো হয়েছে। স্বয়ংক্রিয়ভাবে পরবর্তী দাতা ($reassignedTo)-কে দায়িত্ব হস্তান্তর করা হয়েছে।"
+                                } else {
+                                    "অপারগতা জানানো হয়েছে। বিকল্প দাতা নির্ধারণের জন্য কমিটিকে সতর্কবার্তা পাঠানো হয়েছে।"
+                                }
+                                android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_LONG).show()
+                            }
                         }
                     )
                 }
@@ -737,17 +891,20 @@ private fun NotificationFeedCard(
     onCardClick: () -> Unit,
     onApproveTransaction: (TransactionEntity) -> Unit,
     onRejectTransaction: (TransactionEntity) -> Unit,
-    onVerifyCashbox: (CashboxRecordEntity) -> Unit
+    onVerifyCashbox: (CashboxRecordEntity) -> Unit,
+    onApproveFood: (FoodScheduleEntity) -> Unit,
+    onRejectFood: (FoodScheduleEntity) -> Unit
 ) {
+    val isDark = LocalIsDarkTheme.current
     val containerColor = when {
-        !isRead && item.isUrgent -> MosqueGoldSoft.copy(alpha = 0.72f)
-        !isRead -> MosqueEmeraldSoft.copy(alpha = 0.45f)
-        else -> Color.White
+        !isRead && item.isUrgent -> if (isDark) MosqueNightSurfaceVariant else MosqueGoldSoft.copy(alpha = 0.72f)
+        !isRead -> if (isDark) MosqueEmeraldDark.copy(alpha = 0.35f) else MosqueEmeraldSoft.copy(alpha = 0.45f)
+        else -> MaterialTheme.colorScheme.surface
     }
     val borderColor = when {
         !isRead && item.isUrgent -> item.accentColor.copy(alpha = 0.55f)
-        !isRead -> MosqueEmeraldPrimary.copy(alpha = 0.4f)
-        else -> MosqueCardBorderSubtle
+        !isRead -> MosqueEmeraldPrimary.copy(alpha = 0.45f)
+        else -> MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
     }
 
     Card(
@@ -809,13 +966,13 @@ private fun NotificationFeedCard(
                                     modifier = Modifier
                                         .size(8.dp)
                                         .clip(CircleShape)
-                                        .background(if (item.isUrgent) MosqueUrgentRed else MosqueEmeraldPrimary)
+                                        .background(if (item.isUrgent) MosqueUrgentRed else MaterialTheme.colorScheme.primary)
                                 )
                                 Text(
                                     text = "নতুন",
                                     fontSize = 10.sp,
                                     fontWeight = FontWeight.ExtraBold,
-                                    color = if (item.isUrgent) MosqueUrgentRed else MosqueEmeraldPrimary
+                                    color = if (item.isUrgent) MosqueUrgentRed else MaterialTheme.colorScheme.primary
                                 )
                             }
                         }
@@ -823,7 +980,7 @@ private fun NotificationFeedCard(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                             contentDescription = "বিস্তারিত দেখুন",
-                            tint = MosqueTextMuted,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(18.dp)
                         )
                     }
@@ -834,7 +991,7 @@ private fun NotificationFeedCard(
                         text = item.title,
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = if (isRead) FontWeight.Bold else FontWeight.ExtraBold,
-                        color = MosqueEmeraldDark,
+                        color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -844,7 +1001,7 @@ private fun NotificationFeedCard(
                     Text(
                         text = item.summary,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MosqueTextSecondary,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 3,
                         overflow = TextOverflow.Ellipsis,
                         lineHeight = 17.sp
@@ -855,7 +1012,7 @@ private fun NotificationFeedCard(
                     Text(
                         text = item.metaLine,
                         style = MaterialTheme.typography.labelSmall,
-                        color = MosqueTextMuted
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.85f)
                     )
                 }
             }
@@ -915,6 +1072,39 @@ private fun NotificationFeedCard(
                         }
                     }
                 }
+                is NotificationActionTarget.TomorrowFoodApproval -> {
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = { onRejectFood(target.foodSchedule) },
+                            shape = RoundedCornerShape(10.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = MosqueUrgentRed),
+                            border = BorderStroke(1.dp, MosqueUrgentRed.copy(alpha = 0.6f)),
+                            modifier = Modifier
+                                .weight(1f)
+                                .heightIn(min = 48.dp)
+                                .testTag("notif_reject_food_${target.foodSchedule.id}")
+                        ) {
+                            Text("পারব না", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        }
+                        Button(
+                            onClick = { onApproveFood(target.foodSchedule) },
+                            shape = RoundedCornerShape(10.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary),
+                            modifier = Modifier
+                                .weight(1.3f)
+                                .heightIn(min = 48.dp)
+                                .testTag("notif_approve_food_${target.foodSchedule.id}")
+                        ) {
+                            Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("সম্মতি দিন", fontSize = 12.sp, fontWeight = FontWeight.ExtraBold)
+                        }
+                    }
+                }
                 else -> Unit
             }
         }
@@ -927,10 +1117,12 @@ private fun NoticeDetailPopupDialog(
     onDismiss: () -> Unit,
     onOpenAllNotices: () -> Unit
 ) {
+    val isDark = LocalIsDarkTheme.current
+    val dividerColor = if (isDark) MosqueNightBorder else MosqueCardBorderSubtle
     Dialog(onDismissRequest = onDismiss) {
         Card(
             shape = RoundedCornerShape(18.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             border = BorderStroke(1.dp, MosqueCardBorderGold),
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -947,6 +1139,8 @@ private fun NoticeDetailPopupDialog(
                     Surface(
                         color = if (notice.priority.equals("urgent", true)) {
                             MosqueUrgentRed.copy(alpha = 0.14f)
+                        } else if (isDark) {
+                            MosqueNightSurfaceVariant
                         } else {
                             MosqueEmeraldSoft
                         },
@@ -956,12 +1150,15 @@ private fun NoticeDetailPopupDialog(
                             text = if (notice.priority.equals("urgent", true)) "জরুরি নোটিশ" else "মসজিদ নোটিশ",
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
-                            color = if (notice.priority.equals("urgent", true)) MosqueUrgentRed else MosqueEmeraldPrimary,
+                            color = if (notice.priority.equals("urgent", true)) MosqueUrgentRed else MaterialTheme.colorScheme.primary,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                         )
                     }
-                    IconButton(onClick = onDismiss) {
-                        Icon(Icons.Default.Close, contentDescription = "বন্ধ করুন")
+                    IconButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.testTag("notice_popup_close_icon")
+                    ) {
+                        Icon(Icons.Default.Close, contentDescription = "বন্ধ করুন", tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
 
@@ -971,23 +1168,23 @@ private fun NoticeDetailPopupDialog(
                     text = notice.title,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.ExtraBold,
-                    color = MosqueEmeraldDark
+                    color = MaterialTheme.colorScheme.primary
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "${notice.publishDate} • প্রকাশক: ${notice.createdBy}",
+                    text = "${toBengaliDigits(notice.publishDate)} • প্রকাশক: ${notice.createdBy}",
                     style = MaterialTheme.typography.labelSmall,
-                    color = MosqueTextMuted
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
-                HorizontalDivider(color = MosqueCardBorderSubtle)
+                HorizontalDivider(color = dividerColor)
                 Spacer(modifier = Modifier.height(10.dp))
 
                 Text(
                     text = notice.content,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MosqueTextPrimary,
+                    color = MaterialTheme.colorScheme.onSurface,
                     lineHeight = 22.sp
                 )
 
@@ -1002,6 +1199,7 @@ private fun NoticeDetailPopupDialog(
                         modifier = Modifier
                             .weight(1f)
                             .heightIn(min = 48.dp)
+                            .testTag("notice_popup_dismiss_button")
                     ) {
                         Text("বন্ধ করুন", fontWeight = FontWeight.Bold)
                     }
@@ -1012,6 +1210,7 @@ private fun NoticeDetailPopupDialog(
                         modifier = Modifier
                             .weight(1.2f)
                             .heightIn(min = 48.dp)
+                            .testTag("notice_popup_all_button")
                     ) {
                         Text("সব নোটিশ দেখুন", fontWeight = FontWeight.Bold)
                     }

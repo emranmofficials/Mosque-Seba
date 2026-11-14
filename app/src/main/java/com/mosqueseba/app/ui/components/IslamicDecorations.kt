@@ -77,7 +77,7 @@ fun formatCurrentGregorianDateBn(): String {
 @Composable
 fun MehrabArchCard(
     modifier: Modifier = Modifier,
-    backgroundColor: Color = Color.White,
+    backgroundColor: Color = MaterialTheme.colorScheme.surface,
     borderColor: Color = MosqueCardBorderGold,
     elevation: Dp = 3.dp,
     content: @Composable ColumnScope.() -> Unit
@@ -200,13 +200,24 @@ fun HijriDateBanner(
                     shape = RoundedCornerShape(8.dp),
                     border = androidx.compose.foundation.BorderStroke(0.5.dp, MosqueGold.copy(alpha = 0.4f))
                 ) {
-                    Text(
-                        text = "🌙 $hijriDate",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MosqueGoldLight,
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                    )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.NightsStay,
+                            contentDescription = null,
+                            tint = MosqueGoldLight,
+                            modifier = Modifier.size(12.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = hijriDate,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MosqueGoldLight
+                        )
+                    }
                 }
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
@@ -242,11 +253,17 @@ fun RoleWorkspaceHeader(
             RoleTreasurerAccent,
             Icons.Default.AccountBalanceWallet
         )
-        UserRole.GENERAL_SECRETARY, UserRole.ASSISTANT_SECRETARY, UserRole.ORGANIZING_SECRETARY -> Quadruple(
+        UserRole.GENERAL_SECRETARY, UserRole.ASSISTANT_SECRETARY -> Quadruple(
             "${currentRole.titleBn} — প্রশাসনিক সচিবালয়",
             currentRole.shortSummaryBn,
             RoleSecretaryAccent,
             Icons.Default.FolderShared
+        )
+        UserRole.ORGANIZING_SECRETARY -> Quadruple(
+            "${currentRole.titleBn} — সাংগঠনিক ও মুসল্লি সমন্বয়",
+            currentRole.shortSummaryBn,
+            RoleSecretaryAccent,
+            Icons.Default.Handshake
         )
         UserRole.PUBLICITY_SECRETARY -> Quadruple(
             "প্রচার ও প্রকাশনা সেল",
@@ -330,12 +347,12 @@ fun RoleWorkspaceHeader(
                     text = title,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MosqueEmeraldDark
+                    color = MaterialTheme.colorScheme.primary
                 )
                 Text(
                     text = subtitle,
                     fontSize = 11.sp,
-                    color = MosqueTextSecondary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     lineHeight = 15.sp
                 )
             }

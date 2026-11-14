@@ -2,6 +2,7 @@ package com.mosqueseba.app.ui.screens
 
 import android.content.Intent
 import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -106,7 +107,21 @@ fun MemberProfileScreen(
                             it.id == "staff-${m.id}" ||
                                 (normMobile.isNotEmpty() && it.mobile.filter { c -> c.isDigit() } == normMobile) ||
                                 it.nameBn.trim() == m.nameBn.trim()
-                        }
+                        } ?: StaffEntity(
+                            id = "staff-${m.id}",
+                            nameBn = m.nameBn,
+                            roleCode = m.roleCode,
+                            designationBn = UserRole.fromCode(m.roleCode).titleBn,
+                            joinDate = m.joinDate,
+                            salaryAmount = when (m.roleCode.lowercase()) {
+                                "imam" -> 18000.0
+                                "muazzin" -> 12000.0
+                                else -> 9000.0
+                            },
+                            mealRequired = true,
+                            mobile = m.mobile,
+                            isActive = m.status == "active"
+                        )
                     }
             }
             is MemberProfileTarget.ChandaMember -> null
@@ -120,7 +135,7 @@ fun MemberProfileScreen(
     val displayMobile = resolvedMember?.mobile ?: resolvedStaff?.mobile ?: ""
     val displayRole = UserRole.fromCode(resolvedMember?.roleCode ?: resolvedStaff?.roleCode ?: "general_member")
     val displayDesignation = resolvedStaff?.designationBn ?: displayRole.titleBn
-    val displayCode = resolvedMember?.memberCode ?: (resolvedStaff?.id?.uppercase() ?: "STAFF")
+    val displayCode = resolvedMember?.memberCode ?: (resolvedStaff?.id?.uppercase() ?: "স্টাফ")
     val isActive = (resolvedMember?.status ?: if (resolvedStaff?.isActive == true) "active" else "inactive") == "active"
 
     // Chanda stats
@@ -219,10 +234,16 @@ fun MemberProfileScreen(
     var selectedReceiptForDialog by remember { mutableStateOf<ChandaPaymentEntity?>(null) }
     var showEditMemberDialog by remember { mutableStateOf(false) }
 
+    val isDark = LocalIsDarkTheme.current
+    val cardBorderSubtle = if (isDark) MosqueNightBorder else MosqueCardBorderSubtle
+    val primaryHeadingColor = MaterialTheme.colorScheme.primary
+    val onSurfaceColor = MaterialTheme.colorScheme.onSurface
+    val onSurfaceVariantColor = MaterialTheme.colorScheme.onSurfaceVariant
+
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MosqueBgLight)
+            .background(MaterialTheme.colorScheme.background)
     ) {
         // Top Emerald Header Bar
         Surface(
@@ -301,9 +322,9 @@ fun MemberProfileScreen(
         if (resolvedMember == null && resolvedStaff == null) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(Icons.Default.PersonOff, contentDescription = null, tint = MosqueTextMuted, modifier = Modifier.size(48.dp))
+                    Icon(Icons.Default.PersonOff, contentDescription = null, tint = onSurfaceVariantColor, modifier = Modifier.size(48.dp))
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text("সদস্যের তথ্য পাওয়া যায়নি", color = MosqueTextSecondary)
+                    Text("সদস্যের তথ্য পাওয়া যায়নি", color = onSurfaceVariantColor)
                     Spacer(modifier = Modifier.height(12.dp))
                     Button(onClick = onBack, colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary)) {
                         Text("তালিকায় ফিরুন")
@@ -321,7 +342,7 @@ fun MemberProfileScreen(
             // 1. Hero Profile Summary Card
             item {
                 MehrabArchCard(
-                    backgroundColor = Color.White,
+                    backgroundColor = MaterialTheme.colorScheme.surface,
                     borderColor = MosqueCardBorderGold
                 ) {
                     Column(
@@ -339,7 +360,7 @@ fun MemberProfileScreen(
                                 modifier = Modifier
                                     .size(84.dp)
                                     .clip(CircleShape)
-                                    .background(MosqueEmeraldSoft)
+                                    .background(if (isDark) MosqueEmeraldPrimary.copy(alpha = 0.22f) else MosqueEmeraldSoft)
                                     .border(2.5.dp, MosqueGold, CircleShape),
                                 contentAlignment = Alignment.Center
                             ) {
@@ -355,14 +376,14 @@ fun MemberProfileScreen(
                                         text = displayNameBn.firstOrNull()?.toString() ?: "স",
                                         style = MaterialTheme.typography.headlineLarge,
                                         fontWeight = FontWeight.ExtraBold,
-                                        color = MosqueEmeraldDark
+                                        color = primaryHeadingColor
                                     )
                                 }
                             }
                             Surface(
                                 shape = CircleShape,
                                 color = if (isActive) MosqueSuccessGreen else MosqueUrgentRed,
-                                border = BorderStroke(2.dp, Color.White),
+                                border = BorderStroke(2.dp, MaterialTheme.colorScheme.surface),
                                 modifier = Modifier.size(20.dp)
                             ) {}
                         }
@@ -373,15 +394,8 @@ fun MemberProfileScreen(
                             text = displayNameBn,
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.ExtraBold,
-                            color = MosqueEmeraldDark
+                            color = primaryHeadingColor
                         )
-                        if (displayNameEn.isNotBlank()) {
-                            Text(
-                                text = displayNameEn,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MosqueTextSecondary
-                            )
-                        }
 
                         Spacer(modifier = Modifier.height(6.dp))
 
@@ -390,17 +404,28 @@ fun MemberProfileScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Surface(
-                                color = MosqueGoldLight.copy(alpha = 0.6f),
+                                color = if (isDark) MosqueGold.copy(alpha = 0.2f) else MosqueGoldLight.copy(alpha = 0.6f),
                                 shape = RoundedCornerShape(8.dp),
                                 border = BorderStroke(0.5.dp, MosqueGoldDeep.copy(alpha = 0.4f))
                             ) {
-                                Text(
-                                    text = "${displayRole.emoji} $displayDesignation",
-                                    style = MaterialTheme.typography.labelMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MosqueEmeraldDark,
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
                                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                                )
+                                ) {
+                                    Icon(
+                                        imageVector = displayRole.roleIcon(),
+                                        contentDescription = null,
+                                        tint = primaryHeadingColor,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(5.dp))
+                                    Text(
+                                        text = displayDesignation,
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = primaryHeadingColor
+                                    )
+                                }
                             }
                             Surface(
                                 color = if (isActive) MosqueSuccessGreen.copy(alpha = 0.12f) else MosqueUrgentRed.copy(alpha = 0.12f),
@@ -456,11 +481,11 @@ fun MemberProfileScreen(
                                         Icon(
                                             imageVector = Icons.Default.Mosque,
                                             contentDescription = null,
-                                            tint = MosqueEmeraldDark,
+                                            tint = primaryHeadingColor,
                                             modifier = Modifier.size(18.dp)
                                         )
                                         Spacer(modifier = Modifier.width(6.dp))
-                                        Text("মসজিদের প্রোফাইল", color = MosqueEmeraldDark, fontWeight = FontWeight.Bold)
+                                        Text("মসজিদের প্রোফাইল", color = primaryHeadingColor, fontWeight = FontWeight.Bold)
                                     }
                                 }
                             }
@@ -545,7 +570,7 @@ fun MemberProfileScreen(
                                         .testTag("profile_open_edit_page_button"),
                                     shape = RoundedCornerShape(12.dp),
                                     border = BorderStroke(1.dp, MosqueGoldDeep.copy(alpha = 0.7f)),
-                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MosqueEmeraldDark)
+                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = primaryHeadingColor)
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.Edit,
@@ -627,7 +652,7 @@ fun MemberProfileScreen(
             item {
                 RubElHizbDivider(title = if (isOwnProfile) "আমার ব্যক্তিগত ও সাংগঠনিক তথ্য" else "ব্যক্তিগত ও সাংগঠনিক তথ্য")
                 MehrabArchCard(
-                    backgroundColor = Color.White,
+                    backgroundColor = MaterialTheme.colorScheme.surface,
                     borderColor = MosqueCardBorderGold
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
@@ -641,7 +666,7 @@ fun MemberProfileScreen(
                                 ProfileInfoRow(
                                     label = "মাসিক বেতন ভাতা",
                                     value = "৳${toBengaliDigits(String.format("%,.0f", salaryVal))}",
-                                    valueColor = MosqueEmeraldPrimary
+                                    valueColor = primaryHeadingColor
                                 )
                             } else {
                                 ProfileInfoRow(
@@ -649,7 +674,7 @@ fun MemberProfileScreen(
                                     value = if (monthlyCommitment > 0) {
                                         "৳${toBengaliDigits(String.format("%,.0f", monthlyCommitment))}"
                                     } else "ঐচ্ছিক / সাধারণ",
-                                    valueColor = MosqueEmeraldPrimary
+                                    valueColor = primaryHeadingColor
                                 )
                             }
                         }
@@ -666,7 +691,7 @@ fun MemberProfileScreen(
                                 ProfileInfoRow(
                                     label = "স্টাফদের খাবার প্রদান",
                                     value = if (resolvedMember.willingToProvideStaffMeals) "হ্যাঁ, রাজি আছেন" else "না",
-                                    valueColor = if (resolvedMember.willingToProvideStaffMeals) MosqueSuccessGreen else MosqueTextSecondary
+                                    valueColor = if (resolvedMember.willingToProvideStaffMeals) MosqueSuccessGreen else onSurfaceVariantColor
                                 )
                             }
                         } else if (resolvedStaff != null) {
@@ -681,11 +706,96 @@ fun MemberProfileScreen(
                 }
             }
 
+            // 3A. Personal Salary Slip History for Salaried Staff (Imam, Muazzin, Khadem)
+            if (isOwnProfile && isSalaried) {
+                item {
+                    RubElHizbDivider(title = "আমার বেতন স্লিপ ও পরিশোধ রেকর্ড")
+                }
+                if (staffPayrolls.isEmpty()) {
+                    item {
+                        MehrabArchCard(
+                            backgroundColor = MaterialTheme.colorScheme.surface,
+                            borderColor = cardBorderSubtle
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(18.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Icon(
+                                    Icons.AutoMirrored.Filled.ReceiptLong,
+                                    contentDescription = null,
+                                    tint = onSurfaceVariantColor,
+                                    modifier = Modifier.size(30.dp)
+                                )
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text(
+                                    text = "এখনো কোনো বেতন স্লিপ পে-রোল রেকর্ড হয়নি",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = onSurfaceVariantColor
+                                )
+                            }
+                        }
+                    }
+                } else {
+                    items(staffPayrolls.reversed(), key = { "own_payroll-${it.id}" }) { payroll ->
+                        Card(
+                            shape = RoundedCornerShape(14.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                            border = BorderStroke(1.dp, MosqueCardBorderGold),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(14.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "${toBengaliDigits(payroll.month)} বেতন স্লিপ",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = primaryHeadingColor
+                                    )
+                                    Text(
+                                        text = "মূল: ৳${toBengaliDigits(payroll.salaryAmount.toInt().toString())} + বোনাস: ৳${toBengaliDigits(payroll.bonusAmount.toInt().toString())}",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = onSurfaceVariantColor
+                                    )
+                                    payroll.paidDate?.let { d ->
+                                        Text(
+                                            text = "পরিশোধের তারিখ: ${toBengaliDigits(d)}",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = onSurfaceVariantColor
+                                        )
+                                    }
+                                }
+                                Surface(
+                                    color = MosqueSuccessGreen.copy(alpha = 0.14f),
+                                    shape = RoundedCornerShape(10.dp)
+                                ) {
+                                    Text(
+                                        text = "৳${toBengaliDigits(String.format("%,.0f", payroll.netSalary))}",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.ExtraBold,
+                                        color = MosqueSuccessGreen,
+                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             // 3B. Role Duties & Responsibilities Card (Always visible on Own Profile, also helpful on Member Profile)
             item {
                 RubElHizbDivider(title = if (isOwnProfile) "আমার পদবি ও নির্ধারিত দায়িত্বসমূহ" else "পদবি ও দায়িত্বসমূহ")
                 MehrabArchCard(
-                    backgroundColor = Color.White,
+                    backgroundColor = MaterialTheme.colorScheme.surface,
                     borderColor = MosqueCardBorderGold
                 ) {
                     Column(
@@ -695,23 +805,32 @@ fun MemberProfileScreen(
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         Surface(
-                            color = MosqueGoldSoft,
+                            color = if (isDark) MosqueNightSurfaceVariant else MosqueGoldSoft,
                             shape = RoundedCornerShape(10.dp),
                             border = BorderStroke(0.8.dp, MosqueCardBorderGold),
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Column(modifier = Modifier.padding(12.dp)) {
-                                Text(
-                                    text = "${displayRole.emoji} ${displayRole.titleBn}",
-                                    style = MaterialTheme.typography.titleSmall,
-                                    fontWeight = FontWeight.ExtraBold,
-                                    color = MosqueEmeraldDark
-                                )
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = displayRole.roleIcon(),
+                                        contentDescription = null,
+                                        tint = primaryHeadingColor,
+                                        modifier = Modifier.size(17.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = displayRole.titleBn,
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.ExtraBold,
+                                        color = primaryHeadingColor
+                                    )
+                                }
                                 Spacer(modifier = Modifier.height(3.dp))
                                 Text(
                                     text = displayRole.shortSummaryBn,
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = MosqueTextSecondary,
+                                    color = onSurfaceVariantColor,
                                     lineHeight = 18.sp
                                 )
                             }
@@ -726,27 +845,27 @@ fun MemberProfileScreen(
                                     modifier = Modifier
                                         .size(22.dp)
                                         .clip(CircleShape)
-                                        .background(MosqueEmeraldSoft),
+                                        .background(if (isDark) MosqueEmeraldPrimary.copy(alpha = 0.22f) else MosqueEmeraldSoft),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Text(
                                         text = toBengaliDigits((idx + 1).toString()),
                                         fontSize = 11.sp,
                                         fontWeight = FontWeight.ExtraBold,
-                                        color = MosqueEmeraldPrimary
+                                        color = primaryHeadingColor
                                     )
                                 }
                                 Spacer(modifier = Modifier.width(10.dp))
                                 Text(
                                     text = duty,
                                     style = MaterialTheme.typography.bodyMedium,
-                                    color = MosqueTextPrimary,
+                                    color = onSurfaceColor,
                                     lineHeight = 20.sp,
                                     modifier = Modifier.weight(1f)
                                 )
                             }
                             if (idx < displayRole.dutiesBn.lastIndex) {
-                                HorizontalDivider(color = MosqueCardBorderSubtle.copy(alpha = 0.6f))
+                                HorizontalDivider(color = cardBorderSubtle.copy(alpha = 0.6f))
                             }
                         }
                     }
@@ -788,8 +907,8 @@ fun MemberProfileScreen(
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = MosqueEmeraldPrimary,
                                 selectedLabelColor = Color.White,
-                                containerColor = Color.White,
-                                labelColor = MosqueTextPrimary
+                                containerColor = MaterialTheme.colorScheme.surface,
+                                labelColor = onSurfaceColor
                             ),
                             border = BorderStroke(
                                 1.dp,
@@ -807,26 +926,26 @@ fun MemberProfileScreen(
                         text = "লেনদেন ইতিহাস",
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.ExtraBold,
-                        color = MosqueEmeraldDark,
+                        color = primaryHeadingColor,
                         modifier = Modifier.padding(top = 4.dp)
                     )
                 }
 
                 if (memberPayments.isEmpty() && staffPayrolls.isEmpty() && memberTransactions.isEmpty()) {
                     item {
-                        MehrabArchCard(backgroundColor = Color.White, borderColor = MosqueCardBorderSubtle) {
+                        MehrabArchCard(backgroundColor = MaterialTheme.colorScheme.surface, borderColor = cardBorderSubtle) {
                             Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(18.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                Icon(Icons.AutoMirrored.Filled.ReceiptLong, contentDescription = null, tint = MosqueTextMuted, modifier = Modifier.size(30.dp))
+                                Icon(Icons.AutoMirrored.Filled.ReceiptLong, contentDescription = null, tint = onSurfaceVariantColor, modifier = Modifier.size(30.dp))
                                 Spacer(modifier = Modifier.height(6.dp))
                                 Text(
                                     text = if (isSalaried) "এখনো কোনো বেতন বা লেনদেন রেকর্ড পাওয়া যায়নি" else "এখনো কোনো চাঁদা বা লেনদেন ইতিহাস পাওয়া যায়নি",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = MosqueTextMuted
+                                    color = onSurfaceVariantColor
                                 )
                             }
                         }
@@ -836,7 +955,7 @@ fun MemberProfileScreen(
                         Card(
                             onClick = { selectedReceiptForDialog = payment },
                             shape = RoundedCornerShape(14.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                             border = BorderStroke(1.dp, MosqueCardBorderGold),
                             modifier = Modifier.fillMaxWidth()
                         ) {
@@ -863,7 +982,7 @@ fun MemberProfileScreen(
                                             text = "${payment.month} • রসিদ ${toBengaliDigits(payment.receiptCode)}",
                                             style = MaterialTheme.typography.titleSmall,
                                             fontWeight = FontWeight.Bold,
-                                            color = MosqueEmeraldDark
+                                            color = primaryHeadingColor
                                         )
                                         Text(
                                             text = "মাধ্যম: ${
@@ -874,7 +993,7 @@ fun MemberProfileScreen(
                                                 }
                                             } • ${toBengaliDigits(payment.paidAt)}",
                                             style = MaterialTheme.typography.labelSmall,
-                                            color = MosqueTextSecondary
+                                            color = onSurfaceVariantColor
                                         )
                                     }
                                 }
@@ -889,7 +1008,7 @@ fun MemberProfileScreen(
                                         text = "রসিদ দেখুন",
                                         style = MaterialTheme.typography.labelSmall,
                                         fontSize = 10.sp,
-                                        color = MosqueEmeraldPrimary,
+                                        color = primaryHeadingColor,
                                         fontWeight = FontWeight.SemiBold
                                     )
                                 }
@@ -900,7 +1019,7 @@ fun MemberProfileScreen(
                     items(staffPayrolls, key = { "payroll-${it.id}" }) { payroll ->
                         Card(
                             shape = RoundedCornerShape(14.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                             border = BorderStroke(1.dp, MosqueCardBorderGold),
                             modifier = Modifier.fillMaxWidth()
                         ) {
@@ -916,15 +1035,15 @@ fun MemberProfileScreen(
                                         text = "${payroll.month} বেতন পরিশোধ",
                                         style = MaterialTheme.typography.titleSmall,
                                         fontWeight = FontWeight.Bold,
-                                        color = MosqueEmeraldDark
+                                        color = primaryHeadingColor
                                     )
                                     Text(
                                         text = "মূল: ৳${toBengaliDigits(payroll.salaryAmount.toInt().toString())} + বোনাস: ৳${toBengaliDigits(payroll.bonusAmount.toInt().toString())}",
                                         style = MaterialTheme.typography.labelSmall,
-                                        color = MosqueTextSecondary
+                                        color = onSurfaceVariantColor
                                     )
                                     payroll.paidDate?.let { d ->
-                                        Text("তারিখ: ${toBengaliDigits(d)}", style = MaterialTheme.typography.labelSmall, color = MosqueTextMuted)
+                                        Text("তারিখ: ${toBengaliDigits(d)}", style = MaterialTheme.typography.labelSmall, color = onSurfaceVariantColor)
                                     }
                                 }
                                 Surface(
@@ -969,21 +1088,21 @@ fun MemberProfileScreen(
                         text = if (isSalaried) "খাবার (জায়গির) গ্রহণের ইতিহাস" else "খাবার (জায়গির) প্রদানের ইতিহাস",
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.ExtraBold,
-                        color = MosqueEmeraldDark,
+                        color = primaryHeadingColor,
                         modifier = Modifier.padding(top = 4.dp)
                     )
                 }
 
                 if (memberFoodSchedules.isEmpty()) {
                     item {
-                        MehrabArchCard(backgroundColor = Color.White, borderColor = MosqueCardBorderSubtle) {
+                        MehrabArchCard(backgroundColor = MaterialTheme.colorScheme.surface, borderColor = cardBorderSubtle) {
                             Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(18.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                Icon(Icons.Default.Restaurant, contentDescription = null, tint = MosqueTextMuted, modifier = Modifier.size(30.dp))
+                                Icon(Icons.Default.Restaurant, contentDescription = null, tint = onSurfaceVariantColor, modifier = Modifier.size(30.dp))
                                 Spacer(modifier = Modifier.height(6.dp))
                                 Text(
                                     text = when {
@@ -993,7 +1112,7 @@ fun MemberProfileScreen(
                                         else -> "এখনো কোনো খাবার (জায়গির) প্রদানের ইতিহাস নেই"
                                     },
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = MosqueTextMuted
+                                    color = onSurfaceVariantColor
                                 )
                             }
                         }
@@ -1002,16 +1121,18 @@ fun MemberProfileScreen(
                     items(memberFoodSchedules, key = { "food-${it.id}" }) { food ->
                         val statusLabel = when (food.status) {
                             "delivered" -> "সম্পন্ন"
+                            "approved" -> "সম্মত"
+                            "rejected" -> "প্রত্যাখ্যাত"
                             "cancelled" -> "বাতিল"
-                            else -> "নির্ধারিত"
+                            else -> "অপেক্ষমাণ"
                         }
                         ProfileHistoryEntryCard(
                             icon = Icons.Default.Restaurant,
                             accentColor = MosqueGoldDeep,
                             title = if (isSalaried) {
-                                "${food.mealType} খাবার গ্রহণ (${food.providerName})"
+                                "দৈনিক খাবার গ্রহণ (${food.providerName})"
                             } else {
-                                "${food.mealType} খাবার প্রদান (${food.receiverStaffName})"
+                                "দৈনিক খাবার প্রদান (${food.receiverStaffName})"
                             },
                             subtitle = "তারিখ: ${toBengaliDigits(food.dateStr)} • মোবাইল: ${toBengaliDigits(food.providerMobile)}",
                             badgeText = statusLabel
@@ -1024,16 +1145,16 @@ fun MemberProfileScreen(
             if (selectedHistoryFilter == 0 || selectedHistoryFilter == 3) {
                 if (selectedHistoryFilter == 3 && memberDutyRosters.isEmpty() && memberEvents.isEmpty() && memberAdvisoryNotes.isEmpty() && memberAuditLogs.isEmpty()) {
                     item {
-                        MehrabArchCard(backgroundColor = Color.White, borderColor = MosqueCardBorderSubtle) {
+                        MehrabArchCard(backgroundColor = MaterialTheme.colorScheme.surface, borderColor = cardBorderSubtle) {
                             Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(18.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                Icon(Icons.Default.History, contentDescription = null, tint = MosqueTextMuted, modifier = Modifier.size(30.dp))
+                                Icon(Icons.Default.History, contentDescription = null, tint = onSurfaceVariantColor, modifier = Modifier.size(30.dp))
                                 Spacer(modifier = Modifier.height(6.dp))
-                                Text("এখনো কোনো দায়িত্ব রোস্টার, ইভেন্ট বা কার্যক্রম লগ নেই", style = MaterialTheme.typography.bodySmall, color = MosqueTextMuted)
+                                Text("এখনো কোনো দায়িত্ব রোস্টার, ইভেন্ট বা কার্যক্রম লগ নেই", style = MaterialTheme.typography.bodySmall, color = onSurfaceVariantColor)
                             }
                         }
                     }
@@ -1092,6 +1213,7 @@ fun MemberProfileScreen(
             mosqueName = mosque?.nameBn ?: "বায়তুল জান্নাত জামে মসজিদ",
             mosqueAddress = mosque?.address ?: "মিরপুর-১০, ঢাকা",
             committeeId = mosque?.committeeId ?: "MC-DHK-2024",
+            mosqueLogoUrl = mosque?.logoUrl,
             onDismiss = { selectedReceiptForDialog = null }
         )
     }
@@ -1111,16 +1233,22 @@ fun MemberProfileScreen(
             onToggleStatus = {
                 if (resolvedMember != null) {
                     viewModel.toggleMemberStatus(resolvedMember)
+                    val nextState = if (isActive) "নিষ্ক্রিয়" else "সক্রিয়"
+                    Toast.makeText(context, "${resolvedMember.nameBn}-কে $nextState করা হয়েছে।", Toast.LENGTH_SHORT).show()
                 } else if (resolvedStaff != null) {
                     viewModel.toggleStaffStatus(resolvedStaff)
+                    val nextState = if (resolvedStaff.isActive) "নিষ্ক্রিয়" else "সক্রিয়"
+                    Toast.makeText(context, "${resolvedStaff.nameBn}-কে $nextState করা হয়েছে।", Toast.LENGTH_SHORT).show()
                 }
             },
             onDeleteMember = {
+                val targetName = resolvedMember?.nameBn ?: resolvedStaff?.nameBn ?: "সদস্য"
                 if (resolvedMember != null) {
                     viewModel.deleteMember(resolvedMember)
                 } else if (resolvedStaff != null) {
                     viewModel.removeStaff(resolvedStaff)
                 }
+                Toast.makeText(context, "$targetName তালিকা থেকে অপসারিত হয়েছে।", Toast.LENGTH_SHORT).show()
                 onBack()
             },
             onDismiss = { showEditMemberDialog = false },
@@ -1143,6 +1271,7 @@ fun MemberProfileScreen(
                         salaryAmount = salaryAmount,
                         staffMealRequired = staffMealRequired
                     )
+                    Toast.makeText(context, "$nameBn-এর তথ্য হালনাগাদ হয়েছে।", Toast.LENGTH_SHORT).show()
                 } else if (resolvedStaff != null) {
                     viewModel.promoteStaffAndUpdateDetails(
                         staff = resolvedStaff,
@@ -1160,6 +1289,7 @@ fun MemberProfileScreen(
                         salaryAmount = salaryAmount,
                         staffMealRequired = staffMealRequired
                     )
+                    Toast.makeText(context, "$nameBn-এর প্রোফাইল হালনাগাদ হয়েছে।", Toast.LENGTH_SHORT).show()
                 }
             }
         )
@@ -1176,7 +1306,7 @@ private fun ProfileStatBox(
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(14.dp),
-        color = Color.White,
+        color = MaterialTheme.colorScheme.surface,
         border = BorderStroke(1.dp, MosqueCardBorderGold)
     ) {
         Column(
@@ -1186,7 +1316,7 @@ private fun ProfileStatBox(
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelSmall,
-                color = MosqueTextSecondary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 11.sp
             )
             Spacer(modifier = Modifier.height(4.dp))
@@ -1204,8 +1334,10 @@ private fun ProfileStatBox(
 private fun ProfileInfoRow(
     label: String,
     value: String,
-    valueColor: Color = MosqueTextPrimary
+    valueColor: Color = MaterialTheme.colorScheme.onSurface
 ) {
+    val isDark = LocalIsDarkTheme.current
+    val dividerColor = if (isDark) MosqueNightBorder.copy(alpha = 0.7f) else MosqueCardBorderSubtle.copy(alpha = 0.7f)
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -1216,7 +1348,7 @@ private fun ProfileInfoRow(
         Text(
             text = label,
             style = MaterialTheme.typography.bodySmall,
-            color = MosqueTextMuted,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.weight(0.9f)
         )
         Spacer(modifier = Modifier.width(8.dp))
@@ -1228,7 +1360,7 @@ private fun ProfileInfoRow(
             modifier = Modifier.weight(1.3f)
         )
     }
-    HorizontalDivider(color = MosqueCardBorderSubtle.copy(alpha = 0.7f))
+    HorizontalDivider(color = dividerColor)
 }
 
 @Composable
@@ -1241,7 +1373,7 @@ private fun ProfileHistoryEntryCard(
 ) {
     Card(
         shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         border = BorderStroke(1.dp, MosqueCardBorderGold),
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -1276,14 +1408,14 @@ private fun ProfileHistoryEntryCard(
                         text = title,
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
-                        color = MosqueEmeraldDark
+                        color = MaterialTheme.colorScheme.primary
                     )
                     if (subtitle.isNotBlank()) {
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
                             text = subtitle,
                             style = MaterialTheme.typography.labelSmall,
-                            color = MosqueTextSecondary
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }

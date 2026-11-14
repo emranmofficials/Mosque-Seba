@@ -59,7 +59,8 @@ object DatabaseInitializer {
                 roleCode = "vice_president",
                 monthlyChanda = 1500.0,
                 joinDate = "2024-01-01",
-                status = "active"
+                status = "active",
+                willingToProvideStaffMeals = true
             ),
             MemberEntity(
                 id = "mem-103",
@@ -89,7 +90,8 @@ object DatabaseInitializer {
                 roleCode = "treasurer",
                 monthlyChanda = 2000.0,
                 joinDate = "2024-01-01",
-                status = "active"
+                status = "active",
+                willingToProvideStaffMeals = true
             ),
             MemberEntity(
                 id = "mem-105",
@@ -104,7 +106,8 @@ object DatabaseInitializer {
                 roleCode = "organizing_secretary",
                 monthlyChanda = 1000.0,
                 joinDate = "2024-01-15",
-                status = "active"
+                status = "active",
+                willingToProvideStaffMeals = true
             ),
             MemberEntity(
                 id = "mem-106",
@@ -119,7 +122,8 @@ object DatabaseInitializer {
                 roleCode = "executive_member",
                 monthlyChanda = 1500.0,
                 joinDate = "2024-02-01",
-                status = "active"
+                status = "active",
+                willingToProvideStaffMeals = true
             ),
             MemberEntity(
                 id = "mem-107",
@@ -134,7 +138,8 @@ object DatabaseInitializer {
                 roleCode = "general_member",
                 monthlyChanda = 500.0,
                 joinDate = "2024-02-10",
-                status = "active"
+                status = "active",
+                willingToProvideStaffMeals = true
             ),
             MemberEntity(
                 id = "mem-108",
@@ -164,7 +169,8 @@ object DatabaseInitializer {
                 roleCode = "general_member",
                 monthlyChanda = 1000.0,
                 joinDate = "2024-03-15",
-                status = "active"
+                status = "active",
+                willingToProvideStaffMeals = true
             ),
             MemberEntity(
                 id = "mem-110",
@@ -269,7 +275,8 @@ object DatabaseInitializer {
                 roleCode = "advisory_board",
                 monthlyChanda = 3000.0,
                 joinDate = "2024-01-01",
-                status = "active"
+                status = "active",
+                willingToProvideStaffMeals = true
             ),
             MemberEntity(
                 id = "mem-117",
@@ -457,7 +464,7 @@ object DatabaseInitializer {
                 receiptCode = "RCP-2024-091",
                 qrVerificationCode = "VER-MC-DHK-2024-091-88A",
                 receivedBy = "হাজী মো: আবুল কাসেম",
-                paidAt = "2024-09-01 10:30 AM"
+                paidAt = "২০২৪-০৯-০১ ১০:৩০ পূর্বাহ্ণ"
             ),
             ChandaPaymentEntity(
                 id = "cp-002",
@@ -471,7 +478,7 @@ object DatabaseInitializer {
                 receiptCode = "RCP-2024-092",
                 qrVerificationCode = "VER-MC-DHK-2024-092-33B",
                 receivedBy = "হাজী মো: আবুল কাসেম",
-                paidAt = "2024-09-02 04:15 PM"
+                paidAt = "২০২৪-০৯-০২ ০৪:১৫ অপরাহ্ণ"
             ),
             ChandaPaymentEntity(
                 id = "cp-003",
@@ -485,7 +492,7 @@ object DatabaseInitializer {
                 receiptCode = "RCP-2024-093",
                 qrVerificationCode = "VER-MC-DHK-2024-093-41C",
                 receivedBy = "হাজী মো: আবুল কাসেম",
-                paidAt = "2024-09-03 08:20 PM"
+                paidAt = "২০২৪-০৯-০৩ ০৮:২০ অপরাহ্ণ"
             ),
             ChandaPaymentEntity(
                 id = "cp-004",
@@ -499,7 +506,7 @@ object DatabaseInitializer {
                 receiptCode = "RCP-2024-094",
                 qrVerificationCode = "VER-MC-DHK-2024-094-19D",
                 receivedBy = "মো: রফিকুল ইসলাম",
-                paidAt = "2024-09-03 09:00 PM"
+                paidAt = "২০২৪-০৯-০৩ ০৯:০০ অপরাহ্ণ"
             ),
             ChandaPaymentEntity(
                 id = "cp-005",
@@ -513,7 +520,7 @@ object DatabaseInitializer {
                 receiptCode = "RCP-2024-095",
                 qrVerificationCode = "VER-MC-DHK-2024-095-72E",
                 receivedBy = "হাজী মো: আবুল কাসেম",
-                paidAt = "2024-09-04 11:10 AM"
+                paidAt = "২০২৪-০৯-০৪ ১১:১০ পূর্বাহ্ণ"
             )
         )
         chandaRecords.forEach { chandaDao.insertPayment(it) }
@@ -575,7 +582,7 @@ object DatabaseInitializer {
         val logs = listOf(
             AuditLogEntity(
                 action = "INITIALIZE_SYSTEM",
-                actor = "System Super Admin",
+                actor = "সিস্টেম প্রশাসক",
                 details = "মসজিদ কমিটি ম্যানেজমেন্ট সিস্টেম ডাটাবেজ প্রারম্ভিক সক্রিয়করণ সম্পন্ন",
                 timestamp = "2024-09-01 09:00:00"
             ),
@@ -688,25 +695,67 @@ object DatabaseInitializer {
         )
         rosters.forEach { dutyDao.insertRoster(it) }
 
-        // 12. Food Schedules
+        // 12. Food Schedules (১ দিন = ১ জন সদস্য = ১ জন স্টাফ, কোনো ওয়াক্ত নেই)
         val foodDao = database.foodScheduleDao()
+        val isoFmt = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.ENGLISH)
+        val todayCal = java.util.Calendar.getInstance()
+        val todayIso = isoFmt.format(todayCal.time)
+        val tomorrowIso = (todayCal.clone() as java.util.Calendar).apply {
+            add(java.util.Calendar.DAY_OF_YEAR, 1)
+        }.let { isoFmt.format(it.time) }
         val foods = listOf(
             FoodScheduleEntity(
                 id = "food-001",
-                dateStr = "২০২৪-০৯-১২",
-                mealType = "দুপুর",
+                dateStr = todayIso,
+                mealType = "দৈনিক খাবার",
                 providerName = "হাজী মো: আবুল কাসেম",
                 providerMobile = "01715-556677",
-                receiverStaffName = "ইমাম ও মুয়াজ্জিন সাহেব",
-                status = "scheduled"
+                receiverStaffName = "মাওলানা মুফতি মিজানুর রহমান (পেশ ইমাম ও খতিব)",
+                status = "approved"
             ),
             FoodScheduleEntity(
                 id = "food-002",
-                dateStr = "২০২৪-০৯-১২",
-                mealType = "রাত",
+                dateStr = todayIso,
+                mealType = "দৈনিক খাবার",
                 providerName = "মো: আসাদুজ্জামান",
                 providerMobile = "01611-778899",
-                receiverStaffName = "ইমাম ও মুয়াজ্জিন সাহেব",
+                receiverStaffName = "কারী মো: ইসমাইল হোসেন (মুয়াজ্জিন ও সহকারী কারী)",
+                status = "approved"
+            ),
+            FoodScheduleEntity(
+                id = "food-003",
+                dateStr = todayIso,
+                mealType = "দৈনিক খাবার",
+                providerName = "ডা: তারিকুল ইসলাম",
+                providerMobile = "01552-889900",
+                receiverStaffName = "মো: মোস্তফা মিয়া (প্রধান খাদেম ও তত্ত্বাবধায়ক)",
+                status = "scheduled"
+            ),
+            FoodScheduleEntity(
+                id = "food-004",
+                dateStr = tomorrowIso,
+                mealType = "দৈনিক খাবার",
+                providerName = "আলহাজ্ব আব্দুল বারী",
+                providerMobile = "01819-334455",
+                receiverStaffName = "মাওলানা মুফতি মিজানুর রহমান (পেশ ইমাম ও খতিব)",
+                status = "scheduled"
+            ),
+            FoodScheduleEntity(
+                id = "food-005",
+                dateStr = tomorrowIso,
+                mealType = "দৈনিক খাবার",
+                providerName = "মো: শাহজাহান আলী",
+                providerMobile = "01723-001122",
+                receiverStaffName = "কারী মো: ইসমাইল হোসেন (মুয়াজ্জিন ও সহকারী কারী)",
+                status = "scheduled"
+            ),
+            FoodScheduleEntity(
+                id = "food-006",
+                dateStr = tomorrowIso,
+                mealType = "দৈনিক খাবার",
+                providerName = "আলহাজ্ব শামসুল হক চৌধুরী",
+                providerMobile = "01711-009988",
+                receiverStaffName = "মো: মোস্তফা মিয়া (প্রধান খাদেম ও তত্ত্বাবধায়ক)",
                 status = "scheduled"
             )
         )
@@ -860,7 +909,7 @@ object DatabaseInitializer {
                 id = "adv-002",
                 noteType = "ADVISORY_GUIDANCE",
                 topic = "৩য় ও ৪র্থ তলা সম্প্রসারণ নির্মাণকাজের ধাপ ও আর্থিক নিরাপত্তা",
-                recommendation = "বহুতল সম্প্রসারণ কাজের পূর্বে কাঠামোগত প্রকৌশল (Structural Assessment) সনদ সংগ্রহ এবং ধাপে ধাপে আলাদা 'নির্মাণ তহবিল' গঠন করে ঠিকাদারের সাথে লিখিত শর্তে কাজ শুরুর পরামর্শ প্রদান করা হলো।",
+                recommendation = "বহুতল সম্প্রসারণ কাজের পূর্বে কাঠামোগত প্রকৌশল সনদ সংগ্রহ এবং ধাপে ধাপে আলাদা 'নির্মাণ তহবিল' গঠন করে ঠিকাদারের সাথে লিখিত শর্তে কাজ শুরুর পরামর্শ প্রদান করা হলো।",
                 authorName = "আলহাজ্ব শামসুল হক চৌধুরী",
                 authorRoleTitle = "উপদেষ্টা পরিষদ",
                 shariaCompliance = "কৌশলগত পরামর্শ",

@@ -80,10 +80,16 @@ fun PrayerCard(
     onViewFullScheduleClick: () -> Unit = {}
 ) {
     val (prayers, nextSummary) = computeTodayPrayerSchedule()
+    val isDark = LocalIsDarkTheme.current
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val tileInactiveBg = if (isDark) MosqueNightSurfaceVariant else MosqueBgLight
+    val tileInactiveBorder = if (isDark) MosqueNightBorder else MosqueCardBorderSubtle
+    val secondaryColor = MaterialTheme.colorScheme.onSurfaceVariant
+    val subtitleHighlight = if (isDark) MosqueGoldLight else MosqueGoldDark
 
     MehrabArchCard(
         modifier = Modifier.fillMaxWidth(),
-        backgroundColor = Color.White,
+        backgroundColor = MaterialTheme.colorScheme.surface,
         borderColor = MosqueCardBorderGold.copy(alpha = 0.6f),
         elevation = 3.dp
     ) {
@@ -101,7 +107,7 @@ fun PrayerCard(
                     Icon(
                         imageVector = Icons.Default.AccessTime,
                         contentDescription = null,
-                        tint = MosqueEmeraldPrimary,
+                        tint = primaryColor,
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
@@ -110,12 +116,12 @@ fun PrayerCard(
                             text = "আজকের নামাজের সময়সূচি",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = MosqueEmeraldDark
+                            color = primaryColor
                         )
                         Text(
                             text = "পরবর্তী ${nextSummary.nameBn} • বাকি ${nextSummary.remainingTextBn}",
                             style = MaterialTheme.typography.labelSmall,
-                            color = MosqueGoldDark,
+                            color = subtitleHighlight,
                             fontWeight = FontWeight.SemiBold
                         )
                     }
@@ -128,7 +134,7 @@ fun PrayerCard(
                     Text(
                         text = "পূর্ণ সূচি",
                         style = MaterialTheme.typography.labelSmall,
-                        color = MosqueEmeraldPrimary,
+                        color = primaryColor,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -157,10 +163,10 @@ fun PrayerCard(
                                         )
                                 } else {
                                     Modifier
-                                        .background(MosqueBgLight)
+                                        .background(tileInactiveBg)
                                         .border(
                                             width = 1.dp,
-                                            color = MosqueCardBorderSubtle,
+                                            color = tileInactiveBorder,
                                             shape = RoundedCornerShape(12.dp)
                                         )
                                 }
@@ -171,7 +177,7 @@ fun PrayerCard(
                         Text(
                             text = item.nameBn,
                             style = MaterialTheme.typography.labelSmall,
-                            color = if (item.isNext) MosqueGold else MosqueTextSecondary,
+                            color = if (item.isNext) MosqueGold else secondaryColor,
                             fontWeight = if (item.isNext) FontWeight.Bold else FontWeight.Medium,
                             maxLines = 1
                         )
@@ -179,7 +185,7 @@ fun PrayerCard(
                         Text(
                             text = item.iqamahTime,
                             style = MaterialTheme.typography.labelMedium,
-                            color = if (item.isNext) Color.White else MosqueEmeraldDark,
+                            color = if (item.isNext) Color.White else MaterialTheme.colorScheme.onSurface,
                             fontWeight = FontWeight.Bold
                         )
                         Spacer(modifier = Modifier.height(1.dp))
@@ -187,7 +193,7 @@ fun PrayerCard(
                             text = "আজান ${item.azanTime}",
                             style = MaterialTheme.typography.labelSmall,
                             fontSize = 9.sp,
-                            color = if (item.isNext) Color.White.copy(alpha = 0.85f) else MosqueTextMuted
+                            color = if (item.isNext) Color.White.copy(alpha = 0.85f) else secondaryColor.copy(alpha = 0.85f)
                         )
                     }
                     if (item != prayers.last()) {

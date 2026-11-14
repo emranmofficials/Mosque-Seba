@@ -1,6 +1,7 @@
 package com.mosqueseba.app.ui.screens
 
 import android.content.Intent
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Spring
@@ -46,6 +47,7 @@ import com.mosqueseba.app.data.local.entity.TransactionEntity
 import com.mosqueseba.app.data.model.UserRole
 import com.mosqueseba.app.ui.components.ChandaMonthUtils
 import com.mosqueseba.app.ui.components.MehrabArchCard
+import com.mosqueseba.app.ui.components.MosqueConfirmDialog
 import com.mosqueseba.app.ui.components.toBengaliDigits
 import com.mosqueseba.app.ui.theme.*
 import com.mosqueseba.app.ui.viewmodel.AiSummaryUiState
@@ -169,7 +171,11 @@ fun FinanceScreen(
     viewModel: MosqueViewModel,
     onAddIncomeClick: (() -> Unit)? = null,
     onAddExpenseClick: (() -> Unit)? = null,
-    isReadOnlyTransparencyMode: Boolean = false
+    isReadOnlyTransparencyMode: Boolean = false,
+    openReportTrigger: Int = 0,
+    onReportTriggerConsumed: () -> Unit = {},
+    openPendingTabTrigger: Int = 0,
+    onPendingTabTriggerConsumed: () -> Unit = {}
 ) {
     val allTransactions by viewModel.allTransactions.collectAsState()
     val pendingTransactions by viewModel.pendingTransactions.collectAsState()
@@ -182,6 +188,7 @@ fun FinanceScreen(
     val mosque by viewModel.mosque.collectAsState()
     val aiSummaryState by viewModel.aiSummaryState.collectAsState()
 
+    val context = LocalContext.current
     var selectedTab by rememberSaveable { mutableIntStateOf(0) } // 0: All, 1: Pending, 2: Income, 3: Expense
     var searchQuery by rememberSaveable { mutableStateOf("") }
     var selectedMonthKey by rememberSaveable { mutableStateOf<String?>(null) }
@@ -192,6 +199,21 @@ fun FinanceScreen(
     var breakdownType by rememberSaveable { mutableStateOf("INCOME") }
     var showReportDialog by remember { mutableStateOf(false) }
     var selectedVoucherTxn by remember { mutableStateOf<TransactionEntity?>(null) }
+    var pendingRejectTxn by remember { mutableStateOf<TransactionEntity?>(null) }
+
+    LaunchedEffect(openReportTrigger) {
+        if (openReportTrigger > 0) {
+            showReportDialog = true
+            onReportTriggerConsumed()
+        }
+    }
+
+    LaunchedEffect(openPendingTabTrigger) {
+        if (openPendingTabTrigger > 0) {
+            selectedTab = 1
+            onPendingTabTriggerConsumed()
+        }
+    }
 
     val paymentMethodsById = remember(allChandaPayments) {
         allChandaPayments.associate { it.id to it.method }
@@ -347,13 +369,13 @@ fun FinanceScreen(
         selectedCategoryFilter != null ||
         selectedTab != 0
 
-    val canAddIncomeExpense = currentRole in listOf(UserRole.TREASURER, UserRole.PRESIDENT, UserRole.VICE_PRESIDENT)
+    val canAddIncomeExpense = currentRole.canManageFinance()
     val isTransparencyOnly = isReadOnlyTransparencyMode || !canAddIncomeExpense
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MosqueBgLight),
+            .background(MaterialTheme.colorScheme.background),
         contentAlignment = Alignment.TopCenter
     ) {
         LazyColumn(
@@ -548,6 +570,56 @@ fun FinanceScreen(
                                                 overflow = TextOverflow.Ellipsis
                                             )
                                         }
+                                    }
+                                }
+
+                                // Compact Visual Income vs Expense Ratio Bar
+                                val grandFlow = (totalIncome + totalExpense).coerceAtLeast(1.0)
+                                val incomeRatio by animateFloatAsState(
+                                    targetValue = (totalIncome / grandFlow).toFloat().coerceIn(0f, 1f),
+                                    animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+                                    label = "IncomeRatioAnim"
+                                )
+                                val incomePct = ((totalIncome / grandFlow) * 100).toInt().coerceIn(0, 100)
+                                val expensePct = 100 - incomePct
+                                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = "আয় ${toBengaliDigits(incomePct.toString())}%",
+                                            fontSize = 10.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color(0xFF6EE7B7)
+                                        )
+                                        Text(
+                                            text = "আয়-ব্যয় অনুপাত",
+                                            fontSize = 10.sp,
+                                            color = Color.White.copy(alpha = 0.72f)
+                                        )
+                                        Text(
+                                            text = "ব্যয় ${toBengaliDigits(expensePct.toString())}%",
+                                            fontSize = 10.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color(0xFFFCA5A5)
+                                        )
+                                    }
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(7.dp)
+                                            .clip(RoundedCornerShape(4.dp))
+                                            .background(MosqueUrgentRed.copy(alpha = 0.75f))
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth(incomeRatio)
+                                                .fillMaxHeight()
+                                                .clip(RoundedCornerShape(4.dp))
+                                                .background(MosqueGreenAccent)
+                                        )
                                     }
                                 }
 
@@ -887,7 +959,7 @@ fun FinanceScreen(
             // 3. Search Bar & Filter Section (Matching MembersScreen Design)
             item {
                 Surface(
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.surface,
                     shadowElevation = 1.dp,
                     shape = RoundedCornerShape(14.dp),
                     modifier = Modifier.fillMaxWidth()
@@ -1056,8 +1128,13 @@ fun FinanceScreen(
                 val breakdownScopedTotal = remember(categoryBreakdownList) {
                     categoryBreakdownList.sumOf { it.amount }
                 }
+                val isDark = LocalIsDarkTheme.current
+                val primaryColor = MaterialTheme.colorScheme.primary
+                val subtleSurfaceBg = if (isDark) MosqueNightSurfaceVariant else MosqueBgLight
+                val activeCatBg = if (isDark) MosqueEmeraldPrimary.copy(alpha = 0.28f) else MosqueEmeraldSoft.copy(alpha = 0.78f)
+                val softIconBg = if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft
                 MehrabArchCard(
-                    backgroundColor = Color.White,
+                    backgroundColor = MaterialTheme.colorScheme.surface,
                     borderColor = MosqueCardBorderGold,
                     modifier = Modifier.animateContentSize(spring(stiffness = Spring.StiffnessMediumLow))
                 ) {
@@ -1081,13 +1158,13 @@ fun FinanceScreen(
                                     modifier = Modifier
                                         .size(34.dp)
                                         .clip(CircleShape)
-                                        .background(MosqueEmeraldSoft),
+                                        .background(softIconBg),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.BarChart,
                                         contentDescription = null,
-                                        tint = MosqueEmeraldPrimary,
+                                        tint = primaryColor,
                                         modifier = Modifier.size(18.dp)
                                     )
                                 }
@@ -1097,13 +1174,13 @@ fun FinanceScreen(
                                         text = "খাতভিত্তিক আয়-ব্যয় বিশ্লেষণ",
                                         style = MaterialTheme.typography.titleSmall,
                                         fontWeight = FontWeight.Bold,
-                                        color = MosqueEmeraldDark
+                                        color = primaryColor
                                     )
                                     Text(
                                         text = "যেকোনো খাতে ট্যাপ করে লেনদেন ফিল্টার করুন",
                                         style = MaterialTheme.typography.labelSmall,
                                         fontSize = 10.sp,
-                                        color = MosqueTextSecondary
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                             }
@@ -1123,7 +1200,7 @@ fun FinanceScreen(
                             Icon(
                                 imageVector = if (showCategoryBreakdown) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                                 contentDescription = if (showCategoryBreakdown) "সংকুচিত করুন" else "বিস্তারিত দেখুন",
-                                tint = MosqueEmeraldPrimary
+                                tint = primaryColor
                             )
                         }
 
@@ -1133,7 +1210,7 @@ fun FinanceScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clip(RoundedCornerShape(10.dp))
-                                        .background(MosqueBgLight)
+                                        .background(subtleSurfaceBg)
                                         .padding(4.dp),
                                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                                 ) {
@@ -1145,7 +1222,7 @@ fun FinanceScreen(
                                         shape = RoundedCornerShape(8.dp),
                                         colors = ButtonDefaults.buttonColors(
                                             containerColor = if (breakdownType == "INCOME") MosqueEmeraldPrimary else Color.Transparent,
-                                            contentColor = if (breakdownType == "INCOME") Color.White else MosqueTextSecondary
+                                            contentColor = if (breakdownType == "INCOME") Color.White else MaterialTheme.colorScheme.onSurfaceVariant
                                         ),
                                         elevation = null,
                                         contentPadding = PaddingValues(vertical = 6.dp)
@@ -1160,7 +1237,7 @@ fun FinanceScreen(
                                         shape = RoundedCornerShape(8.dp),
                                         colors = ButtonDefaults.buttonColors(
                                             containerColor = if (breakdownType == "EXPENSE") MosqueUrgentRed else Color.Transparent,
-                                            contentColor = if (breakdownType == "EXPENSE") Color.White else MosqueTextSecondary
+                                            contentColor = if (breakdownType == "EXPENSE") Color.White else MaterialTheme.colorScheme.onSurfaceVariant
                                         ),
                                         elevation = null,
                                         contentPadding = PaddingValues(vertical = 6.dp)
@@ -1173,7 +1250,7 @@ fun FinanceScreen(
                                     Text(
                                         text = "নির্বাচিত ফিল্টারে কোনো খাতভিত্তিক হিসাব পাওয়া যায়নি",
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = MosqueTextMuted,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         modifier = Modifier.padding(vertical = 6.dp)
                                     )
                                 } else {
@@ -1191,10 +1268,10 @@ fun FinanceScreen(
                                                 selectedCategoryFilter = if (isSelectedCat) null else item.category
                                             },
                                             shape = RoundedCornerShape(12.dp),
-                                            color = if (isSelectedCat) MosqueEmeraldSoft.copy(alpha = 0.78f) else MosqueBgLight.copy(alpha = 0.65f),
+                                            color = if (isSelectedCat) activeCatBg else subtleSurfaceBg.copy(alpha = 0.72f),
                                             border = BorderStroke(
                                                 width = if (isSelectedCat) 1.5.dp else 1.dp,
-                                                color = if (isSelectedCat) MosqueEmeraldPrimary else MosqueCardBorderSubtle
+                                                color = if (isSelectedCat) primaryColor else MaterialTheme.colorScheme.outline.copy(alpha = 0.45f)
                                             ),
                                             modifier = Modifier.fillMaxWidth()
                                         ) {
@@ -1232,7 +1309,7 @@ fun FinanceScreen(
                                                             text = "${item.category} (${toBengaliDigits(item.count.toString())} টি)",
                                                             style = MaterialTheme.typography.labelMedium,
                                                             fontWeight = FontWeight.Bold,
-                                                            color = MosqueEmeraldDark,
+                                                            color = MaterialTheme.colorScheme.onSurface,
                                                             maxLines = 1,
                                                             overflow = TextOverflow.Ellipsis
                                                         )
@@ -1293,6 +1370,9 @@ fun FinanceScreen(
 
             // 5. Ledger Header
             item {
+                val isDarkLedger = LocalIsDarkTheme.current
+                val primaryColor = MaterialTheme.colorScheme.primary
+                val pillBg = if (isDarkLedger) MosqueNightSurfaceVariant else MosqueEmeraldSoft
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -1305,13 +1385,13 @@ fun FinanceScreen(
                             modifier = Modifier
                                 .size(26.dp)
                                 .clip(CircleShape)
-                                .background(MosqueEmeraldSoft),
+                                .background(pillBg),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = Icons.Default.ReceiptLong,
                                 contentDescription = null,
-                                tint = MosqueEmeraldPrimary,
+                                tint = primaryColor,
                                 modifier = Modifier.size(14.dp)
                             )
                         }
@@ -1320,18 +1400,18 @@ fun FinanceScreen(
                             text = "লেনদেন ও ভাউচার তালিকা",
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
-                            color = MosqueEmeraldDark
+                            color = primaryColor
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Surface(
                             shape = RoundedCornerShape(10.dp),
-                            color = MosqueEmeraldSoft
+                            color = pillBg
                         ) {
                             Text(
                                 text = "${toBengaliDigits(displayedTransactions.size.toString())} টি",
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = MosqueEmeraldPrimary,
+                                color = primaryColor,
                                 modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp)
                             )
                         }
@@ -1346,7 +1426,7 @@ fun FinanceScreen(
                             },
                             contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
                         ) {
-                            Text("ফিল্টার মুছুন", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = MosqueEmeraldPrimary)
+                            Text("ফিল্টার মুছুন", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = primaryColor)
                         }
                     }
                 }
@@ -1355,7 +1435,7 @@ fun FinanceScreen(
             // 6. Transactions List
             if (displayedTransactions.isEmpty()) {
                 item {
-                    MehrabArchCard(backgroundColor = Color.White, borderColor = MosqueCardBorderSubtle) {
+                    MehrabArchCard(backgroundColor = MaterialTheme.colorScheme.surface, borderColor = MaterialTheme.colorScheme.outline) {
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -1367,13 +1447,13 @@ fun FinanceScreen(
                                 modifier = Modifier
                                     .size(56.dp)
                                     .clip(CircleShape)
-                                    .background(MosqueEmeraldSoft),
+                                    .background(if (LocalIsDarkTheme.current) MosqueNightSurfaceVariant else MosqueEmeraldSoft),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.ReceiptLong,
                                     contentDescription = null,
-                                    tint = MosqueEmeraldPrimary,
+                                    tint = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.size(28.dp)
                                 )
                             }
@@ -1381,7 +1461,7 @@ fun FinanceScreen(
                                 text = "নির্বাচিত ফিল্টারে কোনো লেনদেন পাওয়া যায়নি",
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.SemiBold,
-                                color = MosqueEmeraldDark,
+                                color = MaterialTheme.colorScheme.onSurface,
                                 textAlign = TextAlign.Center
                             )
                             Text(
@@ -1418,8 +1498,15 @@ fun FinanceScreen(
                         channelLabel = channelLabelBn(channel),
                         canApprove = currentRole.canApproveFinance(),
                         onClick = { selectedVoucherTxn = txn },
-                        onApprove = { viewModel.updateTransactionStatus(txn, true) },
-                        onReject = { viewModel.updateTransactionStatus(txn, false) }
+                        onApprove = {
+                            viewModel.updateTransactionStatus(txn, true)
+                            Toast.makeText(
+                                context,
+                                "লেনদেনটি অনুমোদিত হয়েছে (৳${toBengaliDigits(txn.amount.toInt().toString())})।",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        },
+                        onReject = { pendingRejectTxn = txn }
                     )
                 }
             }
@@ -1457,12 +1544,38 @@ fun FinanceScreen(
             onApprove = {
                 viewModel.updateTransactionStatus(latestTxn, true)
                 selectedVoucherTxn = null
+                Toast.makeText(
+                    context,
+                    "ভাউচারটি অনুমোদিত হয়েছে (৳${toBengaliDigits(latestTxn.amount.toInt().toString())})।",
+                    Toast.LENGTH_SHORT
+                ).show()
             },
             onReject = {
-                viewModel.updateTransactionStatus(latestTxn, false)
                 selectedVoucherTxn = null
+                pendingRejectTxn = latestTxn
             },
             onDismiss = { selectedVoucherTxn = null }
+        )
+    }
+
+    // Reject Transaction Confirmation Dialog
+    pendingRejectTxn?.let { target ->
+        MosqueConfirmDialog(
+            title = "লেনদেন বাতিল/প্রত্যাখ্যান করবেন?",
+            message = "\"${target.categoryNameBn}\" (৳${toBengaliDigits(target.amount.toInt().toString())}) লেনদেনটি প্রত্যাখ্যান করা হবে এবং হিসাবের চূড়ান্ত ব্যালেন্স থেকে বাদ যাবে।",
+            confirmText = "হ্যাঁ, প্রত্যাখ্যান করুন",
+            icon = Icons.Default.Cancel,
+            isDestructive = true,
+            onDismiss = { pendingRejectTxn = null },
+            onConfirm = {
+                viewModel.updateTransactionStatus(target, false)
+                pendingRejectTxn = null
+                Toast.makeText(
+                    context,
+                    "লেনদেনটি প্রত্যাখ্যান করা হয়েছে।",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
         )
     }
 }
@@ -1548,13 +1661,17 @@ fun TransactionCardItem(
         isIncome -> MosqueSuccessGreen
         else -> MosqueUrgentRed
     }
+    val isDark = LocalIsDarkTheme.current
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val secondaryTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+    val channelBadgeBg = if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft
     Card(
         onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
             .testTag("txn_card_${transaction.transactionCode}"),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         border = BorderStroke(
             width = 1.dp,
@@ -1586,8 +1703,8 @@ fun TransactionCardItem(
                             .size(40.dp)
                             .clip(CircleShape)
                             .background(
-                                if (isIncome) MosqueSuccessGreen.copy(alpha = 0.12f)
-                                else MosqueUrgentRed.copy(alpha = 0.12f)
+                                if (isIncome) MosqueSuccessGreen.copy(alpha = 0.14f)
+                                else MosqueUrgentRed.copy(alpha = 0.14f)
                             ),
                         contentAlignment = Alignment.Center
                     ) {
@@ -1606,14 +1723,14 @@ fun TransactionCardItem(
                             text = transaction.categoryNameBn,
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
-                            color = MosqueEmeraldDark,
+                            color = MaterialTheme.colorScheme.onSurface,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
                         Text(
                             text = "ভাউচার: ${toBengaliDigits(transaction.transactionCode)} • ${toBengaliDigits(transaction.txnDate)}",
                             style = MaterialTheme.typography.labelSmall,
-                            color = MosqueTextSecondary,
+                            color = secondaryTextColor,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
@@ -1625,7 +1742,7 @@ fun TransactionCardItem(
                 Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Surface(
                         shape = RoundedCornerShape(8.dp),
-                        color = if (isIncome) MosqueSuccessGreen.copy(alpha = 0.1f) else MosqueUrgentRed.copy(alpha = 0.1f)
+                        color = if (isIncome) MosqueSuccessGreen.copy(alpha = 0.12f) else MosqueUrgentRed.copy(alpha = 0.12f)
                     ) {
                         Text(
                             text = "${if (isIncome) "+" else "-"}${formatCurrencyBn(transaction.amount)}",
@@ -1639,14 +1756,14 @@ fun TransactionCardItem(
                     Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
                         Surface(
                             shape = RoundedCornerShape(4.dp),
-                            color = MosqueEmeraldSoft
+                            color = channelBadgeBg
                         ) {
                             Text(
                                 text = channelLabel,
                                 style = MaterialTheme.typography.labelSmall,
                                 fontSize = 9.sp,
                                 fontWeight = FontWeight.SemiBold,
-                                color = MosqueEmeraldDark,
+                                color = primaryColor,
                                 modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
                             )
                         }
@@ -1685,7 +1802,7 @@ fun TransactionCardItem(
                 Text(
                     text = transaction.description,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MosqueTextSecondary,
+                    color = secondaryTextColor,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -1813,6 +1930,9 @@ fun TransactionVoucherDialog(
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
+    val isDark = LocalIsDarkTheme.current
+    val subtleBg = if (isDark) MosqueNightSurfaceVariant else MosqueBgLight
+    val subtleBorder = if (isDark) MosqueNightBorder else MosqueCardBorderSubtle
     val isIncome = transaction.type == "INCOME"
     val statusText = when (transaction.approvalStatus) {
         "approved" -> "অনুমোদিত"
@@ -1833,7 +1953,7 @@ fun TransactionVoucherDialog(
             modifier = Modifier
                 .fillMaxWidth(0.94f)
                 .widthIn(max = 520.dp),
-            backgroundColor = Color.White,
+            backgroundColor = MaterialTheme.colorScheme.surface,
             borderColor = MosqueCardBorderGold
         ) {
             Column(
@@ -1847,13 +1967,13 @@ fun TransactionVoucherDialog(
                     text = mosqueName,
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.ExtraBold,
-                    color = MosqueEmeraldDark,
+                    color = MaterialTheme.colorScheme.primary,
                     textAlign = TextAlign.Center
                 )
                 Text(
                     text = "$mosqueAddress • কমিটি আইডি: ${toBengaliDigits(committeeId)}",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MosqueTextSecondary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center
                 )
                 Spacer(modifier = Modifier.height(6.dp))
@@ -1897,8 +2017,8 @@ fun TransactionVoucherDialog(
                     Spacer(modifier = Modifier.height(10.dp))
                     Surface(
                         shape = RoundedCornerShape(10.dp),
-                        color = MosqueBgLight,
-                        border = BorderStroke(1.dp, MosqueCardBorderSubtle),
+                        color = subtleBg,
+                        border = BorderStroke(1.dp, subtleBorder),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Column(modifier = Modifier.padding(10.dp)) {
@@ -1906,13 +2026,13 @@ fun TransactionVoucherDialog(
                                 text = "বিস্তারিত বিবরণ:",
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = MosqueEmeraldDark
+                                color = MaterialTheme.colorScheme.primary
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
                                 text = transaction.description,
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MosqueTextPrimary
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }
@@ -1958,7 +2078,7 @@ fun TransactionVoucherDialog(
                             .weight(1f)
                             .heightIn(min = 48.dp)
                     ) {
-                        Text("বন্ধ করুন", color = MosqueTextSecondary)
+                        Text("বন্ধ করুন", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     Button(
                         onClick = {
@@ -2012,14 +2132,14 @@ private fun VoucherRow(label: String, value: String) {
         Text(
             text = label,
             style = MaterialTheme.typography.bodySmall,
-            color = MosqueTextSecondary,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(end = 12.dp)
         )
         Text(
             text = value,
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.SemiBold,
-            color = MosqueEmeraldDark,
+            color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.End,
             modifier = Modifier.weight(1f)
         )
@@ -2043,6 +2163,10 @@ fun FinancialReportDialog(
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
+    val isDark = LocalIsDarkTheme.current
+    val dividerColor = if (isDark) MosqueNightBorder else MosqueCardBorderSubtle
+    val aiContainerBg = if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft.copy(alpha = 0.65f)
+    val channelColor = MaterialTheme.colorScheme.primary
 
     DisposableEffect(Unit) {
         onDispose { onClearAiSummary() }
@@ -2056,7 +2180,7 @@ fun FinancialReportDialog(
             modifier = Modifier
                 .fillMaxWidth(0.94f)
                 .widthIn(max = 540.dp),
-            backgroundColor = Color.White,
+            backgroundColor = MaterialTheme.colorScheme.surface,
             borderColor = MosqueCardBorderGold
         ) {
             Column(
@@ -2068,12 +2192,12 @@ fun FinancialReportDialog(
                     text = "আয়-ব্যয় সারসংক্ষেপ রিপোর্ট",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
-                    color = MosqueEmeraldDark
+                    color = MaterialTheme.colorScheme.primary
                 )
                 Text(
                     text = "$mosqueName • অডিট প্রতিবেদন",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MosqueTextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(modifier = Modifier.height(14.dp))
                 HorizontalDivider(color = MosqueGold)
@@ -2084,23 +2208,23 @@ fun FinancialReportDialog(
 
                 ReportRow("সর্বমোট জমা (আয়)", formatCurrencyBn(totalIncome), MosqueSuccessGreen)
                 ReportRow("সর্বমোট খরচ (ব্যয়)", formatCurrencyBn(totalExpense), MosqueUrgentRed)
-                ReportRow("বর্তমান নিট ব্যালেন্স", formatCurrencyBn(netBalance), MosqueEmeraldPrimary)
+                ReportRow("বর্তমান নিট ব্যালেন্স", formatCurrencyBn(netBalance), MaterialTheme.colorScheme.primary)
                 Spacer(modifier = Modifier.height(6.dp))
-                HorizontalDivider(color = MosqueCardBorderSubtle)
+                HorizontalDivider(color = dividerColor)
                 Spacer(modifier = Modifier.height(6.dp))
-                ReportRow("নগদ ফান্ড ব্যালেন্স", formatCurrencyBn(channelBalances.first), MosqueEmeraldDark)
-                ReportRow("বিকাশ/নগদ ব্যালেন্স", formatCurrencyBn(channelBalances.second), MosqueEmeraldDark)
-                ReportRow("ব্যাংক/অনলাইন ব্যালেন্স", formatCurrencyBn(channelBalances.third), MosqueEmeraldDark)
+                ReportRow("নগদ ফান্ড ব্যালেন্স", formatCurrencyBn(channelBalances.first), channelColor)
+                ReportRow("বিকাশ/নগদ ব্যালেন্স", formatCurrencyBn(channelBalances.second), channelColor)
+                ReportRow("ব্যাংক/অনলাইন ব্যালেন্স", formatCurrencyBn(channelBalances.third), channelColor)
                 Spacer(modifier = Modifier.height(6.dp))
-                HorizontalDivider(color = MosqueCardBorderSubtle)
+                HorizontalDivider(color = dividerColor)
                 Spacer(modifier = Modifier.height(6.dp))
-                ReportRow("জুমার দিনের মোট দান", formatCurrencyBn(jummahSummary.first), MosqueEmeraldPrimary)
-                ReportRow("সম্পন্ন জুমার সংখ্যা", "${toBengaliDigits(jummahSummary.second.toString())} টি", MosqueEmeraldDark)
+                ReportRow("জুমার দিনের মোট দান", formatCurrencyBn(jummahSummary.first), MaterialTheme.colorScheme.primary)
+                ReportRow("সম্পন্ন জুমার সংখ্যা", "${toBengaliDigits(jummahSummary.second.toString())} টি", MaterialTheme.colorScheme.onSurface)
                 ReportRow("জুমার গড় আয়", formatCurrencyBn(jummahSummary.third), MosqueSuccessGreen)
                 Spacer(modifier = Modifier.height(6.dp))
-                HorizontalDivider(color = MosqueCardBorderSubtle)
+                HorizontalDivider(color = dividerColor)
                 Spacer(modifier = Modifier.height(6.dp))
-                ReportRow("অনুমোদিত লেনদেন সংখ্যা", "${toBengaliDigits(approvedCount.toString())} টি", MosqueTextPrimary)
+                ReportRow("অনুমোদিত লেনদেন সংখ্যা", "${toBengaliDigits(approvedCount.toString())} টি", MaterialTheme.colorScheme.onSurface)
                 ReportRow("অপেক্ষমাণ অনুমোদন", "${toBengaliDigits(pendingCount.toString())} টি", MosqueWarningAmber)
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -2108,7 +2232,7 @@ fun FinancialReportDialog(
                 // Gemini AI Financial Summary Card
                 Surface(
                     shape = RoundedCornerShape(12.dp),
-                    color = MosqueEmeraldSoft.copy(alpha = 0.65f),
+                    color = aiContainerBg,
                     border = BorderStroke(1.dp, MosqueCardBorderGold),
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -2117,7 +2241,7 @@ fun FinancialReportDialog(
                             text = "জেমিনি এআই আর্থিক সারসংক্ষেপ",
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold,
-                            color = MosqueEmeraldDark
+                            color = MaterialTheme.colorScheme.primary
                         )
                         Spacer(modifier = Modifier.height(8.dp))
 
@@ -2138,14 +2262,14 @@ fun FinancialReportDialog(
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     CircularProgressIndicator(
                                         modifier = Modifier.size(16.dp),
-                                        color = MosqueEmeraldPrimary,
+                                        color = MaterialTheme.colorScheme.primary,
                                         strokeWidth = 2.dp
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
                                         text = "হিসাব বিশ্লেষণ চলছে...",
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = MosqueEmeraldDark
+                                        color = MaterialTheme.colorScheme.onSurface
                                     )
                                 }
                             }
@@ -2153,21 +2277,21 @@ fun FinancialReportDialog(
                                 Text(
                                     text = aiSummaryState.text,
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = MosqueTextPrimary
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                             }
                             is AiSummaryUiState.Success -> {
                                 Text(
                                     text = aiSummaryState.text,
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = MosqueTextPrimary
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                                 Spacer(modifier = Modifier.height(6.dp))
                                 TextButton(
                                     onClick = onGenerateAiSummary,
                                     contentPadding = PaddingValues(0.dp)
                                 ) {
-                                    Text("পুনরায় বিশ্লেষণ করুন", fontSize = 11.sp, color = MosqueEmeraldPrimary)
+                                    Text("পুনরায় বিশ্লেষণ করুন", fontSize = 11.sp, color = MaterialTheme.colorScheme.primary)
                                 }
                             }
                             is AiSummaryUiState.Error -> {
@@ -2181,7 +2305,7 @@ fun FinancialReportDialog(
                                     onClick = onGenerateAiSummary,
                                     contentPadding = PaddingValues(0.dp)
                                 ) {
-                                    Text("আবার চেষ্টা করুন", fontSize = 11.sp, color = MosqueEmeraldPrimary)
+                                    Text("আবার চেষ্টা করুন", fontSize = 11.sp, color = MaterialTheme.colorScheme.primary)
                                 }
                             }
                         }
@@ -2189,7 +2313,7 @@ fun FinancialReportDialog(
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-                HorizontalDivider(color = MosqueCardBorder)
+                HorizontalDivider(color = dividerColor)
                 Spacer(modifier = Modifier.height(14.dp))
 
                 Row(
@@ -2202,7 +2326,7 @@ fun FinancialReportDialog(
                             .weight(1f)
                             .heightIn(min = 48.dp)
                     ) {
-                        Text("বন্ধ করুন", color = MosqueTextSecondary)
+                        Text("বন্ধ করুন", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     Button(
                         onClick = {
@@ -2258,7 +2382,7 @@ private fun ReportRow(label: String, value: String, valueColor: Color) {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text = label, style = MaterialTheme.typography.bodySmall, color = MosqueTextSecondary)
+        Text(text = label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Text(text = value, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = valueColor)
     }
 }

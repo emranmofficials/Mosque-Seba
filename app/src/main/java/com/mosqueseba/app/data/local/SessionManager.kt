@@ -22,6 +22,7 @@ class SessionManager(context: Context) {
         private const val KEY_ACTIVE_MOSQUE_ID = "key_active_mosque_id"
         private const val KEY_NOTIFICATIONS_ENABLED = "key_notifications_enabled"
         private const val KEY_SHOW_HIJRI_BANNER = "key_show_hijri_banner"
+        private const val KEY_DARK_MODE_ENABLED = "key_dark_mode_enabled"
         private const val KEY_READ_NOTIFICATION_IDS = "key_read_notification_ids"
         private const val DEFAULT_MOSQUE_ID = "mosque-001"
     }
@@ -122,6 +123,12 @@ class SessionManager(context: Context) {
         prefs.edit().putBoolean(KEY_SHOW_HIJRI_BANNER, visible).apply()
     }
 
+    fun isDarkModeEnabled(): Boolean = prefs.getBoolean(KEY_DARK_MODE_ENABLED, false)
+
+    fun setDarkModeEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_DARK_MODE_ENABLED, enabled).apply()
+    }
+
     fun getReadNotificationIds(): Set<String> =
         prefs.getStringSet(KEY_READ_NOTIFICATION_IDS, emptySet())?.toSet() ?: emptySet()
 
@@ -134,6 +141,16 @@ class SessionManager(context: Context) {
         if (notificationIds.isEmpty()) return
         val updated = getReadNotificationIds() + notificationIds
         prefs.edit().putStringSet(KEY_READ_NOTIFICATION_IDS, updated).apply()
+    }
+
+    fun getKhademCheckedTasksForDate(dateIso: String): Set<String> =
+        prefs.getStringSet("key_khadem_tasks_$dateIso", emptySet())?.toSet() ?: emptySet()
+
+    fun toggleKhademTaskForDate(dateIso: String, taskId: String): Set<String> {
+        val current = getKhademCheckedTasksForDate(dateIso)
+        val updated = if (taskId in current) current - taskId else current + taskId
+        prefs.edit().putStringSet("key_khadem_tasks_$dateIso", updated).apply()
+        return updated
     }
 
     fun getSavedRole(): UserRole {
@@ -153,11 +170,13 @@ class SessionManager(context: Context) {
         val currentMosque = getActiveMosqueId()
         val notif = isNotificationsEnabled()
         val hijri = isHijriBannerVisible()
+        val darkMode = isDarkModeEnabled()
         prefs.edit()
             .clear()
             .putString(KEY_ACTIVE_MOSQUE_ID, currentMosque)
             .putBoolean(KEY_NOTIFICATIONS_ENABLED, notif)
             .putBoolean(KEY_SHOW_HIJRI_BANNER, hijri)
+            .putBoolean(KEY_DARK_MODE_ENABLED, darkMode)
             .apply()
     }
 }

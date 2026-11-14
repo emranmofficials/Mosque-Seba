@@ -36,7 +36,12 @@ import androidx.compose.ui.unit.sp
 import com.mosqueseba.app.data.local.entity.AdvisoryNoteEntity
 import com.mosqueseba.app.data.local.entity.CashboxRecordEntity
 import com.mosqueseba.app.data.local.entity.MeetingEntity
+import com.mosqueseba.app.data.local.entity.OfficeDocumentEntity
 import com.mosqueseba.app.data.local.entity.TransactionEntity
+import com.mosqueseba.app.data.local.entity.WelfareCaseEntity
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import com.mosqueseba.app.data.model.UserRole
 import com.mosqueseba.app.ui.components.*
 import com.mosqueseba.app.ui.theme.*
@@ -59,16 +64,22 @@ fun DashboardScreen(
     val studentCount by viewModel.studentCount.collectAsState()
     val activeStaff by viewModel.activeStaff.collectAsState()
     val allNotices by viewModel.allNotices.collectAsState()
+    val allEvents by viewModel.allEvents.collectAsState()
     val allWelfareCases by viewModel.allWelfareCases.collectAsState()
     val allChandaPayments by viewModel.allChandaPayments.collectAsState()
     val allCashboxRecords by viewModel.allCashboxRecords.collectAsState()
     val allOfficeDocuments by viewModel.allOfficeDocuments.collectAsState()
     val allAdvisoryNotes by viewModel.allAdvisoryNotes.collectAsState()
     val allSmartBoardQuotes by viewModel.allSmartBoardQuotes.collectAsState()
+    val allPayrolls by viewModel.allPayrolls.collectAsState()
+    val allFoodSchedules by viewModel.allFoodSchedules.collectAsState()
+    val khademCheckedTasks by viewModel.khademCheckedTasks.collectAsState()
     val currentRole by viewModel.currentUserRole.collectAsState()
     val showHijriBanner by viewModel.showHijriBanner.collectAsState()
+    val context = LocalContext.current
 
     var showDutiesDialog by remember { mutableStateOf(false) }
+    var pendingRejectVoucher by remember { mutableStateOf<TransactionEntity?>(null) }
 
     val (_, nextPrayerSummary) = computeTodayPrayerSchedule()
     val nextMeeting = allMeetings.firstOrNull { it.status == "upcoming" } ?: allMeetings.firstOrNull()
@@ -77,16 +88,62 @@ fun DashboardScreen(
     val myChandaPaid = memberChandaPayments.firstOrNull()?.amountPaid ?: 0.0
     val myChandaSub = memberChandaPayments.firstOrNull()?.let { "পরিশোধিত • ${it.month}" } ?: "চলতি মাস"
     val unverifiedCashboxes = allCashboxRecords.filter { !it.witnessVerified }
-    val pendingReplyDocs = allOfficeDocuments.count { it.status == "জবাব অপেক্ষমান" }
+    val pendingOfficeDocs = allOfficeDocuments.filter { it.status == "জবাব অপেক্ষমান" }
+    val pendingReplyDocs = pendingOfficeDocs.size
     val activeAdvisories = allAdvisoryNotes.filter { it.status == "পর্যালোচনাধীন" }
+    val upcomingEventCount = allEvents.count { it.status != "completed" }
+    val pendingWelfareCases = allWelfareCases.filter { it.status != "disbursed" }
+    val roleStaff = activeStaff.firstOrNull { it.roleCode.equals(currentRole.code, ignoreCase = true) }
+    val latestStaffPayroll = roleStaff?.let { st ->
+        allPayrolls.filter { it.staffId == st.id }.lastOrNull()
+    }
+    val mySalaryValue = when {
+        latestStaffPayroll != null -> "পরিশোধিত"
+        roleStaff != null -> "৳${toBengaliDigits(roleStaff.salaryAmount.toInt().toString())}"
+        else -> "পরিশোধিত"
+    }
+    val mySalarySub = when {
+        latestStaffPayroll != null -> "${toBengaliDigits(latestStaffPayroll.month)} • বেতন স্লিপ"
+        roleStaff != null -> "মাসিক বেতন • সার্ভিস রেকর্ড"
+        else -> "বেতন স্লিপ ও রেকর্ড"
+    }
+    val todayIso = remember {
+        java.text.SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH).format(java.util.Date())
+    }
+    val todayStaffFoodProvider = remember(allFoodSchedules, currentRole, todayIso) {
+        allFoodSchedules.firstOrNull { food ->
+            val dateNorm = viewModel.normalizeDigitsToAscii(food.dateStr).trim()
+            val matchesRole = when (currentRole) {
+                UserRole.IMAM -> food.receiverStaffName.contains("ইমাম", ignoreCase = true)
+                UserRole.MUAZZIN -> food.receiverStaffName.contains("মুয়াজ্জিন", ignoreCase = true) ||
+                    food.receiverStaffName.contains("মুয়াজ্জিন", ignoreCase = true)
+                UserRole.KHADEM -> food.receiverStaffName.contains("খাদেম", ignoreCase = true)
+                else -> false
+            }
+            dateNorm == todayIso && food.status != "cancelled" && food.status != "rejected" && matchesRole
+        }?.providerName
+    }
+    val khademChecklistProgress = remember(currentRole, khademCheckedTasks) {
+        if (currentRole == UserRole.KHADEM) {
+            "${toBengaliDigits(khademCheckedTasks.size.toString())}/${toBengaliDigits("4")} কাজ সম্পন্ন"
+        } else {
+            null
+        }
+    }
 
-    LazyColumn(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MosqueBgLight),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 14.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+            .background(MaterialTheme.colorScheme.background),
+        contentAlignment = Alignment.TopCenter
     ) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .widthIn(max = 840.dp),
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 14.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
         if (currentRole == UserRole.PRESIDENT) {
             // 1. Compact Unified Executive Sanctuary Hero
             item(key = "pres_hero") {
@@ -121,8 +178,16 @@ fun DashboardScreen(
                         StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
                             PresidentPendingVouchersCard(
                                 pendingTransactions = pendingTransactions,
-                                onApprove = { viewModel.updateTransactionStatus(it, true) },
-                                onReject = { viewModel.updateTransactionStatus(it, false) }
+                                onApprove = { txn ->
+                                    viewModel.updateTransactionStatus(txn, true)
+                                    Toast.makeText(
+                                        context,
+                                        "${txn.categoryNameBn} ভাউচারটি অনুমোদিত হয়েছে।",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                },
+                                onReject = { txn -> pendingRejectVoucher = txn },
+                                onViewAll = { onOpenDialog("pending_approval") }
                             )
                         }
                     }
@@ -174,7 +239,10 @@ fun DashboardScreen(
                         studentCount = studentCount,
                         staffCount = activeStaff.size,
                         noticeCount = allNotices.size,
+                        upcomingEventCount = upcomingEventCount,
+                        totalEventCount = allEvents.size,
                         welfareCount = allWelfareCases.size,
+                        pendingWelfareCount = pendingWelfareCases.size,
                         cashboxCount = allCashboxRecords.size,
                         pendingCashboxWitnessCount = unverifiedCashboxes.size,
                         officeDocCount = allOfficeDocuments.size,
@@ -251,7 +319,9 @@ fun DashboardScreen(
                 StaggeredDashboardItem(index = 7, modifier = Modifier.animateItem()) {
                     UpcomingMeetingsCard(
                         meetings = allMeetings,
-                        onScheduleClick = { onOpenDialog("schedule_meeting") }
+                        canSchedule = currentRole.canScheduleMeetings(),
+                        onScheduleClick = { onOpenDialog("schedule_meeting") },
+                        onViewAllClick = { onOpenDialog("meetings") }
                     )
                 }
             }
@@ -268,30 +338,17 @@ fun DashboardScreen(
                 }
             }
         } else {
-            // 0. Islamic Hijri Date & Bismillah Sanctuary Banner
-            if (showHijriBanner) {
-                item {
-                    HijriDateBanner(
-                        mosqueName = mosque?.nameBn ?: "বায়তুল জান্নাত জামে মসজিদ"
+            // 0. Unified Compact Executive Sanctuary Hero (same crisp layout for all 16 roles)
+            item(key = "role_hero") {
+                StaggeredDashboardItem(index = 0, modifier = Modifier.animateItem()) {
+                    ExecutiveMosqueHeroCard(
+                        mosque = mosque,
+                        currentRole = currentRole,
+                        showHijriDate = showHijriBanner,
+                        onDutiesClick = { showDutiesDialog = true },
+                        onMosqueProfileClick = { onOpenDialog("mosque_profile") }
                     )
                 }
-            }
-
-            // 0.1 Official Role Workspace Badge (Tap for Duties Checklist or My Profile)
-            item {
-                RoleWorkspaceHeader(
-                    currentRole = currentRole,
-                    onDutiesClick = { showDutiesDialog = true },
-                    onProfileClick = { onOpenDialog("my_profile") }
-                )
-            }
-
-            // 1. Hero Card
-            item {
-                HeroCard(
-                    mosque = mosque,
-                    onMosqueProfileClick = { onOpenDialog("mosque_profile") }
-                )
             }
 
             // 1.1 Vice President Pending Voucher Approval Hotline
@@ -299,8 +356,16 @@ fun DashboardScreen(
                 item {
                     PresidentPendingVouchersCard(
                         pendingTransactions = pendingTransactions,
-                        onApprove = { viewModel.updateTransactionStatus(it, true) },
-                        onReject = { viewModel.updateTransactionStatus(it, false) }
+                        onApprove = { txn ->
+                            viewModel.updateTransactionStatus(txn, true)
+                            Toast.makeText(
+                                context,
+                                "${txn.categoryNameBn} ভাউচারটি অনুমোদিত হয়েছে।",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        },
+                        onReject = { txn -> pendingRejectVoucher = txn },
+                        onViewAll = { onOpenDialog("pending_approval") }
                     )
                 }
             }
@@ -330,6 +395,26 @@ fun DashboardScreen(
                     AdvisoryHighlightCard(
                         notes = activeAdvisories,
                         onOpenAdvisory = { onOpenDialog("sharia_advisory") }
+                    )
+                }
+            }
+
+            // 1.1d Pending Office Correspondence Highlight (Office Secretary)
+            if (currentRole == UserRole.OFFICE_SECRETARY && pendingOfficeDocs.isNotEmpty()) {
+                item {
+                    PendingOfficeDocsHighlightCard(
+                        pendingDocs = pendingOfficeDocs,
+                        onOpenOfficeDocs = { onOpenDialog("office_docs") }
+                    )
+                }
+            }
+
+            // 1.1e Pending Welfare Distribution Highlight (Welfare & Education Secretary)
+            if (currentRole == UserRole.WELFARE_EDUCATION_SECRETARY && pendingWelfareCases.isNotEmpty()) {
+                item {
+                    PendingWelfareHighlightCard(
+                        pendingCases = pendingWelfareCases,
+                        onOpenWelfare = { onOpenDialog("welfare") }
                     )
                 }
             }
@@ -370,12 +455,20 @@ fun DashboardScreen(
                     studentCount = studentCount,
                     staffCount = activeStaff.size,
                     noticeCount = allNotices.size,
+                    upcomingEventCount = upcomingEventCount,
+                    totalEventCount = allEvents.size,
                     welfareCount = allWelfareCases.size,
+                    pendingWelfareCount = pendingWelfareCases.size,
                     cashboxCount = allCashboxRecords.size,
                     pendingCashboxWitnessCount = unverifiedCashboxes.size,
                     officeDocCount = allOfficeDocuments.size,
                     pendingReplyDocCount = pendingReplyDocs,
                     advisoryCount = allAdvisoryNotes.size,
+                    pendingAdvisoryCount = activeAdvisories.size,
+                    mySalaryStatusValue = mySalaryValue,
+                    mySalaryStatusSubtitle = mySalarySub,
+                    todayStaffFoodProvider = todayStaffFoodProvider,
+                    khademChecklistProgress = khademChecklistProgress,
                     smartQuoteCount = allSmartBoardQuotes.size,
                     nextMeetingTitleDate = nextMeeting?.meetingDate?.substringBefore(",") ?: "নির্ধারিত নেই",
                     nextMeetingSubtitle = nextMeeting?.title ?: "কোনো আসন্ন সভা নেই",
@@ -418,16 +511,23 @@ fun DashboardScreen(
                     UserRole.VICE_PRESIDENT,
                     UserRole.GENERAL_SECRETARY,
                     UserRole.ASSISTANT_SECRETARY,
+                    UserRole.TREASURER,
+                    UserRole.ASSISTANT_TREASURER,
                     UserRole.ORGANIZING_SECRETARY,
+                    UserRole.PUBLICITY_SECRETARY,
                     UserRole.OFFICE_SECRETARY,
+                    UserRole.WELFARE_EDUCATION_SECRETARY,
                     UserRole.EXECUTIVE_MEMBER,
+                    UserRole.IMAM,
                     UserRole.ADVISORY_BOARD
                 )
             ) {
                 item {
                     UpcomingMeetingsCard(
                         meetings = allMeetings,
-                        onScheduleClick = { onOpenDialog("schedule_meeting") }
+                        canSchedule = currentRole.canScheduleMeetings(),
+                        onScheduleClick = { onOpenDialog("schedule_meeting") },
+                        onViewAllClick = { onOpenDialog("meetings") }
                     )
                 }
             }
@@ -447,6 +547,7 @@ fun DashboardScreen(
         item {
             Spacer(modifier = Modifier.height(16.dp))
         }
+        }
     }
 
     if (showDutiesDialog) {
@@ -454,6 +555,25 @@ fun DashboardScreen(
             role = currentRole,
             onOpenFullCharter = { onOpenDialog("charter") },
             onDismiss = { showDutiesDialog = false }
+        )
+    }
+
+    pendingRejectVoucher?.let { txn ->
+        MosqueConfirmDialog(
+            title = "ভাউচার বাতিলের নিশ্চিতকরণ",
+            message = "আপনি কি \"${txn.categoryNameBn}\" (৳${toBengaliDigits(String.format("%,.0f", txn.amount))}) ভাউচারটি বাতিল করতে চান?",
+            confirmText = "হ্যাঁ, বাতিল করুন",
+            isDestructive = true,
+            onConfirm = {
+                viewModel.updateTransactionStatus(txn, false)
+                Toast.makeText(
+                    context,
+                    "${txn.categoryNameBn} ভাউচারটি বাতিল করা হয়েছে।",
+                    Toast.LENGTH_SHORT
+                ).show()
+                pendingRejectVoucher = null
+            },
+            onDismiss = { pendingRejectVoucher = null }
         )
     }
 }
@@ -467,7 +587,7 @@ fun PendingCashboxWitnessCard(
 ) {
     val firstRec = records.first()
     MehrabArchCard(
-        backgroundColor = Color.White,
+        backgroundColor = MaterialTheme.colorScheme.surface,
         borderColor = MosqueWarningAmber.copy(alpha = 0.55f),
         elevation = 2.dp
     ) {
@@ -484,23 +604,23 @@ fun PendingCashboxWitnessCard(
                         text = "দান বাক্স সাক্ষ্য যাচাই (${toBengaliDigits(records.size.toString())}টি)",
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
-                        color = MosqueEmeraldDark
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
                 TextButton(onClick = onOpenCashbox) {
-                    Text("সব দেখুন", fontSize = 11.sp, color = MosqueEmeraldPrimary)
+                    Text("সব দেখুন", fontSize = 11.sp, color = MaterialTheme.colorScheme.primary)
                 }
             }
             Text(
-                text = "${firstRec.boxType} • ৳${String.format(Locale.getDefault(), "%,.0f", firstRec.countedAmount)} (${firstRec.collectionDate})",
+                text = "${firstRec.boxType} • ৳${toBengaliDigits(String.format(Locale.getDefault(), "%,.0f", firstRec.countedAmount))} (${toBengaliDigits(firstRec.collectionDate)})",
                 style = MaterialTheme.typography.bodySmall,
                 fontWeight = FontWeight.SemiBold,
-                color = MosqueTextPrimary
+                color = MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = "গণনাকারী: ${firstRec.countedBy}",
                 style = MaterialTheme.typography.labelSmall,
-                color = MosqueTextSecondary
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             if (canVerify) {
                 Spacer(modifier = Modifier.height(8.dp))
@@ -527,8 +647,12 @@ fun AdvisoryHighlightCard(
     onOpenAdvisory: () -> Unit
 ) {
     val top = notes.first()
+    val isDark = LocalIsDarkTheme.current
+    val cardBg = if (isDark) MosqueNightSurfaceVariant else MosqueGoldSoft
+    val headingColor = if (isDark) MosqueGoldLight else MosqueEmeraldDark
+    val primaryColor = MaterialTheme.colorScheme.primary
     MehrabArchCard(
-        backgroundColor = MosqueGoldSoft,
+        backgroundColor = cardBg,
         borderColor = MosqueGoldDeep.copy(alpha = 0.5f),
         elevation = 2.dp
     ) {
@@ -538,27 +662,39 @@ fun AdvisoryHighlightCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = if (top.noteType == "SHARIA_REVIEW") "🕌 শরিয়াহ পর্যালোচনা নোট" else "🏛️ উপদেষ্টা পরিষদের পরামর্শ",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = MosqueEmeraldDark
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Icon(
+                        imageVector = if (top.noteType == "SHARIA_REVIEW") Icons.Default.Mosque else Icons.Default.SupervisorAccount,
+                        contentDescription = null,
+                        tint = primaryColor,
+                        modifier = Modifier.size(17.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = if (top.noteType == "SHARIA_REVIEW") "শরিয়াহ পর্যালোচনা নোট" else "উপদেষ্টা পরিষদের পরামর্শ",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = headingColor
+                    )
+                }
                 TextButton(onClick = onOpenAdvisory) {
-                    Text("বিস্তারিত", fontSize = 11.sp, color = MosqueEmeraldPrimary)
+                    Text("বিস্তারিত", fontSize = 11.sp, color = primaryColor)
                 }
             }
             Text(
                 text = top.topic,
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Bold,
-                color = MosqueTextPrimary
+                color = MaterialTheme.colorScheme.onSurface
             )
             Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = top.recommendation,
                 style = MaterialTheme.typography.bodySmall,
-                color = MosqueTextSecondary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 2
             )
         }
@@ -566,13 +702,152 @@ fun AdvisoryHighlightCard(
 }
 
 @Composable
+fun PendingOfficeDocsHighlightCard(
+    pendingDocs: List<OfficeDocumentEntity>,
+    onOpenOfficeDocs: () -> Unit
+) {
+    val firstDoc = pendingDocs.first()
+    MehrabArchCard(
+        backgroundColor = MaterialTheme.colorScheme.surface,
+        borderColor = RoleOfficeAccent.copy(alpha = 0.55f),
+        elevation = 2.dp
+    ) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.MarkEmailUnread,
+                        contentDescription = null,
+                        tint = RoleOfficeAccent,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "জবাব অপেক্ষমাণ চিঠি (${toBengaliDigits(pendingDocs.size.toString())}টি)",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+                TextButton(onClick = onOpenOfficeDocs) {
+                    Text("সব নথি", fontSize = 11.sp, color = MaterialTheme.colorScheme.primary)
+                }
+            }
+            Text(
+                text = firstDoc.title,
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = "${firstDoc.category} • প্রেরক: ${firstDoc.counterparty} • ${toBengaliDigits(firstDoc.docDate)}",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Button(
+                onClick = onOpenOfficeDocs,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 48.dp),
+                shape = RoundedCornerShape(10.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = RoleOfficeAccent)
+            ) {
+                Icon(Icons.Default.EditNote, contentDescription = null, modifier = Modifier.size(16.dp))
+                Spacer(modifier = Modifier.width(6.dp))
+                Text("জবাব তৈরি ও ফাইল খুলুন", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+            }
+        }
+    }
+}
+
+@Composable
+fun PendingWelfareHighlightCard(
+    pendingCases: List<WelfareCaseEntity>,
+    onOpenWelfare: () -> Unit
+) {
+    val firstCase = pendingCases.first()
+    MehrabArchCard(
+        backgroundColor = MaterialTheme.colorScheme.surface,
+        borderColor = RoleWelfareEduAccent.copy(alpha = 0.55f),
+        elevation = 2.dp
+    ) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.VolunteerActivism,
+                        contentDescription = null,
+                        tint = RoleWelfareEduAccent,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "বিতরণ অপেক্ষমাণ সহায়তা (${toBengaliDigits(pendingCases.size.toString())}টি)",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+                TextButton(onClick = onOpenWelfare) {
+                    Text("সব দেখুন", fontSize = 11.sp, color = MaterialTheme.colorScheme.primary)
+                }
+            }
+            Text(
+                text = "${firstCase.beneficiaryName} • ৳${toBengaliDigits(firstCase.amountApproved.toInt().toString())}",
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = "${firstCase.category} • ${toBengaliDigits(firstCase.applicationDate)}",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Button(
+                onClick = onOpenWelfare,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 48.dp),
+                shape = RoundedCornerShape(10.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = RoleWelfareEduAccent)
+            ) {
+                Icon(Icons.Default.VolunteerActivism, contentDescription = null, modifier = Modifier.size(16.dp))
+                Spacer(modifier = Modifier.width(6.dp))
+                Text("যাকাত ও সহায়তা বিতরণ খুলুন", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+            }
+        }
+    }
+}
+
+@Composable
 fun UpcomingMeetingsCard(
     meetings: List<MeetingEntity>,
-    onScheduleClick: () -> Unit
+    canSchedule: Boolean = true,
+    onScheduleClick: () -> Unit,
+    onViewAllClick: (() -> Unit)? = null
 ) {
+    val isDark = LocalIsDarkTheme.current
+    val itemBg = if (isDark) MosqueNightSurfaceVariant else MosqueBgLight
+    val headingColor = MaterialTheme.colorScheme.primary
     MehrabArchCard(
         modifier = Modifier.fillMaxWidth(),
-        backgroundColor = Color.White,
+        backgroundColor = MaterialTheme.colorScheme.surface,
         borderColor = MosqueCardBorderGold.copy(alpha = 0.5f),
         elevation = 2.dp
     ) {
@@ -582,11 +857,14 @@ fun UpcomingMeetingsCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
+                ) {
                     Icon(
                         imageVector = Icons.Default.Event,
                         contentDescription = null,
-                        tint = MosqueEmeraldPrimary,
+                        tint = headingColor,
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
@@ -594,20 +872,37 @@ fun UpcomingMeetingsCard(
                         text = "আসন্ন কমিটি সভা ও এজেন্ডা",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = MosqueEmeraldDark
+                        color = headingColor
                     )
                 }
 
-                TextButton(
-                    onClick = onScheduleClick,
-                    contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp)
-                ) {
-                    Text(
-                        text = "+ নতুন সভা",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MosqueEmeraldPrimary,
-                        fontWeight = FontWeight.Bold
-                    )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (onViewAllClick != null) {
+                        TextButton(
+                            onClick = onViewAllClick,
+                            contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp)
+                        ) {
+                            Text(
+                                text = "সব দেখুন",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = headingColor,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                    if (canSchedule) {
+                        TextButton(
+                            onClick = onScheduleClick,
+                            contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp)
+                        ) {
+                            Text(
+                                text = "+ নতুন সভা",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = headingColor,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
                 }
             }
 
@@ -617,7 +912,7 @@ fun UpcomingMeetingsCard(
                 Text(
                     text = "কোনো নির্ধারিত সভা নেই",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MosqueTextMuted
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             } else {
                 meetings.take(2).forEach { meeting ->
@@ -626,7 +921,7 @@ fun UpcomingMeetingsCard(
                             .fillMaxWidth()
                             .padding(vertical = 4.dp)
                             .clip(RoundedCornerShape(10.dp))
-                            .background(MosqueBgLight)
+                            .background(itemBg)
                             .padding(10.dp)
                     ) {
                         Column {
@@ -638,7 +933,7 @@ fun UpcomingMeetingsCard(
                                     text = meeting.title,
                                     style = MaterialTheme.typography.labelLarge,
                                     fontWeight = FontWeight.Bold,
-                                    color = MosqueTextPrimary,
+                                    color = MaterialTheme.colorScheme.onSurface,
                                     modifier = Modifier.weight(1f)
                                 )
                                 Box(
@@ -661,21 +956,21 @@ fun UpcomingMeetingsCard(
                                 Icon(
                                     imageVector = Icons.Default.AccessTime,
                                     contentDescription = null,
-                                    tint = MosqueTextMuted,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.size(12.dp)
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
                                     text = meeting.meetingDate,
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = MosqueTextSecondary
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
                                 text = "এজেন্ডা: ${meeting.agenda}",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MosqueTextMuted,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 maxLines = 2
                             )
                         }
@@ -691,9 +986,10 @@ fun RecentActivityCard(
     transactions: List<TransactionEntity>,
     onViewAllClick: () -> Unit
 ) {
+    val headingColor = MaterialTheme.colorScheme.primary
     MehrabArchCard(
         modifier = Modifier.fillMaxWidth(),
-        backgroundColor = Color.White,
+        backgroundColor = MaterialTheme.colorScheme.surface,
         borderColor = MosqueCardBorderGold.copy(alpha = 0.5f),
         elevation = 2.dp
     ) {
@@ -707,7 +1003,7 @@ fun RecentActivityCard(
                     Icon(
                         imageVector = Icons.Default.ReceiptLong,
                         contentDescription = null,
-                        tint = MosqueEmeraldPrimary,
+                        tint = headingColor,
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
@@ -715,7 +1011,7 @@ fun RecentActivityCard(
                         text = "সাম্প্রতিক আর্থিক লেনদেন",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = MosqueEmeraldDark
+                        color = headingColor
                     )
                 }
 
@@ -726,7 +1022,7 @@ fun RecentActivityCard(
                     Text(
                         text = "সব দেখুন",
                         style = MaterialTheme.typography.labelSmall,
-                        color = MosqueEmeraldPrimary,
+                        color = headingColor,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -771,12 +1067,12 @@ fun RecentActivityCard(
                                 text = txn.categoryNameBn,
                                 style = MaterialTheme.typography.labelLarge,
                                 fontWeight = FontWeight.SemiBold,
-                                color = MosqueTextPrimary
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
-                                text = "${txn.txnDate} • ${txn.createdBy}",
+                                text = "${toBengaliDigits(txn.txnDate)} • ${txn.createdBy}",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = MosqueTextMuted,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 maxLines = 1
                             )
                         }
@@ -784,7 +1080,7 @@ fun RecentActivityCard(
 
                     Column(horizontalAlignment = Alignment.End) {
                         Text(
-                            text = "${if (txn.type == "INCOME") "+" else "-"}৳${String.format("%,.0f", txn.amount)}",
+                            text = "${if (txn.type == "INCOME") "+" else "-"}৳${toBengaliDigits(String.format("%,.0f", txn.amount))}",
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.Bold,
                             color = if (txn.type == "INCOME") MosqueSuccessGreen else MosqueUrgentRed
@@ -807,7 +1103,7 @@ fun RecentActivityCard(
                     }
                 }
                 if (txn != transactions.last()) {
-                    HorizontalDivider(color = MosqueCardBorder.copy(alpha = 0.5f))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f))
                 }
             }
         }
@@ -818,10 +1114,13 @@ fun RecentActivityCard(
 fun PresidentPendingVouchersCard(
     pendingTransactions: List<TransactionEntity>,
     onApprove: (TransactionEntity) -> Unit,
-    onReject: (TransactionEntity) -> Unit
+    onReject: (TransactionEntity) -> Unit,
+    onViewAll: (() -> Unit)? = null
 ) {
+    val isDark = LocalIsDarkTheme.current
+    val rowBg = if (isDark) MosqueNightSurfaceVariant else MosqueBgLight
     MehrabArchCard(
-        backgroundColor = Color.White,
+        backgroundColor = MaterialTheme.colorScheme.surface,
         borderColor = MosqueUrgentRed.copy(alpha = 0.5f),
         elevation = 3.dp
     ) {
@@ -831,7 +1130,10 @@ fun PresidentPendingVouchersCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
+                ) {
                     Box(
                         modifier = Modifier
                             .size(28.dp)
@@ -849,15 +1151,28 @@ fun PresidentPendingVouchersCard(
                     Spacer(modifier = Modifier.width(8.dp))
                     Column {
                         Text(
-                            text = "নির্বাহী অনুমোদন ডেস্ক (${pendingTransactions.size}টি ভাউচার)",
+                            text = "নির্বাহী অনুমোদন ডেস্ক (${toBengaliDigits(pendingTransactions.size.toString())}টি ভাউচার)",
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
-                            color = MosqueEmeraldDark
+                            color = MaterialTheme.colorScheme.primary
                         )
                         Text(
-                            text = "সভাপতির স্বাক্ষর ও ব্যয় ভাউচার নিষ্পত্তি",
+                            text = "নির্বাহী স্বাক্ষর ও ব্যয় ভাউচার নিষ্পত্তি",
                             style = MaterialTheme.typography.labelSmall,
-                            color = MosqueTextMuted
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+                if (onViewAll != null) {
+                    TextButton(
+                        onClick = onViewAll,
+                        contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp)
+                    ) {
+                        Text(
+                            text = "সব দেখুন",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }
@@ -868,8 +1183,8 @@ fun PresidentPendingVouchersCard(
             pendingTransactions.take(3).forEach { txn ->
                 Surface(
                     shape = RoundedCornerShape(10.dp),
-                    color = MosqueBgLight,
-                    border = BorderStroke(1.dp, MosqueCardBorderSubtle),
+                    color = rowBg,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 4.dp)
@@ -884,10 +1199,10 @@ fun PresidentPendingVouchersCard(
                                 text = txn.categoryNameBn,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 13.sp,
-                                color = MosqueTextDark
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
-                                text = "দাবিকৃত: ৳${String.format("%,.0f", txn.amount)} • ${txn.createdBy}",
+                                text = "দাবিকৃত: ৳${toBengaliDigits(String.format("%,.0f", txn.amount))} • ${txn.createdBy}",
                                 fontSize = 11.sp,
                                 color = MosqueUrgentRed,
                                 fontWeight = FontWeight.SemiBold
@@ -926,33 +1241,42 @@ fun MusalliDevotionalCard(
     onViewReceipt: () -> Unit,
     onMakeDonation: () -> Unit
 ) {
+    val isDark = LocalIsDarkTheme.current
+    val gradientColors = if (isDark) {
+        listOf(MosqueNightSurfaceVariant, MosqueNightSurface)
+    } else {
+        listOf(MosqueGoldSoft.copy(alpha = 0.5f), Color.White)
+    }
     MehrabArchCard(
-        backgroundColor = Color.White,
+        backgroundColor = MaterialTheme.colorScheme.surface,
         borderColor = MosqueCardBorderGold.copy(alpha = 0.6f),
         elevation = 3.dp
     ) {
         Column(
             modifier = Modifier
-                .background(
-                    Brush.verticalGradient(
-                        listOf(MosqueGoldSoft.copy(alpha = 0.5f), Color.White)
-                    )
-                )
+                .background(Brush.verticalGradient(gradientColors))
                 .padding(14.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.MenuBook,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    text = "📖 আজকের হাদিস ও দ্বীনি অনুপ্রেরণা",
+                    text = "আজকের হাদিস ও দ্বীনি অনুপ্রেরণা",
                     fontWeight = FontWeight.Bold,
                     fontSize = 13.sp,
-                    color = MosqueEmeraldDark
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
             Spacer(modifier = Modifier.height(6.dp))
             Text(
                 text = "«مَنْ بَنَى مَسْجِدًا لِلَّهِ بَنَى اللَّهُ لَهُ فِي الْجَنَّةِ مِثْلَهُ»\n\"যে ব্যক্তি আল্লাহর সন্তুষ্টির উদ্দেশ্যে একটি মসজিদ নির্মাণ করে বা তাতে শরিক হয়, আল্লাহ তার জন্য জান্নাতে একটি প্রাসাদ নির্মাণ করেন।\" — (সহিহ বুখারি: ৪৫০)",
                 fontSize = 12.sp,
-                color = MosqueTextSecondary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 lineHeight = 18.sp
             )
             Spacer(modifier = Modifier.height(10.dp))
@@ -962,10 +1286,13 @@ fun MusalliDevotionalCard(
             ) {
                 OutlinedButton(
                     onClick = onViewReceipt,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = 48.dp)
+                        .testTag("musalli_receipt_button"),
                     shape = RoundedCornerShape(10.dp),
-                    border = BorderStroke(1.dp, MosqueEmeraldPrimary),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MosqueEmeraldPrimary)
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)
                 ) {
                     Icon(Icons.Default.QrCode2, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(6.dp))
@@ -973,13 +1300,16 @@ fun MusalliDevotionalCard(
                 }
                 Button(
                     onClick = onMakeDonation,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = 48.dp)
+                        .testTag("musalli_donation_button"),
                     shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary)
                 ) {
                     Icon(Icons.Default.VolunteerActivism, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("অনলাইনে চাঁদা", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    Text("চাঁদা খাতা দেখুন", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }

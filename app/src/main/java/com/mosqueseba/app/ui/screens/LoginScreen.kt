@@ -128,7 +128,7 @@ fun LoginScreen(
                     Spacer(modifier = Modifier.height(12.dp))
 
                     Text(
-                        text = "মসজিদ সেবা (Mosque Seba)",
+                        text = "মসজিদ সেবা",
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.ExtraBold,
                         color = Color.White,
@@ -258,7 +258,7 @@ fun LoginScreen(
                         value = committeeId,
                         onValueChange = { committeeId = it; errorMessage = null },
                         label = { Text("কমিটি আইডি *") },
-                        placeholder = { Text("MC-DHK-2024") },
+                        placeholder = { Text("কমিটি আইডি লিখুন") },
                         leadingIcon = { Icon(Icons.Default.Badge, contentDescription = null, tint = MosqueEmeraldPrimary) },
                         singleLine = true,
                         colors = fieldColors,
@@ -275,7 +275,7 @@ fun LoginScreen(
                             value = presidentEmail,
                             onValueChange = { presidentEmail = it; errorMessage = null },
                             label = { Text("সভাপতির ইমেইল ঠিকানা *") },
-                            placeholder = { Text("rafiqul.islam@example.com") },
+                            placeholder = { Text("সভাপতির ইমেইল ঠিকানা লিখুন") },
                             leadingIcon = { Icon(Icons.Default.Email, contentDescription = null, tint = MosqueEmeraldPrimary) },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                             singleLine = true,
@@ -493,7 +493,8 @@ fun LoginScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         QuickRoleChip(
-                            label = "👑 সভাপতি",
+                            label = "সভাপতি",
+                            icon = UserRole.PRESIDENT.roleIcon(),
                             onClick = {
                                 viewModel.quickLoginAsRole(UserRole.PRESIDENT, rememberMe)
                                 onLoginSuccess()
@@ -501,7 +502,8 @@ fun LoginScreen(
                             modifier = Modifier.weight(1f)
                         )
                         QuickRoleChip(
-                            label = "📝 সাধারণ সম্পাদক",
+                            label = "সাধারণ সম্পাদক",
+                            icon = UserRole.GENERAL_SECRETARY.roleIcon(),
                             onClick = {
                                 viewModel.quickLoginAsRole(UserRole.GENERAL_SECRETARY, rememberMe)
                                 onLoginSuccess()
@@ -509,7 +511,8 @@ fun LoginScreen(
                             modifier = Modifier.weight(1f)
                         )
                         QuickRoleChip(
-                            label = "💰 কোষাধ্যক্ষ",
+                            label = "কোষাধ্যক্ষ",
+                            icon = UserRole.TREASURER.roleIcon(),
                             onClick = {
                                 viewModel.quickLoginAsRole(UserRole.TREASURER, rememberMe)
                                 onLoginSuccess()
@@ -523,7 +526,8 @@ fun LoginScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         QuickRoleChip(
-                            label = "🕌 পেশ ইমাম",
+                            label = "পেশ ইমাম",
+                            icon = UserRole.IMAM.roleIcon(),
                             onClick = {
                                 viewModel.quickLoginAsRole(UserRole.IMAM, rememberMe)
                                 onLoginSuccess()
@@ -531,7 +535,8 @@ fun LoginScreen(
                             modifier = Modifier.weight(1f)
                         )
                         QuickRoleChip(
-                            label = "👥 সাধারণ মুসল্লি",
+                            label = "সাধারণ মুসল্লি",
+                            icon = UserRole.GENERAL_MEMBER.roleIcon(),
                             onClick = {
                                 viewModel.quickLoginAsRole(UserRole.GENERAL_MEMBER, rememberMe)
                                 onLoginSuccess()
@@ -594,7 +599,8 @@ fun LoginScreen(
                                 ) {
                                     pair.forEach { role ->
                                         QuickRoleChip(
-                                            label = "${role.emoji} ${role.titleBn.substringBefore(" (")}",
+                                            label = role.titleBn.substringBefore(" ("),
+                                            icon = role.roleIcon(),
                                             onClick = {
                                                 viewModel.quickLoginAsRole(role, rememberMe)
                                                 onLoginSuccess()
@@ -783,6 +789,7 @@ private fun LoginRoleTabButton(
 @Composable
 fun QuickRoleChip(
     label: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector? = null,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -791,20 +798,32 @@ fun QuickRoleChip(
         color = MosqueBgLight,
         border = BorderStroke(1.dp, MosqueCardBorderGold),
         modifier = modifier
-            .heightIn(min = 44.dp)
+            .heightIn(min = 48.dp)
             .clip(RoundedCornerShape(10.dp))
             .clickable { onClick() }
     ) {
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier.padding(vertical = 10.dp, horizontal = 6.dp)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier.padding(vertical = 10.dp, horizontal = 8.dp)
         ) {
+            if (icon != null) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = MosqueEmeraldPrimary,
+                    modifier = Modifier.size(15.dp)
+                )
+                Spacer(modifier = Modifier.width(5.dp))
+            }
             Text(
                 text = label,
                 fontSize = 11.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = MosqueEmeraldDark,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
             )
         }
     }

@@ -32,6 +32,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -40,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.mosqueseba.app.R
 import com.mosqueseba.app.data.local.entity.ChandaPaymentEntity
 import com.mosqueseba.app.data.local.entity.MeetingEntity
 import com.mosqueseba.app.data.local.entity.MemberEntity
@@ -175,6 +177,8 @@ fun AddMemberDialog(
         MehrabArchCard(
             modifier = Modifier
                 .fillMaxWidth()
+                .widthIn(max = 560.dp)
+                .imePadding()
                 .padding(horizontal = 16.dp, vertical = 20.dp),
             backgroundColor = MosqueBgLight,
             borderColor = MosqueCardBorderGold,
@@ -233,11 +237,20 @@ fun AddMemberDialog(
                                 )
                             }
                         }
-                        IconButton(onClick = onDismiss) {
+                        IconButton(
+                            onClick = onDismiss,
+                            modifier = Modifier.minimumInteractiveComponentSize()
+                        ) {
                             Icon(Icons.Default.Close, contentDescription = "বন্ধ করুন", tint = Color.White)
                         }
                     }
                 }
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(2.5.dp)
+                        .background(IslamicGoldTrimGradient)
+                )
 
                 // Scrollable Form Body
                 Column(
@@ -336,18 +349,6 @@ fun AddMemberDialog(
                             leadingIcon = { Icon(Icons.Default.Person, contentDescription = null, tint = MosqueEmeraldPrimary) },
                             isError = nameError != null,
                             supportingText = nameError?.let { err -> { Text(err, color = MosqueUrgentRed, fontSize = 11.sp) } },
-                            shape = RoundedCornerShape(12.dp),
-                            singleLine = true,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        OutlinedTextField(
-                            value = nameEn,
-                            onValueChange = { nameEn = it },
-                            label = { Text("পূর্ণ নাম (English - ঐচ্ছিক)") },
-                            leadingIcon = { Icon(Icons.Default.Translate, contentDescription = null, tint = MosqueTextMuted) },
                             shape = RoundedCornerShape(12.dp),
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth()
@@ -698,7 +699,7 @@ fun AddMemberDialog(
                         OutlinedTextField(
                             value = nid,
                             onValueChange = { nid = it },
-                            label = { Text("জাতীয় পরিচয়পত্র নম্বর (NID)") },
+                            label = { Text("জাতীয় পরিচয়পত্র (এনআইডি) নম্বর") },
                             leadingIcon = { Icon(Icons.Default.CreditCard, contentDescription = null, tint = MosqueTextMuted) },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             shape = RoundedCornerShape(12.dp),
@@ -900,27 +901,20 @@ fun AddMemberDialog(
     }
 
     if (showDeleteConfirm && onDeleteMember != null) {
-        AlertDialog(
-            onDismissRequest = { showDeleteConfirm = false },
-            title = { Text("সদস্য অপসারণ নিশ্চিত করুন", fontWeight = FontWeight.Bold) },
-            text = { Text("আপনি কি নিশ্চিতভাবে \"${nameBn.ifBlank { initialMember?.nameBn ?: initialStaff?.nameBn ?: "এই সদস্য" }}\"-কে সদস্য তালিকা থেকে অপসারণ করতে চান?") },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        showDeleteConfirm = false
-                        onDeleteMember()
-                        onDismiss()
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = MosqueUrgentRed)
-                ) {
-                    Text("হ্যাঁ, অপসারণ করুন")
-                }
+        val targetName = nameBn.ifBlank { initialMember?.nameBn ?: initialStaff?.nameBn ?: "এই সদস্য" }
+        MosqueConfirmDialog(
+            title = "সদস্য অপসারণ নিশ্চিত করুন",
+            message = "আপনি কি নিশ্চিতভাবে \"$targetName\"-কে সদস্য তালিকা থেকে স্থায়ীভাবে অপসারণ করতে চান?",
+            confirmText = "হ্যাঁ, অপসারণ করুন",
+            isDestructive = true,
+            icon = Icons.Default.DeleteForever,
+            confirmTag = "confirm_delete_member_button",
+            onConfirm = {
+                showDeleteConfirm = false
+                onDeleteMember()
+                onDismiss()
             },
-            dismissButton = {
-                TextButton(onClick = { showDeleteConfirm = false }) {
-                    Text("বাতিল")
-                }
-            }
+            onDismiss = { showDeleteConfirm = false }
         )
     }
 }
@@ -1021,18 +1015,18 @@ fun AddTransactionDialog(
     val incomeCategories = remember {
         listOf(
             "জুমার দান বাক্স",
-            "মাসিক সদস্য চাঁদা",
             "মসজিদ সংস্কার অনুদান",
             "হিফজখানা অনুদান",
+            "ওয়াকফ ও দোকান ভাড়া",
             "সাধারণ দান"
         )
     }
     val expenseCategories = remember {
         listOf(
-            "ইমাম ও কর্মচারীদের বেতন",
             "বিদ্যুৎ ও ইউটিলিটি বিল",
             "মসজিদ রক্ষণাবেক্ষণ",
             "জেনারেটর জ্বালানি",
+            "অজুখানা ও পানি ব্যবস্থাপনা",
             "আপ্যায়ন ও বিবিধ"
         )
     }
@@ -1063,9 +1057,11 @@ fun AddTransactionDialog(
             modifier = Modifier
                 .fillMaxWidth(0.95f)
                 .widthIn(max = 560.dp)
-                .heightIn(max = 740.dp),
-            backgroundColor = Color.White,
-            borderColor = MosqueCardBorderGold
+                .heightIn(max = 740.dp)
+                .imePadding(),
+            backgroundColor = MosqueBgLight,
+            borderColor = MosqueCardBorderGold,
+            elevation = 8.dp
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
                 // Sticky Header
@@ -1073,35 +1069,68 @@ fun AddTransactionDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(MosqueEmeraldDarkGradient)
-                        .padding(horizontal = 16.dp, vertical = 12.dp)
+                        .padding(horizontal = 18.dp, vertical = 14.dp)
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = if (isIncome) "নতুন আয় অন্তর্ভুক্ত করুন" else "নতুন ব্যয় লিপিবদ্ধ করুন",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = Color.White
-                            )
-                            Text(
-                                text = if (isIncome) "ফান্ড জমা ও ভাউচার স্বয়ংক্রিয়ভাবে আপডেট হবে" else "খরচের ভাউচার ও অনুমোদন ট্র্যাকিং যুক্ত হবে",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MosqueGoldLight,
-                                fontSize = 11.sp
-                            )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Surface(
+                                shape = CircleShape,
+                                color = MosqueGold.copy(alpha = 0.2f),
+                                border = BorderStroke(1.dp, MosqueGold.copy(alpha = 0.7f)),
+                                modifier = Modifier.size(40.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = if (isIncome) Icons.Default.AddCircle else Icons.Default.RemoveCircle,
+                                        contentDescription = null,
+                                        tint = MosqueGoldLight,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(
+                                    text = if (isIncome) "নতুন আয় অন্তর্ভুক্ত করুন" else "নতুন ব্যয় লিপিবদ্ধ করুন",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = Color.White,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Text(
+                                    text = if (isIncome) "ফান্ড জমা ও ভাউচার স্বয়ংক্রিয়ভাবে আপডেট হবে" else "খরচের ভাউচার ও অনুমোদন ট্র্যাকিং যুক্ত হবে",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MosqueGoldLight,
+                                    fontSize = 11.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
                         }
                         IconButton(
                             onClick = onDismiss,
-                            modifier = Modifier.testTag("txn_dialog_close")
+                            modifier = Modifier
+                                .minimumInteractiveComponentSize()
+                                .testTag("txn_dialog_close")
                         ) {
                             Icon(Icons.Default.Close, contentDescription = "বন্ধ করুন", tint = Color.White)
                         }
                     }
                 }
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(2.5.dp)
+                        .background(IslamicGoldTrimGradient)
+                )
 
                 // Scrollable Body
                 Column(
@@ -1164,6 +1193,38 @@ fun AddTransactionDialog(
                             Icon(Icons.Default.ArrowUpward, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
                             Text("ব্যয় (খরচ)", fontWeight = FontWeight.Bold)
+                        }
+                    }
+
+                    // Auto-sync 안내 banner so user knows Chanda & Salary are added automatically from Member List
+                    Surface(
+                        shape = RoundedCornerShape(10.dp),
+                        color = if (isIncome) MosqueEmeraldSoft.copy(alpha = 0.7f) else MosqueGoldSoft,
+                        border = BorderStroke(1.dp, if (isIncome) MosqueEmeraldPrimary.copy(alpha = 0.35f) else MosqueCardBorderGold),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.AutoAwesome,
+                                contentDescription = null,
+                                tint = if (isIncome) MosqueEmeraldPrimary else MosqueGoldDeep,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = if (isIncome) {
+                                    "সদস্য তালিকা থেকে মাসিক চাঁদা গ্রহণ করলে তা স্বয়ংক্রিয়ভাবে মোট আয়ের সাথে যুক্ত হয় — এখানে ম্যানুয়ালি যুক্ত করতে হবে না।"
+                                } else {
+                                    "বেতনভুক্ত সদস্য তালিকা থেকে বেতন প্রদান করলে তা স্বয়ংক্রিয়ভাবে মোট ব্যয়ের সাথে যুক্ত হয় — এখানে ম্যানুয়ালি যুক্ত করতে হবে না।"
+                                },
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MosqueEmeraldDark,
+                                fontWeight = FontWeight.SemiBold,
+                                lineHeight = 15.sp
+                            )
                         }
                     }
 
@@ -1282,7 +1343,7 @@ fun AddTransactionDialog(
                         ) {
                             ChandaMethodOptionCard(
                                 label = "নগদ",
-                                subLabel = "Cash",
+                                subLabel = "হাতে নগদ",
                                 icon = Icons.Default.Payments,
                                 selected = method == "cash",
                                 onClick = { method = "cash" },
@@ -1290,7 +1351,7 @@ fun AddTransactionDialog(
                             )
                             ChandaMethodOptionCard(
                                 label = "বিকাশ/নগদ",
-                                subLabel = "Mobile",
+                                subLabel = "মোবাইল ব্যাংকিং",
                                 icon = Icons.Default.PhoneAndroid,
                                 selected = method == "mobile_banking",
                                 onClick = { method = "mobile_banking" },
@@ -1298,7 +1359,7 @@ fun AddTransactionDialog(
                             )
                             ChandaMethodOptionCard(
                                 label = "ব্যাংক/অনলাইন",
-                                subLabel = "Bank",
+                                subLabel = "ব্যাংক হিসাব",
                                 icon = Icons.Default.AccountBalance,
                                 selected = method == "online",
                                 onClick = { method = "online" },
@@ -1322,22 +1383,23 @@ fun AddTransactionDialog(
                 }
 
                 // Sticky Footer
-                HorizontalDivider(color = MosqueCardBorderSubtle)
+                HorizontalDivider(color = MosqueCardBorderGold)
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(MosqueBgLight.copy(alpha = 0.5f))
+                        .background(Color.White)
                         .padding(horizontal = 16.dp, vertical = 12.dp),
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     OutlinedButton(
                         onClick = onDismiss,
+                        shape = RoundedCornerShape(12.dp),
                         modifier = Modifier
                             .weight(0.9f)
                             .heightIn(min = 48.dp)
                     ) {
-                        Text("বাতিল", color = MosqueTextSecondary, fontWeight = FontWeight.SemiBold)
+                        Text("বাতিল", color = MosqueTextSecondary, fontWeight = FontWeight.Bold)
                     }
                     Button(
                         onClick = {
@@ -1514,9 +1576,11 @@ fun ReceiveChandaDialog(
             modifier = Modifier
                 .fillMaxWidth(0.95f)
                 .widthIn(max = 560.dp)
-                .heightIn(max = 760.dp),
-            backgroundColor = Color.White,
-            borderColor = MosqueCardBorderGold
+                .heightIn(max = 760.dp)
+                .imePadding(),
+            backgroundColor = MosqueBgLight,
+            borderColor = MosqueCardBorderGold,
+            elevation = 8.dp
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
                 // Sticky Emerald Header
@@ -1524,35 +1588,68 @@ fun ReceiveChandaDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(MosqueEmeraldDarkGradient)
-                        .padding(horizontal = 16.dp, vertical = 12.dp)
+                        .padding(horizontal = 18.dp, vertical = 14.dp)
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "সদস্য চাঁদা গ্রহণ ও রসিদ",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = Color.White
-                            )
-                            Text(
-                                text = "এক সাথে ১, ৩, ৬ বা ৯ মাসের বকেয়া ও অগ্রিম আদায়",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MosqueGoldLight,
-                                fontSize = 11.sp
-                            )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Surface(
+                                shape = CircleShape,
+                                color = MosqueGold.copy(alpha = 0.2f),
+                                border = BorderStroke(1.dp, MosqueGold.copy(alpha = 0.7f)),
+                                modifier = Modifier.size(40.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = Icons.Default.Payments,
+                                        contentDescription = null,
+                                        tint = MosqueGoldLight,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(
+                                    text = "সদস্য চাঁদা গ্রহণ ও রসিদ",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = Color.White,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Text(
+                                    text = "এক সাথে ১, ৩, ৬ বা ৯ মাসের বকেয়া ও অগ্রিম আদায়",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MosqueGoldLight,
+                                    fontSize = 11.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
                         }
                         IconButton(
                             onClick = onDismiss,
-                            modifier = Modifier.testTag("chanda_dialog_close")
+                            modifier = Modifier
+                                .minimumInteractiveComponentSize()
+                                .testTag("chanda_dialog_close")
                         ) {
                             Icon(Icons.Default.Close, contentDescription = "বন্ধ করুন", tint = Color.White)
                         }
                     }
                 }
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(2.5.dp)
+                        .background(IslamicGoldTrimGradient)
+                )
 
                 // Scrollable Body
                 Column(
@@ -2124,7 +2221,7 @@ fun ReceiveChandaDialog(
                         ) {
                             ChandaMethodOptionCard(
                                 label = "নগদ",
-                                subLabel = "Cash",
+                                subLabel = "হাতে নগদ",
                                 icon = Icons.Default.Payments,
                                 selected = method == "cash",
                                 onClick = { method = "cash" },
@@ -2132,7 +2229,7 @@ fun ReceiveChandaDialog(
                             )
                             ChandaMethodOptionCard(
                                 label = "বিকাশ/নগদ",
-                                subLabel = "Mobile",
+                                subLabel = "মোবাইল ব্যাংকিং",
                                 icon = Icons.Default.PhoneAndroid,
                                 selected = method == "mobile_banking",
                                 onClick = { method = "mobile_banking" },
@@ -2140,7 +2237,7 @@ fun ReceiveChandaDialog(
                             )
                             ChandaMethodOptionCard(
                                 label = "ব্যাংক/অনলাইন",
-                                subLabel = "Bank",
+                                subLabel = "ব্যাংক হিসাব",
                                 icon = Icons.Default.AccountBalance,
                                 selected = method == "online",
                                 onClick = { method = "online" },
@@ -2148,25 +2245,54 @@ fun ReceiveChandaDialog(
                             )
                         }
                     }
+
+                    // Automatic Total Income Sync Note
+                    Surface(
+                        shape = RoundedCornerShape(10.dp),
+                        color = MosqueSuccessGreen.copy(alpha = 0.1f),
+                        border = BorderStroke(1.dp, MosqueSuccessGreen.copy(alpha = 0.35f)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.CheckCircle,
+                                contentDescription = null,
+                                tint = MosqueSuccessGreen,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "চাঁদা গ্রহণ করলে তা স্বয়ংক্রিয়ভাবে 'মাসিক সদস্য চাঁদা' খাতে মসজিদের মোট আয়ের সাথে যুক্ত হবে (ম্যানুয়ালি যুক্ত করতে হবে না)।",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MosqueEmeraldDark,
+                                fontWeight = FontWeight.SemiBold,
+                                lineHeight = 15.sp
+                            )
+                        }
+                    }
                 }
 
                 // Sticky Footer Actions
-                HorizontalDivider(color = MosqueCardBorderSubtle)
+                HorizontalDivider(color = MosqueCardBorderGold)
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(MosqueBgLight.copy(alpha = 0.5f))
+                        .background(Color.White)
                         .padding(horizontal = 16.dp, vertical = 12.dp),
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     OutlinedButton(
                         onClick = onDismiss,
+                        shape = RoundedCornerShape(12.dp),
                         modifier = Modifier
                             .weight(0.9f)
                             .heightIn(min = 48.dp)
                     ) {
-                        Text("বাতিল", color = MosqueTextSecondary, fontWeight = FontWeight.SemiBold)
+                        Text("বাতিল", color = MosqueTextSecondary, fontWeight = FontWeight.Bold)
                     }
                     Button(
                         onClick = {
@@ -2353,17 +2479,22 @@ fun OfficialReceiptDialog(
     mosqueName: String = "বায়তুল জান্নাত জামে মসজিদ",
     mosqueAddress: String = "মিরপুর-১০, ঢাকা",
     committeeId: String = "MC-DHK-2024",
+    mosqueLogoUrl: String? = null,
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
+    val isDark = LocalIsDarkTheme.current
+    val qrBoxBg = if (isDark) MosqueNightSurfaceVariant else MosqueBgLight
+    val qrBoxBorder = if (isDark) MosqueNightBorder else MosqueCardBorder
+    val mosqueLogoBitmap = remember(mosqueLogoUrl) { loadLocalThumbnail(mosqueLogoUrl, 256) }
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(16.dp)),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            border = CardDefaults.outlinedCardBorder().copy(brush = androidx.compose.ui.graphics.SolidColor(MosqueGold))
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            border = BorderStroke(1.dp, MosqueGold)
         ) {
             Column(
                 modifier = Modifier
@@ -2371,17 +2502,49 @@ fun OfficialReceiptDialog(
                     .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                // Mosque Official Logo
+                Box(
+                    modifier = Modifier
+                        .size(62.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .border(1.5.dp, MosqueGoldGradient, RoundedCornerShape(16.dp))
+                        .background(Color.White)
+                        .padding(if (mosqueLogoBitmap != null) 2.dp else 6.dp)
+                        .testTag("receipt_mosque_logo"),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (mosqueLogoBitmap != null) {
+                        Image(
+                            bitmap = mosqueLogoBitmap,
+                            contentDescription = "মসজিদের অফিসিয়াল লোগো",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clip(RoundedCornerShape(13.dp))
+                        )
+                    } else {
+                        Image(
+                            painter = painterResource(id = R.drawable.app_logo),
+                            contentDescription = "মসজিদের অফিসিয়াল লোগো",
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(10.dp))
+
                 // Header
                 Text(
                     text = mosqueName,
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
-                    color = MosqueEmeraldDark
+                    color = MaterialTheme.colorScheme.primary,
+                    textAlign = TextAlign.Center
                 )
                 Text(
-                    text = "$mosqueAddress • কমিটি আইডি: $committeeId",
+                    text = "$mosqueAddress • কমিটি আইডি: ${toBengaliDigits(committeeId)}",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MosqueTextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Box(
@@ -2394,7 +2557,7 @@ fun OfficialReceiptDialog(
                         text = "অফিসিয়াল চাঁদা জমার রসিদ",
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
-                        color = MosqueEmeraldPrimary
+                        color = MosqueEmeraldDark
                     )
                 }
 
@@ -2404,16 +2567,16 @@ fun OfficialReceiptDialog(
 
                 // Receipt Fields
                 val methodLabel = when (payment.method) {
-                    "cash" -> "নগদ (Cash)"
+                    "cash" -> "নগদ"
                     "online" -> "ব্যাংক/অনলাইন"
                     else -> "বিকাশ/নগদ"
                 }
-                ReceiptRow("রসিদ নম্বর", payment.receiptCode)
+                ReceiptRow("রসিদ নম্বর", toBengaliDigits(payment.receiptCode))
                 ReceiptRow("সদস্যের নাম", payment.memberNameBn)
-                ReceiptRow("মাসের বিবরণ", payment.month)
-                ReceiptRow("টাকার পরিমাণ", "৳${String.format("%,.0f", payment.amountPaid)}")
+                ReceiptRow("মাসের বিবরণ", toBengaliDigits(payment.month))
+                ReceiptRow("টাকার পরিমাণ", "৳${toBengaliDigits(String.format("%,.0f", payment.amountPaid))}")
                 ReceiptRow("পরিশোধের মাধ্যম", methodLabel)
-                ReceiptRow("জমার তারিখ ও সময়", payment.paidAt)
+                ReceiptRow("জমার তারিখ ও সময়", toBengaliDigits(payment.paidAt))
                 ReceiptRow("গ্রহণকারী", payment.receivedBy)
 
                 Spacer(modifier = Modifier.height(14.dp))
@@ -2423,30 +2586,30 @@ fun OfficialReceiptDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(8.dp))
-                        .background(MosqueBgLight)
-                        .border(1.dp, MosqueCardBorder, RoundedCornerShape(8.dp))
+                        .background(qrBoxBg)
+                        .border(1.dp, qrBoxBorder, RoundedCornerShape(8.dp))
                         .padding(10.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(
                             imageVector = Icons.Default.QrCode2,
-                            contentDescription = "QR Code",
-                            tint = MosqueEmeraldDark,
+                            contentDescription = "কিউআর কোড",
+                            tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(54.dp)
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "ডিজিটাল ভেরিফিকেশন কোড:",
                             style = MaterialTheme.typography.labelSmall,
-                            color = MosqueTextMuted,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 10.sp
                         )
                         Text(
                             text = payment.qrVerificationCode,
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
-                            color = MosqueEmeraldPrimary,
+                            color = MaterialTheme.colorScheme.primary,
                             fontSize = 10.sp
                         )
                     }
@@ -2460,10 +2623,13 @@ fun OfficialReceiptDialog(
                 ) {
                     OutlinedButton(
                         onClick = onDismiss,
-                        modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = MosqueEmeraldPrimary)
+                        modifier = Modifier
+                            .weight(1f)
+                            .heightIn(min = 48.dp)
+                            .testTag("receipt_dismiss_button"),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)
                     ) {
-                        Text("বন্ধ করুন")
+                        Text("বন্ধ করুন", fontWeight = FontWeight.Bold)
                     }
 
                     Button(
@@ -2472,12 +2638,12 @@ fun OfficialReceiptDialog(
                                 appendLine(mosqueName)
                                 appendLine("অফিসিয়াল চাঁদা জমার রসিদ")
                                 appendLine("-------------------------")
-                                appendLine("রসিদ নম্বর: ${payment.receiptCode}")
+                                appendLine("রসিদ নম্বর: ${toBengaliDigits(payment.receiptCode)}")
                                 appendLine("সদস্যের নাম: ${payment.memberNameBn}")
-                                appendLine("মাসের বিবরণ: ${payment.month}")
-                                appendLine("টাকার পরিমাণ: ৳${String.format("%,.0f", payment.amountPaid)}")
+                                appendLine("মাসের বিবরণ: ${toBengaliDigits(payment.month)}")
+                                appendLine("টাকার পরিমাণ: ৳${toBengaliDigits(String.format("%,.0f", payment.amountPaid))}")
                                 appendLine("মাধ্যম: $methodLabel")
-                                appendLine("তারিখ ও সময়: ${payment.paidAt}")
+                                appendLine("তারিখ ও সময়: ${toBengaliDigits(payment.paidAt)}")
                                 appendLine("গ্রহণকারী: ${payment.receivedBy}")
                                 appendLine("ভেরিফিকেশন কোড: ${payment.qrVerificationCode}")
                             }
@@ -2488,12 +2654,15 @@ fun OfficialReceiptDialog(
                             }
                             context.startActivity(Intent.createChooser(shareIntent, "রসিদ শেয়ার করুন"))
                         },
-                        modifier = Modifier.weight(1.4f),
+                        modifier = Modifier
+                            .weight(1.4f)
+                            .heightIn(min = 48.dp)
+                            .testTag("receipt_share_button"),
                         colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary)
                     ) {
                         Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("রসিদ শেয়ার", fontSize = 13.sp)
+                        Text("রসিদ শেয়ার", fontSize = 13.sp, fontWeight = FontWeight.Bold)
                     }
                 }
 
@@ -2514,14 +2683,14 @@ private fun ReceiptRow(label: String, value: String) {
         Text(
             text = label,
             style = MaterialTheme.typography.bodySmall,
-            color = MosqueTextSecondary,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(end = 12.dp)
         )
         Text(
             text = value,
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.SemiBold,
-            color = MosqueTextPrimary,
+            color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.End,
             modifier = Modifier.weight(1f)
         )
@@ -2578,6 +2747,8 @@ fun PublishNoticeDialog(
         MehrabArchCard(
             modifier = Modifier
                 .fillMaxWidth()
+                .widthIn(max = 560.dp)
+                .imePadding()
                 .padding(horizontal = 16.dp, vertical = 20.dp),
             backgroundColor = MosqueBgLight,
             borderColor = MosqueCardBorderGold,
@@ -2631,7 +2802,10 @@ fun PublishNoticeDialog(
                                 )
                             }
                         }
-                        IconButton(onClick = onDismiss) {
+                        IconButton(
+                            onClick = onDismiss,
+                            modifier = Modifier.minimumInteractiveComponentSize()
+                        ) {
                             Icon(Icons.Default.Close, contentDescription = "বন্ধ করুন", tint = Color.White)
                         }
                     }
@@ -3167,6 +3341,8 @@ fun ScheduleMeetingDialog(
         MehrabArchCard(
             modifier = Modifier
                 .fillMaxWidth()
+                .widthIn(max = 560.dp)
+                .imePadding()
                 .padding(horizontal = 16.dp, vertical = 20.dp),
             backgroundColor = MosqueBgLight,
             borderColor = MosqueCardBorderGold,
@@ -3220,7 +3396,10 @@ fun ScheduleMeetingDialog(
                                 )
                             }
                         }
-                        IconButton(onClick = onDismiss) {
+                        IconButton(
+                            onClick = onDismiss,
+                            modifier = Modifier.minimumInteractiveComponentSize()
+                        ) {
                             Icon(Icons.Default.Close, contentDescription = "বন্ধ করুন", tint = Color.White)
                         }
                     }
@@ -3491,6 +3670,8 @@ fun MeetingResolutionDialog(
         MehrabArchCard(
             modifier = Modifier
                 .fillMaxWidth()
+                .widthIn(max = 560.dp)
+                .imePadding()
                 .padding(horizontal = 16.dp, vertical = 20.dp),
             backgroundColor = MosqueBgLight,
             borderColor = MosqueCardBorderGold,
@@ -3546,7 +3727,10 @@ fun MeetingResolutionDialog(
                                 )
                             }
                         }
-                        IconButton(onClick = onDismiss) {
+                        IconButton(
+                            onClick = onDismiss,
+                            modifier = Modifier.minimumInteractiveComponentSize()
+                        ) {
                             Icon(Icons.Default.Close, contentDescription = "বন্ধ করুন", tint = Color.White)
                         }
                     }

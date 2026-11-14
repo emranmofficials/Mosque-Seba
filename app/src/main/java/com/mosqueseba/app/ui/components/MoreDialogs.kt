@@ -27,16 +27,24 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.mosqueseba.app.data.local.entity.MemberEntity
 import com.mosqueseba.app.data.local.entity.StaffEntity
 import com.mosqueseba.app.ui.theme.*
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
 @Composable
-private fun ExecutiveFormDialogShell(
+fun ExecutiveFormDialogShell(
     title: String,
     subtitle: String,
     icon: ImageVector,
     confirmText: String,
     confirmTag: String = "dialog_confirm_button",
+    confirmColor: Color = MosqueEmeraldPrimary,
+    confirmIcon: ImageVector = Icons.Default.Check,
+    errorBanner: String? = null,
     onDismiss: () -> Unit,
     onConfirmClick: () -> Unit,
     content: @Composable ColumnScope.() -> Unit
@@ -48,6 +56,8 @@ private fun ExecutiveFormDialogShell(
         MehrabArchCard(
             modifier = Modifier
                 .fillMaxWidth()
+                .widthIn(max = 560.dp)
+                .imePadding()
                 .padding(horizontal = 16.dp, vertical = 20.dp),
             backgroundColor = MosqueBgLight,
             borderColor = MosqueCardBorderGold,
@@ -104,7 +114,10 @@ private fun ExecutiveFormDialogShell(
                                 )
                             }
                         }
-                        IconButton(onClick = onDismiss) {
+                        IconButton(
+                            onClick = onDismiss,
+                            modifier = Modifier.minimumInteractiveComponentSize()
+                        ) {
                             Icon(Icons.Default.Close, contentDescription = "বন্ধ করুন", tint = Color.White)
                         }
                     }
@@ -119,12 +132,40 @@ private fun ExecutiveFormDialogShell(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(max = 500.dp)
+                        .heightIn(max = 510.dp)
                         .verticalScroll(rememberScrollState())
                         .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                    content = content
-                )
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    if (!errorBanner.isNullOrBlank()) {
+                        Surface(
+                            shape = RoundedCornerShape(10.dp),
+                            color = MosqueUrgentRed.copy(alpha = 0.08f),
+                            border = BorderStroke(1.dp, MosqueUrgentRed.copy(alpha = 0.4f)),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.ErrorOutline,
+                                    contentDescription = null,
+                                    tint = MosqueUrgentRed,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = errorBanner,
+                                    color = MosqueUrgentRed,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                        }
+                    }
+                    content()
+                }
 
                 HorizontalDivider(color = MosqueCardBorderGold)
                 Row(
@@ -141,20 +182,31 @@ private fun ExecutiveFormDialogShell(
                             .weight(0.9f)
                             .heightIn(min = 48.dp)
                     ) {
-                        Text("বাতিল", color = MosqueTextSecondary, fontWeight = FontWeight.Bold)
+                        Text(
+                            text = "বাতিল",
+                            color = MosqueTextSecondary,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
                     }
                     Button(
                         onClick = onConfirmClick,
                         shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary),
+                        colors = ButtonDefaults.buttonColors(containerColor = confirmColor),
                         modifier = Modifier
                             .weight(1.3f)
                             .heightIn(min = 48.dp)
                             .testTag(confirmTag)
                     ) {
-                        Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(17.dp))
+                        Icon(confirmIcon, contentDescription = null, modifier = Modifier.size(17.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text(confirmText, fontWeight = FontWeight.ExtraBold)
+                        Text(
+                            text = confirmText,
+                            fontWeight = FontWeight.ExtraBold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
                     }
                 }
             }
@@ -163,7 +215,7 @@ private fun ExecutiveFormDialogShell(
 }
 
 @Composable
-private fun MoreFormSection(
+fun MoreFormSection(
     title: String,
     icon: ImageVector,
     content: @Composable ColumnScope.() -> Unit
@@ -212,30 +264,43 @@ fun PaySalaryFormDialog(
     staff: StaffEntity,
     defaultMonth: String = "সেপ্টেম্বর ২০২৪",
     onDismiss: () -> Unit,
-    onConfirm: (month: String, bonus: Double) -> Unit
+    onConfirm: (month: String, bonus: Double, paymentMethod: String) -> Unit
 ) {
     var month by remember(defaultMonth) { mutableStateOf(defaultMonth) }
     var bonus by remember { mutableStateOf("0") }
+    var paymentMethod by remember { mutableStateOf("cash") }
     var monthError by remember { mutableStateOf<String?>(null) }
 
+    val baseSalary = if (staff.salaryAmount > 0.0) staff.salaryAmount else {
+        when (staff.roleCode.lowercase()) {
+            "imam" -> 18000.0
+            "muazzin" -> 12000.0
+            else -> 9000.0
+        }
+    }
     val bonusAmt = bonus.toDoubleOrNull() ?: 0.0
-    val netTotal = staff.salaryAmount + bonusAmt
+    val netTotal = baseSalary + bonusAmt
     val monthPresets = remember(defaultMonth) {
         listOf(defaultMonth, "সেপ্টেম্বর ২০২৪", "অক্টোবর ২০২৪", "নভেম্বর ২০২৪", "ঈদ বোনাসসহ").distinct()
     }
+    val methodOptions = listOf(
+        "cash" to "নগদ",
+        "mobile_banking" to "বিকাশ/নগদ",
+        "online" to "ব্যাংক/অনলাইন"
+    )
 
     ExecutiveFormDialogShell(
         title = "বেতন ও ভাতা পরিশোধ",
         subtitle = "${staff.nameBn} (${staff.designationBn})",
         icon = Icons.Default.Payments,
-        confirmText = "পরিশোধ নিশ্চিত করুন",
+        confirmText = "৳${toBengaliDigits(String.format("%,.0f", netTotal))} বেতন পরিশোধ করুন",
         confirmTag = "confirm_pay_salary_button",
         onDismiss = onDismiss,
         onConfirmClick = {
             if (month.isBlank()) {
                 monthError = "বেতনের মাস উল্লেখ করুন"
             } else {
-                onConfirm(month.trim(), bonusAmt)
+                onConfirm(month.trim(), bonusAmt, paymentMethod)
             }
         }
     ) {
@@ -255,25 +320,25 @@ fun PaySalaryFormDialog(
                 Column {
                     Text("মূল নির্ধারিত বেতন", fontSize = 11.sp, color = MosqueTextSecondary)
                     Text(
-                        text = "৳${toBengaliDigits(String.format("%,.0f", staff.salaryAmount))}",
+                        text = "৳${toBengaliDigits(String.format("%,.0f", baseSalary))}",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.ExtraBold,
                         color = MosqueEmeraldDark
                     )
                 }
                 Column(horizontalAlignment = Alignment.End) {
-                    Text("মোট প্রদেয়", fontSize = 11.sp, color = MosqueTextSecondary)
+                    Text("মোট প্রদেয় (ব্যয় খাত)", fontSize = 11.sp, color = MosqueTextSecondary)
                     Text(
                         text = "৳${toBengaliDigits(String.format("%,.0f", netTotal))}",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.ExtraBold,
-                        color = MosqueEmeraldPrimary
+                        color = MosqueUrgentRed
                     )
                 }
             }
         }
 
-        MoreFormSection(title = "বেতন বিবরণ", icon = Icons.Default.ReceiptLong) {
+        MoreFormSection(title = "বেতন বিবরণ ও পরিশোধ মাধ্যম", icon = Icons.Default.ReceiptLong) {
             LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 items(monthPresets) { preset ->
                     FilterChip(
@@ -310,6 +375,57 @@ fun PaySalaryFormDialog(
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
+            Spacer(modifier = Modifier.height(10.dp))
+            Text(
+                text = "পরিশোধের মাধ্যম:",
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold,
+                color = MosqueEmeraldDark
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                methodOptions.forEach { (key, label) ->
+                    FilterChip(
+                        selected = paymentMethod == key,
+                        onClick = { paymentMethod = key },
+                        label = { Text(label, fontSize = 11.sp) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MosqueEmeraldPrimary,
+                            selectedLabelColor = Color.White
+                        )
+                    )
+                }
+            }
+        }
+
+        Surface(
+            shape = RoundedCornerShape(10.dp),
+            color = MosqueUrgentRed.copy(alpha = 0.08f),
+            border = BorderStroke(1.dp, MosqueUrgentRed.copy(alpha = 0.3f)),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.CheckCircle,
+                    contentDescription = null,
+                    tint = MosqueUrgentRed,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "বেতন প্রদান করলে তা স্বয়ংক্রিয়ভাবে 'ইমাম ও কর্মচারীদের বেতন' খাতে মসজিদের মোট ব্যয়ের সাথে যুক্ত হবে — ম্যানুয়ালি যুক্ত করতে হবে না।",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MosqueEmeraldDark,
+                    fontWeight = FontWeight.SemiBold,
+                    lineHeight = 15.sp
+                )
+            }
         }
     }
 }
@@ -327,6 +443,7 @@ fun AddRosterFormDialog(
     var notes by remember { mutableStateOf("") }
     var dayError by remember { mutableStateOf<String?>(null) }
     var prayerError by remember { mutableStateOf<String?>(null) }
+    var roleError by remember { mutableStateOf<String?>(null) }
 
     val dayPresets = listOf("প্রতিদিন", "শুক্রবার", "শনি-বৃহস্পতি", "রবিবার")
     val rolePresets = listOf("ইমামতি", "খুতবা ও ইমামতি", "আজান ও ইকামত", "মসজিদ পরিচ্ছন্নতা")
@@ -346,6 +463,10 @@ fun AddRosterFormDialog(
             }
             if (prayerName.isBlank()) {
                 prayerError = "নামাজের ওয়াক্ত উল্লেখ করুন"
+                valid = false
+            }
+            if (roleTitle.isBlank()) {
+                roleError = "দায়িত্বের ধরন উল্লেখ করুন"
                 valid = false
             }
             if (valid) {
@@ -422,8 +543,13 @@ fun AddRosterFormDialog(
             Spacer(modifier = Modifier.height(6.dp))
             OutlinedTextField(
                 value = roleTitle,
-                onValueChange = { roleTitle = it },
+                onValueChange = {
+                    roleTitle = it
+                    roleError = null
+                },
                 label = { Text("দায়িত্ব (ইমামতি / আজান) *") },
+                isError = roleError != null,
+                supportingText = roleError?.let { err -> { Text(err, color = MosqueUrgentRed, fontSize = 11.sp) } },
                 shape = RoundedCornerShape(12.dp),
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
@@ -442,61 +568,128 @@ fun AddRosterFormDialog(
 
 @Composable
 fun AddFoodScheduleFormDialog(
+    willingDonors: List<MemberEntity> = emptyList(),
+    mealStaff: List<StaffEntity> = emptyList(),
     onDismiss: () -> Unit,
-    onConfirm: (dateStr: String, mealType: String, providerName: String, providerMobile: String, receiverName: String) -> Unit
+    onConfirm: (dateStr: String, providerName: String, providerMobile: String, receiverName: String) -> Unit
 ) {
-    var dateStr by remember { mutableStateOf("২০২৪-০৯-১৫") }
-    var mealType by remember { mutableStateOf("দুপুর") }
-    var providerName by remember { mutableStateOf("") }
-    var providerMobile by remember { mutableStateOf("") }
-    var receiverName by remember { mutableStateOf("ইমাম ও মুয়াজ্জিন সাহেব") }
-    var providerError by remember { mutableStateOf<String?>(null) }
+    val isoFormat = remember { SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH) }
+    val todayIso = remember { isoFormat.format(Date()) }
+    val tomorrowIso = remember {
+        Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, 1) }.let { isoFormat.format(it.time) }
+    }
 
-    val mealOptions = listOf("দুপুর", "রাত", "সকাল ও দুপুর")
+    val staffOptions = remember(mealStaff) {
+        if (mealStaff.isEmpty()) {
+            listOf("পেশ ইমাম", "মুয়াজ্জিন", "প্রধান খাদেম")
+        } else {
+            mealStaff.map { "${it.nameBn} (${it.designationBn})" }
+        }
+    }
+
+    val suggestedDonor = remember(willingDonors) { willingDonors.firstOrNull() }
+    var dateStr by remember { mutableStateOf(tomorrowIso) }
+    var providerName by remember { mutableStateOf(suggestedDonor?.nameBn.orEmpty()) }
+    var providerMobile by remember { mutableStateOf(suggestedDonor?.mobile.orEmpty()) }
+    var receiverName by remember { mutableStateOf(staffOptions.first()) }
+    var dateError by remember { mutableStateOf<String?>(null) }
+    var providerError by remember { mutableStateOf<String?>(null) }
+    var mobileError by remember { mutableStateOf<String?>(null) }
+    var receiverError by remember { mutableStateOf<String?>(null) }
 
     ExecutiveFormDialogShell(
-        title = "খাবার দায়িত্ব বণ্টন ফর্ম",
-        subtitle = "ইমাম ও খাদেমদের জায়গির / খাবার সূচি",
+        title = "একক খাবার বণ্টন ফর্ম",
+        subtitle = "একদিনে ১ জন সদস্য → ১ জন বেতনভুক্ত স্টাফ",
         icon = Icons.Default.Restaurant,
         confirmText = "সংরক্ষণ করুন",
         confirmTag = "confirm_add_food_button",
         onDismiss = onDismiss,
         onConfirmClick = {
+            var valid = true
+            if (dateStr.isBlank()) {
+                dateError = "তারিখ লিখুন (বছর-মাস-দিন)"
+                valid = false
+            }
             if (providerName.isBlank()) {
                 providerError = "খাবার প্রদানকারীর নাম লিখুন"
-            } else {
-                onConfirm(dateStr.trim(), mealType.trim(), providerName.trim(), providerMobile.trim(), receiverName.trim())
+                valid = false
+            }
+            if (providerMobile.isBlank()) {
+                mobileError = "দাতার মোবাইল নম্বর লিখুন"
+                valid = false
+            }
+            if (receiverName.isBlank()) {
+                receiverError = "প্রাপক স্টাফ নির্বাচন বা লিখুন"
+                valid = false
+            }
+            if (valid) {
+                onConfirm(dateStr.trim(), providerName.trim(), providerMobile.trim(), receiverName.trim())
             }
         }
     ) {
-        MoreFormSection(title = "তারিখ ও ওয়াক্ত", icon = Icons.Default.Schedule) {
+        MoreFormSection(title = "তারিখ নির্বাচন", icon = Icons.Default.Schedule) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FilterChip(
+                    selected = dateStr == todayIso,
+                    onClick = { dateStr = todayIso; dateError = null },
+                    label = { Text("আজ (${toBengaliDigits(todayIso)})", fontSize = 11.sp) }
+                )
+                FilterChip(
+                    selected = dateStr == tomorrowIso,
+                    onClick = { dateStr = tomorrowIso; dateError = null },
+                    label = { Text("আগামীকাল", fontSize = 11.sp) }
+                )
+            }
+            Spacer(modifier = Modifier.height(6.dp))
             OutlinedTextField(
                 value = dateStr,
-                onValueChange = { dateStr = it },
-                label = { Text("তারিখ *") },
+                onValueChange = { dateStr = it; dateError = null },
+                label = { Text("তারিখ (বছর-মাস-দিন) *") },
+                isError = dateError != null,
+                supportingText = dateError?.let { err -> { Text(err, color = MosqueUrgentRed, fontSize = 11.sp) } },
                 shape = RoundedCornerShape(12.dp),
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text("খাবারের ওয়াক্ত নির্বাচন:", fontSize = 11.5.sp, color = MosqueTextSecondary, fontWeight = FontWeight.SemiBold)
-            Spacer(modifier = Modifier.height(6.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                mealOptions.forEach { option ->
-                    FilterChip(
-                        selected = mealType == option,
-                        onClick = { mealType = option },
-                        label = { Text(option, fontSize = 12.sp) },
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = MosqueEmeraldPrimary,
-                            selectedLabelColor = Color.White
-                        )
-                    )
-                }
-            }
         }
 
-        MoreFormSection(title = "দাতা ও প্রাপকের তথ্য", icon = Icons.Default.People) {
+        MoreFormSection(title = "দাতা ও প্রাপক স্টাফ", icon = Icons.Default.People) {
+            if (willingDonors.isNotEmpty()) {
+                Text(
+                    text = "খাবার দিতে রাজি সদস্য (${toBengaliDigits(willingDonors.size.toString())} জন) — ট্যাপ করে নির্বাচন করুন:",
+                    fontSize = 11.5.sp,
+                    color = MosqueEmeraldDark,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    items(willingDonors, key = { it.id }) { donor ->
+                        val isNextInTurn = donor.id == suggestedDonor?.id
+                        val isSelected = providerName.trim().equals(donor.nameBn.trim(), ignoreCase = true)
+                        FilterChip(
+                            selected = isSelected,
+                            onClick = {
+                                providerName = donor.nameBn
+                                providerMobile = donor.mobile
+                                providerError = null
+                                mobileError = null
+                            },
+                            label = {
+                                Text(
+                                    text = if (isNextInTurn) "${donor.nameBn} (পরবর্তী পালা)" else donor.nameBn,
+                                    fontSize = 11.sp
+                                )
+                            },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = MosqueEmeraldPrimary,
+                                selectedLabelColor = Color.White
+                            )
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
             OutlinedTextField(
                 value = providerName,
                 onValueChange = {
@@ -513,22 +706,288 @@ fun AddFoodScheduleFormDialog(
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
                 value = providerMobile,
-                onValueChange = { providerMobile = it },
+                onValueChange = {
+                    providerMobile = it
+                    mobileError = null
+                },
                 label = { Text("দাতার মোবাইল নম্বর *") },
+                isError = mobileError != null,
+                supportingText = mobileError?.let { err -> { Text(err, color = MosqueUrgentRed, fontSize = 11.sp) } },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                 shape = RoundedCornerShape(12.dp),
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "খাবার প্রাপক বেতনভুক্ত স্টাফ নির্বাচন:",
+                fontSize = 11.5.sp,
+                color = MosqueTextSecondary,
+                fontWeight = FontWeight.SemiBold
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                items(staffOptions) { option ->
+                    FilterChip(
+                        selected = receiverName == option,
+                        onClick = {
+                            receiverName = option
+                            receiverError = null
+                        },
+                        label = { Text(option, fontSize = 11.sp) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MosqueGoldDeep,
+                            selectedLabelColor = Color.White
+                        )
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(6.dp))
             OutlinedTextField(
                 value = receiverName,
-                onValueChange = { receiverName = it },
+                onValueChange = {
+                    receiverName = it
+                    receiverError = null
+                },
                 label = { Text("প্রাপক স্টাফ *") },
+                isError = receiverError != null,
+                supportingText = receiverError?.let { err -> { Text(err, color = MosqueUrgentRed, fontSize = 11.sp) } },
                 shape = RoundedCornerShape(12.dp),
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
+        }
+    }
+}
+
+@Composable
+fun AutoFoodScheduleDialog(
+    willingDonors: List<MemberEntity>,
+    mealStaff: List<StaffEntity>,
+    onDismiss: () -> Unit,
+    onGenerate: (daysCount: Int, startDateIso: String, targetStaffLabels: List<String>) -> Unit
+) {
+    val isoFormat = remember { SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH) }
+    val todayIso = remember { isoFormat.format(Date()) }
+    val tomorrowIso = remember {
+        Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, 1) }.let { isoFormat.format(it.time) }
+    }
+
+    val allStaffLabels = remember(mealStaff) {
+        if (mealStaff.isEmpty()) {
+            listOf("পেশ ইমাম", "মুয়াজ্জিন", "প্রধান খাদেম")
+        } else {
+            mealStaff.map { "${it.nameBn} (${it.designationBn})" }
+        }
+    }
+
+    var startDateIso by remember { mutableStateOf(tomorrowIso) }
+    var daysCount by remember { mutableIntStateOf(7) }
+    var selectedMode by remember { mutableStateOf("ALL") } // "ALL" or specific staff label
+    var startDateError by remember { mutableStateOf<String?>(null) }
+    var donorWarningBanner by remember { mutableStateOf<String?>(null) }
+
+    val durationOptions = listOf(7 to "৭ দিন (সাপ্তাহিক)", 15 to "১৫ দিন (পাক্ষিক)", 30 to "৩০ দিন (মাসিক)")
+    val targetStaffLabels = remember(selectedMode, allStaffLabels) {
+        if (selectedMode == "ALL") allStaffLabels else listOf(selectedMode)
+    }
+
+    val plannedSlotCount = daysCount * targetStaffLabels.size
+    val avgCycleDays = remember(willingDonors.size, targetStaffLabels.size) {
+        if (willingDonors.isEmpty() || targetStaffLabels.isEmpty()) 0.0
+        else willingDonors.size.toDouble() / targetStaffLabels.size.toDouble()
+    }
+
+    ExecutiveFormDialogShell(
+        title = "অটো খাবার শিডিউল জেনারেটর",
+        subtitle = "১ দিন আগে নোটিফিকেশনসহ স্টাফ ও সদস্য অনুযায়ী স্বয়ংক্রিয় ভাগ",
+        icon = Icons.Default.AutoAwesome,
+        confirmText = if (willingDonors.isEmpty()) "দাতা নেই" else "অটো তৈরি করুন",
+        confirmTag = "confirm_auto_food_button",
+        errorBanner = donorWarningBanner,
+        onDismiss = onDismiss,
+        onConfirmClick = {
+            when {
+                willingDonors.isEmpty() -> {
+                    donorWarningBanner = "অটো শিডিউল তৈরির আগে অন্তত ১ জন সদস্যের প্রোফাইলে খাবার প্রদানের সম্মতি চালু করুন।"
+                }
+                startDateIso.isBlank() -> {
+                    startDateError = "শুরুর তারিখ লিখুন (বছর-মাস-দিন)"
+                }
+                targetStaffLabels.isEmpty() -> {
+                    donorWarningBanner = "কমপক্ষে ১ জন প্রাপক স্টাফ নির্বাচন করুন।"
+                }
+                else -> {
+                    onGenerate(daysCount, startDateIso.trim(), targetStaffLabels)
+                }
+            }
+        }
+    ) {
+        MoreFormSection(title = "দাতা ও প্রাপক অনুপাত", icon = Icons.Default.Groups) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Surface(
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(10.dp),
+                    color = MosqueEmeraldSoft
+                ) {
+                    Column(modifier = Modifier.padding(10.dp)) {
+                        Text("রাজি দাতা সদস্য", fontSize = 11.sp, color = MosqueTextSecondary)
+                        Text(
+                            text = "${toBengaliDigits(willingDonors.size.toString())} জন",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = MosqueEmeraldDark
+                        )
+                    }
+                }
+                Surface(
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(10.dp),
+                    color = MosqueGoldLight.copy(alpha = 0.25f)
+                ) {
+                    Column(modifier = Modifier.padding(10.dp)) {
+                        Text("খাবার প্রাপক স্টাফ", fontSize = 11.sp, color = MosqueTextSecondary)
+                        Text(
+                            text = "${toBengaliDigits(allStaffLabels.size.toString())} জন",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = MosqueGoldDeep
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+            if (willingDonors.isEmpty()) {
+                Surface(
+                    shape = RoundedCornerShape(10.dp),
+                    color = MosqueUrgentRed.copy(alpha = 0.1f),
+                    border = BorderStroke(1.dp, MosqueUrgentRed.copy(alpha = 0.3f)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "কোনো সদস্য 'খাবার দিতে রাজি' হিসেবে চিহ্নিত নেই। আগে সদস্য তালিকা থেকে দাতা সদস্যদের প্রোফাইলে 'হ্যাঁ, রাজি আছেন' চালু করুন।",
+                        fontSize = 11.5.sp,
+                        color = MosqueUrgentRed,
+                        modifier = Modifier.padding(10.dp)
+                    )
+                }
+            } else {
+                Text(
+                    text = "রোটেশন সিরিয়াল: ${willingDonors.take(5).joinToString(" → ") { it.nameBn }}${if (willingDonors.size > 5) " (+${toBengaliDigits((willingDonors.size - 5).toString())} জন)" else ""}",
+                    fontSize = 11.5.sp,
+                    color = MosqueEmeraldDark,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+        }
+
+        MoreFormSection(title = "তারিখ ও প্রাপক স্টাফ বণ্টন", icon = Icons.Default.DateRange) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FilterChip(
+                    selected = startDateIso == todayIso,
+                    onClick = { startDateIso = todayIso; startDateError = null },
+                    label = { Text("আজ থেকে শুরু", fontSize = 11.sp) }
+                )
+                FilterChip(
+                    selected = startDateIso == tomorrowIso,
+                    onClick = { startDateIso = tomorrowIso; startDateError = null },
+                    label = { Text("আগামীকাল থেকে", fontSize = 11.sp) }
+                )
+            }
+            Spacer(modifier = Modifier.height(6.dp))
+            OutlinedTextField(
+                value = startDateIso,
+                onValueChange = { startDateIso = it; startDateError = null },
+                label = { Text("শুরুর তারিখ (বছর-মাস-দিন) *") },
+                isError = startDateError != null,
+                supportingText = startDateError?.let { err -> { Text(err, color = MosqueUrgentRed, fontSize = 11.sp) } },
+                shape = RoundedCornerShape(12.dp),
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text("কত দিনের শিডিউল তৈরি হবে:", fontSize = 11.5.sp, color = MosqueTextSecondary, fontWeight = FontWeight.SemiBold)
+            Spacer(modifier = Modifier.height(6.dp))
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                items(durationOptions) { (days, label) ->
+                    FilterChip(
+                        selected = daysCount == days,
+                        onClick = { daysCount = days },
+                        label = { Text(label, fontSize = 11.5.sp) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MosqueEmeraldPrimary,
+                            selectedLabelColor = Color.White
+                        )
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Text("কাদের জন্য খাবার শিডিউল ভাগ হবে:", fontSize = 11.5.sp, color = MosqueTextSecondary, fontWeight = FontWeight.SemiBold)
+            Spacer(modifier = Modifier.height(6.dp))
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                item {
+                    FilterChip(
+                        selected = selectedMode == "ALL",
+                        onClick = { selectedMode = "ALL" },
+                        label = { Text("সবাই (${toBengaliDigits(allStaffLabels.size.toString())} জন স্টাফ)", fontSize = 11.sp) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MosqueGoldDeep,
+                            selectedLabelColor = Color.White
+                        )
+                    )
+                }
+                items(allStaffLabels) { label ->
+                    FilterChip(
+                        selected = selectedMode == label,
+                        onClick = { selectedMode = label },
+                        label = { Text(label.substringBefore(" ("), fontSize = 11.sp) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MosqueGoldDeep,
+                            selectedLabelColor = Color.White
+                        )
+                    )
+                }
+            }
+        }
+
+        MoreFormSection(title = "স্বয়ংক্রিয় ভাগ ও নোটিফিকেশন প্রিভিউ", icon = Icons.Default.RestaurantMenu) {
+            Surface(
+                shape = RoundedCornerShape(10.dp),
+                color = MosqueInfoBlue.copy(alpha = 0.08f),
+                border = BorderStroke(1.dp, MosqueInfoBlue.copy(alpha = 0.25f)),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(
+                        text = "অটো-বণ্টন সারসংক্ষেপ:",
+                        fontSize = 11.5.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MosqueInfoBlue
+                    )
+                    Text(
+                        text = "• প্রতিদিন ${toBengaliDigits(targetStaffLabels.size.toString())} জন ভিন্ন দাতা সদস্য ${toBengaliDigits(targetStaffLabels.size.toString())} জন স্টাফের খাবার দেবেন (মোট ${toBengaliDigits(plannedSlotCount.toString())} টি পালা)।",
+                        fontSize = 11.sp,
+                        color = MosqueTextPrimary
+                    )
+                    if (avgCycleDays > 0) {
+                        Text(
+                            text = "• ${toBengaliDigits(willingDonors.size.toString())} জন সদস্যের মধ্যে ভাগ হলে গড়ে প্রতি ${toBengaliDigits(String.format(Locale.ENGLISH, "%.1f", avgCycleDays))} দিন পর পর একজনের পালা আসবে।",
+                            fontSize = 11.sp,
+                            color = MosqueTextPrimary
+                        )
+                    }
+                    Text(
+                        text = "• প্রতিটি পালার ১ দিন আগে নির্ধারিত সদস্যের নোটিফিকেশনে সম্মতি বা অপারগতা জানানোর অনুরোধ যাবে।",
+                        fontSize = 11.sp,
+                        color = MosqueEmeraldDark,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
         }
     }
 }
@@ -545,6 +1004,7 @@ fun AddWelfareDialog(
     var remarks by remember { mutableStateOf("") }
     var nameError by remember { mutableStateOf<String?>(null) }
     var mobileError by remember { mutableStateOf<String?>(null) }
+    var amountError by remember { mutableStateOf<String?>(null) }
 
     val categories = listOf(
         "জরুরি চিকিৎসা সহায়তা",
@@ -572,8 +1032,12 @@ fun AddWelfareDialog(
                 mobileError = "মোবাইল নম্বর লিখুন"
                 valid = false
             }
+            val amt = amount.toDoubleOrNull() ?: 0.0
+            if (amt <= 0.0) {
+                amountError = "সহায়তার সঠিক পরিমাণ (৳) লিখুন"
+                valid = false
+            }
             if (valid) {
-                val amt = amount.toDoubleOrNull() ?: 5000.0
                 onConfirm(name.trim(), category, mobile.trim(), amt, remarks.trim())
             }
         }
@@ -626,8 +1090,13 @@ fun AddWelfareDialog(
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
                 value = amount,
-                onValueChange = { amount = it.filter { ch -> ch.isDigit() } },
+                onValueChange = {
+                    amount = it.filter { ch -> ch.isDigit() }
+                    amountError = null
+                },
                 label = { Text("সহায়তার পরিমাণ (৳) *") },
+                isError = amountError != null,
+                supportingText = amountError?.let { err -> { Text(err, color = MosqueUrgentRed, fontSize = 11.sp) } },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 shape = RoundedCornerShape(12.dp),
                 singleLine = true,
@@ -659,6 +1128,9 @@ fun AddEventDialog(
     var budget by remember { mutableStateOf("50000") }
     var lead by remember { mutableStateOf("ইঞ্জি: আব্দুল্লাহ আল মামুন") }
     var titleError by remember { mutableStateOf<String?>(null) }
+    var dateError by remember { mutableStateOf<String?>(null) }
+    var speakerError by remember { mutableStateOf<String?>(null) }
+    var venueError by remember { mutableStateOf<String?>(null) }
 
     val eventPresets = listOf("তাফসিরুল কুরআন মাহফিল", "শবে কদর দোয়া মাহফিল", "সীরাতুন্নবী (সা:) সেমিনার", "ইফতার মাহফিল")
 
@@ -670,9 +1142,24 @@ fun AddEventDialog(
         confirmTag = "confirm_add_event_button",
         onDismiss = onDismiss,
         onConfirmClick = {
+            var valid = true
             if (title.isBlank()) {
                 titleError = "অনুষ্ঠানের নাম লিখুন"
-            } else {
+                valid = false
+            }
+            if (dateStr.isBlank()) {
+                dateError = "তারিখ উল্লেখ করুন"
+                valid = false
+            }
+            if (speaker.isBlank()) {
+                speakerError = "বক্তা বা মেহমানের নাম লিখুন"
+                valid = false
+            }
+            if (venue.isBlank()) {
+                venueError = "অনুষ্ঠানের স্থান লিখুন"
+                valid = false
+            }
+            if (valid) {
                 val b = budget.toDoubleOrNull() ?: 20000.0
                 onConfirm(title.trim(), dateStr.trim(), timeStr.trim(), speaker.trim(), venue.trim(), b, lead.trim())
             }
@@ -709,8 +1196,10 @@ fun AddEventDialog(
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(
                     value = dateStr,
-                    onValueChange = { dateStr = it },
+                    onValueChange = { dateStr = it; dateError = null },
                     label = { Text("তারিখ *") },
+                    isError = dateError != null,
+                    supportingText = dateError?.let { err -> { Text(err, color = MosqueUrgentRed, fontSize = 11.sp) } },
                     shape = RoundedCornerShape(12.dp),
                     singleLine = true,
                     modifier = Modifier.weight(1f)
@@ -729,8 +1218,10 @@ fun AddEventDialog(
         MoreFormSection(title = "মেহমান, স্থান ও বাজেট", icon = Icons.Default.LocationOn) {
             OutlinedTextField(
                 value = speaker,
-                onValueChange = { speaker = it },
+                onValueChange = { speaker = it; speakerError = null },
                 label = { Text("প্রধান বক্তা / মেহমান *") },
+                isError = speakerError != null,
+                supportingText = speakerError?.let { err -> { Text(err, color = MosqueUrgentRed, fontSize = 11.sp) } },
                 shape = RoundedCornerShape(12.dp),
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
@@ -738,8 +1229,10 @@ fun AddEventDialog(
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
                 value = venue,
-                onValueChange = { venue = it },
+                onValueChange = { venue = it; venueError = null },
                 label = { Text("অনুষ্ঠানের স্থান *") },
+                isError = venueError != null,
+                supportingText = venueError?.let { err -> { Text(err, color = MosqueUrgentRed, fontSize = 11.sp) } },
                 shape = RoundedCornerShape(12.dp),
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()

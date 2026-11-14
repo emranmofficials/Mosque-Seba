@@ -141,59 +141,22 @@ fun GlobalHeader(
 
                         Spacer(modifier = Modifier.height(2.dp))
 
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(5.dp)
+                        // Role Badge -> Opens User's Own Profile
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(MosqueGold)
+                                .clickable(onClick = onUserProfileClick)
+                                .padding(horizontal = 7.dp, vertical = 2.dp)
                         ) {
-                            // Role Badge -> Opens User's Own Profile
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(6.dp))
-                                    .background(MosqueGold)
-                                    .clickable(onClick = onUserProfileClick)
-                                    .padding(horizontal = 7.dp, vertical = 2.dp)
-                            ) {
-                                Text(
-                                    text = currentRole.titleBn,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MosqueEmeraldDark,
-                                    fontWeight = FontWeight.ExtraBold,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
-
-                            // Mosque Profile quick pill
-                            Surface(
-                                onClick = onMosqueProfileClick,
-                                shape = RoundedCornerShape(6.dp),
-                                color = Color.White.copy(alpha = 0.14f),
-                                border = androidx.compose.foundation.BorderStroke(
-                                    0.7.dp,
-                                    MosqueGoldLight.copy(alpha = 0.6f)
-                                ),
-                                modifier = Modifier.testTag("header_mosque_chip")
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Mosque,
-                                        contentDescription = "মসজিদের প্রোফাইল",
-                                        tint = MosqueGoldLight,
-                                        modifier = Modifier.size(11.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(3.dp))
-                                    Text(
-                                        text = "মসজিদ",
-                                        fontSize = 10.sp,
-                                        color = MosqueGoldLight,
-                                        fontWeight = FontWeight.Bold,
-                                        maxLines = 1
-                                    )
-                                }
-                            }
+                            Text(
+                                text = currentRole.titleBn,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MosqueEmeraldDark,
+                                fontWeight = FontWeight.ExtraBold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
                         }
                     }
                 }

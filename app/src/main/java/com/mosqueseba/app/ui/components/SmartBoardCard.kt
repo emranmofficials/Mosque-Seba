@@ -97,9 +97,14 @@ fun SmartBoardCard(
     val safeIndex = if (slides.isEmpty()) 0 else pageIndex % slides.size
     val currentSlide = slides[safeIndex]
 
+    val isDark = LocalIsDarkTheme.current
+    val cardBg = if (isDark) MosqueNightSurfaceVariant else MosqueGoldSoft
+    val accentEmerald = if (isDark) MosqueGoldLight else MosqueEmeraldPrimary
+    val titleColor = if (isDark) MosqueGoldLight else MosqueEmeraldDark
+
     MehrabArchCard(
         modifier = Modifier.fillMaxWidth(),
-        backgroundColor = MosqueGoldSoft,
+        backgroundColor = cardBg,
         borderColor = MosqueGold.copy(alpha = 0.5f),
         elevation = 2.dp
     ) {
@@ -114,13 +119,13 @@ fun SmartBoardCard(
                         modifier = Modifier
                             .size(8.dp)
                             .clip(RoundedCornerShape(4.dp))
-                            .background(MosqueEmeraldPrimary)
+                            .background(accentEmerald)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = "স্মার্ট নোটিশ ও দেয়াল বোর্ড",
                         style = MaterialTheme.typography.labelSmall,
-                        color = MosqueEmeraldDark,
+                        color = titleColor,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -133,8 +138,8 @@ fun SmartBoardCard(
                                 .width(if (i == safeIndex) 16.dp else 6.dp)
                                 .clip(RoundedCornerShape(2.dp))
                                 .background(
-                                    if (i == safeIndex) MosqueEmeraldPrimary
-                                    else MosqueEmeraldPrimary.copy(alpha = 0.25f)
+                                    if (i == safeIndex) accentEmerald
+                                    else accentEmerald.copy(alpha = 0.25f)
                                 )
                         )
                     }
@@ -157,7 +162,7 @@ fun SmartBoardCard(
                     "বিশেষ ধর্মীয় দিবস", "জুমার নির্দেশনা" -> Icons.Default.Campaign
                     else -> Icons.Default.FormatQuote
                 }
-                val iconTint = if (slide.category == "বিশেষ ধর্মীয় দিবস") MosqueUrgentRed else MosqueEmeraldPrimary
+                val iconTint = if (slide.category == "বিশেষ ধর্মীয় দিবস") MosqueUrgentRed else accentEmerald
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -174,13 +179,13 @@ fun SmartBoardCard(
                         Text(
                             text = slide.title,
                             style = MaterialTheme.typography.labelMedium,
-                            color = if (slide.category == "বিশেষ ধর্মীয় দিবস") MosqueUrgentRed else MosqueEmeraldDark,
+                            color = if (slide.category == "বিশেষ ধর্মীয় দিবস") MosqueUrgentRed else titleColor,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
                             text = slide.subtitle,
                             style = MaterialTheme.typography.bodySmall,
-                            color = MosqueTextPrimary,
+                            color = MaterialTheme.colorScheme.onSurface,
                             maxLines = 2
                         )
                     }

@@ -31,6 +31,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -49,7 +51,7 @@ private val SALARIED_ROLE_CODES = setOf("imam", "muazzin", "khadem")
 
 private data class SalariedMemberUiModel(
     val key: String,
-    val staff: StaffEntity?,
+    val staff: StaffEntity,
     val member: MemberEntity?,
     val nameBn: String,
     val roleCode: String,
@@ -60,7 +62,8 @@ private data class SalariedMemberUiModel(
     val mealRequired: Boolean,
     val photoUrl: String?,
     val isPaidCurrentCycle: Boolean,
-    val paidCount: Int
+    val paidCount: Int,
+    val totalPaidSalary: Double
 )
 
 @Composable
@@ -68,6 +71,7 @@ fun MembersScreen(
     viewModel: MosqueViewModel,
     onAddMemberClick: (() -> Unit)? = null
 ) {
+    val context = LocalContext.current
     val allMembers by viewModel.allMembers.collectAsState()
     val allChandaPayments by viewModel.allChandaPayments.collectAsState()
     val activeStaff by viewModel.activeStaff.collectAsState()
@@ -107,12 +111,14 @@ fun MembersScreen(
         activeStaff.forEach { st ->
             val normStaffMobile = st.mobile.filter { it.isDigit() }
             val linkedMember = allMembers.find { m ->
-                (normStaffMobile.isNotEmpty() && m.mobile.filter { it.isDigit() } == normStaffMobile) ||
+                st.id == "staff-${m.id}" ||
+                    (normStaffMobile.isNotEmpty() && m.mobile.filter { it.isDigit() } == normStaffMobile) ||
                     m.nameBn.trim() == st.nameBn.trim()
             }
             if (linkedMember != null) matchedMemberIds.add(linkedMember.id)
             val staffPayrolls = allPayrolls.filter { it.staffId == st.id }
-            val isPaid = staffPayrolls.any { it.month == activeCycleMonth || it.paymentStatus == "paid" }
+            val isPaid = staffPayrolls.any { it.month == activeCycleMonth && it.paymentStatus == "paid" }
+            val totalPaid = staffPayrolls.filter { it.paymentStatus == "paid" }.sumOf { it.netSalary }
             result.add(
                 SalariedMemberUiModel(
                     key = "staff-${st.id}",
@@ -127,7 +133,8 @@ fun MembersScreen(
                     mealRequired = st.mealRequired,
                     photoUrl = linkedMember?.photoUrl,
                     isPaidCurrentCycle = isPaid,
-                    paidCount = staffPayrolls.size
+                    paidCount = staffPayrolls.size,
+                    totalPaidSalary = totalPaid
                 )
             )
         }
@@ -136,21 +143,41 @@ fun MembersScreen(
             .filter { it.roleCode.lowercase() in SALARIED_ROLE_CODES && it.id !in matchedMemberIds }
             .forEach { m ->
                 val role = UserRole.fromCode(m.roleCode)
+                val fallbackSalary = when (m.roleCode.lowercase()) {
+                    "imam" -> 18000.0
+                    "muazzin" -> 12000.0
+                    else -> 9000.0
+                }
+                val fallbackStaff = StaffEntity(
+                    id = "staff-${m.id}",
+                    nameBn = m.nameBn,
+                    roleCode = m.roleCode,
+                    designationBn = role.titleBn,
+                    joinDate = m.joinDate,
+                    salaryAmount = fallbackSalary,
+                    mealRequired = true,
+                    mobile = m.mobile,
+                    isActive = m.status == "active"
+                )
+                val staffPayrolls = allPayrolls.filter { it.staffId == fallbackStaff.id }
+                val isPaid = staffPayrolls.any { it.month == activeCycleMonth && it.paymentStatus == "paid" }
+                val totalPaid = staffPayrolls.filter { it.paymentStatus == "paid" }.sumOf { it.netSalary }
                 result.add(
                     SalariedMemberUiModel(
                         key = "mem-staff-${m.id}",
-                        staff = null,
+                        staff = fallbackStaff,
                         member = m,
                         nameBn = m.nameBn,
                         roleCode = m.roleCode,
                         designationBn = role.titleBn,
                         mobile = m.mobile,
                         joinDate = m.joinDate,
-                        salaryAmount = 0.0,
+                        salaryAmount = fallbackSalary,
                         mealRequired = true,
                         photoUrl = m.photoUrl,
-                        isPaidCurrentCycle = false,
-                        paidCount = 0
+                        isPaidCurrentCycle = isPaid,
+                        paidCount = staffPayrolls.size,
+                        totalPaidSalary = totalPaid
                     )
                 )
             }
@@ -237,7 +264,8 @@ fun MembersScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MosqueBgLight)
+                .background(MaterialTheme.colorScheme.background),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // 1. Islamic Emerald Header + 2-Tab Switcher + Dynamic KPI Summary
             Surface(
@@ -397,6 +425,45 @@ fun MembersScreen(
                                 )
                             }
                         }
+                        if (selectedTabIndex == 0) {
+                            val collectedThisCycle = remember(memberChandaStats) {
+                                memberChandaStats.values.sumOf { it.first }
+                            }
+                            val targetThisCycle = (collectedThisCycle + totalChandaDue).coerceAtLeast(1.0)
+                            val chandaRatio = (collectedThisCycle / targetThisCycle).toFloat().coerceIn(0f, 1f)
+                            val chandaPct = (chandaRatio * 100).toInt().coerceIn(0, 100)
+
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "চলতি মাসের চাঁদা আদায় অগ্রগতি",
+                                        fontSize = 10.5.sp,
+                                        color = MosqueGoldLight.copy(alpha = 0.9f),
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                    Text(
+                                        text = "${toBengaliDigits(chandaPct.toString())}% আদায়",
+                                        fontSize = 10.5.sp,
+                                        color = MosqueGold,
+                                        fontWeight = FontWeight.ExtraBold
+                                    )
+                                }
+                                LinearProgressIndicator(
+                                    progress = { chandaRatio },
+                                    color = MosqueGold,
+                                    trackColor = Color.White.copy(alpha = 0.18f),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(6.dp)
+                                        .clip(RoundedCornerShape(3.dp))
+                                )
+                            }
+                        }
                     }
 
                     Box(
@@ -410,7 +477,7 @@ fun MembersScreen(
 
             // 2. Search & Role Filter Section
             Surface(
-                color = Color.White,
+                color = MaterialTheme.colorScheme.surface,
                 shadowElevation = 1.dp,
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -499,7 +566,14 @@ fun MembersScreen(
                                             if (selectedRoleFilter == role.code) null else role.code
                                         )
                                     },
-                                    label = { Text("${role.emoji} ${role.titleBn}", fontSize = 11.sp) }
+                                    leadingIcon = {
+                                        Icon(
+                                            imageVector = role.roleIcon(),
+                                            contentDescription = null,
+                                            modifier = Modifier.size(15.dp)
+                                        )
+                                    },
+                                    label = { Text(role.titleBn, fontSize = 11.sp) }
                                 )
                             }
                         } else {
@@ -519,7 +593,14 @@ fun MembersScreen(
                                             if (selectedRoleFilter == role.code) null else role.code
                                         )
                                     },
-                                    label = { Text("${role.emoji} ${role.titleBn}", fontSize = 11.sp) }
+                                    leadingIcon = {
+                                        Icon(
+                                            imageVector = role.roleIcon(),
+                                            contentDescription = null,
+                                            modifier = Modifier.size(15.dp)
+                                        )
+                                    },
+                                    label = { Text(role.titleBn, fontSize = 11.sp) }
                                 )
                             }
                         }
@@ -531,7 +612,10 @@ fun MembersScreen(
             AnimatedContent(
                 targetState = selectedTabIndex,
                 transitionSpec = { fadeIn() togetherWith fadeOut() },
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .widthIn(max = 840.dp),
                 label = "MemberTabContent"
             ) { tab ->
                 if (tab == 0) {
@@ -586,12 +670,12 @@ fun MembersScreen(
                                     canManageFinance = currentRole.canManageFinance(),
                                     onCardClick = {
                                         activeProfileTarget = MemberProfileTarget.SalariedStaff(
-                                            staffId = staffItem.staff?.id,
+                                            staffId = staffItem.staff.id,
                                             memberId = staffItem.member?.id
                                         )
                                     },
                                     onPaySalaryClick = {
-                                        staffItem.staff?.let { paySalaryTargetStaff = it }
+                                        paySalaryTargetStaff = staffItem.staff
                                     },
                                     modifier = Modifier.animateItem(
                                         fadeInSpec = spring(stiffness = Spring.StiffnessMediumLow),
@@ -626,8 +710,14 @@ fun MembersScreen(
                     selectedMonthCount = monthCount,
                     onRecorded = { createdPayment ->
                         receiptPreviewPayment = createdPayment
+                        Toast.makeText(
+                            context,
+                            "৳${toBengaliDigits(amount.toInt().toString())} চাঁদা গৃহীত হয়েছে এবং স্বয়ংক্রিয়ভাবে মোট আয়ের সাথে যুক্ত হয়েছে।",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 )
+                chandaTargetMember = null
             }
         )
     }
@@ -670,6 +760,7 @@ fun MembersScreen(
             mosqueName = mosque?.nameBn ?: "বায়তুল জান্নাত জামে মসজিদ",
             mosqueAddress = mosque?.address ?: "মিরপুর-১০, ঢাকা",
             committeeId = mosque?.committeeId ?: "MC-DHK-2024",
+            mosqueLogoUrl = mosque?.logoUrl,
             onDismiss = { receiptPreviewPayment = null }
         )
     }
@@ -680,8 +771,20 @@ fun MembersScreen(
             staff = staff,
             defaultMonth = activeCycleMonth,
             onDismiss = { paySalaryTargetStaff = null },
-            onConfirm = { month, bonus ->
-                viewModel.disburseSalary(staff = staff, month = month, bonus = bonus)
+            onConfirm = { month, bonus, paymentMethod ->
+                viewModel.disburseSalary(
+                    staff = staff,
+                    month = month,
+                    bonus = bonus,
+                    paymentMethod = paymentMethod,
+                    onDisbursed = { payroll ->
+                        Toast.makeText(
+                            context,
+                            "${staff.nameBn}-এর বেতন ৳${toBengaliDigits(payroll.netSalary.toInt().toString())} পরিশোধিত এবং স্বয়ংক্রিয়ভাবে মোট ব্যয়ের সাথে যুক্ত হয়েছে।",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                )
                 paySalaryTargetStaff = null
             }
         )
@@ -800,6 +903,11 @@ private fun ChandaMemberCard(
     val photoBitmap = remember(member.photoUrl) { loadLocalThumbnail(member.photoUrl, 160) }
     val isActive = member.status == "active"
 
+    val isDark = LocalIsDarkTheme.current
+    val softBadgeBg = if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft
+    val goldBadgeBg = if (isDark) MosqueNightSurfaceVariant else MosqueGoldSoft
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val secondaryColor = MaterialTheme.colorScheme.onSurfaceVariant
     Card(
         onClick = onCardClick,
         interactionSource = interactionSource,
@@ -808,7 +916,7 @@ private fun ChandaMemberCard(
             .scale(scale)
             .testTag("chanda_member_card_${member.id}"),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp, pressedElevation = 5.dp),
         border = BorderStroke(1.dp, MosqueCardBorderGold)
     ) {
@@ -872,23 +980,34 @@ private fun ChandaMemberCard(
                                 text = member.nameBn,
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.ExtraBold,
-                                color = MosqueEmeraldDark,
+                                color = MaterialTheme.colorScheme.onSurface,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
                                 modifier = Modifier.weight(1f, fill = false)
                             )
                             Surface(
                                 shape = RoundedCornerShape(6.dp),
-                                color = if (role.level <= 2) MosqueGoldLight else MosqueEmeraldSoft
+                                color = if (role.level <= 2 && !isDark) MosqueGoldLight else softBadgeBg
                             ) {
-                                Text(
-                                    text = "${role.emoji} ${role.titleBn}",
-                                    fontSize = 10.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MosqueEmeraldDark,
-                                    maxLines = 1,
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
                                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                )
+                                ) {
+                                    Icon(
+                                        imageVector = role.roleIcon(),
+                                        contentDescription = null,
+                                        tint = primaryColor,
+                                        modifier = Modifier.size(11.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(3.dp))
+                                    Text(
+                                        text = role.titleBn,
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = primaryColor,
+                                        maxLines = 1
+                                    )
+                                }
                             }
                         }
 
@@ -897,7 +1016,7 @@ private fun ChandaMemberCard(
                         Text(
                             text = "আইডি: ${toBengaliDigits(member.memberCode)} • ${toBengaliDigits(member.mobile)}",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MosqueTextSecondary,
+                            color = secondaryColor,
                             fontSize = 12.sp
                         )
 
@@ -911,7 +1030,7 @@ private fun ChandaMemberCard(
                             Text(
                                 text = "ঠিকানা: $cardAddress",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = MosqueTextMuted,
+                                color = secondaryColor,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
                                 modifier = Modifier.weight(1f, fill = false)
@@ -919,15 +1038,26 @@ private fun ChandaMemberCard(
                             if (member.willingToProvideStaffMeals) {
                                 Surface(
                                     shape = RoundedCornerShape(6.dp),
-                                    color = MosqueGoldSoft
+                                    color = goldBadgeBg
                                 ) {
-                                    Text(
-                                        text = "🍽️ খাবার দাতা",
-                                        fontSize = 9.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MosqueGoldDeep,
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
                                         modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp)
-                                    )
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Restaurant,
+                                            contentDescription = null,
+                                            tint = MosqueGoldDeep,
+                                            modifier = Modifier.size(10.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(3.dp))
+                                        Text(
+                                            text = "খাবার দাতা",
+                                            fontSize = 9.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MosqueGoldDeep
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -942,7 +1072,7 @@ private fun ChandaMemberCard(
                 }
 
                 Spacer(modifier = Modifier.height(10.dp))
-                HorizontalDivider(color = MosqueCardBorderSubtle)
+                HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
                 Spacer(modifier = Modifier.height(8.dp))
 
                 // Bottom Action Strip: বকেয়া বাটন | জমা বাটন | চাঁদা গ্রহণ বাটন
@@ -956,7 +1086,7 @@ private fun ChandaMemberCard(
                     Surface(
                         onClick = onDueClick,
                         shape = RoundedCornerShape(10.dp),
-                        color = if (hasDue) MosqueUrgentRed.copy(alpha = 0.08f) else MosqueSuccessGreen.copy(alpha = 0.08f),
+                        color = if (hasDue) MosqueUrgentRed.copy(alpha = 0.1f) else MosqueSuccessGreen.copy(alpha = 0.1f),
                         border = BorderStroke(
                             1.dp,
                             if (hasDue) MosqueUrgentRed.copy(alpha = 0.35f) else MosqueSuccessGreen.copy(alpha = 0.3f)
@@ -990,8 +1120,8 @@ private fun ChandaMemberCard(
                     Surface(
                         onClick = onPaidClick,
                         shape = RoundedCornerShape(10.dp),
-                        color = MosqueEmeraldSoft,
-                        border = BorderStroke(1.dp, MosqueEmeraldPrimary.copy(alpha = 0.35f)),
+                        color = softBadgeBg,
+                        border = BorderStroke(1.dp, primaryColor.copy(alpha = 0.35f)),
                         modifier = Modifier
                             .weight(1f)
                             .heightIn(min = 42.dp)
@@ -1006,13 +1136,13 @@ private fun ChandaMemberCard(
                                 text = "জমা",
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.SemiBold,
-                                color = MosqueEmeraldDark
+                                color = secondaryColor
                             )
                             Text(
                                 text = "৳${toBengaliDigits(String.format("%,.0f", totalDeposited))}",
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.ExtraBold,
-                                color = MosqueEmeraldPrimary
+                                color = primaryColor
                             )
                         }
                     }
@@ -1063,13 +1193,19 @@ private fun SalariedMemberCard(
     val role = UserRole.fromCode(item.roleCode)
     val photoBitmap = remember(item.photoUrl) { loadLocalThumbnail(item.photoUrl, 160) }
 
+    val isDark = LocalIsDarkTheme.current
+    val softBadgeBg = if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft
+    val goldBadgeBg = if (isDark) MosqueNightSurfaceVariant else MosqueGoldSoft
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val secondaryColor = MaterialTheme.colorScheme.onSurfaceVariant
+
     Card(
         onClick = onCardClick,
         modifier = modifier
             .fillMaxWidth()
             .testTag("salaried_member_card_${item.key}"),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp, pressedElevation = 5.dp),
         border = BorderStroke(1.dp, MosqueCardBorderGold)
     ) {
@@ -1089,7 +1225,7 @@ private fun SalariedMemberCard(
                         modifier = Modifier
                             .size(50.dp)
                             .clip(CircleShape)
-                            .background(MosqueEmeraldSoft)
+                            .background(softBadgeBg)
                             .border(1.5.dp, MosqueGold.copy(alpha = 0.8f), CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
@@ -1101,9 +1237,11 @@ private fun SalariedMemberCard(
                                 modifier = Modifier.fillMaxSize()
                             )
                         } else {
-                            Text(
-                                text = role.emoji,
-                                fontSize = 22.sp
+                            Icon(
+                                imageVector = role.roleIcon(),
+                                contentDescription = item.nameBn,
+                                tint = primaryColor,
+                                modifier = Modifier.size(24.dp)
                             )
                         }
                     }
@@ -1119,20 +1257,20 @@ private fun SalariedMemberCard(
                                 text = item.nameBn,
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.ExtraBold,
-                                color = MosqueEmeraldDark,
+                                color = MaterialTheme.colorScheme.onSurface,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
                                 modifier = Modifier.weight(1f, fill = false)
                             )
                             Surface(
                                 shape = RoundedCornerShape(6.dp),
-                                color = MosqueGoldLight
+                                color = if (isDark) MosqueNightSurfaceVariant else MosqueGoldLight
                             ) {
                                 Text(
                                     text = item.designationBn,
                                     fontSize = 10.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = MosqueEmeraldDark,
+                                    color = primaryColor,
                                     maxLines = 1,
                                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                                 )
@@ -1143,7 +1281,7 @@ private fun SalariedMemberCard(
                         Text(
                             text = "মোবাইল: ${toBengaliDigits(item.mobile)} • যোগদান: ${toBengaliDigits(item.joinDate)}",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MosqueTextSecondary,
+                            color = secondaryColor,
                             fontSize = 11.5.sp
                         )
                     }
@@ -1157,7 +1295,7 @@ private fun SalariedMemberCard(
                 }
 
                 Spacer(modifier = Modifier.height(10.dp))
-                HorizontalDivider(color = MosqueCardBorderSubtle)
+                HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Row(
@@ -1167,49 +1305,64 @@ private fun SalariedMemberCard(
                 ) {
                     Surface(
                         shape = RoundedCornerShape(10.dp),
-                        color = MosqueEmeraldSoft,
-                        border = BorderStroke(1.dp, MosqueEmeraldPrimary.copy(alpha = 0.3f)),
+                        color = softBadgeBg,
+                        border = BorderStroke(1.dp, primaryColor.copy(alpha = 0.3f)),
                         modifier = Modifier.weight(1f)
                     ) {
                         Column(
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Text("মাসিক বেতন", fontSize = 10.sp, color = MosqueTextSecondary)
+                            Text("মাসিক বেতন", fontSize = 10.sp, color = secondaryColor)
                             Text(
                                 text = "৳${toBengaliDigits(String.format("%,.0f", item.salaryAmount))}",
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.ExtraBold,
-                                color = MosqueEmeraldDark
+                                color = primaryColor
                             )
                         }
                     }
 
                     Surface(
                         shape = RoundedCornerShape(10.dp),
-                        color = if (item.isPaidCurrentCycle) MosqueSuccessGreen.copy(alpha = 0.1f) else MosqueGoldSoft,
+                        color = if (item.isPaidCurrentCycle) MosqueSuccessGreen.copy(alpha = 0.12f) else goldBadgeBg,
                         border = BorderStroke(
                             1.dp,
                             if (item.isPaidCurrentCycle) MosqueSuccessGreen.copy(alpha = 0.35f) else MosqueCardBorderGold
                         ),
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1.1f)
                     ) {
                         Column(
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Text("খাবার ও অবস্থা", fontSize = 10.sp, color = MosqueTextSecondary)
                             Text(
-                                text = if (item.isPaidCurrentCycle) "বেতন পরিশোধিত" else if (item.mealRequired) "খাবার প্রযোজ্য" else "সক্রিয় স্টাফ",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = if (item.isPaidCurrentCycle) MosqueSuccessGreen else MosqueGoldDeep,
+                                text = if (item.totalPaidSalary > 0.0) {
+                                    "পরিশোধিত (${toBengaliDigits(item.paidCount.toString())} বার)"
+                                } else {
+                                    "চলতি মাসের অবস্থা"
+                                },
+                                fontSize = 10.sp,
+                                color = secondaryColor,
+                                maxLines = 1
+                            )
+                            Text(
+                                text = if (item.totalPaidSalary > 0.0) {
+                                    "৳${toBengaliDigits(String.format("%,.0f", item.totalPaidSalary))}"
+                                } else if (item.isPaidCurrentCycle) {
+                                    "পরিশোধিত"
+                                } else {
+                                    "প্রদেয়"
+                                },
+                                fontSize = 11.5.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = if (item.isPaidCurrentCycle || item.totalPaidSalary > 0.0) MosqueSuccessGreen else MosqueGoldDeep,
                                 maxLines = 1
                             )
                         }
                     }
 
-                    if (canManageFinance && item.staff != null) {
+                    if (canManageFinance) {
                         Button(
                             onClick = onPaySalaryClick,
                             shape = RoundedCornerShape(10.dp),
@@ -1217,8 +1370,15 @@ private fun SalariedMemberCard(
                             contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
                             modifier = Modifier
                                 .weight(1.1f)
-                                .heightIn(min = 42.dp)
+                                .heightIn(min = 48.dp)
+                                .testTag("pay_salary_btn_${item.key}")
                         ) {
+                            Icon(
+                                imageVector = Icons.Default.Payments,
+                                contentDescription = null,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
                             Text("বেতন দিন", fontSize = 11.sp, fontWeight = FontWeight.ExtraBold)
                         }
                     }

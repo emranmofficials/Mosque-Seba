@@ -15,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.NightsStay
 import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material.icons.filled.VerifiedUser
 import androidx.compose.material3.*
@@ -32,6 +33,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mosqueseba.app.R
@@ -50,6 +52,7 @@ fun HeroCard(
     val establishedBn = toBengaliDigits((mosque?.establishedYear ?: 1998).toString())
     val startYearBn = toBengaliDigits((mosque?.committeeStartYear ?: 2024).toString())
     val endYearBn = toBengaliDigits((mosque?.committeeEndYear ?: 2026).toString())
+    val mosqueLogoBitmap = remember(mosque?.logoUrl) { loadLocalThumbnail(mosque?.logoUrl, 256) }
 
     MehrabArchCard(
         modifier = Modifier
@@ -107,13 +110,46 @@ fun HeroCard(
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                // Mosque Name
-                Text(
-                    text = nameBn,
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold
-                )
+                // Mosque Logo & Name
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(50.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .border(1.5.dp, MosqueGoldGradient, RoundedCornerShape(12.dp))
+                            .background(Color.White)
+                            .padding(if (mosqueLogoBitmap != null) 2.dp else 5.dp)
+                            .testTag("hero_mosque_logo"),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (mosqueLogoBitmap != null) {
+                            Image(
+                                bitmap = mosqueLogoBitmap,
+                                contentDescription = "মসজিদের অফিসিয়াল লোগো",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .clip(RoundedCornerShape(10.dp))
+                            )
+                        } else {
+                            Image(
+                                painter = painterResource(id = R.drawable.app_logo),
+                                contentDescription = "মসজিদের অফিসিয়াল লোগো",
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
+                    }
+                    Text(
+                        text = nameBn,
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(6.dp))
 
@@ -223,13 +259,24 @@ fun ExecutiveMosqueHeroCard(
                         shape = RoundedCornerShape(6.dp),
                         border = BorderStroke(0.7.dp, MosqueGold.copy(alpha = 0.4f))
                     ) {
-                        Text(
-                            text = "🌙 $hijriDate",
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MosqueGoldLight,
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp)
-                        )
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.NightsStay,
+                                contentDescription = null,
+                                tint = MosqueGoldLight,
+                                modifier = Modifier.size(11.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = hijriDate,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MosqueGoldLight
+                            )
+                        }
                     }
                 }
 
@@ -265,7 +312,8 @@ fun ExecutiveMosqueHeroCard(
                             .clip(RoundedCornerShape(12.dp))
                             .border(1.5.dp, MosqueGoldGradient, RoundedCornerShape(12.dp))
                             .background(Color.White)
-                            .padding(if (mosqueLogoBitmap != null) 2.dp else 5.dp),
+                            .padding(if (mosqueLogoBitmap != null) 2.dp else 5.dp)
+                            .testTag("hero_mosque_logo"),
                         contentAlignment = Alignment.Center
                     ) {
                         if (mosqueLogoBitmap != null) {
@@ -294,7 +342,8 @@ fun ExecutiveMosqueHeroCard(
                             style = MaterialTheme.typography.titleMedium,
                             color = Color.White,
                             fontWeight = FontWeight.ExtraBold,
-                            maxLines = 1
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -309,8 +358,36 @@ fun ExecutiveMosqueHeroCard(
                                 text = fullAddress,
                                 fontSize = 11.sp,
                                 color = Color.White.copy(alpha = 0.86f),
-                                maxLines = 1
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = Color.White.copy(alpha = 0.14f),
+                            border = BorderStroke(0.7.dp, MosqueGold.copy(alpha = 0.45f))
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            ) {
+                                Icon(
+                                    imageVector = currentRole.roleIcon(),
+                                    contentDescription = null,
+                                    tint = MosqueGoldLight,
+                                    modifier = Modifier.size(11.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = currentRole.titleBn,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MosqueGoldLight,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
                         }
                     }
                 }
@@ -325,7 +402,7 @@ fun ExecutiveMosqueHeroCard(
                     modifier = Modifier.testTag("president_duties_strip_button")
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(

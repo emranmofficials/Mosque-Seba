@@ -27,7 +27,6 @@ enum class UserRole(
     val titleBn: String,
     val level: Int,
     val tier: CommitteeTier,
-    val emoji: String,
     val shortSummaryBn: String,
     val dutiesBn: List<String>
 ) {
@@ -36,7 +35,6 @@ enum class UserRole(
         titleBn = "সভাপতি",
         level = 1,
         tier = CommitteeTier.CORE_EXECUTIVE,
-        emoji = "👑",
         shortSummaryBn = "মসজিদের সর্বস্তরের অভিভাবক, সভায় সভাপতিত্ব ও চূড়ান্ত অনুমোদন",
         dutiesBn = listOf(
             "মসজিদের সর্বস্তরের অভিভাবক হিসেবে দায়িত্ব পালন করা।",
@@ -50,7 +48,6 @@ enum class UserRole(
         titleBn = "সহ-সভাপতি",
         level = 2,
         tier = CommitteeTier.CORE_EXECUTIVE,
-        emoji = "🎖️",
         shortSummaryBn = "সভাপতির অনুপস্থিতিতে দায়িত্ব পালন ও উপ-কমিটি তদারকি",
         dutiesBn = listOf(
             "সভাপতির অনুপস্থিতিতে তার সকল দায়িত্ব ও কর্তব্য পালন করা।",
@@ -62,7 +59,6 @@ enum class UserRole(
         titleBn = "সাধারণ সম্পাদক",
         level = 2,
         tier = CommitteeTier.CORE_EXECUTIVE,
-        emoji = "📝",
         shortSummaryBn = "দৈনন্দিন প্রশাসন, সভা আহ্বান, এজেন্ডা-রেজুলেশন ও স্টাফ তদারকি",
         dutiesBn = listOf(
             "মসজিদের দৈনন্দিন প্রশাসনিক ও সাংগঠনিক কাজ পরিচালনা করা।",
@@ -76,7 +72,6 @@ enum class UserRole(
         titleBn = "সহ-সাধারণ সম্পাদক",
         level = 2,
         tier = CommitteeTier.CORE_EXECUTIVE,
-        emoji = "🗂️",
         shortSummaryBn = "সাধারণ সম্পাদককে প্রশাসনিক সহায়তা ও অনুপস্থিতিতে দায়িত্ব পালন",
         dutiesBn = listOf(
             "সাধারণ সম্পাদককে তার দৈনন্দিন কাজে প্রশাসনিকভাবে সাহায্য করা।",
@@ -88,7 +83,6 @@ enum class UserRole(
         titleBn = "কোষাধ্যক্ষ / অর্থ সম্পাদক",
         level = 2,
         tier = CommitteeTier.CORE_EXECUTIVE,
-        emoji = "💰",
         shortSummaryBn = "তহবিল নিরাপত্তা, ক্যাশবক্স গণনা, ব্যাংক জমা, ক্যাশবই ও মাসিক রিপোর্ট",
         dutiesBn = listOf(
             "মসজিদের তহবিলের সম্পূর্ণ হিসাব ও নিরাপত্তা নিশ্চিত করা।",
@@ -102,7 +96,6 @@ enum class UserRole(
         titleBn = "সহ-অর্থ সম্পাদক",
         level = 2,
         tier = CommitteeTier.CORE_EXECUTIVE,
-        emoji = "🏦",
         shortSummaryBn = "অর্থ সম্পাদককে হিসাব সংরক্ষণ ও ব্যাংকিং কার্যক্রমে সহায়তা",
         dutiesBn = listOf(
             "অর্থ সম্পাদককে আয়-ব্যয়ের হিসাব রাখা ও ভাউচার মিলিয়ে দেখতে সরাসরি সাহায্য করা।",
@@ -114,7 +107,6 @@ enum class UserRole(
         titleBn = "সাংগঠনিক সম্পাদক",
         level = 3,
         tier = CommitteeTier.SECRETARIAL,
-        emoji = "🤝",
         shortSummaryBn = "মুসল্লিদের ঐক্য-সৌহার্দ্য রক্ষা, সামাজিক যোগাযোগ ও মতামত সমন্বয়",
         dutiesBn = listOf(
             "মসজিদের মুসল্লিদের মধ্যে ঐক্য ও সৌহার্দ্য বজায় রাখার কাজ করা।",
@@ -127,7 +119,6 @@ enum class UserRole(
         titleBn = "প্রচার ও প্রকাশনা সম্পাদক",
         level = 3,
         tier = CommitteeTier.SECRETARIAL,
-        emoji = "📢",
         shortSummaryBn = "ধর্মীয় অনুষ্ঠান প্রচার, দেয়াল লিখন/উক্তি ও স্মার্ট নোটিশ বোর্ড পরিচালনা",
         dutiesBn = listOf(
             "ঈদে মিলাদুন্নবী, শবে বরাত, শবে কদর ও ওয়াজ মাহফিলসহ ধর্মীয় অনুষ্ঠান এবং জরুরি নোটিশ প্রচার করা।",
@@ -139,7 +130,6 @@ enum class UserRole(
         titleBn = "দপ্তর সম্পাদক",
         level = 3,
         tier = CommitteeTier.SECRETARIAL,
-        emoji = "🗄️",
         shortSummaryBn = "অফিসিয়াল নথিপত্র, দলিল-চুক্তি, চিঠিপত্র সংরক্ষণ ও জবাব তৈরি",
         dutiesBn = listOf(
             "মসজিদের অফিসিয়াল নথিপত্র, ওয়াকফ দলিল-চুক্তি এবং চিঠিপত্র নিরাপদে সংরক্ষণ করা।",
@@ -151,7 +141,6 @@ enum class UserRole(
         titleBn = "সমাজকল্যাণ ও ধর্মীয় শিক্ষা সম্পাদক",
         level = 3,
         tier = CommitteeTier.SECRETARIAL,
-        emoji = "🎓",
         shortSummaryBn = "মক্তব/হিফজ শিক্ষা তদারকি, যাকাত বিতরণ, মেডিকেল ক্যাম্প ও ত্রাণ কার্যক্রম",
         dutiesBn = listOf(
             "মসজিদভিত্তিক মক্তব, হিফজ বা নূরানী মাদরাসার শিক্ষা কার্যক্রম তদারকি করা।",
@@ -164,7 +153,6 @@ enum class UserRole(
         titleBn = "কার্যনির্বাহী সদস্য",
         level = 3,
         tier = CommitteeTier.GENERAL_ADVISORY,
-        emoji = "🛡️",
         shortSummaryBn = "সিদ্ধান্তে অংশগ্রহণ, জুমা-ঈদের শৃঙ্খলা ও ক্যাশবক্স/ক্রয়ে সাক্ষী",
         dutiesBn = listOf(
             "কমিটির বড় সিদ্ধান্ত ও উন্নয়নমূলক কাজে সক্রিয় অংশগ্রহণ করা।",
@@ -177,7 +165,6 @@ enum class UserRole(
         titleBn = "পেশ ইমাম ও খতিব (পদাধিকারবলে)",
         level = 3,
         tier = CommitteeTier.GENERAL_ADVISORY,
-        emoji = "🕌",
         shortSummaryBn = "পদাধিকারবলে সদস্য: শরিয়াহভিত্তিক পরামর্শ ও ইসলামিক নীতিমালা যাচাই",
         dutiesBn = listOf(
             "পদাধিকারবলে কমিটির সদস্য হিসেবে শরিয়াহভিত্তিক পরামর্শ প্রদান করা।",
@@ -190,7 +177,6 @@ enum class UserRole(
         titleBn = "উপদেষ্টা পরিষদ",
         level = 2,
         tier = CommitteeTier.GENERAL_ADVISORY,
-        emoji = "🏛️",
         shortSummaryBn = "সংকটকালীন ও বড় সম্প্রসারণ/বহুতল নির্মাণকাজে কৌশলগত পরামর্শ",
         dutiesBn = listOf(
             "এলাকার সম্মানিত মুরুব্বি ও প্রাজ্ঞ ব্যক্তিবর্গ হিসেবে মসজিদ কল্যাণে দিকনির্দেশনা দেওয়া।",
@@ -202,7 +188,6 @@ enum class UserRole(
         titleBn = "মুয়াজ্জিন",
         level = 4,
         tier = CommitteeTier.STAFF_MUSALLI,
-        emoji = "🎙️",
         shortSummaryBn = "সময়মতো আজান, ইকামত ও সাউন্ড/মসজিদ শৃঙ্খলা রক্ষণাবেক্ষণ",
         dutiesBn = listOf(
             "৫ ওয়াক্ত নামাজের সময়মতো আজান ও ইকামত প্রদান করা।",
@@ -214,7 +199,6 @@ enum class UserRole(
         titleBn = "খাদেম",
         level = 4,
         tier = CommitteeTier.STAFF_MUSALLI,
-        emoji = "🧹",
         shortSummaryBn = "মসজিদ প্রাঙ্গণ, অজুখানা পরিচ্ছন্নতা ও মুসল্লিদের খেদমত",
         dutiesBn = listOf(
             "মসজিদের মূল ভবন, কাতার, অজুখানা ও প্রাঙ্গণ পরিষ্কার-পরিচ্ছন্ন রাখা।",
@@ -226,7 +210,6 @@ enum class UserRole(
         titleBn = "সাধারণ সদস্য / মুসল্লি",
         level = 5,
         tier = CommitteeTier.STAFF_MUSALLI,
-        emoji = "👥",
         shortSummaryBn = "নিয়মিত জামাত ট্র্যাকিং, স্বচ্ছ তহবিল পর্যবেক্ষণ ও মাসিক চাঁদা",
         dutiesBn = listOf(
             "নিয়মিত জামাতে অংশগ্রহণ ও মাসিক চাঁদা পরিশোধ করে মসজিদ তহবিলে শরিক হওয়া।",

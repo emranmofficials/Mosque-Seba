@@ -13,6 +13,7 @@ import com.mosqueseba.app.data.local.SessionManager
 import com.mosqueseba.app.data.local.entity.*
 import com.mosqueseba.app.data.model.UserRole
 import com.mosqueseba.app.data.repository.MosqueRepository
+import com.mosqueseba.app.ui.components.toBengaliDigits
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.TimeoutCancellationException
@@ -74,8 +75,23 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
     private val _rememberMeEnabled = MutableStateFlow(sessionManager.isRememberMeEnabled())
     val rememberMeEnabled: StateFlow<Boolean> = _rememberMeEnabled.asStateFlow()
 
+    private val _darkModeEnabled = MutableStateFlow(sessionManager.isDarkModeEnabled())
+    val darkModeEnabled: StateFlow<Boolean> = _darkModeEnabled.asStateFlow()
+
     private val _readNotificationIds = MutableStateFlow(sessionManager.getReadNotificationIds())
     val readNotificationIds: StateFlow<Set<String>> = _readNotificationIds.asStateFlow()
+
+    private fun todayDateIso(): String =
+        SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH).format(Date())
+
+    private val _khademCheckedTasks = MutableStateFlow(
+        sessionManager.getKhademCheckedTasksForDate(todayDateIso())
+    )
+    val khademCheckedTasks: StateFlow<Set<String>> = _khademCheckedTasks.asStateFlow()
+
+    fun toggleKhademTask(taskId: String) {
+        _khademCheckedTasks.value = sessionManager.toggleKhademTaskForDate(todayDateIso(), taskId)
+    }
 
     fun setNotificationsEnabled(enabled: Boolean) {
         sessionManager.setNotificationsEnabled(enabled)
@@ -90,6 +106,11 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
     fun setRememberMeEnabled(enabled: Boolean) {
         sessionManager.setRememberMeEnabled(enabled)
         _rememberMeEnabled.value = enabled
+    }
+
+    fun setDarkModeEnabled(enabled: Boolean) {
+        sessionManager.setDarkModeEnabled(enabled)
+        _darkModeEnabled.value = enabled
     }
 
     fun markNotificationAsRead(notificationId: String) {
@@ -735,7 +756,9 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
             val rcpNum = allChandaPayments.value.size + 101
             val rcpCode = "RCP-2024-$rcpNum"
             val qrCode = "VER-MC-DHK-2024-$rcpNum-${UUID.randomUUID().toString().take(6).uppercase()}"
-            val paidAtStr = SimpleDateFormat("yyyy-MM-dd hh:mm a", Locale.getDefault()).format(Date())
+            val cal = Calendar.getInstance()
+            val amPm = if (cal.get(Calendar.AM_PM) == Calendar.AM) "পূর্বাহ্ণ" else "অপরাহ্ণ"
+            val paidAtStr = toBengaliDigits("${SimpleDateFormat("yyyy-MM-dd hh:mm", Locale.getDefault()).format(cal.time)} $amPm")
             val monthCount = selectedMonthCount.coerceAtLeast(1)
             val expectedDue = (member.monthlyChanda * monthCount).coerceAtLeast(member.monthlyChanda)
             val payment = ChandaPaymentEntity(
@@ -994,7 +1017,9 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
     ) {
         viewModelScope.launch {
             val rcpCode = "FEE-2024-${UUID.randomUUID().toString().take(6).uppercase()}"
-            val paidAtStr = SimpleDateFormat("yyyy-MM-dd hh:mm a", Locale.getDefault()).format(Date())
+            val cal = Calendar.getInstance()
+            val amPm = if (cal.get(Calendar.AM_PM) == Calendar.AM) "পূর্বাহ্ণ" else "অপরাহ্ণ"
+            val paidAtStr = toBengaliDigits("${SimpleDateFormat("yyyy-MM-dd hh:mm", Locale.getDefault()).format(cal.time)} $amPm")
             val fee = MadrasaFeePaymentEntity(
                 id = UUID.randomUUID().toString(),
                 studentId = student.id,
@@ -1016,20 +1041,43 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
     fun disburseSalary(
         staff: StaffEntity,
         month: String,
-        bonus: Double = 0.0
+        bonus: Double = 0.0,
+        paymentMethod: String = "cash",
+        onDisbursed: ((StaffPayrollEntity) -> Unit)? = null
     ) {
         viewModelScope.launch {
-            val net = staff.salaryAmount + bonus
+            val baseSalary = if (staff.salaryAmount > 0.0) staff.salaryAmount else {
+                when (staff.roleCode.lowercase()) {
+                    "imam" -> 18000.0
+                    "muazzin" -> 12000.0
+                    else -> 9000.0
+                }
+            }
+            if (staff.salaryAmount <= 0.0) {
+                repository.updateStaff(staff.copy(salaryAmount = baseSalary))
+            }
+            val existsInDb = activeStaff.value.any { it.id == staff.id }
+            if (!existsInDb) {
+                repository.addStaff(staff.copy(salaryAmount = baseSalary, isActive = true))
+            }
+            val net = baseSalary + bonus
             val payroll = StaffPayrollEntity(
                 id = UUID.randomUUID().toString(),
                 staffId = staff.id,
                 staffNameBn = staff.nameBn,
                 month = month,
-                salaryAmount = staff.salaryAmount,
+                salaryAmount = baseSalary,
                 bonusAmount = bonus,
-                netSalary = net
+                netSalary = net,
+                paymentStatus = "paid",
+                paidDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
             )
-            repository.disburseStaffSalary(payroll)
+            repository.disburseStaffSalary(
+                payroll = payroll,
+                paidBy = _currentUserRole.value.titleBn,
+                paymentMethod = paymentMethod
+            )
+            onDisbursed?.invoke(payroll)
         }
     }
 
@@ -1060,9 +1108,41 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
     val allFoodSchedules: StateFlow<List<FoodScheduleEntity>> = repository.allFoodSchedules
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    fun normalizeDigitsToAscii(input: String): String {
+        val bnDigits = charArrayOf('০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯')
+        val sb = StringBuilder(input.length)
+        for (ch in input) {
+            val idx = bnDigits.indexOf(ch)
+            if (idx >= 0) sb.append(('0' + idx)) else sb.append(ch)
+        }
+        return sb.toString()
+    }
+
+    fun getOrderedWillingMealDonors(
+        members: List<MemberEntity> = allMembers.value,
+        schedules: List<FoodScheduleEntity> = allFoodSchedules.value
+    ): List<MemberEntity> {
+        val willing = members
+            .filter { it.status == "active" && it.willingToProvideStaffMeals }
+            .sortedBy { it.memberCode }
+        if (willing.isEmpty()) return emptyList()
+
+        val activeSchedules = schedules.filter { it.status != "cancelled" && it.status != "rejected" }
+        return willing.sortedWith(
+            compareBy<MemberEntity> { member ->
+                val memberDigits = member.mobile.filter { it.isDigit() }
+                val cleanName = member.nameBn.trim()
+                activeSchedules.count { food ->
+                    val foodDigits = normalizeDigitsToAscii(food.providerMobile).filter { it.isDigit() }
+                    (memberDigits.length >= 6 && foodDigits == memberDigits) ||
+                        food.providerName.trim().equals(cleanName, ignoreCase = true)
+                }
+            }.thenBy { it.memberCode }
+        )
+    }
+
     fun addFoodSchedule(
         dateStr: String,
-        mealType: String,
         providerName: String,
         providerMobile: String,
         receiverStaffName: String
@@ -1070,13 +1150,253 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
         viewModelScope.launch {
             val food = FoodScheduleEntity(
                 id = UUID.randomUUID().toString(),
-                dateStr = dateStr,
-                mealType = mealType,
+                dateStr = normalizeDigitsToAscii(dateStr).trim(),
+                mealType = "দৈনিক খাবার",
                 providerName = providerName,
                 providerMobile = providerMobile,
-                receiverStaffName = receiverStaffName
+                receiverStaffName = receiverStaffName,
+                status = "scheduled"
             )
             repository.addFoodSchedule(food)
+        }
+    }
+
+    fun autoGenerateFoodSchedule(
+        daysCount: Int,
+        startDateIso: String,
+        targetStaffLabels: List<String>,
+        onComplete: (createdCount: Int, skippedCount: Int) -> Unit
+    ) {
+        viewModelScope.launch {
+            val orderedDonors = getOrderedWillingMealDonors()
+            if (orderedDonors.isEmpty() || targetStaffLabels.isEmpty()) {
+                onComplete(0, 0)
+                return@launch
+            }
+
+            val activeExisting = allFoodSchedules.value
+                .filter { it.status != "cancelled" && it.status != "rejected" }
+
+            // Track already occupied (date -> receiver) and (date -> set of donor keys) so 1 member doesn't feed 2 staff on same day
+            val existingDateReceiverPairs = activeExisting
+                .map { normalizeDigitsToAscii(it.dateStr).trim() to it.receiverStaffName.trim() }
+                .toMutableSet()
+
+            val donorKeysByDate = mutableMapOf<String, MutableSet<String>>()
+            activeExisting.forEach { food ->
+                val dateKey = normalizeDigitsToAscii(food.dateStr).trim()
+                val donorKey = food.providerMobile.filter { it.isDigit() }.ifBlank { food.providerName.trim() }
+                donorKeysByDate.getOrPut(dateKey) { mutableSetOf() }.add(donorKey)
+            }
+
+            val isoFormat = SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH)
+            val parsedStart = runCatching {
+                isoFormat.parse(normalizeDigitsToAscii(startDateIso).trim())
+            }.getOrNull() ?: Date()
+
+            val calendar = Calendar.getInstance().apply { time = parsedStart }
+            val newSchedules = mutableListOf<FoodScheduleEntity>()
+            var skippedCount = 0
+            var donorCursor = 0
+
+            for (dayOffset in 0 until daysCount) {
+                val dateIso = isoFormat.format(calendar.time)
+                val usedToday = donorKeysByDate.getOrPut(dateIso) { mutableSetOf() }
+
+                for (staffLabel in targetStaffLabels) {
+                    val slotKey = dateIso to staffLabel.trim()
+                    val alreadyAssigned = existingDateReceiverPairs.any { (d, r) ->
+                        d == dateIso && (r.equals(staffLabel.trim(), ignoreCase = true) ||
+                            r.contains(staffLabel.substringBefore(" (").trim(), ignoreCase = true))
+                    }
+                    if (alreadyAssigned) {
+                        skippedCount++
+                        continue
+                    }
+
+                    // Pick next donor in fair round-robin who isn't already assigned today (when enough donors exist)
+                    var pickedDonor: MemberEntity? = null
+                    for (attempt in orderedDonors.indices) {
+                        val candidate = orderedDonors[(donorCursor + attempt) % orderedDonors.size]
+                        val candidateKey = candidate.mobile.filter { it.isDigit() }.ifBlank { candidate.nameBn.trim() }
+                        if (candidateKey !in usedToday) {
+                            pickedDonor = candidate
+                            donorCursor = (donorCursor + attempt + 1) % orderedDonors.size
+                            usedToday.add(candidateKey)
+                            break
+                        }
+                    }
+                    if (pickedDonor == null) {
+                        pickedDonor = orderedDonors[donorCursor % orderedDonors.size]
+                        donorCursor = (donorCursor + 1) % orderedDonors.size
+                    }
+
+                    existingDateReceiverPairs.add(slotKey)
+                    newSchedules.add(
+                        FoodScheduleEntity(
+                            id = "food-auto-${UUID.randomUUID()}",
+                            dateStr = dateIso,
+                            mealType = "দৈনিক খাবার",
+                            providerName = pickedDonor.nameBn,
+                            providerMobile = pickedDonor.mobile,
+                            receiverStaffName = staffLabel.trim(),
+                            status = "scheduled"
+                        )
+                    )
+                }
+                calendar.add(Calendar.DAY_OF_YEAR, 1)
+            }
+
+            if (newSchedules.isNotEmpty()) {
+                repository.addFoodSchedulesBatch(
+                    schedules = newSchedules,
+                    actor = _currentUserRole.value.titleBn,
+                    summaryNote = "স্বয়ংক্রিয় দৈনিক খাবার শিডিউল: ${newSchedules.size} টি পালা (${daysCount} দিন, ${targetStaffLabels.size} জন স্টাফ, ${orderedDonors.size} জন দাতা)"
+                )
+            }
+            onComplete(newSchedules.size, skippedCount)
+        }
+    }
+
+    fun approveFoodSchedule(schedule: FoodScheduleEntity) {
+        viewModelScope.launch {
+            val updated = schedule.copy(status = "approved")
+            repository.updateFoodSchedule(
+                schedule = updated,
+                actor = schedule.providerName,
+                auditDetails = "খাবার দায়িত্ব সম্মতি: ${schedule.dateStr} • দাতা: ${schedule.providerName} → ${schedule.receiverStaffName}"
+            )
+        }
+    }
+
+    fun rejectFoodSchedule(
+        schedule: FoodScheduleEntity,
+        onResult: (reassignedToName: String?) -> Unit = {}
+    ) {
+        viewModelScope.launch {
+            val targetDate = normalizeDigitsToAscii(schedule.dateStr).trim()
+            val currentDigits = normalizeDigitsToAscii(schedule.providerMobile).filter { it.isDigit() }
+            val usedSameDayKeys = allFoodSchedules.value
+                .filter {
+                    normalizeDigitsToAscii(it.dateStr).trim() == targetDate &&
+                        it.id != schedule.id &&
+                        it.status != "cancelled" &&
+                        it.status != "rejected"
+                }
+                .map { normalizeDigitsToAscii(it.providerMobile).filter { d -> d.isDigit() }.ifBlank { it.providerName.trim() } }
+                .toSet()
+
+            val orderedDonors = getOrderedWillingMealDonors()
+            val alternateDonor = orderedDonors.firstOrNull { donor ->
+                val donorDigits = donor.mobile.filter { it.isDigit() }
+                val donorKey = donorDigits.ifBlank { donor.nameBn.trim() }
+                val isRejectingMember = (currentDigits.length >= 6 && donorDigits == currentDigits) ||
+                    donor.nameBn.trim().equals(schedule.providerName.trim(), ignoreCase = true)
+                !isRejectingMember && donorKey !in usedSameDayKeys
+            }
+
+            if (alternateDonor != null) {
+                val reassigned = schedule.copy(
+                    providerName = alternateDonor.nameBn,
+                    providerMobile = alternateDonor.mobile,
+                    status = "scheduled"
+                )
+                repository.updateFoodSchedule(
+                    schedule = reassigned,
+                    actor = schedule.providerName,
+                    auditDetails = "${schedule.providerName} অপারগতা → স্বয়ংক্রিয়ভাবে ${alternateDonor.nameBn}-কে দায়িত্ব (${schedule.dateStr}, ${schedule.receiverStaffName})"
+                )
+                onResult(alternateDonor.nameBn)
+            } else {
+                val rejected = schedule.copy(status = "rejected")
+                repository.updateFoodSchedule(
+                    schedule = rejected,
+                    actor = schedule.providerName,
+                    auditDetails = "খাবার দায়িত্ব অপারগতা (বিকল্প প্রয়োজন): ${schedule.dateStr} • ${schedule.providerName} (${schedule.receiverStaffName})"
+                )
+                onResult(null)
+            }
+        }
+    }
+
+    fun markFoodScheduleDelivered(schedule: FoodScheduleEntity) {
+        viewModelScope.launch {
+            val updated = schedule.copy(status = "delivered")
+            repository.updateFoodSchedule(
+                schedule = updated,
+                actor = _currentUserRole.value.titleBn,
+                auditDetails = "খাবার বিতরণ সম্পন্ন: ${schedule.dateStr} - দাতা: ${schedule.providerName} → ${schedule.receiverStaffName}"
+            )
+        }
+    }
+
+    fun cancelFoodSchedule(schedule: FoodScheduleEntity) {
+        viewModelScope.launch {
+            val updated = schedule.copy(status = "cancelled")
+            repository.updateFoodSchedule(
+                schedule = updated,
+                actor = _currentUserRole.value.titleBn,
+                auditDetails = "খাবার শিডিউল বাতিল: ${schedule.dateStr} - দাতা: ${schedule.providerName} (${schedule.receiverStaffName})"
+            )
+        }
+    }
+
+    fun rotateFoodScheduleDonor(
+        schedule: FoodScheduleEntity,
+        onRotated: (FoodScheduleEntity?) -> Unit = {}
+    ) {
+        viewModelScope.launch {
+            val orderedDonors = getOrderedWillingMealDonors()
+            val targetDate = normalizeDigitsToAscii(schedule.dateStr).trim()
+            val currentDigits = normalizeDigitsToAscii(schedule.providerMobile).filter { it.isDigit() }
+            val usedSameDayKeys = allFoodSchedules.value
+                .filter {
+                    normalizeDigitsToAscii(it.dateStr).trim() == targetDate &&
+                        it.id != schedule.id &&
+                        it.status != "cancelled" &&
+                        it.status != "rejected"
+                }
+                .map { normalizeDigitsToAscii(it.providerMobile).filter { d -> d.isDigit() }.ifBlank { it.providerName.trim() } }
+                .toSet()
+
+            val nextDonor = orderedDonors.firstOrNull { donor ->
+                val donorDigits = donor.mobile.filter { it.isDigit() }
+                val donorKey = donorDigits.ifBlank { donor.nameBn.trim() }
+                val sameMobile = currentDigits.length >= 6 && donorDigits == currentDigits
+                val sameName = donor.nameBn.trim().equals(schedule.providerName.trim(), ignoreCase = true)
+                !sameMobile && !sameName && donorKey !in usedSameDayKeys
+            } ?: orderedDonors.firstOrNull { donor ->
+                val donorDigits = donor.mobile.filter { it.isDigit() }
+                val sameMobile = currentDigits.length >= 6 && donorDigits == currentDigits
+                val sameName = donor.nameBn.trim().equals(schedule.providerName.trim(), ignoreCase = true)
+                !sameMobile && !sameName
+            } ?: orderedDonors.firstOrNull()
+
+            if (nextDonor == null) {
+                onRotated(null)
+                return@launch
+            }
+
+            val updated = schedule.copy(
+                providerName = nextDonor.nameBn,
+                providerMobile = nextDonor.mobile,
+                status = "scheduled"
+            )
+            repository.updateFoodSchedule(
+                schedule = updated,
+                actor = _currentUserRole.value.titleBn,
+                auditDetails = "খাবার দাতা স্বয়ংক্রিয় পরিবর্তন: ${schedule.dateStr} (${schedule.receiverStaffName}) ${schedule.providerName} → ${nextDonor.nameBn}"
+            )
+            onRotated(updated)
+        }
+    }
+
+    fun deleteFoodSchedule(schedule: FoodScheduleEntity) {
+        viewModelScope.launch {
+            repository.deleteFoodSchedule(
+                schedule = schedule,
+                actor = _currentUserRole.value.titleBn
+            )
         }
     }
 
@@ -1104,6 +1424,12 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
                 remarks = remarks
             )
             repository.addWelfareCase(case)
+        }
+    }
+
+    fun markWelfareDisbursed(case: WelfareCaseEntity) {
+        viewModelScope.launch {
+            repository.markWelfareDisbursed(case)
         }
     }
 

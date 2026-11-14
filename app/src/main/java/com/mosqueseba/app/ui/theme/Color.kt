@@ -31,6 +31,15 @@ val MosqueTextDark = Color(0xFF0F172A)
 val MosqueTextSecondary = Color(0xFF475569)
 val MosqueTextMuted = Color(0xFF94A3B8)
 
+// Eye-Comfort Night / Dark Theme Palette (ফজর ও এশার উপযোগী নাইট মোড)
+val MosqueNightBg = Color(0xFF071511)
+val MosqueNightSurface = Color(0xFF0E231D)
+val MosqueNightSurfaceVariant = Color(0xFF143129)
+val MosqueNightBorder = Color(0xFF234E41)
+val MosqueNightTextPrimary = Color(0xFFECFDF5)
+val MosqueNightTextSecondary = Color(0xFFCBD5E1)
+val MosqueNightTextMuted = Color(0xFF94A3B8)
+
 // Status & Alert Colors
 val MosqueUrgentRed = Color(0xFFDC2626)
 val MosqueWarningAmber = Color(0xFFD97706)

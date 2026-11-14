@@ -263,13 +263,6 @@ fun MosqueProfileScreen(
                             fontWeight = FontWeight.ExtraBold,
                             color = MosqueEmeraldDark
                         )
-                        if (nameEn.isNotBlank()) {
-                            Text(
-                                text = nameEn,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MosqueTextSecondary
-                            )
-                        }
 
                         Spacer(modifier = Modifier.height(8.dp))
 
@@ -345,7 +338,6 @@ fun MosqueProfileScreen(
                                 onClick = {
                                     val shareText = buildString {
                                         appendLine(nameBn)
-                                        if (nameEn.isNotBlank()) appendLine(nameEn)
                                         appendLine("কমিটি আইডি: $committeeId")
                                         appendLine("ঠিকানা: $address")
                                         appendLine("প্রতিষ্ঠা সাল: ${toBengaliDigits(establishedYear.toString())} ইং")
@@ -746,305 +738,208 @@ private fun EditMosqueProfileDialog(
         }
     }
 
-    Dialog(
-        onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false)
-    ) {
-        MehrabArchCard(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 20.dp),
-            backgroundColor = MosqueBgLight,
-            borderColor = MosqueCardBorderGold,
-            elevation = 8.dp
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(max = 680.dp)
-            ) {
-                // Header
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(MosqueEmeraldDarkGradient)
-                        .padding(horizontal = 16.dp, vertical = 14.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "মসজিদের প্রোফাইল সম্পাদনা",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = Color.White
-                            )
-                            Text(
-                                text = "কমিটি আইডি: ${mosque.committeeId}",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MosqueGoldLight
-                            )
-                        }
-                        IconButton(onClick = onDismiss) {
-                            Icon(Icons.Default.Close, contentDescription = "বন্ধ করুন", tint = Color.White)
-                        }
-                    }
-                }
-
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(2.dp)
-                        .background(IslamicGoldTrimGradient)
+    ExecutiveFormDialogShell(
+        title = "মসজিদের প্রোফাইল সম্পাদনা",
+        subtitle = "কমিটি আইডি: ${mosque.committeeId}",
+        icon = Icons.Default.Mosque,
+        confirmText = "সংরক্ষণ করুন",
+        confirmTag = "mosque_profile_save_button",
+        errorBanner = errorMsg,
+        onDismiss = onDismiss,
+        onConfirmClick = {
+            if (nameBn.isBlank() || address.isBlank()) {
+                errorMsg = "মসজিদের বাংলা নাম এবং ঠিকানা আবশ্যক"
+            } else {
+                onSave(
+                    mosque.copy(
+                        nameBn = nameBn.trim(),
+                        nameEn = nameEn.trim(),
+                        address = address.trim(),
+                        district = district.trim(),
+                        upazila = upazila.trim(),
+                        establishedYear = establishedYear.toIntOrNull() ?: mosque.establishedYear,
+                        committeeStartYear = startYear.toIntOrNull() ?: mosque.committeeStartYear,
+                        committeeEndYear = endYear.toIntOrNull() ?: mosque.committeeEndYear,
+                        waqfRegNo = waqfRegNo.trim(),
+                        capacity = capacity.toIntOrNull(),
+                        bankAccountInfo = bankAccountInfo.trim(),
+                        logoUrl = logoPath
+                    )
                 )
-
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .verticalScroll(rememberScrollState())
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    if (errorMsg != null) {
-                        Surface(
-                            color = MosqueUrgentRed.copy(alpha = 0.08f),
-                            shape = RoundedCornerShape(10.dp),
-                            border = BorderStroke(1.dp, MosqueUrgentRed.copy(alpha = 0.4f))
-                        ) {
-                            Text(
-                                text = errorMsg!!,
-                                color = MosqueUrgentRed,
-                                style = MaterialTheme.typography.bodySmall,
-                                fontWeight = FontWeight.SemiBold,
-                                modifier = Modifier.padding(10.dp)
-                            )
-                        }
-                    }
-
-                    // Logo Picker
-                    Surface(
-                        onClick = {
-                            logoPickerLauncher.launch(
-                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                            )
-                        },
-                        shape = RoundedCornerShape(14.dp),
-                        color = Color.White,
-                        border = BorderStroke(1.dp, MosqueCardBorderGold),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(56.dp)
-                                    .clip(RoundedCornerShape(14.dp))
-                                    .background(MosqueEmeraldSoft)
-                                    .border(1.5.dp, MosqueGold, RoundedCornerShape(14.dp)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                val preview = logoPreview
-                                if (preview != null) {
-                                    Image(
-                                        bitmap = preview,
-                                        contentDescription = "মসজিদের লোগো",
-                                        contentScale = ContentScale.Crop,
-                                        modifier = Modifier.fillMaxSize()
-                                    )
-                                } else {
-                                    Icon(
-                                        imageVector = Icons.Default.Mosque,
-                                        contentDescription = "লোগো নির্বাচন",
-                                        tint = MosqueEmeraldPrimary,
-                                        modifier = Modifier.size(26.dp)
-                                    )
-                                }
-                            }
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = if (logoPreview != null) "অফিসিয়াল লোগো সংযুক্ত" else "মসজিদের লোগো আপলোড (ঐচ্ছিক)",
-                                    style = MaterialTheme.typography.labelLarge,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MosqueEmeraldDark
-                                )
-                                Text(
-                                    text = "পরিবর্তন করতে ট্যাপ করুন",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MosqueTextSecondary
-                                )
-                            }
-                            if (logoPath != null) {
-                                IconButton(
-                                    onClick = {
-                                        logoPath = null
-                                        logoPreview = null
-                                    }
-                                ) {
-                                    Icon(Icons.Default.DeleteOutline, contentDescription = "লোগো মুছুন", tint = MosqueUrgentRed)
-                                }
-                            }
-                        }
-                    }
-
-                    OutlinedTextField(
-                        value = nameBn,
-                        onValueChange = { nameBn = it; errorMsg = null },
-                        label = { Text("মসজিদের নাম (বাংলায়) *") },
-                        singleLine = true,
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.fillMaxWidth()
+            }
+        }
+    ) {
+        MoreFormSection(title = "অফিসিয়াল লোগো", icon = Icons.Default.AddPhotoAlternate) {
+            Surface(
+                onClick = {
+                    logoPickerLauncher.launch(
+                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
                     )
-                    OutlinedTextField(
-                        value = nameEn,
-                        onValueChange = { nameEn = it },
-                        label = { Text("মসজিদের নাম (ইংরেজিতে)") },
-                        singleLine = true,
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    OutlinedTextField(
-                        value = address,
-                        onValueChange = { address = it; errorMsg = null },
-                        label = { Text("মসজিদের পূর্ণ ঠিকানা *") },
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedTextField(
-                            value = district,
-                            onValueChange = { district = it },
-                            label = { Text("জেলা") },
-                            singleLine = true,
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.weight(1f)
-                        )
-                        OutlinedTextField(
-                            value = upazila,
-                            onValueChange = { upazila = it },
-                            label = { Text("উপজেলা/থানা") },
-                            singleLine = true,
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedTextField(
-                            value = establishedYear,
-                            onValueChange = { establishedYear = it.filter { ch -> ch.isDigit() } },
-                            label = { Text("প্রতিষ্ঠা সাল") },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            singleLine = true,
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.weight(1f)
-                        )
-                        OutlinedTextField(
-                            value = capacity,
-                            onValueChange = { capacity = it.filter { ch -> ch.isDigit() } },
-                            label = { Text("ধারণক্ষমতা") },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            singleLine = true,
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedTextField(
-                            value = startYear,
-                            onValueChange = { startYear = it.filter { ch -> ch.isDigit() } },
-                            label = { Text("কমিটি শুরু সাল") },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            singleLine = true,
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.weight(1f)
-                        )
-                        OutlinedTextField(
-                            value = endYear,
-                            onValueChange = { endYear = it.filter { ch -> ch.isDigit() } },
-                            label = { Text("কমিটি শেষ সাল") },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            singleLine = true,
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                    OutlinedTextField(
-                        value = waqfRegNo,
-                        onValueChange = { waqfRegNo = it },
-                        label = { Text("ওয়াকফ / নিবন্ধন নম্বর") },
-                        singleLine = true,
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    OutlinedTextField(
-                        value = bankAccountInfo,
-                        onValueChange = { bankAccountInfo = it },
-                        label = { Text("ব্যাংক / মোবাইল ব্যাংকিং তথ্য") },
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-
-                HorizontalDivider(color = MosqueCardBorderGold)
+                },
+                shape = RoundedCornerShape(12.dp),
+                color = MosqueBgLight,
+                border = BorderStroke(1.dp, MosqueCardBorderGold),
+                modifier = Modifier.fillMaxWidth()
+            ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Color.White)
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        .padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    OutlinedButton(
-                        onClick = onDismiss,
-                        shape = RoundedCornerShape(12.dp),
+                    Box(
                         modifier = Modifier
-                            .weight(0.9f)
-                            .heightIn(min = 48.dp)
+                            .size(56.dp)
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(MosqueEmeraldSoft)
+                            .border(1.5.dp, MosqueGold, RoundedCornerShape(14.dp)),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Text("বাতিল", color = MosqueTextSecondary, fontWeight = FontWeight.Bold)
+                        val preview = logoPreview
+                        if (preview != null) {
+                            Image(
+                                bitmap = preview,
+                                contentDescription = "মসজিদের লোগো",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.Mosque,
+                                contentDescription = "লোগো নির্বাচন",
+                                tint = MosqueEmeraldPrimary,
+                                modifier = Modifier.size(26.dp)
+                            )
+                        }
                     }
-                    Button(
-                        onClick = {
-                            if (nameBn.isBlank() || address.isBlank()) {
-                                errorMsg = "মসজিদের বাংলা নাম এবং ঠিকানা আবশ্যক"
-                            } else {
-                                onSave(
-                                    mosque.copy(
-                                        nameBn = nameBn.trim(),
-                                        nameEn = nameEn.trim(),
-                                        address = address.trim(),
-                                        district = district.trim(),
-                                        upazila = upazila.trim(),
-                                        establishedYear = establishedYear.toIntOrNull() ?: mosque.establishedYear,
-                                        committeeStartYear = startYear.toIntOrNull() ?: mosque.committeeStartYear,
-                                        committeeEndYear = endYear.toIntOrNull() ?: mosque.committeeEndYear,
-                                        waqfRegNo = waqfRegNo.trim(),
-                                        capacity = capacity.toIntOrNull(),
-                                        bankAccountInfo = bankAccountInfo.trim(),
-                                        logoUrl = logoPath
-                                    )
-                                )
-                            }
-                        },
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary),
-                        modifier = Modifier
-                            .weight(1.3f)
-                            .heightIn(min = 48.dp)
-                            .testTag("mosque_profile_save_button")
-                    ) {
-                        Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("সংরক্ষণ করুন", fontWeight = FontWeight.ExtraBold)
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = if (logoPreview != null) "অফিসিয়াল লোগো সংযুক্ত" else "মসজিদের লোগো আপলোড (ঐচ্ছিক)",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MosqueEmeraldDark
+                        )
+                        Text(
+                            text = "পরিবর্তন করতে ট্যাপ করুন",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MosqueTextSecondary
+                        )
+                    }
+                    if (logoPath != null) {
+                        IconButton(
+                            onClick = {
+                                logoPath = null
+                                logoPreview = null
+                            },
+                            modifier = Modifier.minimumInteractiveComponentSize()
+                        ) {
+                            Icon(Icons.Default.DeleteOutline, contentDescription = "লোগো মুছুন", tint = MosqueUrgentRed)
+                        }
                     }
                 }
             }
+        }
+
+        MoreFormSection(title = "পরিচিতি ও পূর্ণ ঠিকানা", icon = Icons.Default.LocationOn) {
+            OutlinedTextField(
+                value = nameBn,
+                onValueChange = { nameBn = it; errorMsg = null },
+                label = { Text("মসজিদের নাম *") },
+                isError = errorMsg != null && nameBn.isBlank(),
+                singleLine = true,
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            OutlinedTextField(
+                value = address,
+                onValueChange = { address = it; errorMsg = null },
+                label = { Text("মসজিদের পূর্ণ ঠিকানা *") },
+                isError = errorMsg != null && address.isBlank(),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(
+                    value = district,
+                    onValueChange = { district = it },
+                    label = { Text("জেলা") },
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.weight(1f)
+                )
+                OutlinedTextField(
+                    value = upazila,
+                    onValueChange = { upazila = it },
+                    label = { Text("উপজেলা/থানা") },
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+
+        MoreFormSection(title = "নিবন্ধন, মেয়াদ ও ব্যাংক তথ্য", icon = Icons.Default.AccountBalance) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(
+                    value = establishedYear,
+                    onValueChange = { establishedYear = it.filter { ch -> ch.isDigit() } },
+                    label = { Text("প্রতিষ্ঠা সাল") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.weight(1f)
+                )
+                OutlinedTextField(
+                    value = capacity,
+                    onValueChange = { capacity = it.filter { ch -> ch.isDigit() } },
+                    label = { Text("ধারণক্ষমতা") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.weight(1f)
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(
+                    value = startYear,
+                    onValueChange = { startYear = it.filter { ch -> ch.isDigit() } },
+                    label = { Text("কমিটি শুরু সাল") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.weight(1f)
+                )
+                OutlinedTextField(
+                    value = endYear,
+                    onValueChange = { endYear = it.filter { ch -> ch.isDigit() } },
+                    label = { Text("কমিটি শেষ সাল") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.weight(1f)
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            OutlinedTextField(
+                value = waqfRegNo,
+                onValueChange = { waqfRegNo = it },
+                label = { Text("ওয়াকফ / নিবন্ধন নম্বর") },
+                singleLine = true,
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            OutlinedTextField(
+                value = bankAccountInfo,
+                onValueChange = { bankAccountInfo = it },
+                label = { Text("ব্যাংক / মোবাইল ব্যাংকিং তথ্য") },
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth()
+            )
         }
     }
 }

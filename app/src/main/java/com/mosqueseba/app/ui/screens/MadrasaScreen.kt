@@ -1,5 +1,6 @@
 package com.mosqueseba.app.ui.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -7,9 +8,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -18,13 +18,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import com.mosqueseba.app.data.local.entity.MadrasaAttendanceEntity
 import com.mosqueseba.app.data.local.entity.StudentEntity
 import com.mosqueseba.app.data.model.UserRole
+import com.mosqueseba.app.ui.components.ExecutiveFormDialogShell
+import com.mosqueseba.app.ui.components.MoreFormSection
 import com.mosqueseba.app.ui.components.toBengaliDigits
 import com.mosqueseba.app.ui.theme.*
 import com.mosqueseba.app.ui.viewmodel.MosqueViewModel
@@ -36,10 +40,11 @@ import java.util.UUID
 
 @Composable
 fun MadrasaScreen(viewModel: MosqueViewModel, initialTab: Int = 0) {
+    val context = LocalContext.current
     val currentRole by viewModel.currentUserRole.collectAsState()
     val defaultTab = when {
         initialTab != 0 -> initialTab
-        currentRole == UserRole.TREASURER -> 2
+        currentRole == UserRole.TREASURER || currentRole == UserRole.ASSISTANT_TREASURER -> 2
         currentRole == UserRole.GENERAL_MEMBER -> 3
         else -> 0
     }
@@ -54,22 +59,25 @@ fun MadrasaScreen(viewModel: MosqueViewModel, initialTab: Int = 0) {
     val feePayments by viewModel.allFeePayments.collectAsState()
     val totalFee by viewModel.totalFeeCollected.collectAsState()
 
+    val isDark = LocalIsDarkTheme.current
+    val cardBorder = if (isDark) MosqueNightBorder else MosqueCardBorderSubtle
+
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MosqueBgLight)
+            .background(MaterialTheme.colorScheme.background)
     ) {
         // Tab selector
         ScrollableTabRow(
             selectedTabIndex = selectedTab,
             edgePadding = 8.dp,
-            containerColor = Color.White,
-            contentColor = MosqueEmeraldPrimary
+            containerColor = MaterialTheme.colorScheme.surface,
+            contentColor = MaterialTheme.colorScheme.primary
         ) {
             Tab(
                 selected = selectedTab == 0,
                 onClick = { selectedTab = 0 },
-                text = { Text("শিক্ষার্থী ($studentCount)", fontWeight = FontWeight.Bold, fontSize = 12.sp) }
+                text = { Text("শিক্ষার্থী (${toBengaliDigits(studentCount.toString())})", fontWeight = FontWeight.Bold, fontSize = 12.sp) }
             )
             Tab(
                 selected = selectedTab == 1,
@@ -111,12 +119,15 @@ fun MadrasaScreen(viewModel: MosqueViewModel, initialTab: Int = 0) {
                                 text = "মাদরাসা ও মক্তব শিক্ষার্থী তালিকা",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = MosqueEmeraldDark
+                                color = MaterialTheme.colorScheme.primary
                             )
-                            val canEnrollStudent = currentRole in listOf(UserRole.PRESIDENT, UserRole.VICE_PRESIDENT, UserRole.GENERAL_SECRETARY, UserRole.IMAM)
+                            val canEnrollStudent = currentRole.canManageWelfareEducation()
                             if (canEnrollStudent) {
                                 Button(
                                     onClick = { showAddStudentDialog = true },
+                                    modifier = Modifier
+                                        .heightIn(min = 48.dp)
+                                        .testTag("add_student_button"),
                                     shape = RoundedCornerShape(8.dp),
                                     colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary)
                                 ) {
@@ -128,10 +139,10 @@ fun MadrasaScreen(viewModel: MosqueViewModel, initialTab: Int = 0) {
 
                     items(students, key = { it.id }) { student ->
                         Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(12.dp)),
-                            colors = CardDefaults.cardColors(containerColor = Color.White)
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                            border = BorderStroke(1.dp, cardBorder)
                         ) {
                             Column(modifier = Modifier.padding(14.dp)) {
                                 Row(
@@ -144,12 +155,12 @@ fun MadrasaScreen(viewModel: MosqueViewModel, initialTab: Int = 0) {
                                             text = student.nameBn,
                                             style = MaterialTheme.typography.titleMedium,
                                             fontWeight = FontWeight.Bold,
-                                            color = MosqueTextPrimary
+                                            color = MaterialTheme.colorScheme.onSurface
                                         )
                                         Text(
-                                            text = "${student.className} • রোল/আইডি: ${student.studentCode}",
+                                            text = "${student.className} • রোল/আইডি: ${toBengaliDigits(student.studentCode)}",
                                             style = MaterialTheme.typography.bodySmall,
-                                            color = MosqueEmeraldPrimary,
+                                            color = MaterialTheme.colorScheme.primary,
                                             fontWeight = FontWeight.SemiBold
                                         )
                                     }
@@ -169,7 +180,7 @@ fun MadrasaScreen(viewModel: MosqueViewModel, initialTab: Int = 0) {
                                 }
 
                                 Spacer(modifier = Modifier.height(8.dp))
-                                HorizontalDivider(color = MosqueCardBorder)
+                                HorizontalDivider(color = cardBorder)
                                 Spacer(modifier = Modifier.height(8.dp))
 
                                 Row(
@@ -177,16 +188,16 @@ fun MadrasaScreen(viewModel: MosqueViewModel, initialTab: Int = 0) {
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
                                     Column {
-                                        Text("অভিভাবক: ${student.guardianName}", style = MaterialTheme.typography.bodySmall, color = MosqueTextSecondary)
-                                        Text("মোবাইল: ${student.guardianMobile}", style = MaterialTheme.typography.labelSmall, color = MosqueTextMuted)
+                                        Text("অভিভাবক: ${student.guardianName}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        Text("মোবাইল: ${toBengaliDigits(student.guardianMobile)}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     }
                                     Column(horizontalAlignment = Alignment.End) {
-                                        Text("মাসিক ফি", style = MaterialTheme.typography.labelSmall, color = MosqueTextMuted)
+                                        Text("মাসিক ফি", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         Text(
-                                            text = "৳${student.monthlyFee.toInt()}",
+                                            text = "৳${toBengaliDigits(student.monthlyFee.toInt().toString())}",
                                             style = MaterialTheme.typography.titleMedium,
                                             fontWeight = FontWeight.Bold,
-                                            color = MosqueEmeraldDark
+                                            color = MaterialTheme.colorScheme.primary
                                         )
                                     }
                                 }
@@ -211,12 +222,15 @@ fun MadrasaScreen(viewModel: MosqueViewModel, initialTab: Int = 0) {
                                 text = "হিফজুল কুরআন দৈনিক মূল্যায়ন",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = MosqueEmeraldDark
+                                color = MaterialTheme.colorScheme.primary
                             )
-                            val canEvaluateHifz = currentRole in listOf(UserRole.PRESIDENT, UserRole.VICE_PRESIDENT, UserRole.IMAM, UserRole.MUAZZIN)
+                            val canEvaluateHifz = currentRole.canManageWelfareEducation() || currentRole == UserRole.MUAZZIN
                             if (canEvaluateHifz) {
                                 Button(
                                     onClick = { showAddHifzDialog = true },
+                                    modifier = Modifier
+                                        .heightIn(min = 48.dp)
+                                        .testTag("add_hifz_button"),
                                     shape = RoundedCornerShape(8.dp),
                                     colors = ButtonDefaults.buttonColors(containerColor = MosqueGoldDeep)
                                 ) {
@@ -228,10 +242,10 @@ fun MadrasaScreen(viewModel: MosqueViewModel, initialTab: Int = 0) {
 
                     items(hifzList, key = { it.id }) { hfz ->
                         Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(12.dp)),
-                            colors = CardDefaults.cardColors(containerColor = Color.White)
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                            border = BorderStroke(1.dp, cardBorder)
                         ) {
                             Column(modifier = Modifier.padding(14.dp)) {
                                 Row(
@@ -242,31 +256,41 @@ fun MadrasaScreen(viewModel: MosqueViewModel, initialTab: Int = 0) {
                                         text = hfz.studentNameBn,
                                         style = MaterialTheme.typography.titleMedium,
                                         fontWeight = FontWeight.Bold,
-                                        color = MosqueTextPrimary
+                                        color = MaterialTheme.colorScheme.onSurface
                                     )
                                     Text(
-                                        text = "পারা: ${hfz.paraNumber}",
+                                        text = "পারা: ${toBengaliDigits(hfz.paraNumber.toString())}",
                                         style = MaterialTheme.typography.labelMedium,
                                         fontWeight = FontWeight.Bold,
-                                        color = MosqueEmeraldPrimary
+                                        color = MaterialTheme.colorScheme.primary
                                     )
                                 }
                                 Text(
-                                    text = "পাঠ: ${hfz.pageOrAyah}",
+                                    text = "পাঠ: ${toBengaliDigits(hfz.pageOrAyah)}",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = MosqueTextSecondary
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Text(
-                                        text = "মান: ${"★".repeat(hfz.qualityScore)}${"☆".repeat(5 - hfz.qualityScore)}",
+                                        text = "মান:",
                                         color = MosqueGoldDeep,
                                         fontWeight = FontWeight.Bold,
-                                        fontSize = 14.sp
+                                        fontSize = 12.sp
                                     )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    val rating = hfz.qualityScore.coerceIn(0, 5)
+                                    for (i in 1..5) {
+                                        Icon(
+                                            imageVector = if (i <= rating) Icons.Default.Star else Icons.Default.StarBorder,
+                                            contentDescription = null,
+                                            tint = if (i <= rating) MosqueGoldDeep else MaterialTheme.colorScheme.onSurfaceVariant,
+                                            modifier = Modifier.size(15.dp)
+                                        )
+                                    }
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
-                                        text = "ভুল: ${hfz.mistakeCount} টি",
+                                        text = "ভুল: ${toBengaliDigits(hfz.mistakeCount.toString())} টি",
                                         style = MaterialTheme.typography.labelSmall,
                                         color = if (hfz.mistakeCount == 0) MosqueSuccessGreen else MosqueWarningAmber
                                     )
@@ -276,7 +300,7 @@ fun MadrasaScreen(viewModel: MosqueViewModel, initialTab: Int = 0) {
                                     Text(
                                         text = "উস্তাদের মন্তব্য: \"${hfz.teacherFeedback}\"",
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = MosqueTextMuted,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
                                     )
                                 }
@@ -307,14 +331,15 @@ fun MadrasaScreen(viewModel: MosqueViewModel, initialTab: Int = 0) {
                             ) {
                                 Column {
                                     Text("মোট সংগৃহীত ফি", color = Color.White.copy(alpha = 0.85f), fontSize = 12.sp)
-                                    Text("৳${String.format("%,.0f", totalFee)}", color = MosqueGold, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                                    Text("৳${toBengaliDigits(String.format(Locale.getDefault(), "%,.0f", totalFee))}", color = MosqueGold, fontWeight = FontWeight.Bold, fontSize = 20.sp)
                                 }
-                                val canCollectFee = currentRole in listOf(UserRole.TREASURER, UserRole.PRESIDENT, UserRole.VICE_PRESIDENT)
+                                val canCollectFee = currentRole in listOf(UserRole.TREASURER, UserRole.ASSISTANT_TREASURER, UserRole.PRESIDENT, UserRole.VICE_PRESIDENT)
                                 if (canCollectFee) {
                                     Button(
                                         onClick = { showCollectFeeDialog = true },
                                         colors = ButtonDefaults.buttonColors(containerColor = MosqueGold),
-                                        shape = RoundedCornerShape(8.dp)
+                                        shape = RoundedCornerShape(8.dp),
+                                        modifier = Modifier.heightIn(min = 48.dp)
                                     ) {
                                         Text("ফি গ্রহণ করুন", color = MosqueEmeraldDark, fontWeight = FontWeight.Bold)
                                     }
@@ -325,10 +350,10 @@ fun MadrasaScreen(viewModel: MosqueViewModel, initialTab: Int = 0) {
 
                     items(feePayments, key = { it.id }) { fee ->
                         Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(12.dp)),
-                            colors = CardDefaults.cardColors(containerColor = Color.White)
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                            border = BorderStroke(1.dp, cardBorder)
                         ) {
                             Row(
                                 modifier = Modifier
@@ -342,22 +367,22 @@ fun MadrasaScreen(viewModel: MosqueViewModel, initialTab: Int = 0) {
                                         text = fee.studentNameBn,
                                         style = MaterialTheme.typography.titleSmall,
                                         fontWeight = FontWeight.Bold,
-                                        color = MosqueTextPrimary
+                                        color = MaterialTheme.colorScheme.onSurface
                                     )
                                     Text(
-                                        text = "${fee.month} • রসিদ: ${fee.receiptCode}",
+                                        text = "${fee.month} • রসিদ: ${toBengaliDigits(fee.receiptCode)}",
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = MosqueTextSecondary
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                     Text(
-                                        text = "জমার সময়: ${fee.paidAt}",
+                                        text = "জমার সময়: ${toBengaliDigits(fee.paidAt)}",
                                         style = MaterialTheme.typography.labelSmall,
-                                        color = MosqueTextMuted
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                                 Column(horizontalAlignment = Alignment.End) {
                                     Text(
-                                        text = "৳${fee.amountPaid.toInt()}",
+                                        text = "৳${toBengaliDigits(fee.amountPaid.toInt().toString())}",
                                         style = MaterialTheme.typography.titleMedium,
                                         fontWeight = FontWeight.Bold,
                                         color = MosqueSuccessGreen
@@ -378,7 +403,7 @@ fun MadrasaScreen(viewModel: MosqueViewModel, initialTab: Int = 0) {
                 // Guardian Portal (PRD §24)
                 if (students.isEmpty()) {
                     Box(modifier = Modifier.fillMaxSize().padding(30.dp), contentAlignment = Alignment.Center) {
-                        Text("কোনো শিক্ষার্থী অন্তর্ভুক্ত নেই", color = MosqueTextMuted)
+                        Text("কোনো শিক্ষার্থী অন্তর্ভুক্ত নেই", color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 } else {
                     var selectedStudentIndex by remember { mutableIntStateOf(0) }
@@ -393,11 +418,12 @@ fun MadrasaScreen(viewModel: MosqueViewModel, initialTab: Int = 0) {
                             Text(
                                 text = "সন্তানের প্রোফাইল নির্বাচন করুন:",
                                 style = MaterialTheme.typography.labelMedium,
-                                color = MosqueTextSecondary
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Spacer(modifier = Modifier.height(4.dp))
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                students.forEachIndexed { index, stu ->
+                            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                items(students.size) { index ->
+                                    val stu = students[index]
                                     FilterChip(
                                         selected = selectedStudentIndex == index,
                                         onClick = { selectedStudentIndex = index },
@@ -409,10 +435,10 @@ fun MadrasaScreen(viewModel: MosqueViewModel, initialTab: Int = 0) {
 
                         item {
                             Card(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(14.dp)),
-                                colors = CardDefaults.cardColors(containerColor = Color.White)
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(14.dp),
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                                border = BorderStroke(1.dp, cardBorder)
                             ) {
                                 Column(modifier = Modifier.padding(16.dp)) {
                                     Row(
@@ -424,12 +450,12 @@ fun MadrasaScreen(viewModel: MosqueViewModel, initialTab: Int = 0) {
                                                 text = currentStudent.nameBn,
                                                 style = MaterialTheme.typography.titleLarge,
                                                 fontWeight = FontWeight.Bold,
-                                                color = MosqueEmeraldDark
+                                                color = MaterialTheme.colorScheme.primary
                                             )
                                             Text(
-                                                text = "${currentStudent.className} • আইডি: ${currentStudent.studentCode}",
+                                                text = "${currentStudent.className} • আইডি: ${toBengaliDigits(currentStudent.studentCode)}",
                                                 style = MaterialTheme.typography.bodySmall,
-                                                color = MosqueTextSecondary
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
                                         }
                                         Box(
@@ -448,22 +474,22 @@ fun MadrasaScreen(viewModel: MosqueViewModel, initialTab: Int = 0) {
                                     }
 
                                     Spacer(modifier = Modifier.height(10.dp))
-                                    HorizontalDivider()
+                                    HorizontalDivider(color = cardBorder)
                                     Spacer(modifier = Modifier.height(10.dp))
 
                                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                        Text("অভিভাবকের নাম", style = MaterialTheme.typography.bodySmall, color = MosqueTextSecondary)
-                                        Text(currentStudent.guardianName, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
+                                        Text("অভিভাবকের নাম", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        Text(currentStudent.guardianName, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                                     }
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                        Text("যোগাযোগের মোবাইল", style = MaterialTheme.typography.bodySmall, color = MosqueTextSecondary)
-                                        Text(currentStudent.guardianMobile, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
+                                        Text("যোগাযোগের মোবাইল", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        Text(toBengaliDigits(currentStudent.guardianMobile), style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                                     }
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                        Text("মাসিক নির্ধারিত ফি", style = MaterialTheme.typography.bodySmall, color = MosqueTextSecondary)
-                                        Text("৳${currentStudent.monthlyFee.toInt()}", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = MosqueEmeraldPrimary)
+                                        Text("মাসিক নির্ধারিত ফি", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        Text("৳${toBengaliDigits(currentStudent.monthlyFee.toInt().toString())}", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                                     }
                                 }
                             }
@@ -474,7 +500,7 @@ fun MadrasaScreen(viewModel: MosqueViewModel, initialTab: Int = 0) {
                                 text = "কুরআন ও হিফজ প্রগ্রেস আপডেট",
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = MosqueEmeraldDark
+                                color = MaterialTheme.colorScheme.primary
                             )
                         }
 
@@ -482,25 +508,28 @@ fun MadrasaScreen(viewModel: MosqueViewModel, initialTab: Int = 0) {
                             item {
                                 Card(
                                     modifier = Modifier.fillMaxWidth(),
-                                    colors = CardDefaults.cardColors(containerColor = Color.White)
+                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                                    border = BorderStroke(1.dp, cardBorder)
                                 ) {
-                                    Text("এখনও কোনো হিফজ পাঠ রেকর্ড করা হয়নি।", modifier = Modifier.padding(14.dp), color = MosqueTextMuted, fontSize = 12.sp)
+                                    Text("এখনও কোনো হিফজ পাঠ রেকর্ড করা হয়নি।", modifier = Modifier.padding(14.dp), color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
                                 }
                             }
                         } else {
                             items(studentHifz) { hfz ->
                                 Card(
-                                    modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)),
-                                    colors = CardDefaults.cardColors(containerColor = Color.White)
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(10.dp),
+                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                                    border = BorderStroke(1.dp, cardBorder)
                                 ) {
                                     Column(modifier = Modifier.padding(12.dp)) {
                                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                            Text("পারা: ${hfz.paraNumber} • ${hfz.pageOrAyah}", fontWeight = FontWeight.Bold, color = MosqueTextPrimary, fontSize = 13.sp)
-                                            Text(hfz.date, fontSize = 11.sp, color = MosqueTextMuted)
+                                            Text("পারা: ${toBengaliDigits(hfz.paraNumber.toString())} • ${toBengaliDigits(hfz.pageOrAyah)}", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface, fontSize = 13.sp)
+                                            Text(toBengaliDigits(hfz.date), fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                         }
                                         if (hfz.teacherFeedback.isNotBlank()) {
                                             Spacer(modifier = Modifier.height(3.dp))
-                                            Text("উস্তাদের মন্তব্য: \"${hfz.teacherFeedback}\"", fontSize = 12.sp, color = MosqueEmeraldPrimary)
+                                            Text("উস্তাদের মন্তব্য: \"${hfz.teacherFeedback}\"", fontSize = 12.sp, color = MaterialTheme.colorScheme.primary)
                                         }
                                     }
                                 }
@@ -517,13 +546,7 @@ fun MadrasaScreen(viewModel: MosqueViewModel, initialTab: Int = 0) {
                 val attendanceStatusMap = remember { mutableStateMapOf<String, String>() }
                 var attendanceSavedBanner by remember { mutableStateOf(false) }
 
-                val canTakeAttendance = currentRole in listOf(
-                    UserRole.PRESIDENT,
-                    UserRole.VICE_PRESIDENT,
-                    UserRole.GENERAL_SECRETARY,
-                    UserRole.IMAM,
-                    UserRole.MUAZZIN
-                )
+                val canTakeAttendance = currentRole.canManageWelfareEducation() || currentRole == UserRole.MUAZZIN
 
                 LaunchedEffect(students, existingAttendance, attendanceDate) {
                     attendanceSavedBanner = false
@@ -583,6 +606,11 @@ fun MadrasaScreen(viewModel: MosqueViewModel, initialTab: Int = 0) {
                                                 }
                                                 viewModel.recordAttendanceBatch(batch)
                                                 attendanceSavedBanner = true
+                                                Toast.makeText(
+                                                    context,
+                                                    "${toBengaliDigits(attendanceDate)} তারিখের হাজিরা সংরক্ষণ করা হয়েছে।",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
                                             },
                                             colors = ButtonDefaults.buttonColors(containerColor = MosqueGold),
                                             shape = RoundedCornerShape(8.dp)
@@ -644,13 +672,13 @@ fun MadrasaScreen(viewModel: MosqueViewModel, initialTab: Int = 0) {
                         OutlinedTextField(
                             value = attendanceDate,
                             onValueChange = { attendanceDate = it },
-                            label = { Text("হাজিরার তারিখ (YYYY-MM-DD)") },
+                            label = { Text("হাজিরার তারিখ (বছর-মাস-দিন)") },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedContainerColor = Color.White,
-                                unfocusedContainerColor = Color.White,
-                                focusedBorderColor = MosqueEmeraldPrimary
+                                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                                focusedBorderColor = MaterialTheme.colorScheme.primary
                             )
                         )
                     }
@@ -686,7 +714,7 @@ fun MadrasaScreen(viewModel: MosqueViewModel, initialTab: Int = 0) {
                                 modifier = Modifier.fillMaxWidth().padding(28.dp),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text("কোনো শিক্ষার্থী নিবন্ধিত নেই", color = MosqueTextMuted)
+                                Text("কোনো শিক্ষার্থী নিবন্ধিত নেই", color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                         }
                     } else {
@@ -695,7 +723,8 @@ fun MadrasaScreen(viewModel: MosqueViewModel, initialTab: Int = 0) {
                             Card(
                                 modifier = Modifier.fillMaxWidth(),
                                 shape = RoundedCornerShape(12.dp),
-                                colors = CardDefaults.cardColors(containerColor = Color.White)
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                                border = BorderStroke(1.dp, cardBorder)
                             ) {
                                 Column(modifier = Modifier.padding(12.dp)) {
                                     Row(
@@ -708,12 +737,12 @@ fun MadrasaScreen(viewModel: MosqueViewModel, initialTab: Int = 0) {
                                                 text = stu.nameBn,
                                                 style = MaterialTheme.typography.titleSmall,
                                                 fontWeight = FontWeight.Bold,
-                                                color = MosqueTextPrimary
+                                                color = MaterialTheme.colorScheme.onSurface
                                             )
                                             Text(
-                                                text = "${stu.className} • ${stu.studentCode}",
+                                                text = "${stu.className} • ${toBengaliDigits(stu.studentCode)}",
                                                 style = MaterialTheme.typography.labelSmall,
-                                                color = MosqueTextMuted
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
                                         }
                                     }
@@ -755,82 +784,126 @@ fun MadrasaScreen(viewModel: MosqueViewModel, initialTab: Int = 0) {
         var guardianName by remember { mutableStateOf("") }
         var mobile by remember { mutableStateOf("") }
         var fee by remember { mutableStateOf("1000") }
+        var nameError by remember { mutableStateOf<String?>(null) }
+        var classError by remember { mutableStateOf<String?>(null) }
+        var guardianError by remember { mutableStateOf<String?>(null) }
+        var mobileError by remember { mutableStateOf<String?>(null) }
+        var feeError by remember { mutableStateOf<String?>(null) }
 
-        Dialog(onDismissRequest = { showAddStudentDialog = false }) {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp)),
-                colors = CardDefaults.cardColors(containerColor = Color.White)
-            ) {
-                Column(modifier = Modifier.padding(20.dp)) {
-                    Text(
-                        text = "নতুন শিক্ষার্থী ভর্তি ফরম",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MosqueEmeraldDark
+        val classPresets = listOf("হিফজুল কুরআন বিভাগ", "নাযেরা বিভাগ", "কায়েদা বিভাগ", "মক্তব প্রভাতি")
+
+        ExecutiveFormDialogShell(
+            title = "নতুন শিক্ষার্থী ভর্তি ফরম",
+            subtitle = "মসজিদ ভিত্তিক মক্তব ও হিফজখানায় ভর্তি",
+            icon = Icons.Default.School,
+            confirmText = "ভর্তি সম্পন্ন করুন",
+            confirmTag = "confirm_add_student_button",
+            onDismiss = { showAddStudentDialog = false },
+            onConfirmClick = {
+                var valid = true
+                if (name.isBlank()) {
+                    nameError = "শিক্ষার্থীর বাংলা নাম লিখুন"
+                    valid = false
+                }
+                if (className.isBlank()) {
+                    classError = "শ্রেণি বা বিভাগ উল্লেখ করুন"
+                    valid = false
+                }
+                if (guardianName.isBlank()) {
+                    guardianError = "অভিভাবকের নাম লিখুন"
+                    valid = false
+                }
+                if (mobile.filter { it.isDigit() }.length < 6) {
+                    mobileError = "অভিভাবকের সঠিক মোবাইল নম্বর দিন"
+                    valid = false
+                }
+                val parsedFee = fee.toDoubleOrNull() ?: 0.0
+                if (parsedFee <= 0.0) {
+                    feeError = "মাসিক নির্ধারিত ফি (৳) লিখুন"
+                    valid = false
+                }
+                if (valid) {
+                    viewModel.addStudent(
+                        nameBn = name.trim(),
+                        className = className.trim(),
+                        guardianName = guardianName.trim(),
+                        guardianMobile = mobile.trim(),
+                        monthlyFee = parsedFee
                     )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    OutlinedTextField(
-                        value = name,
-                        onValueChange = { name = it },
-                        label = { Text("শিক্ষার্থীর নাম (বাংলায়) *") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedTextField(
-                        value = className,
-                        onValueChange = { className = it },
-                        label = { Text("শ্রেণি / বিভাগ *") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedTextField(
-                        value = guardianName,
-                        onValueChange = { guardianName = it },
-                        label = { Text("অভিভাবকের নাম *") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedTextField(
-                        value = mobile,
-                        onValueChange = { mobile = it },
-                        label = { Text("অভিভাবকের মোবাইল *") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedTextField(
-                        value = fee,
-                        onValueChange = { fee = it },
-                        label = { Text("মাসিক বেতন/ফি (৳) *") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End
-                    ) {
-                        TextButton(onClick = { showAddStudentDialog = false }) { Text("বাতিল") }
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Button(
-                            onClick = {
-                                if (name.isNotBlank() && guardianName.isNotBlank()) {
-                                    viewModel.addStudent(
-                                        nameBn = name,
-                                        className = className,
-                                        guardianName = guardianName,
-                                        guardianMobile = mobile,
-                                        monthlyFee = fee.toDoubleOrNull() ?: 1000.0
-                                    )
-                                    showAddStudentDialog = false
-                                }
-                            },
-                            colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary)
-                        ) {
-                            Text("ভর্তি সম্পন্ন করুন")
-                        }
+                    Toast.makeText(context, "${name.trim()}-এর ভর্তি সম্পন্ন হয়েছে।", Toast.LENGTH_SHORT).show()
+                    showAddStudentDialog = false
+                }
+            }
+        ) {
+            MoreFormSection(title = "শিক্ষার্থী ও বিভাগ পরিচিতি", icon = Icons.Default.Person) {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it; nameError = null },
+                    label = { Text("শিক্ষার্থীর নাম (বাংলায়) *") },
+                    isError = nameError != null,
+                    supportingText = nameError?.let { err -> { Text(err, color = MosqueUrgentRed, fontSize = 11.sp) } },
+                    shape = RoundedCornerShape(12.dp),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    items(classPresets) { preset ->
+                        FilterChip(
+                            selected = className == preset,
+                            onClick = { className = preset; classError = null },
+                            label = { Text(preset, fontSize = 11.sp) }
+                        )
                     }
                 }
+                Spacer(modifier = Modifier.height(6.dp))
+                OutlinedTextField(
+                    value = className,
+                    onValueChange = { className = it; classError = null },
+                    label = { Text("শ্রেণি / বিভাগ *") },
+                    isError = classError != null,
+                    supportingText = classError?.let { err -> { Text(err, color = MosqueUrgentRed, fontSize = 11.sp) } },
+                    shape = RoundedCornerShape(12.dp),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+
+            MoreFormSection(title = "অভিভাবক ও মাসিক ফি", icon = Icons.Default.FamilyRestroom) {
+                OutlinedTextField(
+                    value = guardianName,
+                    onValueChange = { guardianName = it; guardianError = null },
+                    label = { Text("অভিভাবকের নাম *") },
+                    isError = guardianError != null,
+                    supportingText = guardianError?.let { err -> { Text(err, color = MosqueUrgentRed, fontSize = 11.sp) } },
+                    shape = RoundedCornerShape(12.dp),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = mobile,
+                    onValueChange = { mobile = it; mobileError = null },
+                    label = { Text("অভিভাবকের মোবাইল *") },
+                    isError = mobileError != null,
+                    supportingText = mobileError?.let { err -> { Text(err, color = MosqueUrgentRed, fontSize = 11.sp) } },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                    shape = RoundedCornerShape(12.dp),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = fee,
+                    onValueChange = { fee = it.filter { ch -> ch.isDigit() }; feeError = null },
+                    label = { Text("মাসিক বেতন/ফি (৳) *") },
+                    isError = feeError != null,
+                    supportingText = feeError?.let { err -> { Text(err, color = MosqueUrgentRed, fontSize = 11.sp) } },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    shape = RoundedCornerShape(12.dp),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         }
     }
@@ -843,117 +916,115 @@ fun MadrasaScreen(viewModel: MosqueViewModel, initialTab: Int = 0) {
         var qualityScore by remember { mutableIntStateOf(5) }
         var mistakeCount by remember { mutableStateOf("0") }
         var feedback by remember { mutableStateOf("") }
+        var paraError by remember { mutableStateOf<String?>(null) }
+        var pageError by remember { mutableStateOf<String?>(null) }
 
-        Dialog(onDismissRequest = { showAddHifzDialog = false }) {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp)),
-                colors = CardDefaults.cardColors(containerColor = Color.White)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .padding(20.dp)
-                        .verticalScroll(rememberScrollState())
-                ) {
-                    Text(
-                        text = "হিফজ পাঠ ও সবক রেকর্ড",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MosqueEmeraldDark
+        ExecutiveFormDialogShell(
+            title = "হিফজ পাঠ ও সবক রেকর্ড",
+            subtitle = "দৈনিক সবক, আমপারা ও উস্তাদের মূল্যায়ন",
+            icon = Icons.Default.MenuBook,
+            confirmText = "সংরক্ষণ করুন",
+            confirmTag = "confirm_add_hifz_button",
+            onDismiss = { showAddHifzDialog = false },
+            onConfirmClick = {
+                var valid = true
+                val para = paraNumber.toIntOrNull()
+                if (para == null || para !in 1..30) {
+                    paraError = "পারা নম্বর ১ থেকে ৩০-এর মধ্যে হতে হবে"
+                    valid = false
+                }
+                if (pageOrAyah.isBlank()) {
+                    pageError = "পৃষ্ঠা বা আয়াত নম্বর লিখুন"
+                    valid = false
+                }
+                if (valid && para != null) {
+                    viewModel.addHifzProgress(
+                        student = selectedStudent,
+                        paraNumber = para,
+                        pageOrAyah = pageOrAyah.trim(),
+                        qualityScore = qualityScore,
+                        mistakeCount = mistakeCount.toIntOrNull() ?: 0,
+                        feedback = feedback.trim()
                     )
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Text(
-                        text = "শিক্ষার্থী নির্বাচন করুন:",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MosqueTextSecondary
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        items(students, key = { it.id }) { stu ->
-                            FilterChip(
-                                selected = selectedStudent.id == stu.id,
-                                onClick = { selectedStudent = stu },
-                                label = { Text(stu.nameBn, fontSize = 11.sp) }
+                    Toast.makeText(context, "${selectedStudent.nameBn}-এর হিফজ পাঠ সংরক্ষিত হয়েছে।", Toast.LENGTH_SHORT).show()
+                    showAddHifzDialog = false
+                }
+            }
+        ) {
+            MoreFormSection(title = "শিক্ষার্থী নির্বাচন", icon = Icons.Default.Person) {
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    items(students, key = { it.id }) { stu ->
+                        FilterChip(
+                            selected = selectedStudent.id == stu.id,
+                            onClick = { selectedStudent = stu },
+                            label = { Text(stu.nameBn, fontSize = 11.sp) }
+                        )
+                    }
+                }
+            }
+
+            MoreFormSection(title = "সবক ও পাঠের মান", icon = Icons.Default.BookmarkAdded) {
+                OutlinedTextField(
+                    value = paraNumber,
+                    onValueChange = { paraNumber = it.filter { ch -> ch.isDigit() }; paraError = null },
+                    label = { Text("পারা নম্বর (১–৩০) *") },
+                    isError = paraError != null,
+                    supportingText = paraError?.let { err -> { Text(err, color = MosqueUrgentRed, fontSize = 11.sp) } },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    shape = RoundedCornerShape(12.dp),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = pageOrAyah,
+                    onValueChange = { pageOrAyah = it; pageError = null },
+                    label = { Text("পৃষ্ঠা বা আয়াত নম্বর *") },
+                    isError = pageError != null,
+                    supportingText = pageError?.let { err -> { Text(err, color = MosqueUrgentRed, fontSize = 11.sp) } },
+                    shape = RoundedCornerShape(12.dp),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "পাঠের মান: ${toBengaliDigits(qualityScore.toString())}/৫",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MosqueTextSecondary,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    for (score in 1..5) {
+                        IconButton(
+                            onClick = { qualityScore = score },
+                            modifier = Modifier.minimumInteractiveComponentSize()
+                        ) {
+                            Icon(
+                                imageVector = if (score <= qualityScore) Icons.Default.Star else Icons.Default.StarBorder,
+                                contentDescription = "মান $score",
+                                tint = if (score <= qualityScore) MosqueGoldDeep else MosqueTextMuted
                             )
                         }
                     }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedTextField(
-                        value = paraNumber,
-                        onValueChange = { paraNumber = it },
-                        label = { Text("পারা নম্বর (১–৩০) *") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedTextField(
-                        value = pageOrAyah,
-                        onValueChange = { pageOrAyah = it },
-                        label = { Text("পৃষ্ঠা বা আয়াত নম্বর *") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "পাঠের মান (Quality Score): ${toBengaliDigits(qualityScore.toString())}/৫",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MosqueTextSecondary
-                    )
-                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        for (score in 1..5) {
-                            IconButton(
-                                onClick = { qualityScore = score },
-                                modifier = Modifier.size(36.dp)
-                            ) {
-                                Icon(
-                                    imageVector = if (score <= qualityScore) Icons.Default.Star else Icons.Default.StarBorder,
-                                    contentDescription = "Rating $score",
-                                    tint = if (score <= qualityScore) MosqueGoldDeep else MosqueTextMuted
-                                )
-                            }
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(6.dp))
-                    OutlinedTextField(
-                        value = mistakeCount,
-                        onValueChange = { mistakeCount = it },
-                        label = { Text("ভুলের সংখ্যা") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedTextField(
-                        value = feedback,
-                        onValueChange = { feedback = it },
-                        label = { Text("উস্তাদের মন্তব্য ও নির্দেশনা") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End
-                    ) {
-                        TextButton(onClick = { showAddHifzDialog = false }) { Text("বাতিল") }
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Button(
-                            onClick = {
-                                viewModel.addHifzProgress(
-                                    student = selectedStudent,
-                                    paraNumber = paraNumber.toIntOrNull()?.coerceIn(1, 30) ?: 1,
-                                    pageOrAyah = pageOrAyah,
-                                    qualityScore = qualityScore,
-                                    mistakeCount = mistakeCount.toIntOrNull() ?: 0,
-                                    feedback = feedback
-                                )
-                                showAddHifzDialog = false
-                            },
-                            colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary)
-                        ) {
-                            Text("সংরক্ষণ করুন")
-                        }
-                    }
                 }
+                OutlinedTextField(
+                    value = mistakeCount,
+                    onValueChange = { mistakeCount = it.filter { ch -> ch.isDigit() } },
+                    label = { Text("ভুলের সংখ্যা") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    shape = RoundedCornerShape(12.dp),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = feedback,
+                    onValueChange = { feedback = it },
+                    label = { Text("উস্তাদের মন্তব্য ও নির্দেশনা") },
+                    shape = RoundedCornerShape(12.dp),
+                    minLines = 2,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         }
     }
@@ -971,83 +1042,86 @@ fun MadrasaScreen(viewModel: MosqueViewModel, initialTab: Int = 0) {
         var selectedStudent by remember { mutableStateOf(students.first()) }
         var month by remember { mutableStateOf(currentMonthBn) }
         var amount by remember { mutableStateOf(selectedStudent.monthlyFee.toInt().toString()) }
+        var monthError by remember { mutableStateOf<String?>(null) }
+        var amountError by remember { mutableStateOf<String?>(null) }
 
-        Dialog(onDismissRequest = { showCollectFeeDialog = false }) {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp)),
-                colors = CardDefaults.cardColors(containerColor = Color.White)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .padding(20.dp)
-                        .verticalScroll(rememberScrollState())
-                ) {
-                    Text(
-                        text = "মাদরাসা মাসিক ফি গ্রহণ",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MosqueEmeraldDark
+        ExecutiveFormDialogShell(
+            title = "মাদরাসা মাসিক ফি গ্রহণ",
+            subtitle = "শিক্ষার্থীর বেতন ও ডিজিটাল রসিদ এন্ট্রি",
+            icon = Icons.Default.Payments,
+            confirmText = "ফি গ্রহণ নিশ্চিত করুন",
+            confirmTag = "confirm_collect_madrasa_fee_button",
+            onDismiss = { showCollectFeeDialog = false },
+            onConfirmClick = {
+                var valid = true
+                if (month.isBlank()) {
+                    monthError = "মাসের নাম লিখুন"
+                    valid = false
+                }
+                val amt = amount.toDoubleOrNull() ?: 0.0
+                if (amt <= 0.0) {
+                    amountError = "সঠিক টাকার পরিমাণ লিখুন"
+                    valid = false
+                }
+                if (valid) {
+                    viewModel.recordMadrasaFee(
+                        student = selectedStudent,
+                        month = month.trim(),
+                        amount = amt
                     )
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Text(
-                        text = "শিক্ষার্থী নির্বাচন করুন:",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MosqueTextSecondary
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        items(students, key = { it.id }) { stu ->
-                            FilterChip(
-                                selected = selectedStudent.id == stu.id,
-                                onClick = {
-                                    selectedStudent = stu
-                                    amount = stu.monthlyFee.toInt().toString()
-                                },
-                                label = { Text(stu.nameBn, fontSize = 11.sp) }
-                            )
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedTextField(
-                        value = month,
-                        onValueChange = { month = it },
-                        label = { Text("মাসের নাম *") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedTextField(
-                        value = amount,
-                        onValueChange = { amount = it },
-                        label = { Text("পরিশোধিত টাকার পরিমাণ (৳) *") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End
-                    ) {
-                        TextButton(onClick = { showCollectFeeDialog = false }) { Text("বাতিল") }
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Button(
+                    Toast.makeText(
+                        context,
+                        "${selectedStudent.nameBn}-এর ৳${toBengaliDigits(amt.toInt().toString())} ফি গৃহীত হয়েছে।",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    showCollectFeeDialog = false
+                }
+            }
+        ) {
+            MoreFormSection(title = "শিক্ষার্থী ও পরিশোধ বিবরণ", icon = Icons.Default.Receipt) {
+                Text(
+                    text = "শিক্ষার্থী নির্বাচন করুন:",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MosqueTextSecondary,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    items(students, key = { it.id }) { stu ->
+                        FilterChip(
+                            selected = selectedStudent.id == stu.id,
                             onClick = {
-                                val amt = amount.toDoubleOrNull() ?: selectedStudent.monthlyFee
-                                viewModel.recordMadrasaFee(
-                                    student = selectedStudent,
-                                    month = month,
-                                    amount = amt
-                                )
-                                showCollectFeeDialog = false
+                                selectedStudent = stu
+                                amount = stu.monthlyFee.toInt().toString()
+                                amountError = null
                             },
-                            colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary)
-                        ) {
-                            Text("ফি গ্রহণ নিশ্চিত করুন")
-                        }
+                            label = { Text(stu.nameBn, fontSize = 11.sp) }
+                        )
                     }
                 }
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = month,
+                    onValueChange = { month = it; monthError = null },
+                    label = { Text("মাসের নাম *") },
+                    isError = monthError != null,
+                    supportingText = monthError?.let { err -> { Text(err, color = MosqueUrgentRed, fontSize = 11.sp) } },
+                    shape = RoundedCornerShape(12.dp),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = amount,
+                    onValueChange = { amount = it.filter { ch -> ch.isDigit() }; amountError = null },
+                    label = { Text("পরিশোধিত টাকার পরিমাণ (৳) *") },
+                    isError = amountError != null,
+                    supportingText = amountError?.let { err -> { Text(err, color = MosqueUrgentRed, fontSize = 11.sp) } },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    shape = RoundedCornerShape(12.dp),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         }
     }

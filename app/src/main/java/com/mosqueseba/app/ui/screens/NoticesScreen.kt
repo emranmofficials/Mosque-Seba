@@ -2,6 +2,7 @@ package com.mosqueseba.app.ui.screens
 
 import android.content.Context
 import android.content.Intent
+import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -30,6 +31,7 @@ import androidx.compose.ui.unit.sp
 import com.mosqueseba.app.data.local.entity.MeetingEntity
 import com.mosqueseba.app.data.local.entity.NoticeEntity
 import com.mosqueseba.app.ui.components.MeetingResolutionDialog
+import com.mosqueseba.app.ui.components.MosqueConfirmDialog
 import com.mosqueseba.app.ui.components.PublishNoticeDialog
 import com.mosqueseba.app.ui.components.ScheduleMeetingDialog
 import com.mosqueseba.app.ui.components.toBengaliDigits
@@ -126,7 +128,8 @@ fun NoticesScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MosqueBgLight)
+            .background(MaterialTheme.colorScheme.background),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // 1. Emerald-Gold Hero Header + 2-Tab Switcher + KPI Summary
         Surface(
@@ -292,7 +295,7 @@ fun NoticesScreen(
 
         // 2. Search & Filter Card (Matching MembersScreen & FinanceScreen)
         Surface(
-            color = Color.White,
+            color = MaterialTheme.colorScheme.surface,
             shadowElevation = 1.dp,
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -318,7 +321,7 @@ fun NoticesScreen(
                         Icon(
                             imageVector = Icons.Default.Search,
                             contentDescription = "অনুসন্ধান",
-                            tint = MosqueEmeraldPrimary
+                            tint = MaterialTheme.colorScheme.primary
                         )
                     },
                     trailingIcon = {
@@ -327,14 +330,14 @@ fun NoticesScreen(
                                 Icon(
                                     imageVector = Icons.Default.Clear,
                                     contentDescription = "অনুসন্ধান মুছুন",
-                                    tint = MosqueTextMuted
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
                     },
                     shape = RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MosqueEmeraldPrimary,
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
                         unfocusedBorderColor = MosqueCardBorderGold
                     ),
                     singleLine = true,
@@ -411,7 +414,10 @@ fun NoticesScreen(
         LazyColumn(
             contentPadding = PaddingValues(14.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = Modifier.weight(1f)
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                .widthIn(max = 840.dp)
         ) {
             if (selectedTabIndex == 0) {
                 if (filteredNotices.isEmpty()) {
@@ -432,7 +438,14 @@ fun NoticesScreen(
                         NoticeCardItem(
                             notice = notice,
                             canManage = canPublish,
-                            onTogglePin = { viewModel.togglePinNotice(notice) },
+                            onTogglePin = {
+                                viewModel.togglePinNotice(notice)
+                                Toast.makeText(
+                                    context,
+                                    if (notice.isPinned) "নোটিশ আনপিন করা হয়েছে।" else "নোটিশটি পিন করা হয়েছে।",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            },
                             onEdit = { editingNotice = notice },
                             onShare = { shareNoticeText(context, mosqueName, notice) },
                             onDeleteRequest = { pendingDeleteNotice = notice }
@@ -458,7 +471,14 @@ fun NoticesScreen(
                         MeetingCardItem(
                             meeting = meeting,
                             canManage = canSchedule,
-                            onToggleStatus = { viewModel.toggleMeetingStatus(meeting) },
+                            onToggleStatus = {
+                                viewModel.toggleMeetingStatus(meeting)
+                                Toast.makeText(
+                                    context,
+                                    if (meeting.status == "completed") "সভা আসন্ন হিসেবে চিহ্নিত হয়েছে।" else "সভা সম্পন্ন হিসেবে চিহ্নিত হয়েছে।",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            },
                             onEdit = { editingMeeting = meeting },
                             onEditResolution = { resolutionTargetMeeting = meeting },
                             onShare = { shareMeetingText(context, mosqueName, meeting) },
@@ -486,42 +506,25 @@ fun NoticesScreen(
                     priority = priority,
                     isPinned = isPinned
                 )
+                Toast.makeText(context, "নোটিশ সফলভাবে হালনাগাদ হয়েছে।", Toast.LENGTH_SHORT).show()
             }
         )
     }
 
     // Delete Notice Confirmation Dialog
     pendingDeleteNotice?.let { target ->
-        AlertDialog(
-            onDismissRequest = { pendingDeleteNotice = null },
-            title = {
-                Text(
-                    text = "নোটিশ মুছে ফেলবেন?",
-                    fontWeight = FontWeight.Bold,
-                    color = MosqueEmeraldDark
-                )
-            },
-            text = {
-                Text(
-                    text = "\"${target.title}\" নোটিশটি স্থায়ীভাবে মুছে ফেলা হবে। আপনি কি নিশ্চিত?"
-                )
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        viewModel.deleteNotice(target)
-                        pendingDeleteNotice = null
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = MosqueUrgentRed),
-                    modifier = Modifier.testTag("confirm_delete_notice_button")
-                ) {
-                    Text("হ্যাঁ, মুছে ফেলুন", color = Color.White)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { pendingDeleteNotice = null }) {
-                    Text("বাতিল", color = MosqueTextSecondary)
-                }
+        MosqueConfirmDialog(
+            title = "নোটিশ মুছে ফেলবেন?",
+            message = "\"${target.title}\" নোটিশটি স্থায়ীভাবে মুছে ফেলা হবে। আপনি কি নিশ্চিত?",
+            confirmText = "হ্যাঁ, মুছে ফেলুন",
+            icon = Icons.Default.DeleteForever,
+            isDestructive = true,
+            confirmTag = "confirm_delete_notice_button",
+            onDismiss = { pendingDeleteNotice = null },
+            onConfirm = {
+                viewModel.deleteNotice(target)
+                pendingDeleteNotice = null
+                Toast.makeText(context, "নোটিশটি মুছে ফেলা হয়েছে।", Toast.LENGTH_SHORT).show()
             }
         )
     }
@@ -539,6 +542,7 @@ fun NoticesScreen(
                     location = location,
                     agenda = agenda
                 )
+                Toast.makeText(context, "সভার তথ্য সফলভাবে হালনাগাদ হয়েছে।", Toast.LENGTH_SHORT).show()
             }
         )
     }
@@ -554,42 +558,25 @@ fun NoticesScreen(
                     resolution = resolution,
                     markCompleted = markCompleted
                 )
+                Toast.makeText(context, "সভার কার্যবিবরণী সংরক্ষিত হয়েছে।", Toast.LENGTH_SHORT).show()
             }
         )
     }
 
     // Delete Meeting Confirmation Dialog
     pendingDeleteMeeting?.let { target ->
-        AlertDialog(
-            onDismissRequest = { pendingDeleteMeeting = null },
-            title = {
-                Text(
-                    text = "সভা মুছে ফেলবেন?",
-                    fontWeight = FontWeight.Bold,
-                    color = MosqueEmeraldDark
-                )
-            },
-            text = {
-                Text(
-                    text = "\"${target.title}\" সভাটি তালিকা থেকে মুছে ফেলা হবে। আপনি কি নিশ্চিত?"
-                )
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        viewModel.deleteMeeting(target)
-                        pendingDeleteMeeting = null
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = MosqueUrgentRed),
-                    modifier = Modifier.testTag("confirm_delete_meeting_button")
-                ) {
-                    Text("হ্যাঁ, মুছে ফেলুন", color = Color.White)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { pendingDeleteMeeting = null }) {
-                    Text("বাতিল", color = MosqueTextSecondary)
-                }
+        MosqueConfirmDialog(
+            title = "সভা মুছে ফেলবেন?",
+            message = "\"${target.title}\" সভাটি তালিকা থেকে মুছে ফেলা হবে। আপনি কি নিশ্চিত?",
+            confirmText = "হ্যাঁ, মুছে ফেলুন",
+            icon = Icons.Default.DeleteForever,
+            isDestructive = true,
+            confirmTag = "confirm_delete_meeting_button",
+            onDismiss = { pendingDeleteMeeting = null },
+            onConfirm = {
+                viewModel.deleteMeeting(target)
+                pendingDeleteMeeting = null
+                Toast.makeText(context, "সভাটি তালিকা থেকে মুছে ফেলা হয়েছে।", Toast.LENGTH_SHORT).show()
             }
         )
     }
@@ -707,14 +694,14 @@ fun NoticeCardItem(
             .fillMaxWidth()
             .testTag("notice_card_${notice.id}"),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         border = BorderStroke(
             width = 1.dp,
             color = when {
                 notice.priority == "urgent" -> MosqueUrgentRed.copy(alpha = 0.4f)
                 notice.isPinned -> MosqueCardBorderGold
-                else -> MosqueCardBorderSubtle
+                else -> MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
             }
         )
     ) {
@@ -795,7 +782,7 @@ fun NoticeCardItem(
                             Icon(
                                 imageVector = Icons.Default.Share,
                                 contentDescription = "নোটিশ শেয়ার করুন",
-                                tint = MosqueEmeraldPrimary,
+                                tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(19.dp)
                             )
                         }
@@ -808,7 +795,7 @@ fun NoticeCardItem(
                                 Icon(
                                     imageVector = if (notice.isPinned) Icons.Default.PushPin else Icons.Outlined.PushPin,
                                     contentDescription = if (notice.isPinned) "আনপিন করুন" else "পিন করুন",
-                                    tint = if (notice.isPinned) MosqueGoldDeep else MosqueTextMuted,
+                                    tint = if (notice.isPinned) MosqueGoldDeep else MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.size(19.dp)
                                 )
                             }
@@ -819,7 +806,7 @@ fun NoticeCardItem(
                                 Icon(
                                     imageVector = Icons.Default.Edit,
                                     contentDescription = "নোটিশ সম্পাদনা",
-                                    tint = MosqueTextSecondary,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.size(19.dp)
                                 )
                             }
@@ -844,7 +831,7 @@ fun NoticeCardItem(
                     text = notice.title,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = MosqueTextPrimary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
 
                 Spacer(modifier = Modifier.height(6.dp))
@@ -852,12 +839,12 @@ fun NoticeCardItem(
                 Text(
                     text = notice.content,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MosqueTextSecondary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     lineHeight = 20.sp
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
-                HorizontalDivider(color = MosqueCardBorder.copy(alpha = 0.6f))
+                HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
                 Spacer(modifier = Modifier.height(6.dp))
 
                 Row(
@@ -869,14 +856,14 @@ fun NoticeCardItem(
                         Icon(
                             imageVector = Icons.Default.Schedule,
                             contentDescription = null,
-                            tint = MosqueTextMuted,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(13.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = "প্রকাশ: ${toBengaliDigits(notice.publishDate)}",
                             style = MaterialTheme.typography.labelSmall,
-                            color = MosqueTextMuted,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 11.sp
                         )
                     }
@@ -884,7 +871,7 @@ fun NoticeCardItem(
                     Text(
                         text = "প্রচারে: ${notice.createdBy}",
                         style = MaterialTheme.typography.labelSmall,
-                        color = MosqueEmeraldDark,
+                        color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Medium,
                         fontSize = 11.sp,
                         maxLines = 1,
@@ -901,6 +888,7 @@ fun NoticeCardItem(
 fun MeetingCardItem(
     meeting: MeetingEntity,
     canManage: Boolean,
+    canEditResolution: Boolean = canManage,
     onToggleStatus: () -> Unit,
     onEdit: () -> Unit,
     onEditResolution: () -> Unit,
@@ -915,7 +903,7 @@ fun MeetingCardItem(
             .fillMaxWidth()
             .testTag("meeting_card_${meeting.id}"),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         border = BorderStroke(
             width = 1.dp,
@@ -969,7 +957,7 @@ fun MeetingCardItem(
                             Icon(
                                 imageVector = Icons.Default.Share,
                                 contentDescription = "সভার বিবরণ শেয়ার করুন",
-                                tint = MosqueEmeraldPrimary,
+                                tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(19.dp)
                             )
                         }
@@ -981,7 +969,7 @@ fun MeetingCardItem(
                                 Icon(
                                     imageVector = Icons.Default.Edit,
                                     contentDescription = "সভা সম্পাদনা",
-                                    tint = MosqueTextSecondary,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.size(19.dp)
                                 )
                             }
@@ -1006,7 +994,7 @@ fun MeetingCardItem(
                     text = meeting.title,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = MosqueEmeraldDark
+                    color = MaterialTheme.colorScheme.primary
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -1015,14 +1003,14 @@ fun MeetingCardItem(
                     Icon(
                         imageVector = Icons.Default.Event,
                         contentDescription = null,
-                        tint = MosqueEmeraldPrimary,
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(15.dp)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = toBengaliDigits(meeting.meetingDate),
                         style = MaterialTheme.typography.bodySmall,
-                        color = MosqueTextPrimary,
+                        color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.SemiBold
                     )
                 }
@@ -1040,16 +1028,17 @@ fun MeetingCardItem(
                     Text(
                         text = "স্থান: ${meeting.location}",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MosqueTextSecondary
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
                 if (meeting.agenda.isNotBlank()) {
+                    val isDarkMeeting = LocalIsDarkTheme.current
                     Spacer(modifier = Modifier.height(10.dp))
                     Surface(
-                        color = MosqueBgLight,
+                        color = if (isDarkMeeting) MosqueNightSurfaceVariant else MosqueBgLight,
                         shape = RoundedCornerShape(10.dp),
-                        border = BorderStroke(0.8.dp, MosqueCardBorderSubtle),
+                        border = BorderStroke(0.8.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Column(modifier = Modifier.padding(10.dp)) {
@@ -1057,13 +1046,13 @@ fun MeetingCardItem(
                                 text = "আলোচ্যসূচি (এজেন্ডা):",
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = MosqueEmeraldDark
+                                color = MaterialTheme.colorScheme.primary
                             )
                             Spacer(modifier = Modifier.height(3.dp))
                             Text(
                                 text = meeting.agenda,
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MosqueTextPrimary,
+                                color = MaterialTheme.colorScheme.onSurface,
                                 lineHeight = 18.sp
                             )
                         }
@@ -1073,9 +1062,9 @@ fun MeetingCardItem(
                 if (meeting.resolution.isNotBlank()) {
                     Spacer(modifier = Modifier.height(8.dp))
                     Surface(
-                        color = MosqueEmeraldPrimary.copy(alpha = 0.08f),
+                        color = MosqueEmeraldPrimary.copy(alpha = 0.12f),
                         shape = RoundedCornerShape(10.dp),
-                        border = BorderStroke(0.8.dp, MosqueEmeraldPrimary.copy(alpha = 0.25f)),
+                        border = BorderStroke(0.8.dp, MosqueEmeraldPrimary.copy(alpha = 0.3f)),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Column(modifier = Modifier.padding(10.dp)) {
@@ -1083,7 +1072,7 @@ fun MeetingCardItem(
                                 Icon(
                                     imageVector = Icons.Default.FactCheck,
                                     contentDescription = null,
-                                    tint = MosqueEmeraldPrimary,
+                                    tint = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.size(15.dp)
                                 )
                                 Spacer(modifier = Modifier.width(5.dp))
@@ -1091,21 +1080,21 @@ fun MeetingCardItem(
                                     text = "গৃহীত সিদ্ধান্ত / কার্যবিবরণী:",
                                     style = MaterialTheme.typography.labelMedium,
                                     fontWeight = FontWeight.Bold,
-                                    color = MosqueEmeraldDark
+                                    color = MaterialTheme.colorScheme.primary
                                 )
                             }
                             Spacer(modifier = Modifier.height(3.dp))
                             Text(
                                 text = meeting.resolution,
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MosqueTextPrimary,
+                                color = MaterialTheme.colorScheme.onSurface,
                                 lineHeight = 18.sp
                             )
                         }
                     }
                 }
 
-                if (canManage) {
+                if (canManage || canEditResolution) {
                     Spacer(modifier = Modifier.height(10.dp))
                     HorizontalDivider(color = MosqueCardBorder.copy(alpha = 0.5f))
                     Spacer(modifier = Modifier.height(8.dp))
@@ -1114,59 +1103,63 @@ fun MeetingCardItem(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        OutlinedButton(
-                            onClick = onToggleStatus,
-                            shape = RoundedCornerShape(10.dp),
-                            border = BorderStroke(1.dp, statusColor.copy(alpha = 0.6f)),
-                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
-                            modifier = Modifier
-                                .weight(1f)
-                                .heightIn(min = 44.dp)
-                                .testTag("toggle_meeting_status_${meeting.id}")
-                        ) {
-                            Icon(
-                                imageVector = if (isCompleted) Icons.Default.Replay else Icons.Default.CheckCircleOutline,
-                                contentDescription = null,
-                                tint = statusColor,
-                                modifier = Modifier.size(15.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = if (isCompleted) "পুনরায় আসন্ন" else "সম্পন্ন করুন",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = statusColor,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
+                        if (canManage) {
+                            OutlinedButton(
+                                onClick = onToggleStatus,
+                                shape = RoundedCornerShape(10.dp),
+                                border = BorderStroke(1.dp, statusColor.copy(alpha = 0.6f)),
+                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .heightIn(min = 48.dp)
+                                    .testTag("toggle_meeting_status_${meeting.id}")
+                            ) {
+                                Icon(
+                                    imageVector = if (isCompleted) Icons.Default.Replay else Icons.Default.CheckCircleOutline,
+                                    contentDescription = null,
+                                    tint = statusColor,
+                                    modifier = Modifier.size(15.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = if (isCompleted) "পুনরায় আসন্ন" else "সম্পন্ন করুন",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = statusColor,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
                         }
 
-                        Button(
-                            onClick = onEditResolution,
-                            shape = RoundedCornerShape(10.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MosqueEmeraldPrimary,
-                                contentColor = Color.White
-                            ),
-                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
-                            modifier = Modifier
-                                .weight(1f)
-                                .heightIn(min = 44.dp)
-                                .testTag("meeting_resolution_button_${meeting.id}")
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.NoteAdd,
-                                contentDescription = null,
-                                modifier = Modifier.size(15.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = if (meeting.resolution.isBlank()) "সিদ্ধান্ত লিখুন" else "সিদ্ধান্ত সম্পাদনা",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
+                        if (canEditResolution) {
+                            Button(
+                                onClick = onEditResolution,
+                                shape = RoundedCornerShape(10.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MosqueEmeraldPrimary,
+                                    contentColor = Color.White
+                                ),
+                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .heightIn(min = 48.dp)
+                                    .testTag("meeting_resolution_button_${meeting.id}")
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.NoteAdd,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(15.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = if (meeting.resolution.isBlank()) "সিদ্ধান্ত লিখুন" else "সিদ্ধান্ত সম্পাদনা",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
                         }
                     }
                 }
@@ -1183,13 +1176,15 @@ private fun EmptyNoticesMeetingsState(
     hasActiveFilters: Boolean,
     onResetFilters: () -> Unit
 ) {
+    val isDark = LocalIsDarkTheme.current
+    val borderColor = if (isDark) MosqueNightBorder else MosqueCardBorderSubtle
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(top = 16.dp),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        border = BorderStroke(1.dp, MosqueCardBorderSubtle)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, borderColor)
     ) {
         Column(
             modifier = Modifier
@@ -1199,14 +1194,14 @@ private fun EmptyNoticesMeetingsState(
         ) {
             Surface(
                 shape = CircleShape,
-                color = MosqueEmeraldPrimary.copy(alpha = 0.1f),
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
                 modifier = Modifier.size(56.dp)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
                         imageVector = icon,
                         contentDescription = null,
-                        tint = MosqueEmeraldPrimary,
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(28.dp)
                     )
                 }
@@ -1216,22 +1211,24 @@ private fun EmptyNoticesMeetingsState(
                 text = title,
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
-                color = MosqueEmeraldDark
+                color = MaterialTheme.colorScheme.primary
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.bodySmall,
-                color = MosqueTextSecondary
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             if (hasActiveFilters) {
                 Spacer(modifier = Modifier.height(12.dp))
                 OutlinedButton(
                     onClick = onResetFilters,
                     shape = RoundedCornerShape(10.dp),
-                    modifier = Modifier.testTag("reset_notices_filters_button")
+                    modifier = Modifier
+                        .heightIn(min = 48.dp)
+                        .testTag("reset_notices_filters_button")
                 ) {
-                    Text("ফিল্টার মুছুন", color = MosqueEmeraldPrimary, fontWeight = FontWeight.Bold)
+                    Text("ফিল্টার মুছুন", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -1245,14 +1242,14 @@ fun shareNoticeText(context: Context, mosqueName: String, notice: NoticeEntity) 
         else -> "মসজিদ নোটিশ"
     }
     val text = buildString {
-        appendLine("📢 $mosqueName — $priorityBn")
+        appendLine("[$priorityBn] $mosqueName")
         appendLine()
         appendLine("*${notice.title}*")
         appendLine()
         appendLine(notice.content)
         appendLine()
-        appendLine("📅 প্রকাশ: ${toBengaliDigits(notice.publishDate)}")
-        append("✍️ প্রচারে: ${notice.createdBy}")
+        appendLine("প্রকাশ: ${toBengaliDigits(notice.publishDate)}")
+        append("প্রচারে: ${notice.createdBy}")
     }
     val intent = Intent(Intent.ACTION_SEND).apply {
         type = "text/plain"
@@ -1267,19 +1264,19 @@ fun shareNoticeText(context: Context, mosqueName: String, notice: NoticeEntity) 
 fun shareMeetingText(context: Context, mosqueName: String, meeting: MeetingEntity) {
     val statusBn = if (meeting.status == "completed") "সম্পন্ন সভা" else "আসন্ন কমিটি সভা"
     val text = buildString {
-        appendLine("🕌 $mosqueName — $statusBn")
+        appendLine("[$statusBn] $mosqueName")
         appendLine()
         appendLine("*${meeting.title}*")
-        appendLine("📅 তারিখ ও সময়: ${toBengaliDigits(meeting.meetingDate)}")
-        appendLine("📍 স্থান: ${meeting.location}")
+        appendLine("তারিখ ও সময়: ${toBengaliDigits(meeting.meetingDate)}")
+        appendLine("স্থান: ${meeting.location}")
         if (meeting.agenda.isNotBlank()) {
             appendLine()
-            appendLine("📝 আলোচ্যসূচি:")
+            appendLine("আলোচ্যসূচি:")
             appendLine(meeting.agenda)
         }
         if (meeting.resolution.isNotBlank()) {
             appendLine()
-            appendLine("✅ গৃহীত সিদ্ধান্ত / কার্যবিবরণী:")
+            appendLine("গৃহীত সিদ্ধান্ত / কার্যবিবরণী:")
             appendLine(meeting.resolution)
         }
     }

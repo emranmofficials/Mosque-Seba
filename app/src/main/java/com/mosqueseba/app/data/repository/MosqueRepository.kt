@@ -96,10 +96,11 @@ class MosqueRepository(private val database: MosqueDatabase) {
             sourceType = "chanda_${payment.method}",
             sourceId = payment.id,
             createdBy = payment.receivedBy,
+            approvedBy = payment.receivedBy,
             approvalStatus = "approved"
         )
         database.transactionDao().insertTransaction(txn)
-        logAudit("CHANDA_RECORDED", "${payment.memberNameBn}-এর চাঁদা জমা: ৳${payment.amountPaid} (রসিদ: ${payment.receiptCode})")
+        logAudit("CHANDA_RECORDED", "${payment.memberNameBn}-এর চাঁদা জমা: ৳${payment.amountPaid} (রসিদ: ${payment.receiptCode}) — স্বয়ংক্রিয়ভাবে মোট আয়ে যুক্ত", payment.receivedBy)
     }
 
     // Staff
@@ -205,24 +206,35 @@ class MosqueRepository(private val database: MosqueDatabase) {
     // --- স্টাফ পে-রোল, রোস্টার ও ফুড শিডিউল (PRD §10–§12) ---
     val allPayrolls: Flow<List<StaffPayrollEntity>> = database.staffPayrollDao().getAllPayrolls()
 
-    suspend fun disburseStaffSalary(payroll: StaffPayrollEntity) {
-        database.staffPayrollDao().insertPayroll(payroll.copy(paymentStatus = "paid", paidDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())))
-        // Post linked Finance EXPENSE (PRD §10)
+    suspend fun disburseStaffSalary(
+        payroll: StaffPayrollEntity,
+        paidBy: String = "কমিটি কোষাধ্যক্ষ",
+        paymentMethod: String = "cash"
+    ) {
+        val dateStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+        database.staffPayrollDao().insertPayroll(
+            payroll.copy(paymentStatus = "paid", paidDate = dateStr)
+        )
+        // Post linked Finance EXPENSE automatically (PRD §10)
+        val bonusSuffix = if (payroll.bonusAmount > 0.0) {
+            " (মূল বেতন: ৳${payroll.salaryAmount.toInt()}, বোনাস/ভাতা: ৳${payroll.bonusAmount.toInt()})"
+        } else ""
         val txn = TransactionEntity(
             id = UUID.randomUUID().toString(),
             transactionCode = "TXN-PAY-${UUID.randomUUID().toString().take(6).uppercase()}",
-            categoryNameBn = "কর্মচারী বেতন ও ভাতা",
+            categoryNameBn = "ইমাম ও কর্মচারীদের বেতন",
             type = "EXPENSE",
             amount = payroll.netSalary,
-            txnDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date()),
-            description = "${payroll.staffNameBn}-এর বেতন পরিশোধ (${payroll.month})",
-            sourceType = "payroll",
+            txnDate = dateStr,
+            description = "${payroll.staffNameBn}-এর বেতন পরিশোধ (${payroll.month})$bonusSuffix",
+            sourceType = "payroll_$paymentMethod",
             sourceId = payroll.id,
-            createdBy = "কমিটি কোষাধ্যক্ষ",
+            createdBy = paidBy,
+            approvedBy = paidBy,
             approvalStatus = "approved"
         )
         database.transactionDao().insertTransaction(txn)
-        logAudit("SALARY_DISBURSED", "${payroll.staffNameBn}-কে বেতন পরিশোধ: ৳${payroll.netSalary}")
+        logAudit("SALARY_DISBURSED", "${payroll.staffNameBn}-কে বেতন পরিশোধ: ৳${payroll.netSalary} (${payroll.month}) — স্বয়ংক্রিয়ভাবে মোট ব্যয়ে যুক্ত", paidBy)
     }
 
     val allDutyRosters: Flow<List<DutyRosterEntity>> = database.dutyRosterDao().getAllRosters()
@@ -234,7 +246,38 @@ class MosqueRepository(private val database: MosqueDatabase) {
     val allFoodSchedules: Flow<List<FoodScheduleEntity>> = database.foodScheduleDao().getAllSchedules()
     suspend fun addFoodSchedule(schedule: FoodScheduleEntity) {
         database.foodScheduleDao().insertSchedule(schedule)
-        logAudit("FOOD_SCHEDULED", "খাবার দায়িত্ব বণ্টন: ${schedule.providerName} (${schedule.mealType})")
+        logAudit("FOOD_SCHEDULED", "খাবার দায়িত্ব বণ্টন: ${schedule.dateStr} • দাতা: ${schedule.providerName} → ${schedule.receiverStaffName}")
+    }
+
+    suspend fun addFoodSchedulesBatch(
+        schedules: List<FoodScheduleEntity>,
+        actor: String,
+        summaryNote: String
+    ) {
+        if (schedules.isEmpty()) return
+        database.foodScheduleDao().insertSchedules(schedules)
+        logAudit("FOOD_AUTO_SCHEDULED", summaryNote, actor)
+    }
+
+    suspend fun updateFoodSchedule(
+        schedule: FoodScheduleEntity,
+        actor: String,
+        auditDetails: String
+    ) {
+        database.foodScheduleDao().updateSchedule(schedule)
+        logAudit("FOOD_SCHEDULE_UPDATED", auditDetails, actor)
+    }
+
+    suspend fun deleteFoodSchedule(
+        schedule: FoodScheduleEntity,
+        actor: String
+    ) {
+        database.foodScheduleDao().deleteSchedule(schedule)
+        logAudit(
+            "FOOD_SCHEDULE_DELETED",
+            "খাবার শিডিউল অপসারণ: ${schedule.dateStr} (${schedule.mealType}) - ${schedule.providerName}",
+            actor
+        )
     }
 
     // Audit
@@ -245,6 +288,12 @@ class MosqueRepository(private val database: MosqueDatabase) {
     suspend fun addWelfareCase(case: WelfareCaseEntity) {
         database.welfareDao().insertCase(case)
         logAudit("WELFARE_APPLICATION_ADDED", "সমাজকল্যাণ আবেদন যুক্ত: ${case.beneficiaryName} (৳${case.amountRequested.toInt()})")
+    }
+
+    suspend fun markWelfareDisbursed(case: WelfareCaseEntity) {
+        val updated = case.copy(status = "disbursed")
+        database.welfareDao().updateCase(updated)
+        logAudit("WELFARE_CASE_DISBURSED", "সমাজকল্যাণ সহায়তা বিতরণ সম্পন্ন: ${case.beneficiaryName} (৳${case.amountApproved.toInt()})")
     }
 
     // Events & Programs (PRD §25)

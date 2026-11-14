@@ -356,7 +356,7 @@ fun RegistrationScreen(
                                 OutlinedTextField(
                                     value = presidentNameBn,
                                     onValueChange = { presidentNameBn = it; errorMessage = null },
-                                    label = { Text("সভাপতির পূর্ণ নাম (বাংলায়) *") },
+                                    label = { Text("সভাপতির পূর্ণ নাম *") },
                                     leadingIcon = { Icon(Icons.Default.Badge, contentDescription = null, tint = MosqueEmeraldPrimary) },
                                     singleLine = true,
                                     colors = fieldColors,
@@ -369,25 +369,10 @@ fun RegistrationScreen(
                                 Spacer(modifier = Modifier.height(10.dp))
 
                                 OutlinedTextField(
-                                    value = presidentNameEn,
-                                    onValueChange = { presidentNameEn = it },
-                                    label = { Text("সভাপতির নাম (ইংরেজিতে)") },
-                                    leadingIcon = { Icon(Icons.Default.PersonOutline, contentDescription = null, tint = MosqueEmeraldPrimary) },
-                                    singleLine = true,
-                                    colors = fieldColors,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .testTag("president_name_en_input"),
-                                    shape = RoundedCornerShape(12.dp)
-                                )
-
-                                Spacer(modifier = Modifier.height(10.dp))
-
-                                OutlinedTextField(
                                     value = presidentMobile,
                                     onValueChange = { presidentMobile = it; errorMessage = null },
                                     label = { Text("সভাপতির মোবাইল নম্বর *") },
-                                    placeholder = { Text("017XX-XXXXXX") },
+                                    placeholder = { Text("০১৭১১-২২৩৩৪৪") },
                                     leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null, tint = MosqueEmeraldPrimary) },
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                                     singleLine = true,
@@ -404,7 +389,7 @@ fun RegistrationScreen(
                                     value = presidentEmail,
                                     onValueChange = { presidentEmail = it; errorMessage = null },
                                     label = { Text("ইমেইল ঠিকানা (লগইন ইউজার আইডি) *") },
-                                    placeholder = { Text("president@example.com") },
+                                    placeholder = { Text("আপনার ইমেইল ঠিকানা লিখুন") },
                                     leadingIcon = { Icon(Icons.Default.Email, contentDescription = null, tint = MosqueEmeraldPrimary) },
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                                     singleLine = true,
@@ -420,7 +405,7 @@ fun RegistrationScreen(
                                 OutlinedTextField(
                                     value = presidentNid,
                                     onValueChange = { presidentNid = it },
-                                    label = { Text("জাতীয় পরিচয়পত্র (NID) নম্বর (ঐচ্ছিক)") },
+                                    label = { Text("জাতীয় পরিচয়পত্র (এনআইডি) নম্বর (ঐচ্ছিক)") },
                                     leadingIcon = { Icon(Icons.Default.Fingerprint, contentDescription = null, tint = MosqueEmeraldPrimary) },
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                     singleLine = true,
@@ -675,24 +660,6 @@ fun RegistrationScreen(
                                     shape = RoundedCornerShape(12.dp)
                                 )
 
-                                Spacer(modifier = Modifier.height(10.dp))
-
-                                OutlinedTextField(
-                                    value = mosqueNameEn,
-                                    onValueChange = { mosqueNameEn = it },
-                                    label = { Text("মসজিদের নাম (ইংরেজিতে)") },
-                                    placeholder = { Text("Baitul Jannat Jame Masjid") },
-                                    leadingIcon = { Icon(Icons.Default.Translate, contentDescription = null, tint = MosqueEmeraldPrimary) },
-                                    singleLine = true,
-                                    colors = fieldColors,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .testTag("mosque_name_en_input"),
-                                    shape = RoundedCornerShape(12.dp)
-                                )
-
-                                Spacer(modifier = Modifier.height(10.dp))
-
                                 OutlinedTextField(
                                     value = address,
                                     onValueChange = { address = it; errorMessage = null },
@@ -790,7 +757,7 @@ fun RegistrationScreen(
                                     value = waqfRegNo,
                                     onValueChange = { waqfRegNo = it },
                                     label = { Text("ওয়াকফ / সরকারি নিবন্ধন নম্বর (ঐচ্ছিক)") },
-                                    placeholder = { Text("যেমন: WAQF-DHK-12345") },
+                                    placeholder = { Text("যেমন: ওয়াকফ-ঢাকা-১২৩৪৫") },
                                     leadingIcon = { Icon(Icons.Default.VerifiedUser, contentDescription = null, tint = MosqueGoldDeep) },
                                     singleLine = true,
                                     colors = fieldColors,
@@ -1067,7 +1034,7 @@ fun RegistrationScreen(
                                             label = "স্টাফদের খাবার প্রদান:",
                                             value = if (willingToProvideStaffMeals == true) "হ্যাঁ, রাজি আছেন" else "না"
                                         )
-                                        SummaryRow(label = "অ্যাসাইনড রোল:", value = "সভাপতি (Chief Admin)")
+                                        SummaryRow(label = "নির্ধারিত দায়িত্ব:", value = "সভাপতি (প্রধান প্রশাসক)")
                                     }
                                 }
 

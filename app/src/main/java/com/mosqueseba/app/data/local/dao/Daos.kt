@@ -233,8 +233,14 @@ interface FoodScheduleDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSchedule(schedule: FoodScheduleEntity): Long
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertSchedules(schedules: List<FoodScheduleEntity>)
+
     @Update
     suspend fun updateSchedule(schedule: FoodScheduleEntity): Int
+
+    @Delete
+    suspend fun deleteSchedule(schedule: FoodScheduleEntity): Int
 }
 
 // --- সমাজকল্যাণ ও যাকাত তহবিল (PRD §26) DAO ---
@@ -245,6 +251,9 @@ interface WelfareDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertCase(welfareCase: WelfareCaseEntity): Long
+
+    @Update
+    suspend fun updateCase(welfareCase: WelfareCaseEntity): Int
 }
 
 // --- মাহফিল ও বিশেষ ইভেন্ট (PRD §25) DAO ---
