@@ -31,6 +31,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mosqueseba.app.data.local.entity.AdvisoryNoteEntity
@@ -144,38 +145,51 @@ fun DashboardScreen(
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 14.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-        if (currentRole == UserRole.PRESIDENT) {
-            // 1. Compact Unified Executive Sanctuary Hero
-            item(key = "pres_hero") {
-                StaggeredDashboardItem(index = 0, modifier = Modifier.animateItem()) {
-                    ExecutiveMosqueHeroCard(
-                        mosque = mosque,
-                        currentRole = currentRole,
-                        showHijriDate = showHijriBanner,
-                        onDutiesClick = { showDutiesDialog = true },
-                        onMosqueProfileClick = { onOpenDialog("mosque_profile") }
-                    )
-                }
+        val onKpiClickHandler: (String) -> Unit = { key ->
+            when (key) {
+                "members" -> onOpenDialog("members")
+                "finance" -> onOpenDialog("finance")
+                "treasurer_chanda" -> onOpenDialog("treasurer_chanda")
+                "treasurer_payroll" -> onOpenDialog("treasurer_payroll")
+                "meetings" -> onOpenDialog("meetings")
+                "chanda" -> onOpenDialog(if (currentRole.canManageFinance()) "receive_chanda" else "my_chanda")
+                "pending" -> onOpenDialog("pending_approval")
+                "roster" -> onOpenDialog("roster")
+                "food" -> onOpenDialog("food")
+                "madrasa" -> onOpenDialog("madrasa")
+                "staff_profile" -> onOpenDialog("staff_profile")
+                "my_chanda" -> onOpenDialog("my_chanda")
+                "transparency" -> onOpenDialog("transparency")
+                "cashbox" -> onOpenDialog("cashbox")
+                "office_docs" -> onOpenDialog("office_docs")
+                "sharia_advisory" -> onOpenDialog("sharia_advisory")
+                "publicity" -> onOpenDialog("publicity")
+                "notices" -> onOpenDialog("notices")
+                "events" -> onOpenDialog("events")
+                "welfare" -> onOpenDialog("welfare")
+                else -> onOpenDialog(key)
             }
+        }
 
-            // 2. Priority Executive Approvals & Oversight (only shown when action is needed)
-            val hasPriorityItems = pendingTransactions.isNotEmpty() ||
-                unverifiedCashboxes.isNotEmpty() ||
-                activeAdvisories.isNotEmpty()
+        // 0. Compact Unified Executive Sanctuary Hero (Consistent for all roles)
+        item(key = "role_hero") {
+            StaggeredDashboardItem(index = 0, modifier = Modifier.animateItem()) {
+                ExecutiveMosqueHeroCard(
+                    mosque = mosque,
+                    currentRole = currentRole,
+                    showHijriDate = showHijriBanner,
+                    onDutiesClick = { showDutiesDialog = true },
+                    onMosqueProfileClick = { onOpenDialog("mosque_profile") }
+                )
+            }
+        }
 
-            if (hasPriorityItems) {
-                item(key = "pres_priority_div") {
-                    StaggeredDashboardItem(index = 1, modifier = Modifier.animateItem()) {
-                        RubElHizbDivider(
-                            title = "তদারকি ও অনুমোদন",
-                            modifier = Modifier.padding(vertical = 2.dp)
-                        )
-                    }
-                }
-
+        when (currentRole) {
+            UserRole.PRESIDENT, UserRole.VICE_PRESIDENT -> {
+                // Priority Approvals & Oversight
                 if (pendingTransactions.isNotEmpty()) {
                     item(key = "pres_pending_vouchers") {
-                        StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
+                        StaggeredDashboardItem(index = 1, modifier = Modifier.animateItem()) {
                             PresidentPendingVouchersCard(
                                 pendingTransactions = pendingTransactions,
                                 onApprove = { txn ->
@@ -195,7 +209,7 @@ fun DashboardScreen(
 
                 if (unverifiedCashboxes.isNotEmpty()) {
                     item(key = "pres_cashbox_witness") {
-                        StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
+                        StaggeredDashboardItem(index = 1, modifier = Modifier.animateItem()) {
                             PendingCashboxWitnessCard(
                                 records = unverifiedCashboxes,
                                 canVerify = currentRole.canWitnessCashbox(),
@@ -208,7 +222,7 @@ fun DashboardScreen(
 
                 if (activeAdvisories.isNotEmpty()) {
                     item(key = "pres_advisory") {
-                        StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
+                        StaggeredDashboardItem(index = 1, modifier = Modifier.animateItem()) {
                             AdvisoryHighlightCard(
                                 notes = activeAdvisories,
                                 onOpenAdvisory = { onOpenDialog("sharia_advisory") }
@@ -216,329 +230,969 @@ fun DashboardScreen(
                         }
                     }
                 }
-            }
 
-            // 3. Committee KPI Overview
-            item(key = "pres_kpi_div") {
-                StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
-                    RubElHizbDivider(
-                        title = "কমিটি সারসংক্ষেপ",
-                        modifier = Modifier.padding(vertical = 2.dp)
-                    )
+                item(key = "pres_kpi_div") {
+                    StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
+                        RubElHizbDivider(title = "কমিটি সারসংক্ষেপ ও তহবিল", modifier = Modifier.padding(vertical = 2.dp))
+                    }
                 }
-            }
 
-            item(key = "pres_kpi_grid") {
-                StaggeredDashboardItem(index = 3, modifier = Modifier.animateItem()) {
-                    DashboardKpiGrid(
-                        role = currentRole,
-                        totalMembers = totalMembers,
-                        netBalance = netBalance,
-                        dueChanda = dueChanda,
-                        pendingItems = pendingTransactions.size,
-                        studentCount = studentCount,
-                        staffCount = activeStaff.size,
-                        noticeCount = allNotices.size,
-                        upcomingEventCount = upcomingEventCount,
-                        totalEventCount = allEvents.size,
-                        welfareCount = allWelfareCases.size,
-                        pendingWelfareCount = pendingWelfareCases.size,
-                        cashboxCount = allCashboxRecords.size,
-                        pendingCashboxWitnessCount = unverifiedCashboxes.size,
-                        officeDocCount = allOfficeDocuments.size,
-                        pendingReplyDocCount = pendingReplyDocs,
-                        advisoryCount = allAdvisoryNotes.size,
-                        smartQuoteCount = allSmartBoardQuotes.size,
-                        nextMeetingTitleDate = nextMeeting?.meetingDate?.substringBefore(",") ?: "নির্ধারিত নেই",
-                        nextMeetingSubtitle = nextMeeting?.title ?: "কোনো আসন্ন সভা নেই",
-                        myChandaPaid = myChandaPaid,
-                        myChandaSubtitle = myChandaSub,
-                        nextPrayerName = nextPrayerSummary.nameBn,
-                        nextPrayerSubtitle = "${nextPrayerSummary.iqamahTimeBn} (বাকি ${nextPrayerSummary.remainingTextBn})",
-                        onKpiClick = { key ->
-                            when (key) {
-                                "members" -> onOpenDialog("members")
-                                "finance" -> onOpenDialog("finance")
-                                "chanda" -> onOpenDialog("receive_chanda")
-                                "pending" -> onOpenDialog("pending_approval")
-                                else -> onOpenDialog(key)
-                            }
+                item(key = "pres_kpi_grid") {
+                    StaggeredDashboardItem(index = 3, modifier = Modifier.animateItem()) {
+                        DashboardKpiGrid(
+                            role = currentRole,
+                            totalMembers = totalMembers,
+                            netBalance = netBalance,
+                            dueChanda = dueChanda,
+                            pendingItems = pendingTransactions.size,
+                            studentCount = studentCount,
+                            staffCount = activeStaff.size,
+                            noticeCount = allNotices.size,
+                            upcomingEventCount = upcomingEventCount,
+                            totalEventCount = allEvents.size,
+                            welfareCount = allWelfareCases.size,
+                            pendingWelfareCount = pendingWelfareCases.size,
+                            cashboxCount = allCashboxRecords.size,
+                            pendingCashboxWitnessCount = unverifiedCashboxes.size,
+                            officeDocCount = allOfficeDocuments.size,
+                            pendingReplyDocCount = pendingReplyDocs,
+                            advisoryCount = allAdvisoryNotes.size,
+                            smartQuoteCount = allSmartBoardQuotes.size,
+                            nextMeetingTitleDate = nextMeeting?.meetingDate?.substringBefore(",") ?: "নির্ধারিত নেই",
+                            nextMeetingSubtitle = nextMeeting?.title ?: "কোনো আসন্ন সভা নেই",
+                            myChandaPaid = myChandaPaid,
+                            myChandaSubtitle = myChandaSub,
+                            nextPrayerName = nextPrayerSummary.nameBn,
+                            nextPrayerSubtitle = "${nextPrayerSummary.iqamahTimeBn} (বাকি ${nextPrayerSummary.remainingTextBn})",
+                            onKpiClick = onKpiClickHandler
+                        )
+                    }
+                }
+
+                item(key = "pres_quick_actions") {
+                    StaggeredDashboardItem(index = 4, modifier = Modifier.animateItem()) {
+                        QuickActionsGrid(
+                            role = currentRole,
+                            onActionClick = { actionKey -> onOpenDialog(actionKey) }
+                        )
+                    }
+                }
+
+                item(key = "pres_prayer_div") {
+                    StaggeredDashboardItem(index = 5, modifier = Modifier.animateItem()) {
+                        RubElHizbDivider(title = "নামাজের সূচি ও দেয়াল বোর্ড", modifier = Modifier.padding(vertical = 2.dp))
+                    }
+                }
+
+                item(key = "pres_prayer_card") {
+                    StaggeredDashboardItem(index = 5, modifier = Modifier.animateItem()) {
+                        PrayerCard(onViewFullScheduleClick = { onOpenDialog("view_prayers") })
+                    }
+                }
+
+                item(key = "pres_smart_board") {
+                    StaggeredDashboardItem(index = 6, modifier = Modifier.animateItem()) {
+                        SmartBoardCard(quotes = allSmartBoardQuotes, includeDateAndPrayerSlides = false)
+                    }
+                }
+
+                item(key = "pres_meetings_div") {
+                    StaggeredDashboardItem(index = 6, modifier = Modifier.animateItem()) {
+                        RubElHizbDivider(title = "সভা ও সাম্প্রতিক লেনদেন", modifier = Modifier.padding(vertical = 2.dp))
+                    }
+                }
+
+                item(key = "pres_meetings_card") {
+                    StaggeredDashboardItem(index = 7, modifier = Modifier.animateItem()) {
+                        UpcomingMeetingsCard(
+                            meetings = allMeetings,
+                            canSchedule = currentRole.canScheduleMeetings(),
+                            onScheduleClick = { onOpenDialog("schedule_meeting") },
+                            onViewAllClick = { onOpenDialog("meetings") }
+                        )
+                    }
+                }
+
+                val completedTransactions = allTransactions.filter { it.approvalStatus != "pending" }.take(4)
+                if (completedTransactions.isNotEmpty()) {
+                    item(key = "pres_recent_txns") {
+                        StaggeredDashboardItem(index = 8, modifier = Modifier.animateItem()) {
+                            RecentActivityCard(transactions = completedTransactions, onViewAllClick = { onOpenDialog("finance") })
                         }
-                    )
+                    }
                 }
             }
 
-            // 4. Quick Actions
-            item(key = "pres_quick_actions") {
-                StaggeredDashboardItem(index = 4, modifier = Modifier.animateItem()) {
-                    QuickActionsGrid(
-                        role = currentRole,
-                        onActionClick = { actionKey -> onOpenDialog(actionKey) }
-                    )
+            UserRole.TREASURER, UserRole.ASSISTANT_TREASURER -> {
+                // Primary Desk: Treasury Ledger
+                item(key = "treasurer_desk") {
+                    StaggeredDashboardItem(index = 1, modifier = Modifier.animateItem()) {
+                        TreasurerTreasuryLedgerCard(
+                            netBalance = netBalance,
+                            dueChanda = dueChanda,
+                            unverifiedCashboxCount = unverifiedCashboxes.size,
+                            pendingVoucherCount = pendingTransactions.size,
+                            onReceiveChanda = { onOpenDialog("receive_chanda") },
+                            onOpenCashbox = { onOpenDialog("cashbox") },
+                            onOpenPayroll = { onOpenDialog("treasurer_payroll") },
+                            onViewFinance = { onOpenDialog("finance") }
+                        )
+                    }
                 }
-            }
 
-            // 5. Prayer Schedule & Wall Notice Quotes (no duplicate date/prayer slides)
-            item(key = "pres_prayer_div") {
-                StaggeredDashboardItem(index = 5, modifier = Modifier.animateItem()) {
-                    RubElHizbDivider(
-                        title = "নামাজের সূচি ও দেয়াল বোর্ড",
-                        modifier = Modifier.padding(vertical = 2.dp)
-                    )
+                if (unverifiedCashboxes.isNotEmpty()) {
+                    item(key = "treasurer_cashbox_pending") {
+                        StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
+                            PendingCashboxWitnessCard(
+                                records = unverifiedCashboxes,
+                                canVerify = currentRole.canWitnessCashbox(),
+                                onVerify = { viewModel.verifyCashboxAsWitness(it) },
+                                onOpenCashbox = { onOpenDialog("cashbox") }
+                            )
+                        }
+                    }
                 }
-            }
 
-            item(key = "pres_prayer_card") {
-                StaggeredDashboardItem(index = 5, modifier = Modifier.animateItem()) {
-                    PrayerCard(
-                        onViewFullScheduleClick = { onOpenDialog("view_prayers") }
-                    )
+                item(key = "treasurer_kpi_div") {
+                    StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
+                        RubElHizbDivider(title = "বায়তুলমাল আর্থিক সূচক ও স্থিতি", modifier = Modifier.padding(vertical = 2.dp))
+                    }
                 }
-            }
 
-            item(key = "pres_smart_board") {
-                StaggeredDashboardItem(index = 6, modifier = Modifier.animateItem()) {
-                    SmartBoardCard(
-                        quotes = allSmartBoardQuotes,
-                        includeDateAndPrayerSlides = false
-                    )
+                item(key = "treasurer_kpi_grid") {
+                    StaggeredDashboardItem(index = 3, modifier = Modifier.animateItem()) {
+                        DashboardKpiGrid(
+                            role = currentRole,
+                            totalMembers = totalMembers,
+                            netBalance = netBalance,
+                            dueChanda = dueChanda,
+                            pendingItems = pendingTransactions.size,
+                            studentCount = studentCount,
+                            staffCount = activeStaff.size,
+                            noticeCount = allNotices.size,
+                            upcomingEventCount = upcomingEventCount,
+                            totalEventCount = allEvents.size,
+                            welfareCount = allWelfareCases.size,
+                            pendingWelfareCount = pendingWelfareCases.size,
+                            cashboxCount = allCashboxRecords.size,
+                            pendingCashboxWitnessCount = unverifiedCashboxes.size,
+                            officeDocCount = allOfficeDocuments.size,
+                            pendingReplyDocCount = pendingReplyDocs,
+                            advisoryCount = allAdvisoryNotes.size,
+                            smartQuoteCount = allSmartBoardQuotes.size,
+                            nextMeetingTitleDate = nextMeeting?.meetingDate?.substringBefore(",") ?: "নির্ধারিত নেই",
+                            nextMeetingSubtitle = nextMeeting?.title ?: "কোনো আসন্ন সভা নেই",
+                            myChandaPaid = myChandaPaid,
+                            myChandaSubtitle = myChandaSub,
+                            nextPrayerName = nextPrayerSummary.nameBn,
+                            nextPrayerSubtitle = "${nextPrayerSummary.iqamahTimeBn} (বাকি ${nextPrayerSummary.remainingTextBn})",
+                            onKpiClick = onKpiClickHandler
+                        )
+                    }
                 }
-            }
 
-            // 6. Meetings & Completed Financial Activity (excludes pending items already shown above)
-            item(key = "pres_meetings_div") {
-                StaggeredDashboardItem(index = 6, modifier = Modifier.animateItem()) {
-                    RubElHizbDivider(
-                        title = "সভা ও সাম্প্রতিক লেনদেন",
-                        modifier = Modifier.padding(vertical = 2.dp)
-                    )
+                item(key = "treasurer_actions_div") {
+                    StaggeredDashboardItem(index = 4, modifier = Modifier.animateItem()) {
+                        RubElHizbDivider(title = "কোষাধক্ষ্য কুইক অ্যাকশন", modifier = Modifier.padding(vertical = 2.dp))
+                    }
                 }
-            }
 
-            item(key = "pres_meetings_card") {
-                StaggeredDashboardItem(index = 7, modifier = Modifier.animateItem()) {
-                    UpcomingMeetingsCard(
-                        meetings = allMeetings,
-                        canSchedule = currentRole.canScheduleMeetings(),
-                        onScheduleClick = { onOpenDialog("schedule_meeting") },
-                        onViewAllClick = { onOpenDialog("meetings") }
-                    )
+                item(key = "treasurer_actions_grid") {
+                    StaggeredDashboardItem(index = 4, modifier = Modifier.animateItem()) {
+                        QuickActionsGrid(
+                            role = currentRole,
+                            onActionClick = { actionKey -> onOpenDialog(actionKey) }
+                        )
+                    }
                 }
-            }
 
-            val completedTransactions = allTransactions.filter { it.approvalStatus != "pending" }.take(4)
-            if (completedTransactions.isNotEmpty()) {
-                item(key = "pres_recent_txns") {
-                    StaggeredDashboardItem(index = 8, modifier = Modifier.animateItem()) {
+                item(key = "treasurer_txns_div") {
+                    StaggeredDashboardItem(index = 5, modifier = Modifier.animateItem()) {
+                        RubElHizbDivider(title = "সাম্প্রতিক লেনদেন ও ভাউচার খতিয়ান", modifier = Modifier.padding(vertical = 2.dp))
+                    }
+                }
+
+                item(key = "treasurer_recent_txns") {
+                    StaggeredDashboardItem(index = 5, modifier = Modifier.animateItem()) {
                         RecentActivityCard(
-                            transactions = completedTransactions,
+                            transactions = allTransactions.take(5),
                             onViewAllClick = { onOpenDialog("finance") }
                         )
                     }
                 }
-            }
-        } else {
-            // 0. Unified Compact Executive Sanctuary Hero (same crisp layout for all 16 roles)
-            item(key = "role_hero") {
-                StaggeredDashboardItem(index = 0, modifier = Modifier.animateItem()) {
-                    ExecutiveMosqueHeroCard(
-                        mosque = mosque,
-                        currentRole = currentRole,
-                        showHijriDate = showHijriBanner,
-                        onDutiesClick = { showDutiesDialog = true },
-                        onMosqueProfileClick = { onOpenDialog("mosque_profile") }
-                    )
+
+                item(key = "treasurer_meetings_card") {
+                    StaggeredDashboardItem(index = 6, modifier = Modifier.animateItem()) {
+                        UpcomingMeetingsCard(
+                            meetings = allMeetings,
+                            canSchedule = currentRole.canScheduleMeetings(),
+                            onScheduleClick = { onOpenDialog("schedule_meeting") },
+                            onViewAllClick = { onOpenDialog("meetings") }
+                        )
+                    }
+                }
+
+                item(key = "treasurer_prayer_card") {
+                    StaggeredDashboardItem(index = 7, modifier = Modifier.animateItem()) {
+                        PrayerCard(onViewFullScheduleClick = { onOpenDialog("view_prayers") })
+                    }
                 }
             }
 
-            // 1.1 Vice President Pending Voucher Approval Hotline
-            if (currentRole.canApproveFinance() && pendingTransactions.isNotEmpty()) {
-                item {
-                    PresidentPendingVouchersCard(
-                        pendingTransactions = pendingTransactions,
-                        onApprove = { txn ->
-                            viewModel.updateTransactionStatus(txn, true)
-                            Toast.makeText(
-                                context,
-                                "${txn.categoryNameBn} ভাউচারটি অনুমোদিত হয়েছে।",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        },
-                        onReject = { txn -> pendingRejectVoucher = txn },
-                        onViewAll = { onOpenDialog("pending_approval") }
-                    )
+            UserRole.GENERAL_SECRETARY, UserRole.ASSISTANT_SECRETARY, UserRole.ORGANIZING_SECRETARY, UserRole.OFFICE_SECRETARY -> {
+                // Primary Desk: Secretariat Executive Hub
+                item(key = "sec_hub") {
+                    StaggeredDashboardItem(index = 1, modifier = Modifier.animateItem()) {
+                        SecretariatExecutiveHubCard(
+                            nextMeeting = nextMeeting,
+                            pendingDocsCount = pendingReplyDocs,
+                            onScheduleMeeting = { onOpenDialog("schedule_meeting") },
+                            onDraftNotice = { onOpenDialog("publish_notice") },
+                            onOpenOfficeDocs = { onOpenDialog("office_docs") }
+                        )
+                    }
                 }
-            }
 
-            // 1.1b Cashbox Witness Verification Card
-            if ((currentRole.canWitnessCashbox() || currentRole.canManageCashbox()) && unverifiedCashboxes.isNotEmpty()) {
-                item {
-                    PendingCashboxWitnessCard(
-                        records = unverifiedCashboxes,
-                        canVerify = currentRole.canWitnessCashbox(),
-                        onVerify = { viewModel.verifyCashboxAsWitness(it) },
-                        onOpenCashbox = { onOpenDialog("cashbox") }
-                    )
-                }
-            }
-
-            // 1.1c Advisory & Sharia Guidance Highlight
-            if (currentRole in listOf(
-                    UserRole.VICE_PRESIDENT,
-                    UserRole.GENERAL_SECRETARY,
-                    UserRole.ASSISTANT_SECRETARY,
-                    UserRole.IMAM,
-                    UserRole.ADVISORY_BOARD
-                ) && activeAdvisories.isNotEmpty()
-            ) {
-                item {
-                    AdvisoryHighlightCard(
-                        notes = activeAdvisories,
-                        onOpenAdvisory = { onOpenDialog("sharia_advisory") }
-                    )
-                }
-            }
-
-            // 1.1d Pending Office Correspondence Highlight (Office Secretary)
-            if (currentRole == UserRole.OFFICE_SECRETARY && pendingOfficeDocs.isNotEmpty()) {
-                item {
-                    PendingOfficeDocsHighlightCard(
-                        pendingDocs = pendingOfficeDocs,
-                        onOpenOfficeDocs = { onOpenDialog("office_docs") }
-                    )
-                }
-            }
-
-            // 1.1e Pending Welfare Distribution Highlight (Welfare & Education Secretary)
-            if (currentRole == UserRole.WELFARE_EDUCATION_SECRETARY && pendingWelfareCases.isNotEmpty()) {
-                item {
-                    PendingWelfareHighlightCard(
-                        pendingCases = pendingWelfareCases,
-                        onOpenWelfare = { onOpenDialog("welfare") }
-                    )
-                }
-            }
-
-            // 1.2 Musalli Devotional & Instant Digital Receipt Card
-            if (currentRole == UserRole.GENERAL_MEMBER) {
-                item {
-                    MusalliDevotionalCard(
-                        onViewReceipt = { onOpenDialog("view_receipt") },
-                        onMakeDonation = { onOpenDialog("my_chanda") }
-                    )
-                }
-            }
-
-            // 2. Smart Board (Dynamic Quotes)
-            item {
-                SmartBoardCard(
-                    quotes = allSmartBoardQuotes,
-                    includeDateAndPrayerSlides = false
-                )
-            }
-
-            // 3. Prayer Schedule Card
-            item {
-                PrayerCard(
-                    onViewFullScheduleClick = { onOpenDialog("view_prayers") }
-                )
-            }
-
-            // 4. Role-based KPIs
-            item {
-                DashboardKpiGrid(
-                    role = currentRole,
-                    totalMembers = totalMembers,
-                    netBalance = netBalance,
-                    dueChanda = dueChanda,
-                    pendingItems = pendingTransactions.size,
-                    studentCount = studentCount,
-                    staffCount = activeStaff.size,
-                    noticeCount = allNotices.size,
-                    upcomingEventCount = upcomingEventCount,
-                    totalEventCount = allEvents.size,
-                    welfareCount = allWelfareCases.size,
-                    pendingWelfareCount = pendingWelfareCases.size,
-                    cashboxCount = allCashboxRecords.size,
-                    pendingCashboxWitnessCount = unverifiedCashboxes.size,
-                    officeDocCount = allOfficeDocuments.size,
-                    pendingReplyDocCount = pendingReplyDocs,
-                    advisoryCount = allAdvisoryNotes.size,
-                    pendingAdvisoryCount = activeAdvisories.size,
-                    mySalaryStatusValue = mySalaryValue,
-                    mySalaryStatusSubtitle = mySalarySub,
-                    todayStaffFoodProvider = todayStaffFoodProvider,
-                    khademChecklistProgress = khademChecklistProgress,
-                    smartQuoteCount = allSmartBoardQuotes.size,
-                    nextMeetingTitleDate = nextMeeting?.meetingDate?.substringBefore(",") ?: "নির্ধারিত নেই",
-                    nextMeetingSubtitle = nextMeeting?.title ?: "কোনো আসন্ন সভা নেই",
-                    myChandaPaid = myChandaPaid,
-                    myChandaSubtitle = myChandaSub,
-                    nextPrayerName = nextPrayerSummary.nameBn,
-                    nextPrayerSubtitle = "${nextPrayerSummary.iqamahTimeBn} (বাকি ${nextPrayerSummary.remainingTextBn})",
-                    onKpiClick = { key ->
-                        when (key) {
-                            "members" -> onOpenDialog("members")
-                            "finance" -> onOpenDialog("finance")
-                            "treasurer_chanda" -> onOpenDialog("treasurer_chanda")
-                            "treasurer_payroll" -> onOpenDialog("treasurer_payroll")
-                            "meetings" -> onOpenDialog("meetings")
-                            "chanda" -> onOpenDialog(if (currentRole.canManageFinance()) "receive_chanda" else "my_chanda")
-                            "pending" -> onOpenDialog("pending_approval")
-                            "roster" -> onOpenDialog("roster")
-                            "food" -> onOpenDialog("food")
-                            "madrasa" -> onOpenDialog("madrasa")
-                            "staff_profile" -> onOpenDialog("staff_profile")
-                            "my_chanda" -> onOpenDialog("my_chanda")
-                            else -> onOpenDialog(key)
+                if (pendingOfficeDocs.isNotEmpty()) {
+                    item(key = "sec_office_docs") {
+                        StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
+                            PendingOfficeDocsHighlightCard(
+                                pendingDocs = pendingOfficeDocs,
+                                onOpenOfficeDocs = { onOpenDialog("office_docs") }
+                            )
                         }
                     }
-                )
-            }
+                }
 
-            // 5. Role-based Quick Actions
-            item {
-                QuickActionsGrid(
-                    role = currentRole,
-                    onActionClick = { actionKey ->
-                        onOpenDialog(actionKey)
+                item(key = "sec_kpi_div") {
+                    StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
+                        RubElHizbDivider(title = "প্রশাসনিক সূচক ও সদস্য তথ্য", modifier = Modifier.padding(vertical = 2.dp))
                     }
-                )
-            }
+                }
 
-            // 6. Upcoming Meetings Card
-            if (currentRole in listOf(
-                    UserRole.VICE_PRESIDENT,
-                    UserRole.GENERAL_SECRETARY,
-                    UserRole.ASSISTANT_SECRETARY,
-                    UserRole.TREASURER,
-                    UserRole.ASSISTANT_TREASURER,
-                    UserRole.ORGANIZING_SECRETARY,
-                    UserRole.PUBLICITY_SECRETARY,
-                    UserRole.OFFICE_SECRETARY,
-                    UserRole.WELFARE_EDUCATION_SECRETARY,
-                    UserRole.EXECUTIVE_MEMBER,
-                    UserRole.IMAM,
-                    UserRole.ADVISORY_BOARD
-                )
-            ) {
-                item {
-                    UpcomingMeetingsCard(
-                        meetings = allMeetings,
-                        canSchedule = currentRole.canScheduleMeetings(),
-                        onScheduleClick = { onOpenDialog("schedule_meeting") },
-                        onViewAllClick = { onOpenDialog("meetings") }
-                    )
+                item(key = "sec_kpi_grid") {
+                    StaggeredDashboardItem(index = 3, modifier = Modifier.animateItem()) {
+                        DashboardKpiGrid(
+                            role = currentRole,
+                            totalMembers = totalMembers,
+                            netBalance = netBalance,
+                            dueChanda = dueChanda,
+                            pendingItems = pendingTransactions.size,
+                            studentCount = studentCount,
+                            staffCount = activeStaff.size,
+                            noticeCount = allNotices.size,
+                            upcomingEventCount = upcomingEventCount,
+                            totalEventCount = allEvents.size,
+                            welfareCount = allWelfareCases.size,
+                            pendingWelfareCount = pendingWelfareCases.size,
+                            cashboxCount = allCashboxRecords.size,
+                            pendingCashboxWitnessCount = unverifiedCashboxes.size,
+                            officeDocCount = allOfficeDocuments.size,
+                            pendingReplyDocCount = pendingReplyDocs,
+                            advisoryCount = allAdvisoryNotes.size,
+                            smartQuoteCount = allSmartBoardQuotes.size,
+                            nextMeetingTitleDate = nextMeeting?.meetingDate?.substringBefore(",") ?: "নির্ধারিত নেই",
+                            nextMeetingSubtitle = nextMeeting?.title ?: "কোনো আসন্ন সভা নেই",
+                            myChandaPaid = myChandaPaid,
+                            myChandaSubtitle = myChandaSub,
+                            nextPrayerName = nextPrayerSummary.nameBn,
+                            nextPrayerSubtitle = "${nextPrayerSummary.iqamahTimeBn} (বাকি ${nextPrayerSummary.remainingTextBn})",
+                            onKpiClick = onKpiClickHandler
+                        )
+                    }
+                }
+
+                item(key = "sec_actions_div") {
+                    StaggeredDashboardItem(index = 4, modifier = Modifier.animateItem()) {
+                        RubElHizbDivider(title = "সচিবালয় কুইক অ্যাকশন", modifier = Modifier.padding(vertical = 2.dp))
+                    }
+                }
+
+                item(key = "sec_actions_grid") {
+                    StaggeredDashboardItem(index = 4, modifier = Modifier.animateItem()) {
+                        QuickActionsGrid(
+                            role = currentRole,
+                            onActionClick = { actionKey -> onOpenDialog(actionKey) }
+                        )
+                    }
+                }
+
+                item(key = "sec_meetings_div") {
+                    StaggeredDashboardItem(index = 5, modifier = Modifier.animateItem()) {
+                        RubElHizbDivider(title = "আসন্ন সভা ও এজেন্ডা", modifier = Modifier.padding(vertical = 2.dp))
+                    }
+                }
+
+                item(key = "sec_meetings_card") {
+                    StaggeredDashboardItem(index = 5, modifier = Modifier.animateItem()) {
+                        UpcomingMeetingsCard(
+                            meetings = allMeetings,
+                            canSchedule = currentRole.canScheduleMeetings(),
+                            onScheduleClick = { onOpenDialog("schedule_meeting") },
+                            onViewAllClick = { onOpenDialog("meetings") }
+                        )
+                    }
+                }
+
+                item(key = "sec_smart_board") {
+                    StaggeredDashboardItem(index = 6, modifier = Modifier.animateItem()) {
+                        SmartBoardCard(quotes = allSmartBoardQuotes, includeDateAndPrayerSlides = false)
+                    }
+                }
+
+                item(key = "sec_prayer_card") {
+                    StaggeredDashboardItem(index = 7, modifier = Modifier.animateItem()) {
+                        PrayerCard(onViewFullScheduleClick = { onOpenDialog("view_prayers") })
+                    }
                 }
             }
 
-            // 7. Recent Financial Activity
-            if (currentRole.canManageFinance()) {
-                item {
-                    RecentActivityCard(
-                        transactions = allTransactions.take(4),
-                        onViewAllClick = { onOpenDialog("finance") }
-                    )
+            UserRole.IMAM -> {
+                // Primary Desk: Mehrab & Imamat
+                item(key = "imam_mehrab_desk") {
+                    StaggeredDashboardItem(index = 1, modifier = Modifier.animateItem()) {
+                        ImamMehrabDutyCard(
+                            nextPrayerName = nextPrayerSummary.nameBn,
+                            nextPrayerIqamah = nextPrayerSummary.iqamahTimeBn,
+                            remainingText = nextPrayerSummary.remainingTextBn,
+                            onViewFullSchedule = { onOpenDialog("view_prayers") },
+                            onOpenAdvisory = { onOpenDialog("sharia_advisory") },
+                            onOpenSmartBoard = { onOpenDialog("publicity") }
+                        )
+                    }
+                }
+
+                item(key = "imam_madrasa_desk") {
+                    StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
+                        ImamMadrasaHifzDeskCard(
+                            studentCount = studentCount,
+                            onOpenMadrasa = { onOpenDialog("madrasa") }
+                        )
+                    }
+                }
+
+                item(key = "imam_food_desk") {
+                    StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
+                        StaffFoodScheduleCard(
+                            todayFoodProvider = todayStaffFoodProvider,
+                            onOpenFood = { onOpenDialog("food") }
+                        )
+                    }
+                }
+
+                if (activeAdvisories.isNotEmpty()) {
+                    item(key = "imam_advisories") {
+                        StaggeredDashboardItem(index = 3, modifier = Modifier.animateItem()) {
+                            AdvisoryHighlightCard(
+                                notes = activeAdvisories,
+                                onOpenAdvisory = { onOpenDialog("sharia_advisory") }
+                            )
+                        }
+                    }
+                }
+
+                item(key = "imam_kpi_div") {
+                    StaggeredDashboardItem(index = 3, modifier = Modifier.animateItem()) {
+                        RubElHizbDivider(title = "দ্বীনি ও একাডেমিক কার্যক্রম", modifier = Modifier.padding(vertical = 2.dp))
+                    }
+                }
+
+                item(key = "imam_kpi_grid") {
+                    StaggeredDashboardItem(index = 4, modifier = Modifier.animateItem()) {
+                        DashboardKpiGrid(
+                            role = currentRole,
+                            totalMembers = totalMembers,
+                            netBalance = netBalance,
+                            dueChanda = dueChanda,
+                            pendingItems = pendingTransactions.size,
+                            studentCount = studentCount,
+                            staffCount = activeStaff.size,
+                            noticeCount = allNotices.size,
+                            upcomingEventCount = upcomingEventCount,
+                            totalEventCount = allEvents.size,
+                            welfareCount = allWelfareCases.size,
+                            pendingWelfareCount = pendingWelfareCases.size,
+                            cashboxCount = allCashboxRecords.size,
+                            pendingCashboxWitnessCount = unverifiedCashboxes.size,
+                            officeDocCount = allOfficeDocuments.size,
+                            pendingReplyDocCount = pendingReplyDocs,
+                            advisoryCount = allAdvisoryNotes.size,
+                            mySalaryStatusValue = mySalaryValue,
+                            mySalaryStatusSubtitle = mySalarySub,
+                            todayStaffFoodProvider = todayStaffFoodProvider,
+                            smartQuoteCount = allSmartBoardQuotes.size,
+                            nextMeetingTitleDate = nextMeeting?.meetingDate?.substringBefore(",") ?: "নির্ধারিত নেই",
+                            nextMeetingSubtitle = nextMeeting?.title ?: "কোনো আসন্ন সভা নেই",
+                            myChandaPaid = myChandaPaid,
+                            myChandaSubtitle = myChandaSub,
+                            nextPrayerName = nextPrayerSummary.nameBn,
+                            nextPrayerSubtitle = "${nextPrayerSummary.iqamahTimeBn} (বাকি ${nextPrayerSummary.remainingTextBn})",
+                            onKpiClick = onKpiClickHandler
+                        )
+                    }
+                }
+
+                item(key = "imam_actions_div") {
+                    StaggeredDashboardItem(index = 5, modifier = Modifier.animateItem()) {
+                        RubElHizbDivider(title = "ইমামতি কুইক অ্যাকশন", modifier = Modifier.padding(vertical = 2.dp))
+                    }
+                }
+
+                item(key = "imam_actions_grid") {
+                    StaggeredDashboardItem(index = 5, modifier = Modifier.animateItem()) {
+                        QuickActionsGrid(
+                            role = currentRole,
+                            onActionClick = { actionKey -> onOpenDialog(actionKey) }
+                        )
+                    }
+                }
+
+                item(key = "imam_prayer_div") {
+                    StaggeredDashboardItem(index = 6, modifier = Modifier.animateItem()) {
+                        RubElHizbDivider(title = "সালাত সূচি ও মসজিদ দেয়াল বার্তা", modifier = Modifier.padding(vertical = 2.dp))
+                    }
+                }
+
+                item(key = "imam_prayer_card") {
+                    StaggeredDashboardItem(index = 6, modifier = Modifier.animateItem()) {
+                        PrayerCard(onViewFullScheduleClick = { onOpenDialog("view_prayers") })
+                    }
+                }
+
+                item(key = "imam_smart_board") {
+                    StaggeredDashboardItem(index = 7, modifier = Modifier.animateItem()) {
+                        SmartBoardCard(quotes = allSmartBoardQuotes, includeDateAndPrayerSlides = false)
+                    }
+                }
+
+                item(key = "imam_meetings_card") {
+                    StaggeredDashboardItem(index = 8, modifier = Modifier.animateItem()) {
+                        UpcomingMeetingsCard(
+                            meetings = allMeetings,
+                            canSchedule = currentRole.canScheduleMeetings(),
+                            onScheduleClick = { onOpenDialog("schedule_meeting") },
+                            onViewAllClick = { onOpenDialog("meetings") }
+                        )
+                    }
+                }
+            }
+
+            UserRole.MUAZZIN -> {
+                // Primary Desk: Azan & Sound Desk
+                item(key = "muazzin_azan_desk") {
+                    StaggeredDashboardItem(index = 1, modifier = Modifier.animateItem()) {
+                        MuazzinAzanDutyCard(
+                            nextPrayerName = nextPrayerSummary.nameBn,
+                            nextPrayerIqamah = nextPrayerSummary.iqamahTimeBn,
+                            remainingText = nextPrayerSummary.remainingTextBn,
+                            onViewFullSchedule = { onOpenDialog("view_prayers") },
+                            onOpenRoster = { onOpenDialog("roster") }
+                        )
+                    }
+                }
+
+                item(key = "muazzin_food_card") {
+                    StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
+                        StaffFoodScheduleCard(
+                            todayFoodProvider = todayStaffFoodProvider,
+                            onOpenFood = { onOpenDialog("food") }
+                        )
+                    }
+                }
+
+                item(key = "muazzin_kpi_div") {
+                    StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
+                        RubElHizbDivider(title = "দৈনিক আজান ও খেদমত সূচি", modifier = Modifier.padding(vertical = 2.dp))
+                    }
+                }
+
+                item(key = "muazzin_kpi_grid") {
+                    StaggeredDashboardItem(index = 3, modifier = Modifier.animateItem()) {
+                        DashboardKpiGrid(
+                            role = currentRole,
+                            totalMembers = totalMembers,
+                            netBalance = netBalance,
+                            dueChanda = dueChanda,
+                            studentCount = studentCount,
+                            staffCount = activeStaff.size,
+                            noticeCount = allNotices.size,
+                            upcomingEventCount = upcomingEventCount,
+                            totalEventCount = allEvents.size,
+                            welfareCount = allWelfareCases.size,
+                            mySalaryStatusValue = mySalaryValue,
+                            mySalaryStatusSubtitle = mySalarySub,
+                            todayStaffFoodProvider = todayStaffFoodProvider,
+                            smartQuoteCount = allSmartBoardQuotes.size,
+                            nextPrayerName = nextPrayerSummary.nameBn,
+                            nextPrayerSubtitle = "${nextPrayerSummary.iqamahTimeBn} (বাকি ${nextPrayerSummary.remainingTextBn})",
+                            onKpiClick = onKpiClickHandler
+                        )
+                    }
+                }
+
+                item(key = "muazzin_actions_div") {
+                    StaggeredDashboardItem(index = 4, modifier = Modifier.animateItem()) {
+                        RubElHizbDivider(title = "মুয়াজ্জিন কুইক অ্যাকশন", modifier = Modifier.padding(vertical = 2.dp))
+                    }
+                }
+
+                item(key = "muazzin_actions_grid") {
+                    StaggeredDashboardItem(index = 4, modifier = Modifier.animateItem()) {
+                        QuickActionsGrid(
+                            role = currentRole,
+                            onActionClick = { actionKey -> onOpenDialog(actionKey) }
+                        )
+                    }
+                }
+
+                item(key = "muazzin_prayer_card") {
+                    StaggeredDashboardItem(index = 5, modifier = Modifier.animateItem()) {
+                        PrayerCard(onViewFullScheduleClick = { onOpenDialog("view_prayers") })
+                    }
+                }
+
+                item(key = "muazzin_smart_board") {
+                    StaggeredDashboardItem(index = 6, modifier = Modifier.animateItem()) {
+                        SmartBoardCard(quotes = allSmartBoardQuotes, includeDateAndPrayerSlides = false)
+                    }
+                }
+            }
+
+            UserRole.KHADEM -> {
+                // Primary Desk: Facility & Cleanliness Checklist
+                item(key = "khadem_checklist_desk") {
+                    StaggeredDashboardItem(index = 1, modifier = Modifier.animateItem()) {
+                        KhademFacilityChecklistCard(
+                            checkedTasks = khademCheckedTasks,
+                            onToggleTask = { taskId -> viewModel.toggleKhademTask(taskId) },
+                            onOpenRoster = { onOpenDialog("roster") }
+                        )
+                    }
+                }
+
+                item(key = "khadem_food_card") {
+                    StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
+                        StaffFoodScheduleCard(
+                            todayFoodProvider = todayStaffFoodProvider,
+                            onOpenFood = { onOpenDialog("food") }
+                        )
+                    }
+                }
+
+                item(key = "khadem_kpi_div") {
+                    StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
+                        RubElHizbDivider(title = "দৈনিক খেদমত ও সূচি", modifier = Modifier.padding(vertical = 2.dp))
+                    }
+                }
+
+                item(key = "khadem_kpi_grid") {
+                    StaggeredDashboardItem(index = 3, modifier = Modifier.animateItem()) {
+                        DashboardKpiGrid(
+                            role = currentRole,
+                            totalMembers = totalMembers,
+                            netBalance = netBalance,
+                            dueChanda = dueChanda,
+                            noticeCount = allNotices.size,
+                            mySalaryStatusValue = mySalaryValue,
+                            mySalaryStatusSubtitle = mySalarySub,
+                            todayStaffFoodProvider = todayStaffFoodProvider,
+                            khademChecklistProgress = khademChecklistProgress,
+                            smartQuoteCount = allSmartBoardQuotes.size,
+                            nextPrayerName = nextPrayerSummary.nameBn,
+                            nextPrayerSubtitle = "${nextPrayerSummary.iqamahTimeBn} (বাকি ${nextPrayerSummary.remainingTextBn})",
+                            onKpiClick = onKpiClickHandler
+                        )
+                    }
+                }
+
+                item(key = "khadem_actions_div") {
+                    StaggeredDashboardItem(index = 4, modifier = Modifier.animateItem()) {
+                        RubElHizbDivider(title = "খেদমত কুইক অ্যাকশন", modifier = Modifier.padding(vertical = 2.dp))
+                    }
+                }
+
+                item(key = "khadem_actions_grid") {
+                    StaggeredDashboardItem(index = 4, modifier = Modifier.animateItem()) {
+                        QuickActionsGrid(
+                            role = currentRole,
+                            onActionClick = { actionKey -> onOpenDialog(actionKey) }
+                        )
+                    }
+                }
+
+                item(key = "khadem_prayer_card") {
+                    StaggeredDashboardItem(index = 5, modifier = Modifier.animateItem()) {
+                        PrayerCard(onViewFullScheduleClick = { onOpenDialog("view_prayers") })
+                    }
+                }
+
+                item(key = "khadem_smart_board") {
+                    StaggeredDashboardItem(index = 6, modifier = Modifier.animateItem()) {
+                        SmartBoardCard(quotes = allSmartBoardQuotes, includeDateAndPrayerSlides = false)
+                    }
+                }
+            }
+
+            UserRole.WELFARE_EDUCATION_SECRETARY -> {
+                // Primary Desk: Welfare & Education
+                item(key = "welfare_desk") {
+                    StaggeredDashboardItem(index = 1, modifier = Modifier.animateItem()) {
+                        WelfareEduDeskCard(
+                            studentCount = studentCount,
+                            pendingWelfareCount = pendingWelfareCases.size,
+                            onOpenWelfare = { onOpenDialog("welfare") },
+                            onOpenMadrasa = { onOpenDialog("madrasa") }
+                        )
+                    }
+                }
+
+                if (pendingWelfareCases.isNotEmpty()) {
+                    item(key = "welfare_highlight") {
+                        StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
+                            PendingWelfareHighlightCard(
+                                pendingCases = pendingWelfareCases,
+                                onOpenWelfare = { onOpenDialog("welfare") }
+                            )
+                        }
+                    }
+                }
+
+                item(key = "welfare_kpi_div") {
+                    StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
+                        RubElHizbDivider(title = "সমাজকল্যাণ ও শিক্ষা সূচক", modifier = Modifier.padding(vertical = 2.dp))
+                    }
+                }
+
+                item(key = "welfare_kpi_grid") {
+                    StaggeredDashboardItem(index = 3, modifier = Modifier.animateItem()) {
+                        DashboardKpiGrid(
+                            role = currentRole,
+                            totalMembers = totalMembers,
+                            netBalance = netBalance,
+                            dueChanda = dueChanda,
+                            studentCount = studentCount,
+                            staffCount = activeStaff.size,
+                            noticeCount = allNotices.size,
+                            upcomingEventCount = upcomingEventCount,
+                            totalEventCount = allEvents.size,
+                            welfareCount = allWelfareCases.size,
+                            pendingWelfareCount = pendingWelfareCases.size,
+                            smartQuoteCount = allSmartBoardQuotes.size,
+                            nextMeetingTitleDate = nextMeeting?.meetingDate?.substringBefore(",") ?: "নির্ধারিত নেই",
+                            nextMeetingSubtitle = nextMeeting?.title ?: "কোনো আসন্ন সভা নেই",
+                            onKpiClick = onKpiClickHandler
+                        )
+                    }
+                }
+
+                item(key = "welfare_actions_div") {
+                    StaggeredDashboardItem(index = 4, modifier = Modifier.animateItem()) {
+                        RubElHizbDivider(title = "কল্যাণ ও শিক্ষা অ্যাকশন", modifier = Modifier.padding(vertical = 2.dp))
+                    }
+                }
+
+                item(key = "welfare_actions_grid") {
+                    StaggeredDashboardItem(index = 4, modifier = Modifier.animateItem()) {
+                        QuickActionsGrid(
+                            role = currentRole,
+                            onActionClick = { actionKey -> onOpenDialog(actionKey) }
+                        )
+                    }
+                }
+
+                item(key = "welfare_meetings_card") {
+                    StaggeredDashboardItem(index = 5, modifier = Modifier.animateItem()) {
+                        UpcomingMeetingsCard(
+                            meetings = allMeetings,
+                            canSchedule = currentRole.canScheduleMeetings(),
+                            onScheduleClick = { onOpenDialog("schedule_meeting") },
+                            onViewAllClick = { onOpenDialog("meetings") }
+                        )
+                    }
+                }
+
+                item(key = "welfare_prayer_card") {
+                    StaggeredDashboardItem(index = 6, modifier = Modifier.animateItem()) {
+                        PrayerCard(onViewFullScheduleClick = { onOpenDialog("view_prayers") })
+                    }
+                }
+            }
+
+            UserRole.PUBLICITY_SECRETARY -> {
+                // Primary Desk: Publicity & Smart Board
+                item(key = "publicity_desk") {
+                    StaggeredDashboardItem(index = 1, modifier = Modifier.animateItem()) {
+                        PublicityNoticeDeskCard(
+                            quoteCount = allSmartBoardQuotes.size,
+                            noticeCount = allNotices.size,
+                            onOpenPublicity = { onOpenDialog("publicity") },
+                            onOpenNotices = { onOpenDialog("publish_notice") }
+                        )
+                    }
+                }
+
+                item(key = "publicity_smart_board") {
+                    StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
+                        SmartBoardCard(quotes = allSmartBoardQuotes, includeDateAndPrayerSlides = false)
+                    }
+                }
+
+                item(key = "publicity_kpi_div") {
+                    StaggeredDashboardItem(index = 3, modifier = Modifier.animateItem()) {
+                        RubElHizbDivider(title = "প্রচার ও প্রযুক্তি সূচক", modifier = Modifier.padding(vertical = 2.dp))
+                    }
+                }
+
+                item(key = "publicity_kpi_grid") {
+                    StaggeredDashboardItem(index = 3, modifier = Modifier.animateItem()) {
+                        DashboardKpiGrid(
+                            role = currentRole,
+                            totalMembers = totalMembers,
+                            netBalance = netBalance,
+                            dueChanda = dueChanda,
+                            noticeCount = allNotices.size,
+                            upcomingEventCount = upcomingEventCount,
+                            totalEventCount = allEvents.size,
+                            smartQuoteCount = allSmartBoardQuotes.size,
+                            nextMeetingTitleDate = nextMeeting?.meetingDate?.substringBefore(",") ?: "নির্ধারিত নেই",
+                            nextMeetingSubtitle = nextMeeting?.title ?: "কোনো আসন্ন সভা নেই",
+                            onKpiClick = onKpiClickHandler
+                        )
+                    }
+                }
+
+                item(key = "publicity_actions_div") {
+                    StaggeredDashboardItem(index = 4, modifier = Modifier.animateItem()) {
+                        RubElHizbDivider(title = "প্রচার অ্যাকশন", modifier = Modifier.padding(vertical = 2.dp))
+                    }
+                }
+
+                item(key = "publicity_actions_grid") {
+                    StaggeredDashboardItem(index = 4, modifier = Modifier.animateItem()) {
+                        QuickActionsGrid(
+                            role = currentRole,
+                            onActionClick = { actionKey -> onOpenDialog(actionKey) }
+                        )
+                    }
+                }
+
+                item(key = "publicity_prayer_card") {
+                    StaggeredDashboardItem(index = 5, modifier = Modifier.animateItem()) {
+                        PrayerCard(onViewFullScheduleClick = { onOpenDialog("view_prayers") })
+                    }
+                }
+
+                item(key = "publicity_meetings_card") {
+                    StaggeredDashboardItem(index = 6, modifier = Modifier.animateItem()) {
+                        UpcomingMeetingsCard(
+                            meetings = allMeetings,
+                            canSchedule = currentRole.canScheduleMeetings(),
+                            onScheduleClick = { onOpenDialog("schedule_meeting") },
+                            onViewAllClick = { onOpenDialog("meetings") }
+                        )
+                    }
+                }
+            }
+
+            UserRole.GENERAL_MEMBER -> {
+                // Primary Desk: Musalli Devotional & Transparency
+                item(key = "musalli_transparency_desk") {
+                    StaggeredDashboardItem(index = 1, modifier = Modifier.animateItem()) {
+                        MusalliTransparencySummaryCard(
+                            netBalance = netBalance,
+                            myChandaPaid = myChandaPaid,
+                            myChandaSub = myChandaSub,
+                            onViewReceipt = { onOpenDialog("view_receipt") },
+                            onMakeDonation = { onOpenDialog("my_chanda") },
+                            onOpenTransparency = { onOpenDialog("transparency") }
+                        )
+                    }
+                }
+
+                item(key = "musalli_devotional") {
+                    StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
+                        MusalliDevotionalCard(
+                            onViewReceipt = { onOpenDialog("view_receipt") },
+                            onMakeDonation = { onOpenDialog("my_chanda") }
+                        )
+                    }
+                }
+
+                item(key = "musalli_kpi_div") {
+                    StaggeredDashboardItem(index = 3, modifier = Modifier.animateItem()) {
+                        RubElHizbDivider(title = "মুসল্লি সারসংক্ষেপ ও হিসাব", modifier = Modifier.padding(vertical = 2.dp))
+                    }
+                }
+
+                item(key = "musalli_kpi_grid") {
+                    StaggeredDashboardItem(index = 3, modifier = Modifier.animateItem()) {
+                        DashboardKpiGrid(
+                            role = currentRole,
+                            totalMembers = totalMembers,
+                            netBalance = netBalance,
+                            dueChanda = dueChanda,
+                            noticeCount = allNotices.size,
+                            myChandaPaid = myChandaPaid,
+                            myChandaSubtitle = myChandaSub,
+                            smartQuoteCount = allSmartBoardQuotes.size,
+                            nextPrayerName = nextPrayerSummary.nameBn,
+                            nextPrayerSubtitle = "${nextPrayerSummary.iqamahTimeBn} (বাকি ${nextPrayerSummary.remainingTextBn})",
+                            onKpiClick = onKpiClickHandler
+                        )
+                    }
+                }
+
+                item(key = "musalli_actions_div") {
+                    StaggeredDashboardItem(index = 4, modifier = Modifier.animateItem()) {
+                        RubElHizbDivider(title = "প্রয়োজনীয় সেবা ও চাঁদা", modifier = Modifier.padding(vertical = 2.dp))
+                    }
+                }
+
+                item(key = "musalli_actions_grid") {
+                    StaggeredDashboardItem(index = 4, modifier = Modifier.animateItem()) {
+                        QuickActionsGrid(
+                            role = currentRole,
+                            onActionClick = { actionKey -> onOpenDialog(actionKey) }
+                        )
+                    }
+                }
+
+                item(key = "musalli_prayer_div") {
+                    StaggeredDashboardItem(index = 5, modifier = Modifier.animateItem()) {
+                        RubElHizbDivider(title = "নামাজের পূর্ণাঙ্গ সময়সূচি", modifier = Modifier.padding(vertical = 2.dp))
+                    }
+                }
+
+                item(key = "musalli_prayer_card") {
+                    StaggeredDashboardItem(index = 5, modifier = Modifier.animateItem()) {
+                        PrayerCard(onViewFullScheduleClick = { onOpenDialog("view_prayers") })
+                    }
+                }
+
+                item(key = "musalli_smart_board") {
+                    StaggeredDashboardItem(index = 6, modifier = Modifier.animateItem()) {
+                        SmartBoardCard(quotes = allSmartBoardQuotes, includeDateAndPrayerSlides = false)
+                    }
+                }
+            }
+
+            else -> {
+                // Executive Members, Advisory Board
+                if (activeAdvisories.isNotEmpty()) {
+                    item(key = "other_advisory") {
+                        StaggeredDashboardItem(index = 1, modifier = Modifier.animateItem()) {
+                            AdvisoryHighlightCard(
+                                notes = activeAdvisories,
+                                onOpenAdvisory = { onOpenDialog("sharia_advisory") }
+                            )
+                        }
+                    }
+                }
+
+                if (unverifiedCashboxes.isNotEmpty()) {
+                    item(key = "other_cashbox") {
+                        StaggeredDashboardItem(index = 1, modifier = Modifier.animateItem()) {
+                            PendingCashboxWitnessCard(
+                                records = unverifiedCashboxes,
+                                canVerify = currentRole.canWitnessCashbox(),
+                                onVerify = { viewModel.verifyCashboxAsWitness(it) },
+                                onOpenCashbox = { onOpenDialog("cashbox") }
+                            )
+                        }
+                    }
+                }
+
+                item(key = "other_kpi_div") {
+                    StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
+                        RubElHizbDivider(title = "পরামর্শ ও তদারকি সূচক", modifier = Modifier.padding(vertical = 2.dp))
+                    }
+                }
+
+                item(key = "other_kpi_grid") {
+                    StaggeredDashboardItem(index = 3, modifier = Modifier.animateItem()) {
+                        DashboardKpiGrid(
+                            role = currentRole,
+                            totalMembers = totalMembers,
+                            netBalance = netBalance,
+                            dueChanda = dueChanda,
+                            pendingItems = pendingTransactions.size,
+                            studentCount = studentCount,
+                            staffCount = activeStaff.size,
+                            noticeCount = allNotices.size,
+                            upcomingEventCount = upcomingEventCount,
+                            totalEventCount = allEvents.size,
+                            welfareCount = allWelfareCases.size,
+                            pendingWelfareCount = pendingWelfareCases.size,
+                            cashboxCount = allCashboxRecords.size,
+                            pendingCashboxWitnessCount = unverifiedCashboxes.size,
+                            officeDocCount = allOfficeDocuments.size,
+                            pendingReplyDocCount = pendingReplyDocs,
+                            advisoryCount = allAdvisoryNotes.size,
+                            smartQuoteCount = allSmartBoardQuotes.size,
+                            nextMeetingTitleDate = nextMeeting?.meetingDate?.substringBefore(",") ?: "নির্ধারিত নেই",
+                            nextMeetingSubtitle = nextMeeting?.title ?: "কোনো আসন্ন সভা নেই",
+                            myChandaPaid = myChandaPaid,
+                            myChandaSubtitle = myChandaSub,
+                            nextPrayerName = nextPrayerSummary.nameBn,
+                            nextPrayerSubtitle = "${nextPrayerSummary.iqamahTimeBn} (বাকি ${nextPrayerSummary.remainingTextBn})",
+                            onKpiClick = onKpiClickHandler
+                        )
+                    }
+                }
+
+                item(key = "other_actions_div") {
+                    StaggeredDashboardItem(index = 4, modifier = Modifier.animateItem()) {
+                        RubElHizbDivider(title = "কমিটি কুইক অ্যাকশন", modifier = Modifier.padding(vertical = 2.dp))
+                    }
+                }
+
+                item(key = "other_actions_grid") {
+                    StaggeredDashboardItem(index = 4, modifier = Modifier.animateItem()) {
+                        QuickActionsGrid(
+                            role = currentRole,
+                            onActionClick = { actionKey -> onOpenDialog(actionKey) }
+                        )
+                    }
+                }
+
+                item(key = "other_meetings_div") {
+                    StaggeredDashboardItem(index = 5, modifier = Modifier.animateItem()) {
+                        RubElHizbDivider(title = "আসন্ন সভা ও এজেন্ডা", modifier = Modifier.padding(vertical = 2.dp))
+                    }
+                }
+
+                item(key = "other_meetings_card") {
+                    StaggeredDashboardItem(index = 5, modifier = Modifier.animateItem()) {
+                        UpcomingMeetingsCard(
+                            meetings = allMeetings,
+                            canSchedule = currentRole.canScheduleMeetings(),
+                            onScheduleClick = { onOpenDialog("schedule_meeting") },
+                            onViewAllClick = { onOpenDialog("meetings") }
+                        )
+                    }
+                }
+
+                item(key = "other_smart_board") {
+                    StaggeredDashboardItem(index = 6, modifier = Modifier.animateItem()) {
+                        SmartBoardCard(quotes = allSmartBoardQuotes, includeDateAndPrayerSlides = false)
+                    }
+                }
+
+                item(key = "other_prayer_card") {
+                    StaggeredDashboardItem(index = 7, modifier = Modifier.animateItem()) {
+                        PrayerCard(onViewFullScheduleClick = { onOpenDialog("view_prayers") })
+                    }
+                }
+
+                if (currentRole.canManageFinance()) {
+                    item(key = "other_recent_txns") {
+                        StaggeredDashboardItem(index = 8, modifier = Modifier.animateItem()) {
+                            RecentActivityCard(
+                                transactions = allTransactions.take(4),
+                                onViewAllClick = { onOpenDialog("finance") }
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -1310,6 +1964,1330 @@ fun MusalliDevotionalCard(
                     Icon(Icons.Default.VolunteerActivism, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(6.dp))
                     Text("চাঁদা খাতা দেখুন", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun TreasurerTreasuryLedgerCard(
+    netBalance: Double,
+    dueChanda: Double,
+    unverifiedCashboxCount: Int,
+    pendingVoucherCount: Int,
+    onReceiveChanda: () -> Unit,
+    onOpenCashbox: () -> Unit,
+    onOpenPayroll: () -> Unit,
+    onViewFinance: () -> Unit
+) {
+    val isDark = LocalIsDarkTheme.current
+    MehrabArchCard(
+        modifier = Modifier.fillMaxWidth(),
+        backgroundColor = MaterialTheme.colorScheme.surface,
+        borderColor = RoleTreasurerAccent.copy(alpha = 0.6f),
+        elevation = 3.dp
+    ) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(30.dp)
+                            .clip(CircleShape)
+                            .background(RoleTreasurerAccent.copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.AccountBalanceWallet,
+                            contentDescription = null,
+                            tint = RoleTreasurerAccent,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Column {
+                        Text(
+                            text = "বায়তুলমাল ও প্রধান তহবিল ডেস্ক",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = "নগদ ও ব্যাংক আমানত তদারকি",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+                TextButton(
+                    onClick = onViewFinance,
+                    contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp)
+                ) {
+                    Text(
+                        text = "পূর্ণ খতিয়ান",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = if (isDark) MosqueNightSurfaceVariant else MosqueGoldSoft.copy(alpha = 0.5f),
+                border = BorderStroke(1.dp, MosqueGold.copy(alpha = 0.35f)),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier.padding(12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            text = "বর্তমান নেট বায়তুলমাল স্থিতি",
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = "৳${toBengaliDigits(String.format(Locale.getDefault(), "%,.0f", netBalance))}",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = MosqueSuccessGreen
+                        )
+                    }
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(
+                            text = "বকেয়া আদায়যোগ্য",
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = "৳${toBengaliDigits(String.format(Locale.getDefault(), "%,.0f", dueChanda))}",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MosqueWarningAmber
+                        )
+                    }
+                }
+            }
+
+            if (unverifiedCashboxCount > 0 || pendingVoucherCount > 0) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    if (unverifiedCashboxCount > 0) {
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = MosqueWarningAmber.copy(alpha = 0.12f),
+                            border = BorderStroke(0.8.dp, MosqueWarningAmber.copy(alpha = 0.4f)),
+                            modifier = Modifier
+                                .weight(1f)
+                                .clickable(onClick = onOpenCashbox)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(Icons.Default.Inventory2, contentDescription = null, tint = MosqueWarningAmber, modifier = Modifier.size(14.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = "ক্যাশবক্স গণনা: ${toBengaliDigits(unverifiedCashboxCount.toString())}টি বাকি",
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MosqueWarningAmber
+                                )
+                            }
+                        }
+                    }
+                    if (pendingVoucherCount > 0) {
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = MosqueUrgentRed.copy(alpha = 0.12f),
+                            border = BorderStroke(0.8.dp, MosqueUrgentRed.copy(alpha = 0.4f)),
+                            modifier = Modifier
+                                .weight(1f)
+                                .clickable(onClick = onViewFinance)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(Icons.Default.PendingActions, contentDescription = null, tint = MosqueUrgentRed, modifier = Modifier.size(14.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = "ভাউচার অনুমোদন: ${toBengaliDigits(pendingVoucherCount.toString())}টি",
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MosqueUrgentRed
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Button(
+                    onClick = onReceiveChanda,
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = 44.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary)
+                ) {
+                    Icon(Icons.Default.Payments, contentDescription = null, modifier = Modifier.size(15.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("চাঁদা গ্রহণ", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                }
+                OutlinedButton(
+                    onClick = onOpenCashbox,
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = 44.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    border = BorderStroke(1.dp, RoleTreasurerAccent),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = RoleTreasurerAccent)
+                ) {
+                    Icon(Icons.Default.Inventory2, contentDescription = null, modifier = Modifier.size(15.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("ক্যাশবক্স জমা", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                }
+                Button(
+                    onClick = onOpenPayroll,
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = 44.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MosqueInfoBlue)
+                ) {
+                    Icon(Icons.Default.Badge, contentDescription = null, modifier = Modifier.size(15.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("বেতন খাতা", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun SecretariatExecutiveHubCard(
+    nextMeeting: MeetingEntity?,
+    pendingDocsCount: Int,
+    onScheduleMeeting: () -> Unit,
+    onDraftNotice: () -> Unit,
+    onOpenOfficeDocs: () -> Unit
+) {
+    val isDark = LocalIsDarkTheme.current
+    MehrabArchCard(
+        modifier = Modifier.fillMaxWidth(),
+        backgroundColor = MaterialTheme.colorScheme.surface,
+        borderColor = RoleSecretaryAccent.copy(alpha = 0.6f),
+        elevation = 3.dp
+    ) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(30.dp)
+                            .clip(CircleShape)
+                            .background(RoleSecretaryAccent.copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.FolderShared,
+                            contentDescription = null,
+                            tint = RoleSecretaryAccent,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Column {
+                        Text(
+                            text = "প্রশাসনিক সচিবালয় ও কার্যবিবরণী ডেস্ক",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = "কমিটি সভা, রেজোলিউশন ও অফিস নথি",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft.copy(alpha = 0.5f),
+                border = BorderStroke(1.dp, MosqueEmeraldPrimary.copy(alpha = 0.35f)),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier.padding(12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "আসন্ন কমিটি সভা",
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = nextMeeting?.title ?: "কোনো সভা নির্ধারিত নেই",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        if (nextMeeting != null) {
+                            Text(
+                                text = "তারিখ: ${nextMeeting.meetingDate}",
+                                fontSize = 11.sp,
+                                color = MosqueEmeraldPrimary,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
+                    if (pendingDocsCount > 0) {
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = RoleOfficeAccent.copy(alpha = 0.15f),
+                            border = BorderStroke(0.8.dp, RoleOfficeAccent.copy(alpha = 0.4f)),
+                            modifier = Modifier.clickable(onClick = onOpenOfficeDocs)
+                        ) {
+                            Text(
+                                text = "জবাব বাকি: ${toBengaliDigits(pendingDocsCount.toString())}টি",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = RoleOfficeAccent,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Button(
+                    onClick = onScheduleMeeting,
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = 44.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary)
+                ) {
+                    Icon(Icons.Default.EventAvailable, contentDescription = null, modifier = Modifier.size(15.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("নতুন সভা", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                }
+                Button(
+                    onClick = onDraftNotice,
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = 44.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MosqueGoldDeep)
+                ) {
+                    Icon(Icons.Default.AutoAwesome, contentDescription = null, modifier = Modifier.size(15.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("AI নোটিশ ড্রাফট", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                }
+                OutlinedButton(
+                    onClick = onOpenOfficeDocs,
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = 44.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    border = BorderStroke(1.dp, RoleSecretaryAccent),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = RoleSecretaryAccent)
+                ) {
+                    Icon(Icons.Default.FolderShared, contentDescription = null, modifier = Modifier.size(15.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("চিঠি ও নথি", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ImamMehrabDutyCard(
+    nextPrayerName: String,
+    nextPrayerIqamah: String,
+    remainingText: String,
+    onViewFullSchedule: () -> Unit,
+    onOpenAdvisory: () -> Unit,
+    onOpenSmartBoard: () -> Unit
+) {
+    val isDark = LocalIsDarkTheme.current
+    MehrabArchCard(
+        modifier = Modifier.fillMaxWidth(),
+        backgroundColor = MaterialTheme.colorScheme.surface,
+        borderColor = RoleImamAccent.copy(alpha = 0.6f),
+        elevation = 3.dp
+    ) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(30.dp)
+                            .clip(CircleShape)
+                            .background(RoleImamAccent.copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Mosque,
+                            contentDescription = null,
+                            tint = RoleImamAccent,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Column {
+                        Text(
+                            text = "মিহরাব ও ইমামতি ডেস্ক",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = "পাঁচ ওয়াক্ত সালাত, খুতবা ও দ্বীনি পরামর্শ",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = MosqueGold.copy(alpha = 0.15f),
+                    border = BorderStroke(0.8.dp, MosqueGold.copy(alpha = 0.4f))
+                ) {
+                    Text(
+                        text = "সম্মানিত ইমাম",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MosqueGoldDark,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft.copy(alpha = 0.5f),
+                border = BorderStroke(1.dp, MosqueEmeraldPrimary.copy(alpha = 0.35f)),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier.padding(12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            text = "পরবর্তী জামায়াত ও ওয়াক্ত",
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = "$nextPrayerName • ইকামত: $nextPrayerIqamah",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = MosqueEmeraldPrimary
+                        )
+                    }
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = MosqueGold.copy(alpha = 0.2f)
+                    ) {
+                        Text(
+                            text = "বাকি $remainingText",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MosqueGoldDark,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Button(
+                    onClick = onViewFullSchedule,
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = 44.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary)
+                ) {
+                    Icon(Icons.Default.AccessTime, contentDescription = null, modifier = Modifier.size(15.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("নামাজের সূচি", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                }
+                Button(
+                    onClick = onOpenAdvisory,
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = 44.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MosqueGoldDeep)
+                ) {
+                    Icon(Icons.Default.MenuBook, contentDescription = null, modifier = Modifier.size(15.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("শরিয়াহ ফতোয়া", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                }
+                OutlinedButton(
+                    onClick = onOpenSmartBoard,
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = 44.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    border = BorderStroke(1.dp, RoleImamAccent),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = RoleImamAccent)
+                ) {
+                    Icon(Icons.Default.Campaign, contentDescription = null, modifier = Modifier.size(15.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("দেয়াল বার্তা", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ImamMadrasaHifzDeskCard(
+    studentCount: Int,
+    onOpenMadrasa: () -> Unit
+) {
+    MehrabArchCard(
+        modifier = Modifier.fillMaxWidth(),
+        backgroundColor = MaterialTheme.colorScheme.surface,
+        borderColor = MosqueInfoBlue.copy(alpha = 0.5f),
+        elevation = 2.dp
+    ) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.School,
+                        contentDescription = null,
+                        tint = MosqueInfoBlue,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "মক্তব ও হিফজুল কুরআন বিভাগ (${toBengaliDigits(studentCount.toString())} জন ছাত্র)",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+                TextButton(onClick = onOpenMadrasa) {
+                    Text("তালিকা", fontSize = 11.sp, color = MaterialTheme.colorScheme.primary)
+                }
+            }
+            Text(
+                text = "ছাত্রদের দৈনিক সবক, আমপারা ও হিফজ মূল্যায়ন খাতা হালনাগাদ রাখুন।",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Button(
+                onClick = onOpenMadrasa,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 44.dp),
+                shape = RoundedCornerShape(10.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = MosqueInfoBlue)
+            ) {
+                Icon(Icons.Default.EditNote, contentDescription = null, modifier = Modifier.size(16.dp))
+                Spacer(modifier = Modifier.width(6.dp))
+                Text("আজকের সবক মূল্যায়ন ও হাজিরা", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+            }
+        }
+    }
+}
+
+@Composable
+fun StaffFoodScheduleCard(
+    todayFoodProvider: String?,
+    onOpenFood: () -> Unit
+) {
+    MehrabArchCard(
+        modifier = Modifier.fillMaxWidth(),
+        backgroundColor = MaterialTheme.colorScheme.surface,
+        borderColor = MosqueGold.copy(alpha = 0.5f),
+        elevation = 2.dp
+    ) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Restaurant,
+                        contentDescription = null,
+                        tint = MosqueGoldDeep,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "খানাপিনা ও মেহমানদারি সূচি",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+                TextButton(onClick = onOpenFood) {
+                    Text("সব দিন", fontSize = 11.sp, color = MaterialTheme.colorScheme.primary)
+                }
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = todayFoodProvider?.let { "আজকের মেহমানদার পরিবার: $it" } ?: "আজকের খানা ব্যবস্থা: সাধারণ / মেহমানদার পরিবার নির্ধারিত নেই",
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.SemiBold,
+                color = if (todayFoodProvider != null) MosqueSuccessGreen else MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = "দুপুর ও রাতের খাবার সময়মতো নিশ্চিতকরণ ও মেহমানদারি সমন্বয়।",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
+            )
+        }
+    }
+}
+
+@Composable
+fun MuazzinAzanDutyCard(
+    nextPrayerName: String,
+    nextPrayerIqamah: String,
+    remainingText: String,
+    onViewFullSchedule: () -> Unit,
+    onOpenRoster: () -> Unit
+) {
+    val isDark = LocalIsDarkTheme.current
+    MehrabArchCard(
+        modifier = Modifier.fillMaxWidth(),
+        backgroundColor = MaterialTheme.colorScheme.surface,
+        borderColor = MosqueEmeraldPrimary.copy(alpha = 0.6f),
+        elevation = 3.dp
+    ) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(30.dp)
+                            .clip(CircleShape)
+                            .background(MosqueEmeraldPrimary.copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.AccessTime,
+                            contentDescription = null,
+                            tint = MosqueEmeraldPrimary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Column {
+                        Text(
+                            text = "আজান, ইকামত ও সাউন্ড কন্ট্রোল ডেস্ক",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = "৫ ওয়াক্ত আজান আহ্বান ও সময়নিষ্ঠা",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = MosqueEmeraldPrimary.copy(alpha = 0.15f)
+                ) {
+                    Text(
+                        text = "মুয়াজ্জিন",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MosqueEmeraldPrimary,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft.copy(alpha = 0.5f),
+                border = BorderStroke(1.dp, MosqueEmeraldPrimary.copy(alpha = 0.35f)),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier.padding(12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            text = "আসন্ন আজান ও জামায়াত",
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = "$nextPrayerName • ইকামত: $nextPrayerIqamah",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = MosqueEmeraldPrimary
+                        )
+                    }
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = MosqueGold.copy(alpha = 0.2f)
+                    ) {
+                        Text(
+                            text = "বাকি $remainingText",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MosqueGoldDark,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Button(
+                    onClick = onViewFullSchedule,
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = 44.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary)
+                ) {
+                    Icon(Icons.Default.AccessTime, contentDescription = null, modifier = Modifier.size(15.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("আজান সময়সূচি", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                }
+                OutlinedButton(
+                    onClick = onOpenRoster,
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = 44.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    border = BorderStroke(1.dp, MosqueEmeraldPrimary),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MosqueEmeraldPrimary)
+                ) {
+                    Icon(Icons.Default.Schedule, contentDescription = null, modifier = Modifier.size(15.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("ডিউটি রোস্টার", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun KhademFacilityChecklistCard(
+    checkedTasks: Set<String>,
+    onToggleTask: (String) -> Unit,
+    onOpenRoster: () -> Unit
+) {
+    val isDark = LocalIsDarkTheme.current
+    val tasks = listOf(
+        Triple("khadem_clean", "প্রধান নামাজ কক্ষ ও কার্পেট পরিচ্ছন্নতা", "কাতার সোজা ও ধূলিমুক্ত রাখা"),
+        Triple("khadem_wudu", "অজুখানা ও ওয়াশরুম জীবাণুমুক্তকরণ", "সাবান, লোটা ও পানির কল পরীক্ষা"),
+        Triple("khadem_lights", "বাতি, ফ্যান ও সাউন্ড সিস্টেম পরীক্ষা", "জামাতের পূর্বে সুইচিং ও ব্যাটারি চেক"),
+        Triple("khadem_water", "বিশুদ্ধ পানি ও রিজার্ভার পাম্প চেক", "পানির ট্যাংক পূর্ণতা ও অজু সুবিধা")
+    )
+    val doneCount = tasks.count { it.first in checkedTasks }
+
+    MehrabArchCard(
+        modifier = Modifier.fillMaxWidth(),
+        backgroundColor = MaterialTheme.colorScheme.surface,
+        borderColor = MosqueEmeraldLight.copy(alpha = 0.6f),
+        elevation = 3.dp
+    ) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(30.dp)
+                            .clip(CircleShape)
+                            .background(MosqueEmeraldPrimary.copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.CleaningServices,
+                            contentDescription = null,
+                            tint = MosqueEmeraldPrimary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Column {
+                        Text(
+                            text = "মসজিদ পবিত্রতা ও খেদমত চেকলিস্ট",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = "দৈনিক ৪-দফা পরিচ্ছন্নতা ও রক্ষণাবেক্ষণ",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = if (doneCount == 4) MosqueSuccessGreen.copy(alpha = 0.15f) else MosqueGold.copy(alpha = 0.15f)
+                ) {
+                    Text(
+                        text = "${toBengaliDigits(doneCount.toString())}/${toBengaliDigits("4")} সম্পন্ন",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (doneCount == 4) MosqueSuccessGreen else MosqueGoldDark,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            tasks.forEachIndexed { idx, (taskId, title, subtitle) ->
+                val isChecked = taskId in checkedTasks
+                if (idx > 0) Spacer(modifier = Modifier.height(6.dp))
+                Surface(
+                    onClick = { onToggleTask(taskId) },
+                    shape = RoundedCornerShape(10.dp),
+                    color = when {
+                        isChecked && isDark -> MosqueEmeraldDark.copy(alpha = 0.35f)
+                        isChecked -> MosqueEmeraldSoft.copy(alpha = 0.65f)
+                        isDark -> MosqueNightSurfaceVariant
+                        else -> MosqueBgLight
+                    },
+                    border = BorderStroke(
+                        0.8.dp,
+                        if (isChecked) MosqueEmeraldPrimary.copy(alpha = 0.5f)
+                        else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = if (isChecked) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
+                            contentDescription = null,
+                            tint = if (isChecked) MosqueEmeraldPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = title,
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = if (isChecked) FontWeight.Bold else FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = subtitle,
+                                style = MaterialTheme.typography.bodySmall,
+                                fontSize = 11.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            TextButton(
+                onClick = onOpenRoster,
+                modifier = Modifier.align(Alignment.End),
+                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 2.dp)
+            ) {
+                Text(
+                    text = "সম্পূর্ণ খেদমত লগ ও রোস্টার দেখুন →",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun MusalliTransparencySummaryCard(
+    netBalance: Double,
+    myChandaPaid: Double,
+    myChandaSub: String,
+    onViewReceipt: () -> Unit,
+    onMakeDonation: () -> Unit,
+    onOpenTransparency: () -> Unit
+) {
+    val isDark = LocalIsDarkTheme.current
+    MehrabArchCard(
+        modifier = Modifier.fillMaxWidth(),
+        backgroundColor = MaterialTheme.colorScheme.surface,
+        borderColor = MosqueGold.copy(alpha = 0.6f),
+        elevation = 3.dp
+    ) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(30.dp)
+                            .clip(CircleShape)
+                            .background(RoleMusalliAccent.copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.AccountBalance,
+                            contentDescription = null,
+                            tint = RoleMusalliAccent,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Column {
+                        Text(
+                            text = "স্বচ্ছ বায়তুলমাল ও আমার আমানত",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = "মসজিদের উন্মুক্ত আয়-ব্যয় ও নিজস্ব চাঁদা রেকর্ড",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+                TextButton(
+                    onClick = onOpenTransparency,
+                    contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp)
+                ) {
+                    Text(
+                        text = "স্বচ্ছ হিসাব",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = if (isDark) MosqueNightSurfaceVariant else MosqueGoldSoft.copy(alpha = 0.5f),
+                border = BorderStroke(1.dp, MosqueGold.copy(alpha = 0.35f)),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier.padding(12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            text = "মসজিদের কেন্দ্রীয় তহবিল স্থিতি",
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = "৳${toBengaliDigits(String.format(Locale.getDefault(), "%,.0f", netBalance))}",
+                            fontSize = 19.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = MosqueSuccessGreen
+                        )
+                    }
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(
+                            text = "আমার প্রদত্ত চাঁদা ($myChandaSub)",
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = "৳${toBengaliDigits(String.format(Locale.getDefault(), "%,.0f", myChandaPaid))}",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MosqueGoldDark
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedButton(
+                    onClick = onViewReceipt,
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = 44.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)
+                ) {
+                    Icon(Icons.Default.QrCode2, contentDescription = null, modifier = Modifier.size(15.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("QR ডিজিটাল রসিদ", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                }
+                Button(
+                    onClick = onMakeDonation,
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = 44.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary)
+                ) {
+                    Icon(Icons.Default.Payments, contentDescription = null, modifier = Modifier.size(15.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("চাঁদা প্রদান ও খাতা", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun WelfareEduDeskCard(
+    studentCount: Int,
+    pendingWelfareCount: Int,
+    onOpenWelfare: () -> Unit,
+    onOpenMadrasa: () -> Unit
+) {
+    val isDark = LocalIsDarkTheme.current
+    MehrabArchCard(
+        modifier = Modifier.fillMaxWidth(),
+        backgroundColor = MaterialTheme.colorScheme.surface,
+        borderColor = RoleWelfareEduAccent.copy(alpha = 0.6f),
+        elevation = 3.dp
+    ) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(30.dp)
+                            .clip(CircleShape)
+                            .background(RoleWelfareEduAccent.copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.VolunteerActivism,
+                            contentDescription = null,
+                            tint = RoleWelfareEduAccent,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Column {
+                        Text(
+                            text = "সমাজকল্যাণ ও শিক্ষা বিষয়ক ডেস্ক",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = "যাকাত তহবিল, অসচ্ছল পরিবার সহায়তা ও মক্তব",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft.copy(alpha = 0.5f),
+                border = BorderStroke(1.dp, MosqueEmeraldPrimary.copy(alpha = 0.35f)),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier.padding(12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            text = "বিতরণ অপেক্ষমাণ আবেদন",
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = "${toBengaliDigits(pendingWelfareCount.toString())} টি কেস",
+                            fontSize = 17.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = if (pendingWelfareCount > 0) MosqueUrgentRed else MosqueSuccessGreen
+                        )
+                    }
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(
+                            text = "মাদরাসা ও মক্তব ছাত্র",
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = "${toBengaliDigits(studentCount.toString())} জন",
+                            fontSize = 17.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MosqueInfoBlue
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Button(
+                    onClick = onOpenWelfare,
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = 44.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = RoleWelfareEduAccent)
+                ) {
+                    Icon(Icons.Default.VolunteerActivism, contentDescription = null, modifier = Modifier.size(15.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("যাকাত ও কল্যাণ", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                }
+                Button(
+                    onClick = onOpenMadrasa,
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = 44.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MosqueInfoBlue)
+                ) {
+                    Icon(Icons.Default.School, contentDescription = null, modifier = Modifier.size(15.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("মাদরাসা কার্যক্রম", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun PublicityNoticeDeskCard(
+    quoteCount: Int,
+    noticeCount: Int,
+    onOpenPublicity: () -> Unit,
+    onOpenNotices: () -> Unit
+) {
+    val isDark = LocalIsDarkTheme.current
+    MehrabArchCard(
+        modifier = Modifier.fillMaxWidth(),
+        backgroundColor = MaterialTheme.colorScheme.surface,
+        borderColor = RolePublicityAccent.copy(alpha = 0.6f),
+        elevation = 3.dp
+    ) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(30.dp)
+                            .clip(CircleShape)
+                            .background(RolePublicityAccent.copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ViewCarousel,
+                            contentDescription = null,
+                            tint = RolePublicityAccent,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Column {
+                        Text(
+                            text = "প্রচার ও তথ্যপ্রযুক্তি ডেস্ক",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = "স্মার্ট ডিজিটাল বোর্ড ও দেয়াল বার্তা প্রচার",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = if (isDark) MosqueNightSurfaceVariant else MosqueGoldSoft.copy(alpha = 0.5f),
+                border = BorderStroke(1.dp, MosqueGold.copy(alpha = 0.35f)),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier.padding(12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            text = "সক্রিয় স্মার্ট বার্তা",
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = "${toBengaliDigits(quoteCount.toString())} টি স্লাইড",
+                            fontSize = 17.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = RolePublicityAccent
+                        )
+                    }
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(
+                            text = "প্রকাশিত নোটিশ",
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = "${toBengaliDigits(noticeCount.toString())} টি বিজ্ঞপ্তি",
+                            fontSize = 17.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MosqueEmeraldPrimary
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Button(
+                    onClick = onOpenPublicity,
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = 44.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = RolePublicityAccent)
+                ) {
+                    Icon(Icons.Default.ViewCarousel, contentDescription = null, modifier = Modifier.size(15.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("স্মার্ট বোর্ড কনটেন্ট", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                }
+                Button(
+                    onClick = onOpenNotices,
+                    modifier = Modifier
+                        .weight(1f)
+                        .heightIn(min = 44.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary)
+                ) {
+                    Icon(Icons.Default.Campaign, contentDescription = null, modifier = Modifier.size(15.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("নতুন নোটিশ", fontSize = 11.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }

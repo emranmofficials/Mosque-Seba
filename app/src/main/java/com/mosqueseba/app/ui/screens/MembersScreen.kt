@@ -295,7 +295,11 @@ fun MembersScreen(
                                     color = Color.White
                                 )
                                 Text(
-                                    text = "মাসিক চাঁদা দাতা ও বেতনভুক্ত স্টাফ ব্যবস্থাপনা",
+                                    text = if (currentRole.canManageFinance() || currentRole.canManageMembers()) {
+                                        "${currentRole.titleBn} প্যানেল • সদস্য চাঁদা সংগ্রহ, রসিদ ইস্যু ও স্টাফ বেতন ছাড়পত্র"
+                                    } else {
+                                        "${currentRole.titleBn} ভিউ • মাসিক চাঁদা দাতা ও খেদমতকারী স্টাফ তালিকা"
+                                    },
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MosqueGoldLight.copy(alpha = 0.9f)
                                 )
