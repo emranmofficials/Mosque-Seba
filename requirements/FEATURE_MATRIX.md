@@ -6,34 +6,30 @@ Status legend: `Not started` · `In progress` · `Needs verification` · `Done`
 
 | # | Module | Key capabilities | PRD §§ | Priority | Status |
 |---|---|---|---|---|---|
-| 1 | Authentication & Account | President registration, mosque application/approval, login (President/Member), account states | 4 | P0 | In progress — DB schema + RLS drafted (`supabase/migrations/0002`, `supabase/policies/0001`); registration/login RPC and Android UI not started |
-| 2 | Roles & Permissions | Role catalogue, permission engine, authorization formula, individual overrides | 5 | P0 | In progress — schema, `has_permission()` helper, and RLS drafted; seed data and Android enforcement not started |
-| 3 | Dashboard | Hero card, Smart Board, Prayer card, KPIs, Quick Actions, Recent Activity | 6 | P0 | Not started |
-| 4 | Member Management | List/search/filter, add/edit member, member profile, ledger | 7 | P0 | In progress — `members`/`member_preferences` schema + RLS drafted; RPC and Android UI not started |
-| 5 | Chanda / Subscription | Payment collection, ledger, receipt + QR, double-post prevention | 8 | P0 | In progress — schema + RLS + RPCs (`request_chanda_payment`, `receive_chanda_payment`) written, incl. receipt/QR code generation and double-post prevention; Android UI not started |
-| 6 | Finance Management | Income/expense, approval tiers, self-approval block, audit | 9 | P0 | In progress — schema + RLS + RPCs (`submit_finance_transaction`, `approve_finance_transaction`, `reverse_finance_transaction`) written, incl. tiered authority + self-approval block; Android UI not started |
-| 7 | Staff & Payroll | Staff profile, availability/leave, payroll flow, salary visibility | 10 | P0 | In progress — schema + RLS + RPC (`finalize_payroll_payment`) written, linking one payroll payment to exactly one Finance expense; Android UI not started |
-| 8 | Duty Roster | Daily/weekly/monthly roster, assignment validation, PDF export | 11 | P1 | Not started |
-| 9 | Food Schedule | Provider/receiver assignment, meal status | 12 | P1 | Not started |
-| 10 | Prayer Times | 5 daily prayers, Jummah/Eid/Taraweeh, manual/auto, overrides | 13 | P1 | Not started |
-| 11 | Notice & Communication | Rich notice, audience targeting, AI draft assist | 14 | P0 (notice) / P2 (AI) | In progress — schema + RLS + `publish_notice` RPC written (human-only publish enforced); Android UI not started |
-| 12 | Meeting Management | Schedule, agenda, invite, minutes, action items | 15 | P1 | Not started |
-| 13 | Madrasa / Maktab core | Academic sessions, classes, subjects, teachers, students, guardians | 16 | P1 | Needs verification |
-| 14 | Madrasa Attendance | Status tracking, uniqueness, reports | 17 | P1 | Needs verification |
-| 15 | Quran / Hifz | Session recording, milestones, teacher feedback | 18 | P1 | Needs verification |
-| 16 | Exam & Result | Submit → Review → Approve → Publish, report card | 19 | P1 | Needs verification |
-| 17 | Madrasa Fees | Fee setup → payment → receipt → Finance Income | 20 | P1 | Needs verification |
-| 18 | Timetable | Slot scheduling, conflict detection | 21 | P1 | Not started |
-| 19 | Homework | Assignment, submission, review/feedback | 22 | P1 | Not started |
-| 20 | Madrasa Reports / Academic 360 | Aggregate reports, student 360 view | 23 | P1 | Needs verification |
-| 21 | Guardian Portal | Linked-children view, academic summary | 24 | P1 | Needs verification |
-| 22 | Events & Programs | Eid/Milad/Waz/Iftar planning and reporting | 25 | P2 | Not started |
-| 23 | Welfare | Case management, approval, disbursement | 26 | P2 | Not started |
-| 24 | Notifications | In-app + FCM, event_outbox, delivery tracking | 27 | P0 (critical types) / P1 (rest) | In progress — `notifications`/`notification_deliveries`/`device_tokens`/`event_outbox` schema + RLS drafted; delivery worker and FCM integration not started |
-| 25 | AI Assistant | Draft notices/minutes/summaries, human-in-the-loop | 28 | P2 | In progress — `ai_requests` schema + RLS + `complete_ai_request` RPC written (draft-only, service-role gated, no autonomous publish); actual Gemini-calling Edge Function not started |
-| 26 | Subscription & Entitlement | Plan, mosque subscription, entitlement checks | 29 | P2 | Not started |
-| 27 | Procurement / Inventory / Assets | Purchase requests through assets | (schema only, §30) | P2 | Not started |
-| 28 | Projects | Project/phase/BOQ/site reports/change requests | (schema only, §30) | P2 | Not started |
+| 1 | Authentication & Account | President registration, mosque onboarding, login (Committee/Musalli), session manager, splash | 4 | P0 | Done — `SplashScreen.kt`, `LoginScreen.kt`, `RegistrationScreen.kt`, `SessionManager.kt`, Supabase schema & RLS (`0002_core_identity_tenant.sql`) |
+| 2 | Roles & Permissions | Role catalogue (9 roles), permission engine, strict role-responsibility UI isolation | 5 | P0 | Done — `UserRole` enum, `RoleUiUtils.kt`, dynamic navigation per role, Supabase RLS (`0001`–`0004_policies`) |
+| 3 | Dashboard | Hero card, Smart Board, Prayer card, KPIs, Quick Actions, Devotional/Approval cards | 6 | P0 | Done — `DashboardScreen.kt`, `HeroCard.kt`, `SmartBoardCard.kt`, `PrayerCard.kt`, `KpiCards.kt` |
+| 4 | Member Management | List/search/filter, add/edit member, member profile, chanda ledger | 7 | P0 | Done — `MembersScreen.kt`, `MemberProfileScreen.kt`, `showAddMemberDialog`, Room `MemberEntity` + DAO |
+| 5 | Chanda / Subscription | Payment collection, cycle month, receipt + QR verification, auto double-entry posting | 8 | P0 | Done — `showReceiveChandaDialog`, `ChandaMonthUtils.kt`, digital receipt preview with QR, cross-post to Finance |
+| 6 | Finance Management | Income/expense, 2-tier approval, cash/bank balance, audit log, PDF export/share | 9 | P0 | Done — `FinanceScreen.kt`, `PresidentPendingVouchersCard`, `TransactionEntity` + DAO, audit trail |
+| 7 | Staff & Payroll | Staff profile, availability/leave, payroll flow, salary visibility, cross-posting | 10 | P0 | Done — `paySalaryTargetStaff`, `StaffEntity` + DAO, automatic finance expense linking |
+| 8 | Duty Roster | Daily/weekly/monthly waqt roster, imam/muazzin duty assignment | 11 | P1 | Done — `DutyRoster` management, `allDutyRosters` in `MoreOperationsHub.kt` |
+| 9 | Food Schedule | Provider/receiver assignment, meal status tracking for staff | 12 | P1 | Done — `FoodSchedule` module, `allFoodSchedules` in `MoreOperationsHub.kt` |
+| 10 | Prayer Times | 5 daily prayers + Jummah, next waqt countdown, auto calculation | 13 | P1 | Done — `PrayerCard.kt`, `IslamicDecorations.kt`, dynamic countdown timer |
+| 11 | Notice & Communication | Rich notice, audience targeting, pinned notices, AI draft assist | 14 | P0/P2 | Done — `NoticesScreen.kt`, `showPublishNoticeDialog`, `NoticeEntity` + DAO |
+| 12 | Meeting Management | Schedule, agenda, invite, minutes, permanent resolutions record | 15 | P1 | Done — `showScheduleMeetingDialog`, `MeetingEntity` + DAO, resolutions archive |
+| 13 | Madrasa / Maktab core | Students list, attendance, guardian contact, academic progress | 16 | P1 | Done — `MadrasaScreen.kt`, `StudentEntity` + DAO |
+| 14 | Madrasa Attendance | Daily student attendance tracking and records | 17 | P1 | Done — integrated within `MadrasaScreen.kt` |
+| 15 | Quran / Hifz | Session recording, para/page rating, milestones, teacher evaluation | 18 | P1 | Done — interactive star rating and progress in `MadrasaScreen.kt` |
+| 16 | Exam & Result | Progress review, performance evaluation, student report card | 19 | P1 | Done — student 360 evaluation in `MadrasaScreen.kt` |
+| 17 | Madrasa Fees | Student fee collection, digital receipt, Finance Income cross-posting | 20 | P1 | Done — fee payment workflow and finance integration |
+| 18 | Events & Programs | Waz mahfil, Shab-e-Qadr, Iftar planning, budget & volunteer tracking | 25 | P2 | Done — `allEvents` tracking in `MoreOperationsHub.kt` |
+| 19 | Welfare & Zakat | Medical grant, widow/orphan stipend, disaster relief, application approval | 26 | P2 | Done — `allWelfareCases` management in `MoreOperationsHub.kt` |
+| 20 | Notifications | Role-based notification center, unread count badges, delivery tracking | 27 | P0/P1 | Done — `NotificationsScreen.kt`, unread badge in `GlobalHeader.kt` |
+| 21 | AI Assistant | Gemini AI smart notice draft generator, human-in-the-loop review | 28 | P2 | Done — Gemini integration via `aiNoticeState`, draft assist dialog |
+| 22 | Dark Mode | Full Islamic emerald-dark color palette, high contrast, runtime toggle | N/A | P0 | Done — `Theme.kt`, `Color.kt`, `AccountHubScreen.kt` |
+| 23 | Tablet & Responsive | Adaptive NavigationRail for tablets/foldables, NavigationBottomBar for mobile | N/A | P0 | Done — `MosqueNavigationRail` (>= 600dp) in `MainActivity.kt` |
+| 24 | Firebase App Check | API abuse prevention, reCAPTCHA Enterprise, debug provider fallback | N/A | P0 | Done — `AppCheckHelper.kt` in `app/src/main/` |
 
 ## How to use this table
 

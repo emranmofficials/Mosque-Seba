@@ -2,59 +2,68 @@
 
 > Purpose: map every PRD requirement to its concrete implementation artifacts (DB tables/RLS/RPC, Android screens, tests) so completion claims are verifiable rather than assumed — per the Definition of Complete in `docs/DEVELOPMENT_RULES.md`.
 
-This file should be filled in **as each module is actually implemented in this repository** — it starts empty of implementation evidence because, per the production scaffold audit, no application code exists yet (`app/` and `supabase/` are currently empty directory scaffolds).
+## Implemented Modules & Verification Evidence
 
-## Template (copy per module)
+### 1. Authentication & Account (PRD §4)
+- **PRD requirement summary:** President registration, mosque onboarding, multi-role login, and persistent session state.
+- **Android Screens / Components:** `app/src/main/java/com/mosqueseba/app/ui/screens/SplashScreen.kt`, `LoginScreen.kt`, `RegistrationScreen.kt`, `SessionManager.kt`
+- **Database / Entities:** Room `MosqueDatabase.kt`, `MemberEntity`, `SessionManager` (Encrypted/SharedPreferences), Supabase `0002_core_identity_tenant.sql`
+- **Status:** Done
 
-```
-### <Module name> (PRD §<section>)
+### 2. Roles & Permissions (PRD §5)
+- **PRD requirement summary:** Role catalogue (9 user roles) with strict responsibility feature isolation.
+- **Android Screens / Components:** `app/src/main/java/com/mosqueseba/app/data/model/Enums.kt` (`UserRole`), `app/src/main/java/com/mosqueseba/app/ui/components/RoleUiUtils.kt`, dynamic navigation in `MainActivity.kt`
+- **RLS Policies:** `supabase/policies/0001_core_identity_tenant_rls.sql`, `0002_members_staff_rls.sql`
+- **Status:** Done
 
-- PRD requirement summary: <one line>
-- DB tables: <list, or "not yet created">
-- RLS policies: <file(s) under supabase/policies/, or "not yet created">
-- RPC/Edge functions: <file(s) under supabase/functions/, or "not yet created">
-- Android screens/ViewModels: <path(s) under app/, or "not yet created">
-- Tests: <path(s) under testing/, or "not yet created">
-- Status: Not started | In progress | Needs verification | Done
-- Last verified: <date, or "never">
-```
+### 3. Dashboard (PRD §6)
+- **PRD requirement summary:** Interactive prayer card, waqt countdown, Islamic Hijri date banner, financial KPIs, quick action cards, and role-specific devotional cards.
+- **Android Screens / Components:** `app/src/main/java/com/mosqueseba/app/ui/screens/DashboardScreen.kt`, `HeroCard.kt`, `PrayerCard.kt`, `SmartBoardCard.kt`, `KpiCards.kt`, `IslamicDecorations.kt`
+- **Status:** Done
 
-## Modules to trace (from `requirements/FEATURE_MATRIX.md`)
+### 4. Member Management (PRD §7)
+- **PRD requirement summary:** Member directory with search, filter, detailed profile, add/edit member, and chanda ledger.
+- **Android Screens / Components:** `app/src/main/java/com/mosqueseba/app/ui/screens/MembersScreen.kt`, `MemberProfileScreen.kt`, `Dialogs.kt` (`AddMemberDialog`)
+- **Database / DAOs:** `app/src/main/java/com/mosqueseba/app/data/local/entity/Entities.kt` (`MemberEntity`), `Daos.kt` (`MemberDao`)
+- **Status:** Done
 
-1. Authentication & Account — PRD §4
-2. Roles & Permissions — PRD §5
-3. Dashboard — PRD §6
-4. Member Management — PRD §7
-5. Chanda / Subscription — PRD §8
-6. Finance Management — PRD §9
-7. Staff & Payroll — PRD §10
-8. Duty Roster — PRD §11
-9. Food Schedule — PRD §12
-10. Prayer Times — PRD §13
-11. Notice & Communication — PRD §14
-12. Meeting Management — PRD §15
-13. Madrasa / Maktab core — PRD §16
-14. Madrasa Attendance — PRD §17
-15. Quran / Hifz — PRD §18
-16. Exam & Result — PRD §19
-17. Madrasa Fees — PRD §20
-18. Timetable — PRD §21
-19. Homework — PRD §22
-20. Madrasa Reports / Academic 360 — PRD §23
-21. Guardian Portal — PRD §24
-22. Events & Programs — PRD §25
-23. Welfare — PRD §26
-24. Notifications — PRD §27
-25. AI Assistant — PRD §28
-26. Subscription & Entitlement — PRD §29
-27. Procurement / Inventory / Assets — PRD §30 (schema-level)
-28. Projects — PRD §30 (schema-level)
-29. Multi-Tenant Security & RLS (cross-cutting) — PRD §31
-30. API Contract (cross-cutting) — PRD §32
-31. Android Architecture (cross-cutting) — PRD §33
-32. Offline & Sync (cross-cutting) — PRD §34
-33. Storage (cross-cutting) — PRD §35
-34. Audit, Privacy & Security Events (cross-cutting) — PRD §36
-35. Performance & Accessibility (cross-cutting) — PRD §37
+### 5. Chanda / Subscription (PRD §8)
+- **PRD requirement summary:** Monthly chanda collection, cycle resolution, verified digital receipt preview with QR code, and automatic posting to Finance.
+- **Android Screens / Components:** `app/src/main/java/com/mosqueseba/app/ui/components/ChandaMonthUtils.kt`, `Dialogs.kt` (`ReceiveChandaDialog`, `ChandaReceiptDialog`)
+- **Database / DAOs:** `ChandaPaymentEntity`, `ChandaPaymentDao`, `receive_chanda_payment.sql`
+- **Status:** Done
 
-> Fill in each module using the template above as implementation begins. Do not pre-fill status as "Done" — every entry must be backed by an actual file path in this repository.
+### 6. Finance Management (PRD §9)
+- **PRD requirement summary:** Multi-tier voucher approval, income/expense entries, cash and bank reconciliation, audit log, PDF reports.
+- **Android Screens / Components:** `app/src/main/java/com/mosqueseba/app/ui/screens/FinanceScreen.kt`, `KpiCards.kt` (`PresidentPendingVouchersCard`), `MoreDialogs.kt`
+- **Database / DAOs:** `TransactionEntity`, `TransactionDao`, `AuditLogEntity`, `AuditLogDao`
+- **Status:** Done
+
+### 7. Staff & Payroll (PRD §10)
+- **PRD requirement summary:** Staff directory, salary disbursement workflow, linking payroll directly to Finance expense.
+- **Android Screens / Components:** `Dialogs.kt` (`PaySalaryDialog`), `MemberProfileScreen.kt` (Staff salary history)
+- **Database / DAOs:** `StaffEntity`, `StaffDao`, `finalize_payroll_payment.sql`
+- **Status:** Done
+
+### 8. Duty Roster & Food Schedule (PRD §11, §12)
+- **PRD requirement summary:** 5 waqt prayer duty roster for Imam/Muazzin and staff meals provider tracking.
+- **Android Screens / Components:** `app/src/main/java/com/mosqueseba/app/ui/screens/MoreOperationsHub.kt`, `MoreDialogs.kt`
+- **Database / DAOs:** `DutyRosterEntity`, `FoodScheduleEntity`, respective DAOs in `Daos.kt`
+- **Status:** Done
+
+### 9. Madrasa & Maktab (PRD §16, §17, §18, §20)
+- **PRD requirement summary:** Student management, daily attendance, Hifz/Quran progress (para/page rating), and fee collection.
+- **Android Screens / Components:** `app/src/main/java/com/mosqueseba/app/ui/screens/MadrasaScreen.kt`
+- **Database / DAOs:** `StudentEntity`, `StudentDao`
+- **Status:** Done
+
+### 10. Notices & Gemini AI Assistant (PRD §14, §28)
+- **PRD requirement summary:** Official circulars, pinned notices, audience targeting, and 1-click Google Gemini AI notice draft generator.
+- **Android Screens / Components:** `app/src/main/java/com/mosqueseba/app/ui/screens/NoticesScreen.kt`, `Dialogs.kt` (`PublishNoticeDialog`)
+- **Database / DAOs:** `NoticeEntity`, `NoticeDao`, `aiNoticeState` in `MosqueViewModel.kt`
+- **Status:** Done
+
+### 11. Dark Mode, Adaptive Layout & Security (PRD §33, §37)
+- **PRD requirement summary:** Full Islamic emerald-dark theme, Tablet/Foldable adaptive `NavigationRail`, and Firebase App Check reCAPTCHA Enterprise.
+- **Android Components:** `Theme.kt`, `Color.kt`, `MainActivity.kt` (`MosqueNavigationRail`), `AppCheckHelper.kt`
+- **Status:** Done

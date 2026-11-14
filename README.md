@@ -11,6 +11,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Platform-Android-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Android" />
+  <img src="https://img.shields.io/badge/Version-1.0.22-0D5C3A?style=for-the-badge" alt="Version 1.0.22" />
   <img src="https://img.shields.io/badge/Kotlin-2.0-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white" alt="Kotlin" />
   <img src="https://img.shields.io/badge/UI-Jetpack%20Compose-4285F4?style=for-the-badge&logo=jetpackcompose&logoColor=white" alt="Compose" />
   <img src="https://img.shields.io/badge/Database-Room%20v3-0D5C3A?style=for-the-badge&logo=sqlite&logoColor=white" alt="Room" />
@@ -46,6 +47,7 @@
   - 🟢 **Primary Emerald Green:** `#0D5C3A` / `#0A482D`
   - 🟡 **Accent Islamic Gold:** `#D4AF37` / `#C5A028`
   - ⚪ **Background Light:** `#F6F8F6`
+  - 🌙 **Background Dark:** `#0A1B14` / `#05130E`
 
 ---
 
@@ -65,34 +67,48 @@
 | **📅 মাহফিল ও বিশেষ অনুষ্ঠান** | বাৎসরিক ওয়াজ, শবে কদর, রমজানের ইফতার মাহফিলের তারিখ, আলোচক, বাজেট ও ভলান্টিয়ার ট্র্যাকিং। |
 | **📝 কমিটি সভা ও রেজুলেশন** | আসন্ন সভার তারিখ, এজেন্ডা, মিটিং রুম এবং গৃহীত সিদ্ধান্তের স্থায়ী রেজুলেশন রেকর্ড। |
 | **✨ জেমিনি এআই নোটিশ ড্রাফটার** | ১-ক্লিকে নোটিশের শিরোনাম থেকে পূর্ণাঙ্গ অফিশিয়াল জরুরি বা সাধারণ নোটিশ ড্রাফট করার সুবিধা। |
-| **🔐 নিরাপদ লগইন ও অনবোর্ডিং** | কমিটি আইডি + মোবাইল + পাসওয়ার্ড অথেনটিকেশন এবং নতুন সভাপতি/মসজিদ রেজিস্ট্রেশন। |
+| **🔐 নিরাপদ লগইন ও অনবোর্ডিং** | কমিটি আইডি + মোবাইল + পাসওয়ার্ড অথেনটিকেশন এবং নতুন সভাপতি/মসজিদ রেজিস্ট্রেশন উইজার্ড। |
+| **🌙 সম্পূর্ণ ডার্ক মোড (Dark Theme)** | চোখের সুরক্ষায় ইসলামিক এমারেল্ড-ডার্ক কালার প্যালেট সহ রিয়েলটাইম থিম টগল। |
+| **🔔 রোল-ভিত্তিক নোটিফিকেশন হাব** | প্রতিটি পদের জন্য গুরুত্বপূর্ণ পেন্ডিং অনুমোদন, আয়-ব্যয় ও নোটিশের অপঠিত কাউন্টার ব্যাজ। |
+| **👤 অ্যাকাউন্ট ও প্রোফাইল হাব** | ব্যক্তিগত প্রোফাইল, পাসওয়ার্ড পরিবর্তন, লগইন সেশন ব্যবস্থাপনা ও মসজিদ তথ্যের সেন্ট্রাল হাব। |
+| **📱 অ্যাডাপটিভ লেআউট (Tablet/Foldable)** | বড় স্ক্রিনে স্বয়ংক্রিয় সাইড নেভিগেশন রেল (NavigationRail) ও মোবাইলে রেসপনসিভ বটম বার। |
+| **🛡️ ফায়ারবেস অ্যাপ চেক সিকিউরিটি** | অননুমোদিত রিকোয়েস্ট ও ব্যাকএন্ডের সুরক্ষা নিশ্চিতে reCAPTCHA Enterprise ইন্টিগ্রেশন। |
 
 ---
 
 ## 🏗️ টেকনোলজি স্ট্যাক ও আর্কিটেকচার (Tech Stack)
 
 ```
-app/
- ├── data/
- │    ├── local/         # Room Database (v3), DAOs (11 interfaces), Entities (17 tables), DatabaseInitializer
- │    ├── model/         # UserRole, Enums, UI State models
- │    └── repository/    # MosqueRepository (SSoT, Audit Logging, Business Rules)
- ├── ui/
- │    ├── components/    # Islamic Theme Components (Header, HeroCard, SmartBoard, Dialogs)
- │    ├── screens/       # Dashboard, Members, Finance, Madrasa, Notices, Login, More
- │    ├── theme/         # Color palette, Type, MosqueCommitteeTheme
- │    └── viewmodel/     # MosqueViewModel (MVI StateFlow, Coroutines)
+app/src/main/
+ ├── java/com/mosqueseba/app/
+ │    ├── MainActivity.kt        # সিঙ্গেল-অ্যাক্টিভিটি এন্ট্রি, স্ক্রিন রাউটিং ও অ্যাডাপটিভ নেভিগেশন
+ │    ├── AppCheckHelper.kt      # Firebase App Check ও reCAPTCHA সিকিউরিটি প্রোভাইডার
+ │    ├── data/
+ │    │    ├── local/            # Room Database (v3), DAOs (Daos.kt), Entities (Entities.kt), SessionManager
+ │    │    ├── model/            # UserRole, Enums (Enums.kt), UI স্টেট মডেল
+ │    │    └── repository/       # MosqueRepository (SSoT, Audit Logging, Business Rules)
+ │    ├── ui/
+ │    │    ├── components/       # মেহরাব আর্চ কার্ড, হিজরি ব্যানার, গ্লোবাল হেডার, ইসলামিক ডেকোরেশন
+ │    │    ├── screens/          # Dashboard, Members, Finance, Madrasa, Notices, Login, Registration,
+ │    │    │                     # AccountHub, Notifications, MemberProfile, MosqueProfile, More
+ │    │    ├── theme/            # ইসলামিক কালার প্যালেট (লাইট/ডার্ক), টাইপোগ্রাফি (Hind Siliguri), থিম
+ │    │    └── viewmodel/        # MosqueViewModel (StateFlow, Coroutines, MVI)
+ └── res/
+      ├── font/                  # hind_siliguri.ttf ফন্ট অ্যাসেট
+      └── mipmap-*/              # অফিসিয়াল ৩ডি লঞ্চার ও অ্যাডাপটিভ আইকন
 ```
 
 - **ল্যাঙ্গুয়েজ:** Kotlin 2.0+
 - **ইউজার ইন্টারফেস:** Jetpack Compose (Declarative UI, Custom Islamic Modern Components)
 - **আর্কিটেকচার:** Clean Architecture + MVI (Model-View-Intent) with Unidirectional Data Flow
-- **লোকাল ডাটাবেজ:** Android Room Database (v3) with Flow & Coroutines
+- **লোকাল ডাটাবেজ:** Android Room Database (v3) with Flow & Coroutines (সম্পূর্ণ অফলাইন সাপোর্ট)
 - **ক্লাউড ও সিঙ্ক সাপোর্ট:** Supabase (PostgreSQL with Row Level Security & Multi-Tenant architecture)
+- **এআই অ্যাসিস্ট্যান্ট:** Google Gemini API Integration (স্মার্ট নোটিশ জেনারেশন)
+- **সিকিউরিটি:** Firebase App Check (reCAPTCHA Enterprise) + SHA-256 এনক্রিপ্টেড সেশন
 - **ইনভ্যারিয়েন্ট রুলস:** 
-  - নো ম্যাটেরিয়াল ৩ (No Material 3 UI design patterns).
-  - জিরো ফ্লোটিং পয়েন্ট হিসাব (Zero floating-point rounding errors in financial transactions).
-  - স্বয়ংক্রিয় পোস্টিং (Automatic double-entry cross-posting from Chanda, Madrasa Fee, and Payroll to Finance).
+  - নো ম্যাটেরিয়াল ৩ জেনেরিক কম্পোনেন্ট (সম্পূর্ণ ইসলামিক মেহরাব ও অ্যারাবেস্ক ডিজাইন প্যাটার্ন)।
+  - জিরো ফ্লোটিং পয়েন্ট হিসাব (আর্থিক লেনদেনে কোনো রাউন্ডিং এরর ছাড়া নিখুঁত হিসাব)।
+  - স্বয়ংক্রিয় পোস্টিং (চাঁদা আদায়, মাদরাসা ফি ও বেতন প্রদান থেকে সরাসরি আয়-ব্যয় ভাউচারে পোস্টিং)।
 
 ---
 
@@ -100,8 +116,8 @@ app/
 
 ### প্রয়োজনীয় টুলস:
 - **Android Studio:** Ladybug / Koala বা এর পরবর্তী সংস্করণ
-- **JDK:** OpenJDK 21
-- **Android SDK:** Compile SDK 36, Min SDK 26
+- **JDK:** OpenJDK 17 বা 21
+- **Android SDK:** Compile SDK 35, Min SDK 26, Target SDK 35
 
 ### লোকাল মেশিনে রান করা:
 ```bash
