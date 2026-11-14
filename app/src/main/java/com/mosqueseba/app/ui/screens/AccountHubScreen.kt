@@ -188,9 +188,9 @@ fun AccountHubScreen(
                                 modifier = Modifier
                                     .size(64.dp)
                                     .clip(RoundedCornerShape(16.dp))
-                                    .background(Color.White)
+                                    .background(MosqueEmeraldDark)
                                     .border(2.dp, MosqueGoldGradient, RoundedCornerShape(16.dp))
-                                    .padding(if (mosqueLogoBitmap != null) 2.dp else 7.dp),
+                                    .padding(2.dp),
                                 contentAlignment = Alignment.Center
                             ) {
                                 if (mosqueLogoBitmap != null) {
@@ -206,7 +206,10 @@ fun AccountHubScreen(
                                     Image(
                                         painter = painterResource(id = R.drawable.app_logo),
                                         contentDescription = mosqueNameBn,
-                                        modifier = Modifier.fillMaxSize()
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .clip(RoundedCornerShape(14.dp))
                                     )
                                 }
                             }
@@ -941,15 +944,18 @@ private fun AboutAppDialog(
                     modifier = Modifier
                         .size(64.dp)
                         .clip(RoundedCornerShape(16.dp))
-                        .background(MosqueEmeraldSoft)
+                        .background(MosqueEmeraldDark)
                         .border(1.5.dp, MosqueGold, RoundedCornerShape(16.dp))
-                        .padding(8.dp),
+                        .padding(2.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Image(
                         painter = painterResource(id = R.drawable.app_logo),
                         contentDescription = "মসজিদ সেবা",
-                        modifier = Modifier.fillMaxSize()
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(RoundedCornerShape(14.dp))
                     )
                 }
                 Spacer(modifier = Modifier.height(10.dp))

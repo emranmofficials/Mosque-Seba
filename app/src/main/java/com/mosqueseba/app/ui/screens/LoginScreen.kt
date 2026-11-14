@@ -23,6 +23,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -115,12 +116,12 @@ fun LoginScreen(
                                 shape = RoundedCornerShape(22.dp)
                             )
                             .clip(RoundedCornerShape(22.dp))
-                            .background(Color.White)
-                            .padding(6.dp)
+                            .background(MosqueEmeraldDark)
                     ) {
                         Image(
                             painter = painterResource(id = R.drawable.app_logo),
                             contentDescription = "মসজিদ সেবা লোগো",
+                            contentScale = ContentScale.Crop,
                             modifier = Modifier.fillMaxSize()
                         )
                     }

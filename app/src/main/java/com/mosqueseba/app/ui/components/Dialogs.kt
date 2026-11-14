@@ -2508,8 +2508,8 @@ fun OfficialReceiptDialog(
                         .size(62.dp)
                         .clip(RoundedCornerShape(16.dp))
                         .border(1.5.dp, MosqueGoldGradient, RoundedCornerShape(16.dp))
-                        .background(Color.White)
-                        .padding(if (mosqueLogoBitmap != null) 2.dp else 6.dp)
+                        .background(MosqueEmeraldDark)
+                        .padding(2.dp)
                         .testTag("receipt_mosque_logo"),
                     contentAlignment = Alignment.Center
                 ) {
@@ -2526,7 +2526,10 @@ fun OfficialReceiptDialog(
                         Image(
                             painter = painterResource(id = R.drawable.app_logo),
                             contentDescription = "মসজিদের অফিসিয়াল লোগো",
-                            modifier = Modifier.fillMaxSize()
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clip(RoundedCornerShape(13.dp))
                         )
                     }
                 }

@@ -115,9 +115,8 @@ fun GlobalHeader(
                                 Image(
                                     painter = painterResource(id = R.drawable.app_logo),
                                     contentDescription = mosqueName?.takeIf { it.isNotBlank() } ?: "মসজিদের প্রোফাইল দেখুন",
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .padding(4.dp)
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.fillMaxSize()
                                 )
                             }
                         }

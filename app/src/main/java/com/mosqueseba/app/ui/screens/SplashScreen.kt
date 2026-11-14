@@ -17,6 +17,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -124,12 +125,12 @@ fun SplashScreen(
                         shape = RoundedCornerShape(32.dp)
                     )
                     .clip(RoundedCornerShape(32.dp))
-                    .background(Color.White)
-                    .padding(8.dp)
+                    .background(MosqueEmeraldDark)
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.app_logo),
                     contentDescription = "মসজিদ সেবা লোগো",
+                    contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize()
                 )
             }

@@ -120,8 +120,8 @@ fun HeroCard(
                             .size(50.dp)
                             .clip(RoundedCornerShape(12.dp))
                             .border(1.5.dp, MosqueGoldGradient, RoundedCornerShape(12.dp))
-                            .background(Color.White)
-                            .padding(if (mosqueLogoBitmap != null) 2.dp else 5.dp)
+                            .background(MosqueEmeraldDark)
+                            .padding(2.dp)
                             .testTag("hero_mosque_logo"),
                         contentAlignment = Alignment.Center
                     ) {
@@ -138,7 +138,10 @@ fun HeroCard(
                             Image(
                                 painter = painterResource(id = R.drawable.app_logo),
                                 contentDescription = "মসজিদের অফিসিয়াল লোগো",
-                                modifier = Modifier.fillMaxSize()
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .clip(RoundedCornerShape(10.dp))
                             )
                         }
                     }
@@ -311,8 +314,8 @@ fun ExecutiveMosqueHeroCard(
                             .size(46.dp)
                             .clip(RoundedCornerShape(12.dp))
                             .border(1.5.dp, MosqueGoldGradient, RoundedCornerShape(12.dp))
-                            .background(Color.White)
-                            .padding(if (mosqueLogoBitmap != null) 2.dp else 5.dp)
+                            .background(MosqueEmeraldDark)
+                            .padding(2.dp)
                             .testTag("hero_mosque_logo"),
                         contentAlignment = Alignment.Center
                     ) {
@@ -329,7 +332,10 @@ fun ExecutiveMosqueHeroCard(
                             Image(
                                 painter = painterResource(id = R.drawable.app_logo),
                                 contentDescription = "মসজিদের অফিসিয়াল লোগো",
-                                modifier = Modifier.fillMaxSize()
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .clip(RoundedCornerShape(10.dp))
                             )
                         }
                     }

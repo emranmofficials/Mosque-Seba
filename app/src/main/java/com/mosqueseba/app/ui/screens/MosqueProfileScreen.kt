@@ -232,9 +232,9 @@ fun MosqueProfileScreen(
                             modifier = Modifier
                                 .size(90.dp)
                                 .clip(RoundedCornerShape(22.dp))
-                                .background(MosqueEmeraldSoft)
+                                .background(MosqueEmeraldDark)
                                 .border(2.5.dp, MosqueGoldGradient, RoundedCornerShape(22.dp))
-                                .padding(if (logoBitmap != null) 2.dp else 10.dp),
+                                .padding(2.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             if (logoBitmap != null) {
@@ -250,7 +250,10 @@ fun MosqueProfileScreen(
                                 Image(
                                     painter = painterResource(id = R.drawable.app_logo),
                                     contentDescription = "মসজিদের অফিসিয়াল লোগো",
-                                    modifier = Modifier.fillMaxSize()
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .clip(RoundedCornerShape(19.dp))
                                 )
                             }
                         }
