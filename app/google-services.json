@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "847291038472",
+    "project_id": "mosque-seba",
+    "storage_bucket": "mosque-seba.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:847291038472:android:6b5a3e218c9f0d4a7b2e1c",
+        "android_client_info": {
+          "package_name": "com.mosqueseba.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB3-dummyKeyMosqueSebaAppBuild01234"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
