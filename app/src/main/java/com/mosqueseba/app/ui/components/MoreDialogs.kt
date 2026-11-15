@@ -482,6 +482,13 @@ fun AddRosterFormDialog(
                     FilterChip(
                         selected = selectedStaff.id == staff.id,
                         onClick = { selectedStaff = staff },
+                        leadingIcon = {
+                            MosqueMemberAvatar(
+                                nameBn = staff.nameBn,
+                                photoUrl = null,
+                                size = 18.dp
+                            )
+                        },
                         label = { Text("${staff.nameBn} (${staff.designationBn})", fontSize = 11.sp) },
                         colors = FilterChipDefaults.filterChipColors(
                             selectedContainerColor = MosqueEmeraldPrimary,
@@ -675,6 +682,13 @@ fun AddFoodScheduleFormDialog(
                                 providerMobile = donor.mobile
                                 providerError = null
                                 mobileError = null
+                            },
+                            leadingIcon = {
+                                MosqueMemberAvatar(
+                                    nameBn = donor.nameBn,
+                                    photoUrl = donor.photoUrl,
+                                    size = 18.dp
+                                )
                             },
                             label = {
                                 Text(

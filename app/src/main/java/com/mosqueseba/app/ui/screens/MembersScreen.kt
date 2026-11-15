@@ -21,6 +21,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -69,7 +70,8 @@ private data class SalariedMemberUiModel(
 @Composable
 fun MembersScreen(
     viewModel: MosqueViewModel,
-    onAddMemberClick: (() -> Unit)? = null
+    onAddMemberClick: (() -> Unit)? = null,
+    onBack: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
     val allMembers by viewModel.allMembers.collectAsState()
@@ -287,22 +289,40 @@ fun MembersScreen(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = "সদস্য পরিষদ ও খেদমত তালিকা",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.ExtraBold,
-                                    color = Color.White
-                                )
-                                Text(
-                                    text = if (currentRole.canManageFinance() || currentRole.canManageMembers()) {
-                                        "${currentRole.titleBn} প্যানেল • সদস্য চাঁদা সংগ্রহ, রসিদ ইস্যু ও স্টাফ বেতন ছাড়পত্র"
-                                    } else {
-                                        "${currentRole.titleBn} ভিউ • মাসিক চাঁদা দাতা ও খেদমতকারী স্টাফ তালিকা"
-                                    },
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MosqueGoldLight.copy(alpha = 0.9f)
-                                )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                if (onBack != null) {
+                                    IconButton(
+                                        onClick = onBack,
+                                        modifier = Modifier.testTag("members_back_button")
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                            contentDescription = "পিছনে যান",
+                                            tint = MosqueGoldLight
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                }
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "সদস্য পরিষদ ও খেদমত তালিকা",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.ExtraBold,
+                                        color = Color.White
+                                    )
+                                    Text(
+                                        text = if (currentRole.canManageFinance() || currentRole.canManageMembers()) {
+                                            "${currentRole.titleBn} প্যানেল • সদস্য চাঁদা সংগ্রহ, রসিদ ইস্যু ও স্টাফ বেতন ছাড়পত্র"
+                                        } else {
+                                            "${currentRole.titleBn} ভিউ • মাসিক চাঁদা দাতা ও খেদমতকারী স্টাফ তালিকা"
+                                        },
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MosqueGoldLight.copy(alpha = 0.9f)
+                                    )
+                                }
                             }
 
                             if (onAddMemberClick != null) {
@@ -938,38 +958,12 @@ private fun ChandaMemberCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     // Profile Avatar
-                    Box(contentAlignment = Alignment.BottomEnd) {
-                        Box(
-                            modifier = Modifier
-                                .size(50.dp)
-                                .clip(CircleShape)
-                                .background(MosqueEmeraldSoft)
-                                .border(1.5.dp, MosqueGold.copy(alpha = 0.8f), CircleShape),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            if (photoBitmap != null) {
-                                Image(
-                                    bitmap = photoBitmap,
-                                    contentDescription = member.nameBn,
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier.fillMaxSize()
-                                )
-                            } else {
-                                Text(
-                                    text = member.nameBn.firstOrNull()?.toString() ?: "স",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.ExtraBold,
-                                    color = MosqueEmeraldDark
-                                )
-                            }
-                        }
-                        Surface(
-                            shape = CircleShape,
-                            color = if (isActive) MosqueSuccessGreen else MosqueUrgentRed,
-                            border = BorderStroke(1.5.dp, Color.White),
-                            modifier = Modifier.size(12.dp)
-                        ) {}
-                    }
+                    MosqueMemberAvatar(
+                        nameBn = member.nameBn,
+                        photoUrl = member.photoUrl,
+                        size = 48.dp,
+                        isActive = isActive
+                    )
 
                     Spacer(modifier = Modifier.width(12.dp))
 
@@ -1237,30 +1231,12 @@ private fun SalariedMemberCard(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(50.dp)
-                            .clip(CircleShape)
-                            .background(softBadgeBg)
-                            .border(1.5.dp, MosqueGold.copy(alpha = 0.8f), CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        if (photoBitmap != null) {
-                            Image(
-                                bitmap = photoBitmap,
-                                contentDescription = item.nameBn,
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier.fillMaxSize()
-                            )
-                        } else {
-                            Icon(
-                                imageVector = role.roleIcon(),
-                                contentDescription = item.nameBn,
-                                tint = primaryColor,
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
-                    }
+                    MosqueMemberAvatar(
+                        nameBn = item.nameBn,
+                        photoUrl = item.photoUrl,
+                        size = 48.dp,
+                        isActive = (item.status == "active")
+                    )
 
                     Spacer(modifier = Modifier.width(12.dp))
 

@@ -204,6 +204,7 @@ fun ElectionScreen(
                 )
                 ElectionTab.CANDIDATES -> ElectionCandidatesTabView(
                     candidates = allCandidates,
+                    allMembers = allMembers,
                     canManage = canManageElection,
                     onAddCandidate = { showAddCandidateDialog = true },
                     onVoteEntry = { targetCandidateForVote = it },
@@ -216,6 +217,7 @@ fun ElectionScreen(
                 ElectionTab.RESULTS -> ElectionResultsTabView(
                     election = currentElection,
                     candidates = allCandidates,
+                    allMembers = allMembers,
                     canManage = canManageElection,
                     onActivateCommittee = { showActivateCommitteeDialog = true }
                 )
@@ -626,6 +628,7 @@ private fun RoadmapPhaseCard(
 @Composable
 private fun ElectionCandidatesTabView(
     candidates: List<ElectionCandidateEntity>,
+    allMembers: List<MemberEntity> = emptyList(),
     canManage: Boolean,
     onAddCandidate: () -> Unit,
     onVoteEntry: (ElectionCandidateEntity) -> Unit,
@@ -672,7 +675,7 @@ private fun ElectionCandidatesTabView(
         if (candidates.isEmpty()) {
             item {
                 Surface(
-                    shape = RoundedCornerShape(14.dp),
+                    shape = RoundedCornerShape(16.dp),
                     color = MaterialTheme.colorScheme.surface,
                     border = BorderStroke(1.dp, MosqueCardBorder),
                     modifier = Modifier
@@ -723,6 +726,7 @@ private fun ElectionCandidatesTabView(
                 items(candList, key = { it.id }) { cand ->
                     CandidateCard(
                         candidate = cand,
+                        allMembers = allMembers,
                         canManage = canManage,
                         onVoteEntry = { onVoteEntry(cand) },
                         onDelete = { onDelete(cand) }
@@ -736,10 +740,18 @@ private fun ElectionCandidatesTabView(
 @Composable
 private fun CandidateCard(
     candidate: ElectionCandidateEntity,
+    allMembers: List<MemberEntity> = emptyList(),
     canManage: Boolean,
     onVoteEntry: () -> Unit,
     onDelete: () -> Unit
 ) {
+    val linkedMember = remember(candidate.memberCode, candidate.candidateNameBn, allMembers) {
+        allMembers.firstOrNull {
+            (candidate.memberCode.isNotBlank() && it.memberCode == candidate.memberCode) ||
+                it.nameBn == candidate.candidateNameBn ||
+                (candidate.candidateMobile.isNotBlank() && it.mobile == candidate.candidateMobile)
+        }
+    }
     Surface(
         shape = RoundedCornerShape(14.dp),
         color = MaterialTheme.colorScheme.surface,
@@ -757,23 +769,15 @@ private fun CandidateCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
-                    Box(
-                        contentAlignment = Alignment.Center,
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(CircleShape)
-                            .background(
-                                if (candidate.isElected) MosqueGold.copy(alpha = 0.2f)
-                                else MosqueEmeraldSoft
-                            )
-                    ) {
-                        Text(
-                            text = candidate.candidateNameBn.take(1),
-                            fontWeight = FontWeight.Bold,
-                            color = if (candidate.isElected) MosqueGoldDeep else MosqueEmeraldPrimary,
-                            fontSize = 16.sp
+                    MosqueMemberAvatar(
+                        nameBn = candidate.candidateNameBn,
+                        photoUrl = linkedMember?.photoUrl,
+                        size = 44.dp,
+                        borderStroke = BorderStroke(
+                            1.5.dp,
+                            if (candidate.isElected) MosqueGold else MosqueEmeraldPrimary.copy(alpha = 0.5f)
                         )
-                    }
+                    )
                     Spacer(modifier = Modifier.width(10.dp))
                     Column {
                         Text(
@@ -967,15 +971,12 @@ private fun ElectionVotersTabView(
                     modifier = Modifier.padding(12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Box(
-                        contentAlignment = Alignment.Center,
-                        modifier = Modifier
-                            .size(36.dp)
-                            .clip(CircleShape)
-                            .background(MosqueEmeraldPrimary.copy(alpha = 0.12f))
-                    ) {
-                        Icon(Icons.Default.Person, contentDescription = null, tint = MosqueEmeraldPrimary, modifier = Modifier.size(20.dp))
-                    }
+                    MosqueMemberAvatar(
+                        nameBn = voter.nameBn,
+                        photoUrl = voter.photoUrl,
+                        size = 40.dp,
+                        isActive = (voter.status == "active")
+                    )
                     Spacer(modifier = Modifier.width(10.dp))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
@@ -1016,6 +1017,7 @@ private fun ElectionVotersTabView(
 private fun ElectionResultsTabView(
     election: ElectionScheduleEntity?,
     candidates: List<ElectionCandidateEntity>,
+    allMembers: List<MemberEntity> = emptyList(),
     canManage: Boolean,
     onActivateCommittee: () -> Unit
 ) {
@@ -1078,25 +1080,59 @@ private fun ElectionResultsTabView(
                         )
                     } else {
                         electedList.forEachIndexed { idx, cand ->
+                            val linkedMember = remember(cand.memberCode, cand.candidateNameBn, allMembers) {
+                                allMembers.firstOrNull {
+                                    (cand.memberCode.isNotBlank() && it.memberCode == cand.memberCode) ||
+                                        it.nameBn == cand.candidateNameBn ||
+                                        (cand.candidateMobile.isNotBlank() && it.mobile == cand.candidateMobile)
+                                }
+                            }
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(vertical = 4.dp),
+                                    .padding(vertical = 6.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(
-                                    text = "${toBengaliDigits((idx + 1).toString())}. ${cand.targetRoleTitleBn}:",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MosqueEmeraldPrimary
-                                )
-                                Text(
-                                    text = cand.candidateNameBn,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    MosqueMemberAvatar(
+                                        nameBn = cand.candidateNameBn,
+                                        photoUrl = linkedMember?.photoUrl,
+                                        size = 34.dp,
+                                        borderStroke = BorderStroke(1.dp, MosqueGold)
+                                    )
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Column {
+                                        Text(
+                                            text = "${toBengaliDigits((idx + 1).toString())}. ${cand.targetRoleTitleBn}",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MosqueEmeraldPrimary
+                                        )
+                                        Text(
+                                            text = cand.candidateNameBn,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                    }
+                                }
+                                Surface(
+                                    shape = RoundedCornerShape(12.dp),
+                                    color = MosqueGold.copy(alpha = 0.15f),
+                                    border = BorderStroke(1.dp, MosqueGold.copy(alpha = 0.6f))
+                                ) {
+                                    Text(
+                                        text = "নির্বাচিত",
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MosqueGoldDark,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                    )
+                                }
                             }
                             HorizontalDivider(color = MosqueCardBorderSubtle, thickness = 0.5.dp)
                         }
@@ -1351,6 +1387,143 @@ private fun AddCandidateNominationDialog(
     var seconder by remember { mutableStateOf("") }
     var panel by remember { mutableStateOf("মসজিদ ঐক্য পরিষদ") }
 
+    var showMemberPicker by remember { mutableStateOf(false) }
+    var selectedMember by remember { mutableStateOf<MemberEntity?>(null) }
+    var memberPickerMode by remember { mutableStateOf("CANDIDATE") } // CANDIDATE, PROPOSER, SECONDER
+    var memberSearchQuery by remember { mutableStateOf("") }
+
+    if (showMemberPicker) {
+        val filteredPickerMembers = remember(allMembers, memberSearchQuery) {
+            allMembers.filter {
+                memberSearchQuery.isBlank() ||
+                    it.nameBn.contains(memberSearchQuery, ignoreCase = true) ||
+                    it.memberCode.contains(memberSearchQuery, ignoreCase = true) ||
+                    it.mobile.contains(memberSearchQuery)
+            }
+        }
+        val pickerTitle = when (memberPickerMode) {
+            "PROPOSER" -> "প্রস্তাবক হিসেবে সদস্য নির্বাচন"
+            "SECONDER" -> "সমর্থক হিসেবে সদস্য নির্বাচন"
+            else -> "প্রার্থী হিসেবে সদস্য নির্বাচন"
+        }
+        Dialog(onDismissRequest = { showMemberPicker = false }) {
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = MaterialTheme.colorScheme.surface,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 520.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = pickerTitle,
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MosqueEmeraldPrimary
+                        )
+                        IconButton(onClick = { showMemberPicker = false }) {
+                            Icon(Icons.Default.Close, contentDescription = "বন্ধ করুন")
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = memberSearchQuery,
+                        onValueChange = { memberSearchQuery = it },
+                        placeholder = { Text("নাম, কোড বা মোবাইল নম্বর দিয়ে খুঁজুন...", fontSize = 12.sp) },
+                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = MosqueTextSecondary) },
+                        trailingIcon = {
+                            if (memberSearchQuery.isNotBlank()) {
+                                IconButton(onClick = { memberSearchQuery = "" }) {
+                                    Icon(Icons.Default.Close, contentDescription = "মুছুন", modifier = Modifier.size(16.dp))
+                                }
+                            }
+                        },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp)
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    LazyColumn(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        if (filteredPickerMembers.isEmpty()) {
+                            item {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(24.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text("কোনো সদস্য পাওয়া যায়নি", color = MosqueTextMuted, fontSize = 13.sp)
+                                }
+                            }
+                        } else {
+                            items(filteredPickerMembers, key = { it.id }) { m ->
+                                Surface(
+                                    onClick = {
+                                        when (memberPickerMode) {
+                                            "PROPOSER" -> proposer = m.nameBn
+                                            "SECONDER" -> seconder = m.nameBn
+                                            else -> {
+                                                selectedMember = m
+                                                candidateName = m.nameBn
+                                                candidateMobile = m.mobile
+                                                memberCode = m.memberCode
+                                            }
+                                        }
+                                        showMemberPicker = false
+                                    },
+                                    shape = RoundedCornerShape(10.dp),
+                                    color = if (selectedMember?.id == m.id && memberPickerMode == "CANDIDATE") MosqueEmeraldSoft else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+                                    border = BorderStroke(
+                                        1.dp,
+                                        if (selectedMember?.id == m.id && memberPickerMode == "CANDIDATE") MosqueEmeraldPrimary else MosqueCardBorderSubtle
+                                    ),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(10.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        MosqueMemberAvatar(
+                                            nameBn = m.nameBn,
+                                            photoUrl = m.photoUrl,
+                                            size = 38.dp,
+                                            isActive = (m.status == "active")
+                                        )
+                                        Spacer(modifier = Modifier.width(10.dp))
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = m.nameBn,
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 13.sp,
+                                                color = MaterialTheme.colorScheme.onSurface
+                                            )
+                                            Text(
+                                                text = "কোড: ${m.memberCode} • ${m.mobile}",
+                                                fontSize = 11.sp,
+                                                color = MosqueTextSecondary
+                                            )
+                                        }
+                                        if (selectedMember?.id == m.id && memberPickerMode == "CANDIDATE") {
+                                            Icon(Icons.Default.CheckCircle, contentDescription = null, tint = MosqueEmeraldPrimary)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     Dialog(onDismissRequest = onDismiss) {
         Surface(
             shape = RoundedCornerShape(16.dp),
@@ -1383,7 +1556,89 @@ private fun AddCandidateNominationDialog(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // 1. Select Candidate from Mosque Members
+                Surface(
+                    onClick = {
+                        memberPickerMode = "CANDIDATE"
+                        memberSearchQuery = ""
+                        showMemberPicker = true
+                    },
+                    shape = RoundedCornerShape(12.dp),
+                    color = if (selectedMember != null) MosqueEmeraldSoft.copy(alpha = 0.5f) else MosqueBgLight,
+                    border = BorderStroke(
+                        1.dp,
+                        if (selectedMember != null) MosqueEmeraldPrimary else MosqueGold.copy(alpha = 0.65f)
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                            if (selectedMember != null) {
+                                MosqueMemberAvatar(
+                                    nameBn = selectedMember!!.nameBn,
+                                    photoUrl = selectedMember!!.photoUrl,
+                                    size = 40.dp
+                                )
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Column {
+                                    Text(
+                                        text = selectedMember!!.nameBn,
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MosqueEmeraldDark
+                                    )
+                                    Text(
+                                        text = "কোড: ${selectedMember!!.memberCode} • ${selectedMember!!.mobile}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MosqueTextSecondary
+                                    )
+                                }
+                            } else {
+                                Surface(
+                                    shape = CircleShape,
+                                    color = MosqueGold.copy(alpha = 0.2f),
+                                    modifier = Modifier.size(38.dp)
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Icon(
+                                            Icons.Default.PersonSearch,
+                                            contentDescription = null,
+                                            tint = MosqueGoldDeep,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
+                                }
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Column {
+                                    Text(
+                                        text = "সদস্য তালিকা থেকে প্রার্থী নির্বাচন করুন",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 13.sp,
+                                        color = MosqueEmeraldPrimary
+                                    )
+                                    Text(
+                                        text = "সদস্য নির্বাচন করলে নাম, কোড ও মোবাইল স্বয়ংক্রিয় পূরণ হবে",
+                                        fontSize = 11.sp,
+                                        color = MosqueTextMuted
+                                    )
+                                }
+                            }
+                        }
+                        Icon(
+                            if (selectedMember != null) Icons.Default.CheckCircle else Icons.Default.ArrowDropDown,
+                            contentDescription = null,
+                            tint = if (selectedMember != null) MosqueSuccessGreen else MosqueTextMuted
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
 
                 OutlinedTextField(
                     value = candidateName,
@@ -1412,6 +1667,26 @@ private fun AddCandidateNominationDialog(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
 
+                // Proposer Field with Quick-Picker Chip
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("প্রস্তাবকের তথ্য:", style = MaterialTheme.typography.labelMedium)
+                    TextButton(
+                        onClick = {
+                            memberPickerMode = "PROPOSER"
+                            memberSearchQuery = ""
+                            showMemberPicker = true
+                        },
+                        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp)
+                    ) {
+                        Icon(Icons.Default.PersonAdd, contentDescription = null, modifier = Modifier.size(14.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("সদস্য থেকে বাছাই", fontSize = 11.sp)
+                    }
+                }
                 OutlinedTextField(
                     value = proposer,
                     onValueChange = { proposer = it },
@@ -1421,6 +1696,26 @@ private fun AddCandidateNominationDialog(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
 
+                // Seconder Field with Quick-Picker Chip
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("সমর্থকের তথ্য:", style = MaterialTheme.typography.labelMedium)
+                    TextButton(
+                        onClick = {
+                            memberPickerMode = "SECONDER"
+                            memberSearchQuery = ""
+                            showMemberPicker = true
+                        },
+                        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp)
+                    ) {
+                        Icon(Icons.Default.PersonAdd, contentDescription = null, modifier = Modifier.size(14.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("সদস্য থেকে বাছাই", fontSize = 11.sp)
+                    }
+                }
                 OutlinedTextField(
                     value = seconder,
                     onValueChange = { seconder = it },

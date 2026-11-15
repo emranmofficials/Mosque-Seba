@@ -175,19 +175,28 @@ fun CommitteeCharterScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
-                                Surface(
-                                    shape = CircleShape,
-                                    color = iconCircleBg,
-                                    border = BorderStroke(1.dp, MosqueCardBorderGold),
-                                    modifier = Modifier.size(34.dp)
-                                ) {
-                                    Box(contentAlignment = Alignment.Center) {
-                                        Icon(
-                                            imageVector = role.roleIcon(),
-                                            contentDescription = role.titleBn,
-                                            tint = MaterialTheme.colorScheme.primary,
-                                            modifier = Modifier.size(18.dp)
-                                        )
+                                if (assignedMembers.isNotEmpty()) {
+                                    val firstMember = assignedMembers.first()
+                                    MosqueMemberAvatar(
+                                        nameBn = firstMember.nameBn,
+                                        photoUrl = firstMember.photoUrl,
+                                        size = 36.dp
+                                    )
+                                } else {
+                                    Surface(
+                                        shape = CircleShape,
+                                        color = iconCircleBg,
+                                        border = BorderStroke(1.dp, MosqueCardBorderGold),
+                                        modifier = Modifier.size(36.dp)
+                                    ) {
+                                        Box(contentAlignment = Alignment.Center) {
+                                            Icon(
+                                                imageVector = role.roleIcon(),
+                                                contentDescription = role.titleBn,
+                                                tint = MaterialTheme.colorScheme.primary,
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                        }
                                     }
                                 }
                                 Spacer(modifier = Modifier.width(10.dp))

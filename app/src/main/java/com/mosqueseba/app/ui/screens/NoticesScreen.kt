@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material3.*
@@ -58,7 +59,8 @@ fun NoticesScreen(
     viewModel: MosqueViewModel,
     onPublishNoticeClick: () -> Unit,
     onScheduleMeetingClick: (() -> Unit)? = null,
-    initialTabIndex: Int = 0
+    initialTabIndex: Int = 0,
+    onBack: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
     val notices by viewModel.allNotices.collectAsState()
@@ -152,18 +154,36 @@ fun NoticesScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "নোটিশ বোর্ড ও কমিটি সভা",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = Color.White
-                            )
-                            Text(
-                                text = "মসজিদ ঘোষণা, জরুরি বার্তা ও সভার কার্যবিবরণী",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MosqueGoldLight.copy(alpha = 0.9f)
-                            )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            if (onBack != null) {
+                                IconButton(
+                                    onClick = onBack,
+                                    modifier = Modifier.testTag("notices_back_button")
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                        contentDescription = "পিছনে যান",
+                                        tint = MosqueGoldLight
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(4.dp))
+                            }
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "নোটিশ বোর্ড ও কমিটি সভা",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = Color.White
+                                )
+                                Text(
+                                    text = "মসজিদ ঘোষণা, জরুরি বার্তা ও সভার কার্যবিবরণী",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MosqueGoldLight.copy(alpha = 0.9f)
+                                )
+                            }
                         }
 
                         if (selectedTabIndex == 0 && canPublish) {

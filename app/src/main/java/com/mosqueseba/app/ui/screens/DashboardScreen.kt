@@ -186,6 +186,20 @@ fun DashboardScreen(
             }
         }
 
+        // 1. Top Daily Prayer Schedule & Jamat Times (Always at Top)
+        item(key = "global_top_prayer_card") {
+            StaggeredDashboardItem(index = 1, modifier = Modifier.animateItem()) {
+                PrayerCard(onViewFullScheduleClick = { onOpenDialog("view_prayers") })
+            }
+        }
+
+        // 2. Top Digital Notice Board & Urgent Announcements
+        item(key = "global_top_smart_board") {
+            StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
+                SmartBoardCard(quotes = allSmartBoardQuotes, includeDateAndPrayerSlides = false)
+            }
+        }
+
         when (currentRole) {
             UserRole.PRESIDENT, UserRole.VICE_PRESIDENT -> {
                 // Priority Approvals & Executive Oversight
@@ -302,24 +316,6 @@ fun DashboardScreen(
                         }
                     }
                 }
-
-                item(key = "pres_prayer_div") {
-                    StaggeredDashboardItem(index = 7, modifier = Modifier.animateItem()) {
-                        RubElHizbDivider(title = "নামাজের সূচি ও ডিজিটাল বোর্ড", modifier = Modifier.padding(vertical = 2.dp))
-                    }
-                }
-
-                item(key = "pres_prayer_card") {
-                    StaggeredDashboardItem(index = 7, modifier = Modifier.animateItem()) {
-                        PrayerCard(onViewFullScheduleClick = { onOpenDialog("view_prayers") })
-                    }
-                }
-
-                item(key = "pres_smart_board") {
-                    StaggeredDashboardItem(index = 8, modifier = Modifier.animateItem()) {
-                        SmartBoardCard(quotes = allSmartBoardQuotes, includeDateAndPrayerSlides = false)
-                    }
-                }
             }
 
             UserRole.TREASURER, UserRole.ASSISTANT_TREASURER -> {
@@ -426,18 +422,6 @@ fun DashboardScreen(
                         )
                     }
                 }
-
-                item(key = "treasurer_prayer_div") {
-                    StaggeredDashboardItem(index = 7, modifier = Modifier.animateItem()) {
-                        RubElHizbDivider(title = "নামাজের সূচি", modifier = Modifier.padding(vertical = 2.dp))
-                    }
-                }
-
-                item(key = "treasurer_prayer_card") {
-                    StaggeredDashboardItem(index = 7, modifier = Modifier.animateItem()) {
-                        PrayerCard(onViewFullScheduleClick = { onOpenDialog("view_prayers") })
-                    }
-                }
             }
 
             UserRole.GENERAL_SECRETARY, UserRole.ASSISTANT_SECRETARY, UserRole.ORGANIZING_SECRETARY, UserRole.OFFICE_SECRETARY -> {
@@ -527,24 +511,6 @@ fun DashboardScreen(
                             onScheduleClick = { onOpenDialog("schedule_meeting") },
                             onViewAllClick = { onOpenDialog("meetings") }
                         )
-                    }
-                }
-
-                item(key = "sec_smart_board") {
-                    StaggeredDashboardItem(index = 6, modifier = Modifier.animateItem()) {
-                        SmartBoardCard(quotes = allSmartBoardQuotes, includeDateAndPrayerSlides = false)
-                    }
-                }
-
-                item(key = "sec_prayer_div") {
-                    StaggeredDashboardItem(index = 7, modifier = Modifier.animateItem()) {
-                        RubElHizbDivider(title = "নামাজের সূচি", modifier = Modifier.padding(vertical = 2.dp))
-                    }
-                }
-
-                item(key = "sec_prayer_card") {
-                    StaggeredDashboardItem(index = 7, modifier = Modifier.animateItem()) {
-                        PrayerCard(onViewFullScheduleClick = { onOpenDialog("view_prayers") })
                     }
                 }
             }
@@ -646,24 +612,6 @@ fun DashboardScreen(
                     }
                 }
 
-                item(key = "imam_prayer_div") {
-                    StaggeredDashboardItem(index = 6, modifier = Modifier.animateItem()) {
-                        RubElHizbDivider(title = "সালাত সূচি ও মসজিদ দেয়াল বার্তা", modifier = Modifier.padding(vertical = 2.dp))
-                    }
-                }
-
-                item(key = "imam_prayer_card") {
-                    StaggeredDashboardItem(index = 6, modifier = Modifier.animateItem()) {
-                        PrayerCard(onViewFullScheduleClick = { onOpenDialog("view_prayers") })
-                    }
-                }
-
-                item(key = "imam_smart_board") {
-                    StaggeredDashboardItem(index = 7, modifier = Modifier.animateItem()) {
-                        SmartBoardCard(quotes = allSmartBoardQuotes, includeDateAndPrayerSlides = false)
-                    }
-                }
-
                 item(key = "imam_meetings_card") {
                     StaggeredDashboardItem(index = 8, modifier = Modifier.animateItem()) {
                         UpcomingMeetingsCard(
@@ -740,23 +688,6 @@ fun DashboardScreen(
                     }
                 }
 
-                item(key = "muazzin_prayer_div") {
-                    StaggeredDashboardItem(index = 5, modifier = Modifier.animateItem()) {
-                        RubElHizbDivider(title = "সালাত সূচি ও মসজিদ দেয়াল বার্তা", modifier = Modifier.padding(vertical = 2.dp))
-                    }
-                }
-
-                item(key = "muazzin_prayer_card") {
-                    StaggeredDashboardItem(index = 5, modifier = Modifier.animateItem()) {
-                        PrayerCard(onViewFullScheduleClick = { onOpenDialog("view_prayers") })
-                    }
-                }
-
-                item(key = "muazzin_smart_board") {
-                    StaggeredDashboardItem(index = 6, modifier = Modifier.animateItem()) {
-                        SmartBoardCard(quotes = allSmartBoardQuotes, includeDateAndPrayerSlides = false)
-                    }
-                }
             }
 
             UserRole.KHADEM -> {
@@ -816,23 +747,6 @@ fun DashboardScreen(
                     }
                 }
 
-                item(key = "khadem_prayer_div") {
-                    StaggeredDashboardItem(index = 5, modifier = Modifier.animateItem()) {
-                        RubElHizbDivider(title = "সালাত সূচি ও মসজিদ দেয়াল বার্তা", modifier = Modifier.padding(vertical = 2.dp))
-                    }
-                }
-
-                item(key = "khadem_prayer_card") {
-                    StaggeredDashboardItem(index = 5, modifier = Modifier.animateItem()) {
-                        PrayerCard(onViewFullScheduleClick = { onOpenDialog("view_prayers") })
-                    }
-                }
-
-                item(key = "khadem_smart_board") {
-                    StaggeredDashboardItem(index = 6, modifier = Modifier.animateItem()) {
-                        SmartBoardCard(quotes = allSmartBoardQuotes, includeDateAndPrayerSlides = false)
-                    }
-                }
             }
 
             UserRole.WELFARE_EDUCATION_SECRETARY -> {
@@ -914,12 +828,6 @@ fun DashboardScreen(
                         )
                     }
                 }
-
-                item(key = "welfare_prayer_card") {
-                    StaggeredDashboardItem(index = 6, modifier = Modifier.animateItem()) {
-                        PrayerCard(onViewFullScheduleClick = { onOpenDialog("view_prayers") })
-                    }
-                }
             }
 
             UserRole.PUBLICITY_SECRETARY -> {
@@ -934,12 +842,6 @@ fun DashboardScreen(
                             onOpenEvents = { onOpenDialog("events") },
                             onOpenPrayerSchedule = { onOpenDialog("view_prayers") }
                         )
-                    }
-                }
-
-                item(key = "publicity_smart_board") {
-                    StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
-                        SmartBoardCard(quotes = allSmartBoardQuotes, includeDateAndPrayerSlides = false)
                     }
                 }
 
@@ -979,12 +881,6 @@ fun DashboardScreen(
                             role = currentRole,
                             onActionClick = { actionKey -> onOpenDialog(actionKey) }
                         )
-                    }
-                }
-
-                item(key = "publicity_prayer_card") {
-                    StaggeredDashboardItem(index = 5, modifier = Modifier.animateItem()) {
-                        PrayerCard(onViewFullScheduleClick = { onOpenDialog("view_prayers") })
                     }
                 }
 
@@ -1061,24 +957,6 @@ fun DashboardScreen(
                             role = currentRole,
                             onActionClick = { actionKey -> onOpenDialog(actionKey) }
                         )
-                    }
-                }
-
-                item(key = "musalli_prayer_div") {
-                    StaggeredDashboardItem(index = 5, modifier = Modifier.animateItem()) {
-                        RubElHizbDivider(title = "নামাজের পূর্ণাঙ্গ সময়সূচি", modifier = Modifier.padding(vertical = 2.dp))
-                    }
-                }
-
-                item(key = "musalli_prayer_card") {
-                    StaggeredDashboardItem(index = 5, modifier = Modifier.animateItem()) {
-                        PrayerCard(onViewFullScheduleClick = { onOpenDialog("view_prayers") })
-                    }
-                }
-
-                item(key = "musalli_smart_board") {
-                    StaggeredDashboardItem(index = 6, modifier = Modifier.animateItem()) {
-                        SmartBoardCard(quotes = allSmartBoardQuotes, includeDateAndPrayerSlides = false)
                     }
                 }
             }
@@ -1176,18 +1054,6 @@ fun DashboardScreen(
                             onScheduleClick = { onOpenDialog("schedule_meeting") },
                             onViewAllClick = { onOpenDialog("meetings") }
                         )
-                    }
-                }
-
-                item(key = "other_smart_board") {
-                    StaggeredDashboardItem(index = 6, modifier = Modifier.animateItem()) {
-                        SmartBoardCard(quotes = allSmartBoardQuotes, includeDateAndPrayerSlides = false)
-                    }
-                }
-
-                item(key = "other_prayer_card") {
-                    StaggeredDashboardItem(index = 7, modifier = Modifier.animateItem()) {
-                        PrayerCard(onViewFullScheduleClick = { onOpenDialog("view_prayers") })
                     }
                 }
 

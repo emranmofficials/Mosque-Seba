@@ -1,5 +1,7 @@
 package com.mosqueseba.app.ui.components
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -10,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -17,6 +20,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -453,3 +457,71 @@ fun RoleWorkspaceHeader(
 }
 
 private data class Quadruple<A, B, C, D>(val first: A, val second: B, val third: C, val fourth: D)
+
+/**
+ * Global Islamic Member Avatar with Photo Support & Emerald-Gold Fallback
+ */
+@Composable
+fun MosqueMemberAvatar(
+    nameBn: String,
+    photoUrl: String? = null,
+    modifier: Modifier = Modifier,
+    size: Dp = 44.dp,
+    borderStroke: BorderStroke = BorderStroke(1.5.dp, MosqueGold.copy(alpha = 0.85f)),
+    shape: androidx.compose.ui.graphics.Shape = CircleShape,
+    isActive: Boolean? = null,
+    fallbackBgColor: Color = MosqueEmeraldSoft,
+    fallbackTextColor: Color = MosqueEmeraldDark
+) {
+    val photoBitmap = remember(photoUrl) {
+        val px = (size.value * 3.5f).toInt().coerceAtLeast(120)
+        loadLocalThumbnail(photoUrl, px)
+    }
+
+    Box(
+        modifier = modifier,
+        contentAlignment = Alignment.BottomEnd
+    ) {
+        Surface(
+            shape = shape,
+            color = fallbackBgColor,
+            border = borderStroke,
+            modifier = Modifier.size(size)
+        ) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                if (photoBitmap != null) {
+                    Image(
+                        bitmap = photoBitmap,
+                        contentDescription = nameBn,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else {
+                    val initial = nameBn.trim().firstOrNull()?.toString() ?: "স"
+                    Text(
+                        text = initial,
+                        fontSize = (size.value * 0.42f).sp,
+                        fontWeight = FontWeight.Bold,
+                        color = fallbackTextColor,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+        }
+
+        if (isActive != null) {
+            val dotSize = (size.value * 0.28f).coerceIn(9f, 13f).dp
+            Surface(
+                shape = CircleShape,
+                color = if (isActive) MosqueSuccessGreen else MosqueUrgentRed,
+                border = BorderStroke(1.2.dp, Color.White),
+                modifier = Modifier
+                    .size(dotSize)
+                    .offset(x = 1.dp, y = 1.dp)
+            ) {}
+        }
+    }
+}

@@ -1734,26 +1734,37 @@ fun ReceiveChandaDialog(
                                             .widthIn(min = 148.dp, max = 210.dp)
                                             .heightIn(min = 52.dp)
                                     ) {
-                                        Column(
-                                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
-                                            verticalArrangement = Arrangement.spacedBy(2.dp)
+                                        Row(
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                                            verticalAlignment = Alignment.CenterVertically
                                         ) {
-                                            Text(
-                                                text = m.nameBn,
-                                                style = MaterialTheme.typography.labelLarge,
-                                                fontWeight = FontWeight.Bold,
-                                                color = if (isChosen) Color.White else MosqueEmeraldDark,
-                                                maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis
+                                            MosqueMemberAvatar(
+                                                nameBn = m.nameBn,
+                                                photoUrl = m.photoUrl,
+                                                size = 30.dp
                                             )
-                                            Text(
-                                                text = "${toBengaliDigits(m.memberCode)} • ৳${toBengaliDigits(m.monthlyChanda.toInt().toString())}",
-                                                style = MaterialTheme.typography.labelSmall,
-                                                fontSize = 10.sp,
-                                                color = if (isChosen) MosqueGoldLight else MosqueTextSecondary,
-                                                maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis
-                                            )
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Column(
+                                                modifier = Modifier.weight(1f),
+                                                verticalArrangement = Arrangement.spacedBy(1.dp)
+                                            ) {
+                                                Text(
+                                                    text = m.nameBn,
+                                                    style = MaterialTheme.typography.labelMedium,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = if (isChosen) Color.White else MosqueEmeraldDark,
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis
+                                                )
+                                                Text(
+                                                    text = "${toBengaliDigits(m.memberCode)} • ৳${toBengaliDigits(m.monthlyChanda.toInt().toString())}",
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    fontSize = 10.sp,
+                                                    color = if (isChosen) MosqueGoldLight else MosqueTextSecondary,
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis
+                                                )
+                                            }
                                         }
                                     }
                                 }
@@ -1773,20 +1784,11 @@ fun ReceiveChandaDialog(
                                         .padding(horizontal = 12.dp, vertical = 10.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(38.dp)
-                                            .clip(CircleShape)
-                                            .background(MosqueEmeraldSoft),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Person,
-                                            contentDescription = null,
-                                            tint = MosqueEmeraldPrimary,
-                                            modifier = Modifier.size(20.dp)
-                                        )
-                                    }
+                                    MosqueMemberAvatar(
+                                        nameBn = selectedMember?.nameBn ?: "",
+                                        photoUrl = selectedMember?.photoUrl,
+                                        size = 40.dp
+                                    )
                                     Spacer(modifier = Modifier.width(10.dp))
                                     Column(modifier = Modifier.weight(1f)) {
                                         Text(

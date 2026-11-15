@@ -43,6 +43,7 @@ import com.mosqueseba.app.ui.components.AddWelfareDialog
 import com.mosqueseba.app.ui.components.AutoFoodScheduleDialog
 import com.mosqueseba.app.ui.components.MeetingResolutionDialog
 import com.mosqueseba.app.ui.components.MosqueConfirmDialog
+import com.mosqueseba.app.ui.components.MosqueMemberAvatar
 import com.mosqueseba.app.ui.components.OfficialReceiptDialog
 import com.mosqueseba.app.ui.components.PaySalaryFormDialog
 import com.mosqueseba.app.ui.components.ScheduleMeetingDialog
@@ -145,8 +146,9 @@ fun MoreScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // Cohesive Emerald-Gold Sticky Header for Sub-modules
-        if (selectedSubModule != null) {
+        // Cohesive Emerald-Gold Sticky Header for Sub-modules (skip for submodules that already provide their own complete header)
+        val subModulesWithOwnHeader = setOf("election", "notices", "members")
+        if (selectedSubModule != null && selectedSubModule !in subModulesWithOwnHeader) {
             Surface(
                 color = Color.Transparent,
                 shadowElevation = 4.dp
@@ -233,7 +235,9 @@ fun MoreScreen(
             "election" -> {
                 ElectionScreen(
                     viewModel = viewModel,
-                    onBack = { selectedSubModule = null }
+                    onBack = {
+                        if (initialSubModule != null) onBack?.invoke() else selectedSubModule = null
+                    }
                 )
             }
             "charter" -> {
@@ -257,13 +261,19 @@ fun MoreScreen(
                     onPublishNoticeClick = onOpenPublishNotice,
                     onScheduleMeetingClick = if (currentRole.canScheduleMeetings()) {
                         onOpenScheduleMeeting
-                    } else null
+                    } else null,
+                    onBack = {
+                        if (initialSubModule != null) onBack?.invoke() else selectedSubModule = null
+                    }
                 )
             }
             "members" -> {
                 MembersScreen(
                     viewModel = viewModel,
-                    onAddMemberClick = if (currentRole.canManageMembers()) onOpenAddMember else null
+                    onAddMemberClick = if (currentRole.canManageMembers()) onOpenAddMember else null,
+                    onBack = {
+                        if (initialSubModule != null) onBack?.invoke() else selectedSubModule = null
+                    }
                 )
             }
             "transparency", "finance" -> {
@@ -495,6 +505,14 @@ fun MoreScreen(
 
                     items(displayedStaff, key = { it.id }) { staff ->
                         val latestPayroll = payrolls.filter { it.staffId == staff.id }.lastOrNull()
+                        val linkedMember = remember(allMembers, staff) {
+                            val normMobile = staff.mobile.filter { it.isDigit() }
+                            allMembers.find {
+                                it.id == "staff-${staff.id}" ||
+                                    (normMobile.length >= 6 && it.mobile.filter { c -> c.isDigit() } == normMobile) ||
+                                    it.nameBn.trim() == staff.nameBn.trim()
+                            }
+                        }
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -508,19 +526,30 @@ fun MoreScreen(
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Column {
-                                        Text(
-                                            text = staff.nameBn,
-                                            style = MaterialTheme.typography.titleMedium,
-                                            fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colorScheme.onSurface
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        MosqueMemberAvatar(
+                                            nameBn = staff.nameBn,
+                                            photoUrl = linkedMember?.photoUrl,
+                                            size = 42.dp
                                         )
-                                        Text(
-                                            text = staff.designationBn,
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.primary,
-                                            fontWeight = FontWeight.SemiBold
-                                        )
+                                        Spacer(modifier = Modifier.width(10.dp))
+                                        Column {
+                                            Text(
+                                                text = staff.nameBn,
+                                                style = MaterialTheme.typography.titleMedium,
+                                                fontWeight = FontWeight.Bold,
+                                                color = MaterialTheme.colorScheme.onSurface
+                                            )
+                                            Text(
+                                                text = staff.designationBn,
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.primary,
+                                                fontWeight = FontWeight.SemiBold
+                                            )
+                                        }
                                     }
 
                                     Box(

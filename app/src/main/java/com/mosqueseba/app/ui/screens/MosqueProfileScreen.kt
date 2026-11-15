@@ -540,6 +540,7 @@ fun MosqueProfileScreen(
                             name = president?.nameBn ?: "নির্ধারিত নয়",
                             mobile = president?.mobile ?: "",
                             accent = RolePresidentAccent,
+                            photoUrl = president?.photoUrl,
                             onCall = { mobile ->
                                 context.startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:$mobile")))
                             }
@@ -549,6 +550,7 @@ fun MosqueProfileScreen(
                             name = vicePresident?.nameBn ?: "নির্ধারিত নয়",
                             mobile = vicePresident?.mobile ?: "",
                             accent = RolePresidentAccent,
+                            photoUrl = vicePresident?.photoUrl,
                             onCall = { mobile ->
                                 context.startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:$mobile")))
                             }
@@ -558,6 +560,7 @@ fun MosqueProfileScreen(
                             name = generalSecretary?.nameBn ?: "নির্ধারিত নয়",
                             mobile = generalSecretary?.mobile ?: "",
                             accent = RoleSecretaryAccent,
+                            photoUrl = generalSecretary?.photoUrl,
                             onCall = { mobile ->
                                 context.startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:$mobile")))
                             }
@@ -567,6 +570,7 @@ fun MosqueProfileScreen(
                             name = treasurer?.nameBn ?: "নির্ধারিত নয়",
                             mobile = treasurer?.mobile ?: "",
                             accent = RoleTreasurerAccent,
+                            photoUrl = treasurer?.photoUrl,
                             onCall = { mobile ->
                                 context.startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:$mobile")))
                             }
@@ -576,6 +580,7 @@ fun MosqueProfileScreen(
                             name = imamMember?.nameBn ?: imamStaff?.nameBn ?: "নির্ধারিত নয়",
                             mobile = imamMember?.mobile ?: imamStaff?.mobile ?: "",
                             accent = RoleImamAccent,
+                            photoUrl = imamMember?.photoUrl,
                             showDivider = false,
                             onCall = { mobile ->
                                 context.startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:$mobile")))
@@ -643,6 +648,7 @@ private fun OfficeholderRow(
     name: String,
     mobile: String,
     accent: Color,
+    photoUrl: String? = null,
     showDivider: Boolean = true,
     onCall: (String) -> Unit
 ) {
@@ -654,32 +660,43 @@ private fun OfficeholderRow(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Surface(
-                    color = accent.copy(alpha = 0.12f),
-                    shape = RoundedCornerShape(6.dp)
-                ) {
-                    Text(
-                        text = roleTitle,
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = accent,
-                        modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp)
-                    )
-                }
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = name,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f)
+            ) {
+                MosqueMemberAvatar(
+                    nameBn = name,
+                    photoUrl = photoUrl,
+                    size = 42.dp
                 )
-                if (mobile.isNotBlank()) {
+                Spacer(modifier = Modifier.width(10.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Surface(
+                        color = accent.copy(alpha = 0.12f),
+                        shape = RoundedCornerShape(6.dp)
+                    ) {
+                        Text(
+                            text = roleTitle,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = accent,
+                            modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = mobile,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MosqueTextSecondary
+                        text = name,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
+                    if (mobile.isNotBlank()) {
+                        Text(
+                            text = mobile,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MosqueTextSecondary
+                        )
+                    }
                 }
             }
 
