@@ -18,6 +18,7 @@ Thumbs.db
 .env.*
 *.jks
 *.keystore
+!keystore/mosque-seba.jks
 
 # Generated / local
 captures/
