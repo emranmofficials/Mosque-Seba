@@ -27,9 +27,9 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.mosqueseba.app.BuildConfig
 import com.mosqueseba.app.data.updater.AppUpdateInfo
-import com.mosqueseba.app.ui.theme.EmeraldDeepPrimary
+import com.mosqueseba.app.ui.theme.MosqueEmeraldPrimary
 import com.mosqueseba.app.ui.theme.MosqueCardBorderGold
-import com.mosqueseba.app.ui.theme.MosqueGoldAccent
+import com.mosqueseba.app.ui.theme.MosqueGold
 
 @Composable
 fun AppUpdateDialog(
@@ -66,13 +66,13 @@ fun AppUpdateDialog(
                     modifier = Modifier
                         .size(60.dp)
                         .clip(CircleShape)
-                        .background(EmeraldDeepPrimary.copy(alpha = 0.12f)),
+                        .background(MosqueEmeraldPrimary.copy(alpha = 0.12f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.SystemUpdate,
                         contentDescription = "App Update",
-                        tint = EmeraldDeepPrimary,
+                        tint = MosqueEmeraldPrimary,
                         modifier = Modifier.size(34.dp)
                     )
                 }
@@ -127,7 +127,7 @@ fun AppUpdateDialog(
 
                         Text(
                             text = "➔",
-                            color = MosqueGoldAccent,
+                            color = MosqueGold,
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -136,13 +136,13 @@ fun AppUpdateDialog(
                             Text(
                                 text = "নতুন ভার্সন",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = EmeraldDeepPrimary
+                                color = MosqueEmeraldPrimary
                             )
                             Text(
                                 text = "v${updateInfo.latestVersionName}",
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = EmeraldDeepPrimary
+                                color = MosqueEmeraldPrimary
                             )
                         }
                     }
@@ -185,13 +185,13 @@ fun AppUpdateDialog(
                 // Safety Assurance Note
                 Surface(
                     shape = RoundedCornerShape(8.dp),
-                    color = EmeraldDeepPrimary.copy(alpha = 0.08f),
+                    color = MosqueEmeraldPrimary.copy(alpha = 0.08f),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
                         text = "✓ অফিসিয়াল আপডেট: পূর্বের কোনো ডাটা নষ্ট হবে না এবং অ্যাপ আনইনস্টল করার প্রয়োজন নেই।",
                         style = MaterialTheme.typography.labelSmall,
-                        color = EmeraldDeepPrimary,
+                        color = MosqueEmeraldPrimary,
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
                         textAlign = TextAlign.Center
                     )
@@ -223,7 +223,7 @@ fun AppUpdateDialog(
                             context.startActivity(intent)
                             onDismiss()
                         },
-                        colors = ButtonDefaults.buttonColors(containerColor = EmeraldDeepPrimary),
+                        colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary),
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier
                             .weight(1.5f)

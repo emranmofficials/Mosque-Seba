@@ -512,7 +512,7 @@ fun NotificationsScreen(
                 isUrgent = true,
                 category = NotificationCategory.ACTION_REQUIRED,
                 icon = Icons.Default.SystemUpdate,
-                accentColor = EmeraldDeepPrimary,
+                accentColor = MosqueEmeraldPrimary,
                 target = NotificationActionTarget.OpenModule("app_update")
             )
             listOf(updateItem) + roleNotificationItems
