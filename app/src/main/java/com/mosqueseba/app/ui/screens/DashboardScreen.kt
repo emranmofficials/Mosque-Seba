@@ -58,6 +58,8 @@ fun DashboardScreen(
     val mosque by viewModel.mosque.collectAsState()
     val totalMembers by viewModel.memberCount.collectAsState()
     val netBalance by viewModel.netBalance.collectAsState()
+    val totalIncome by viewModel.totalIncome.collectAsState()
+    val totalExpense by viewModel.totalExpense.collectAsState()
     val dueChanda by viewModel.dueChanda.collectAsState()
     val pendingTransactions by viewModel.pendingTransactions.collectAsState()
     val allTransactions by viewModel.allTransactions.collectAsState()
@@ -186,24 +188,22 @@ fun DashboardScreen(
 
         when (currentRole) {
             UserRole.PRESIDENT, UserRole.VICE_PRESIDENT -> {
-                // Priority Approvals & Oversight
-                if (pendingTransactions.isNotEmpty()) {
-                    item(key = "pres_pending_vouchers") {
-                        StaggeredDashboardItem(index = 1, modifier = Modifier.animateItem()) {
-                            PresidentPendingVouchersCard(
-                                pendingTransactions = pendingTransactions,
-                                onApprove = { txn ->
-                                    viewModel.updateTransactionStatus(txn, true)
-                                    Toast.makeText(
-                                        context,
-                                        "${txn.categoryNameBn} ভাউচারটি অনুমোদিত হয়েছে।",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                },
-                                onReject = { txn -> pendingRejectVoucher = txn },
-                                onViewAll = { onOpenDialog("pending_approval") }
-                            )
-                        }
+                // Priority Approvals & Executive Oversight
+                item(key = "pres_pending_vouchers") {
+                    StaggeredDashboardItem(index = 1, modifier = Modifier.animateItem()) {
+                        PresidentPendingVouchersCard(
+                            pendingTransactions = pendingTransactions,
+                            onApprove = { txn ->
+                                viewModel.updateTransactionStatus(txn, true)
+                                Toast.makeText(
+                                    context,
+                                    "${txn.categoryNameBn} ভাউচারটি অনুমোদিত হয়েছে।",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            },
+                            onReject = { txn -> pendingRejectVoucher = txn },
+                            onViewAll = { onOpenDialog("pending_approval") }
+                        )
                     }
                 }
 
@@ -278,32 +278,14 @@ fun DashboardScreen(
                     }
                 }
 
-                item(key = "pres_prayer_div") {
-                    StaggeredDashboardItem(index = 5, modifier = Modifier.animateItem()) {
-                        RubElHizbDivider(title = "নামাজের সূচি ও দেয়াল বোর্ড", modifier = Modifier.padding(vertical = 2.dp))
-                    }
-                }
-
-                item(key = "pres_prayer_card") {
-                    StaggeredDashboardItem(index = 5, modifier = Modifier.animateItem()) {
-                        PrayerCard(onViewFullScheduleClick = { onOpenDialog("view_prayers") })
-                    }
-                }
-
-                item(key = "pres_smart_board") {
-                    StaggeredDashboardItem(index = 6, modifier = Modifier.animateItem()) {
-                        SmartBoardCard(quotes = allSmartBoardQuotes, includeDateAndPrayerSlides = false)
-                    }
-                }
-
                 item(key = "pres_meetings_div") {
-                    StaggeredDashboardItem(index = 6, modifier = Modifier.animateItem()) {
-                        RubElHizbDivider(title = "সভা ও সাম্প্রতিক লেনদেন", modifier = Modifier.padding(vertical = 2.dp))
+                    StaggeredDashboardItem(index = 5, modifier = Modifier.animateItem()) {
+                        RubElHizbDivider(title = "আসন্ন সভা ও সর্বশেষ অডিট লেনদেন", modifier = Modifier.padding(vertical = 2.dp))
                     }
                 }
 
                 item(key = "pres_meetings_card") {
-                    StaggeredDashboardItem(index = 7, modifier = Modifier.animateItem()) {
+                    StaggeredDashboardItem(index = 5, modifier = Modifier.animateItem()) {
                         UpcomingMeetingsCard(
                             meetings = allMeetings,
                             canSchedule = currentRole.canScheduleMeetings(),
@@ -316,9 +298,27 @@ fun DashboardScreen(
                 val completedTransactions = allTransactions.filter { it.approvalStatus != "pending" }.take(4)
                 if (completedTransactions.isNotEmpty()) {
                     item(key = "pres_recent_txns") {
-                        StaggeredDashboardItem(index = 8, modifier = Modifier.animateItem()) {
+                        StaggeredDashboardItem(index = 6, modifier = Modifier.animateItem()) {
                             RecentActivityCard(transactions = completedTransactions, onViewAllClick = { onOpenDialog("finance") })
                         }
+                    }
+                }
+
+                item(key = "pres_prayer_div") {
+                    StaggeredDashboardItem(index = 7, modifier = Modifier.animateItem()) {
+                        RubElHizbDivider(title = "নামাজের সূচি ও ডিজিটাল বোর্ড", modifier = Modifier.padding(vertical = 2.dp))
+                    }
+                }
+
+                item(key = "pres_prayer_card") {
+                    StaggeredDashboardItem(index = 7, modifier = Modifier.animateItem()) {
+                        PrayerCard(onViewFullScheduleClick = { onOpenDialog("view_prayers") })
+                    }
+                }
+
+                item(key = "pres_smart_board") {
+                    StaggeredDashboardItem(index = 8, modifier = Modifier.animateItem()) {
+                        SmartBoardCard(quotes = allSmartBoardQuotes, includeDateAndPrayerSlides = false)
                     }
                 }
             }
@@ -329,6 +329,8 @@ fun DashboardScreen(
                     StaggeredDashboardItem(index = 1, modifier = Modifier.animateItem()) {
                         TreasurerTreasuryLedgerCard(
                             netBalance = netBalance,
+                            totalIncome = totalIncome,
+                            totalExpense = totalExpense,
                             dueChanda = dueChanda,
                             unverifiedCashboxCount = unverifiedCashboxes.size,
                             pendingVoucherCount = pendingTransactions.size,
@@ -355,7 +357,7 @@ fun DashboardScreen(
 
                 item(key = "treasurer_kpi_div") {
                     StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
-                        RubElHizbDivider(title = "বায়তুলমাল আর্থিক সূচক ও স্থিতি", modifier = Modifier.padding(vertical = 2.dp))
+                        RubElHizbDivider(title = "বায়তুলমাল আর্থিক সূচক ও সেবা", modifier = Modifier.padding(vertical = 2.dp))
                     }
                 }
 
@@ -391,12 +393,6 @@ fun DashboardScreen(
                     }
                 }
 
-                item(key = "treasurer_actions_div") {
-                    StaggeredDashboardItem(index = 4, modifier = Modifier.animateItem()) {
-                        RubElHizbDivider(title = "কোষাধক্ষ্য কুইক অ্যাকশন", modifier = Modifier.padding(vertical = 2.dp))
-                    }
-                }
-
                 item(key = "treasurer_actions_grid") {
                     StaggeredDashboardItem(index = 4, modifier = Modifier.animateItem()) {
                         QuickActionsGrid(
@@ -408,7 +404,7 @@ fun DashboardScreen(
 
                 item(key = "treasurer_txns_div") {
                     StaggeredDashboardItem(index = 5, modifier = Modifier.animateItem()) {
-                        RubElHizbDivider(title = "সাম্প্রতিক লেনদেন ও ভাউচার খতিয়ান", modifier = Modifier.padding(vertical = 2.dp))
+                        RubElHizbDivider(title = "সাম্প্রতিক লেনদেন ও আসন্ন সভা", modifier = Modifier.padding(vertical = 2.dp))
                     }
                 }
 
@@ -429,6 +425,12 @@ fun DashboardScreen(
                             onScheduleClick = { onOpenDialog("schedule_meeting") },
                             onViewAllClick = { onOpenDialog("meetings") }
                         )
+                    }
+                }
+
+                item(key = "treasurer_prayer_div") {
+                    StaggeredDashboardItem(index = 7, modifier = Modifier.animateItem()) {
+                        RubElHizbDivider(title = "নামাজের সূচি", modifier = Modifier.padding(vertical = 2.dp))
                     }
                 }
 
@@ -1773,9 +1775,76 @@ fun PresidentPendingVouchersCard(
 ) {
     val isDark = LocalIsDarkTheme.current
     val rowBg = if (isDark) MosqueNightSurfaceVariant else MosqueBgLight
+
+    if (pendingTransactions.isEmpty()) {
+        MehrabArchCard(
+            backgroundColor = MaterialTheme.colorScheme.surface,
+            borderColor = MosqueCardBorderGold.copy(alpha = 0.6f),
+            elevation = 2.dp
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(14.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(34.dp)
+                            .clip(CircleShape)
+                            .background(MosqueEmeraldPrimary.copy(alpha = 0.12f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Verified,
+                            contentDescription = null,
+                            tint = MosqueEmeraldPrimary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column {
+                        Text(
+                            text = "সকল আর্থিক ভাউচার অনুমোদিত ও নিষ্পন্ন",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = "বর্তমানে কোনো ব্যয় ভাউচার বা বিল স্বাক্ষরের অপেক্ষায় নেই।",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+                if (onViewAll != null) {
+                    TextButton(
+                        onClick = onViewAll,
+                        contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp)
+                    ) {
+                        Text(
+                            text = "খতিয়ান",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
+        }
+        return
+    }
+
+    val totalPendingAmount = pendingTransactions.sumOf { it.amount }
+
     MehrabArchCard(
         backgroundColor = MaterialTheme.colorScheme.surface,
-        borderColor = MosqueUrgentRed.copy(alpha = 0.5f),
+        borderColor = MosqueUrgentRed.copy(alpha = 0.6f),
         elevation = 3.dp
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
@@ -1790,7 +1859,7 @@ fun PresidentPendingVouchersCard(
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(28.dp)
+                            .size(32.dp)
                             .clip(CircleShape)
                             .background(MosqueUrgentRed.copy(alpha = 0.15f)),
                         contentAlignment = Alignment.Center
@@ -1799,19 +1868,34 @@ fun PresidentPendingVouchersCard(
                             imageVector = Icons.Default.Gavel,
                             contentDescription = null,
                             tint = MosqueUrgentRed,
-                            modifier = Modifier.size(16.dp)
+                            modifier = Modifier.size(18.dp)
                         )
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     Column {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "নির্বাহী অনুমোদন ডেস্ক",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Surface(
+                                shape = RoundedCornerShape(6.dp),
+                                color = MosqueUrgentRed.copy(alpha = 0.12f)
+                            ) {
+                                Text(
+                                    text = "${toBengaliDigits(pendingTransactions.size.toString())}টি ভাউচার",
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MosqueUrgentRed,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
                         Text(
-                            text = "নির্বাহী অনুমোদন ডেস্ক (${toBengaliDigits(pendingTransactions.size.toString())}টি ভাউচার)",
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Text(
-                            text = "নির্বাহী স্বাক্ষর ও ব্যয় ভাউচার নিষ্পত্তি",
+                            text = "মোট দাবিকৃত: ৳${toBengaliDigits(String.format(Locale.getDefault(), "%,.0f", totalPendingAmount))} • নির্বাহী স্বাক্ষর অপেক্ষমাণ",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -1836,9 +1920,9 @@ fun PresidentPendingVouchersCard(
 
             pendingTransactions.take(3).forEach { txn ->
                 Surface(
-                    shape = RoundedCornerShape(10.dp),
+                    shape = RoundedCornerShape(12.dp),
                     color = rowBg,
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.35f)),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 4.dp)
@@ -1856,30 +1940,45 @@ fun PresidentPendingVouchersCard(
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
-                                text = "দাবিকৃত: ৳${toBengaliDigits(String.format("%,.0f", txn.amount))} • ${txn.createdBy}",
+                                text = "দাবিকৃত: ৳${toBengaliDigits(String.format(Locale.getDefault(), "%,.0f", txn.amount))} • ${txn.createdBy}",
                                 fontSize = 11.sp,
                                 color = MosqueUrgentRed,
                                 fontWeight = FontWeight.SemiBold
                             )
+                            if (txn.note.isNotBlank()) {
+                                Text(
+                                    text = txn.note,
+                                    fontSize = 10.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
                         }
 
-                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
                             OutlinedButton(
                                 onClick = { onReject(txn) },
                                 shape = RoundedCornerShape(8.dp),
-                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
-                                colors = ButtonDefaults.outlinedButtonColors(contentColor = MosqueUrgentRed)
+                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 2.dp),
+                                modifier = Modifier.height(34.dp),
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = MosqueUrgentRed),
+                                border = BorderStroke(1.dp, MosqueUrgentRed.copy(alpha = 0.6f))
                             ) {
-                                Text("বাতিল", fontSize = 11.sp)
+                                Text("বাতিল", fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
                             }
                             Button(
                                 onClick = { onApprove(txn) },
                                 shape = RoundedCornerShape(8.dp),
-                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 2.dp),
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 2.dp),
+                                modifier = Modifier.height(34.dp),
                                 colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary)
                             ) {
-                                Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(14.dp))
-                                Spacer(modifier = Modifier.width(4.dp))
+                                Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(13.dp))
+                                Spacer(modifier = Modifier.width(3.dp))
                                 Text("অনুমোদন", fontSize = 11.sp, fontWeight = FontWeight.Bold)
                             }
                         }
@@ -1973,6 +2072,8 @@ fun MusalliDevotionalCard(
 @Composable
 fun TreasurerTreasuryLedgerCard(
     netBalance: Double,
+    totalIncome: Double = 0.0,
+    totalExpense: Double = 0.0,
     dueChanda: Double,
     unverifiedCashboxCount: Int,
     pendingVoucherCount: Int,
@@ -1989,6 +2090,7 @@ fun TreasurerTreasuryLedgerCard(
         elevation = 3.dp
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
+            // Header
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -1997,7 +2099,7 @@ fun TreasurerTreasuryLedgerCard(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         modifier = Modifier
-                            .size(30.dp)
+                            .size(32.dp)
                             .clip(CircleShape)
                             .background(RoleTreasurerAccent.copy(alpha = 0.15f)),
                         contentAlignment = Alignment.Center
@@ -2015,10 +2117,10 @@ fun TreasurerTreasuryLedgerCard(
                             text = "বায়তুলমাল ও প্রধান তহবিল ডেস্ক",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "নগদ ও ব্যাংক আমানত তদারকি",
+                            text = "নগদ স্থিতি ও অর্থ ব্যবস্থাপনা",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -2039,46 +2141,94 @@ fun TreasurerTreasuryLedgerCard(
 
             Spacer(modifier = Modifier.height(10.dp))
 
+            // Main Balance Surface
             Surface(
                 shape = RoundedCornerShape(12.dp),
                 color = if (isDark) MosqueNightSurfaceVariant else MosqueGoldSoft.copy(alpha = 0.5f),
                 border = BorderStroke(1.dp, MosqueGold.copy(alpha = 0.35f)),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Row(
-                    modifier = Modifier.padding(12.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text(
-                            text = "বর্তমান নেট বায়তুলমাল স্থিতি",
-                            fontSize = 11.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            text = "৳${toBengaliDigits(String.format(Locale.getDefault(), "%,.0f", netBalance))}",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = MosqueSuccessGreen
-                        )
+                Column(modifier = Modifier.padding(12.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = "বর্তমান নেট বায়তুলমাল স্থিতি",
+                                fontSize = 11.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = "৳${toBengaliDigits(String.format(Locale.getDefault(), "%,.0f", netBalance))}",
+                                fontSize = 22.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = MosqueSuccessGreen
+                            )
+                        }
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text(
+                                text = "বকেয়া আদায়যোগ্য",
+                                fontSize = 11.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = "৳${toBengaliDigits(String.format(Locale.getDefault(), "%,.0f", dueChanda))}",
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MosqueWarningAmber
+                            )
+                        }
                     }
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text(
-                            text = "বকেয়া আদায়যোগ্য",
-                            fontSize = 11.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            text = "৳${toBengaliDigits(String.format(Locale.getDefault(), "%,.0f", dueChanda))}",
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MosqueWarningAmber
-                        )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+                    HorizontalDivider(
+                        color = MosqueGold.copy(alpha = 0.2f),
+                        thickness = 0.5.dp
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.ArrowDownward,
+                                contentDescription = null,
+                                tint = MosqueSuccessGreen,
+                                modifier = Modifier.size(13.dp)
+                            )
+                            Spacer(modifier = Modifier.width(3.dp))
+                            Text(
+                                text = "মোট আয়: ৳${toBengaliDigits(String.format(Locale.getDefault(), "%,.0f", totalIncome))}",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MosqueSuccessGreen
+                            )
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.ArrowUpward,
+                                contentDescription = null,
+                                tint = MosqueUrgentRed,
+                                modifier = Modifier.size(13.dp)
+                            )
+                            Spacer(modifier = Modifier.width(3.dp))
+                            Text(
+                                text = "মোট ব্যয়: ৳${toBengaliDigits(String.format(Locale.getDefault(), "%,.0f", totalExpense))}",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MosqueUrgentRed
+                            )
+                        }
                     }
                 }
             }
 
+            // Alert Badges (if any unverified cashboxes or pending vouchers)
             if (unverifiedCashboxCount > 0 || pendingVoucherCount > 0) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(
@@ -2138,46 +2288,70 @@ fun TreasurerTreasuryLedgerCard(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            Row(
+            // 4 Uniform Grid Action Buttons (2x2)
+            Column(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Button(
-                    onClick = onReceiveChanda,
-                    modifier = Modifier
-                        .weight(1f)
-                        .heightIn(min = 44.dp),
-                    shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(Icons.Default.Payments, contentDescription = null, modifier = Modifier.size(15.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("চাঁদা গ্রহণ", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    Button(
+                        onClick = onReceiveChanda,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary)
+                    ) {
+                        Icon(Icons.Default.Payments, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(5.dp))
+                        Text("চাঁদা গ্রহণ", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    }
+                    Button(
+                        onClick = onOpenCashbox,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = RoleTreasurerAccent)
+                    ) {
+                        Icon(Icons.Default.Inventory2, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(5.dp))
+                        Text("দানবাক্স জমা", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    }
                 }
-                OutlinedButton(
-                    onClick = onOpenCashbox,
-                    modifier = Modifier
-                        .weight(1f)
-                        .heightIn(min = 44.dp),
-                    shape = RoundedCornerShape(10.dp),
-                    border = BorderStroke(1.dp, RoleTreasurerAccent),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = RoleTreasurerAccent)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(Icons.Default.Inventory2, contentDescription = null, modifier = Modifier.size(15.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("ক্যাশবক্স জমা", fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                }
-                Button(
-                    onClick = onOpenPayroll,
-                    modifier = Modifier
-                        .weight(1f)
-                        .heightIn(min = 44.dp),
-                    shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MosqueInfoBlue)
-                ) {
-                    Icon(Icons.Default.Badge, contentDescription = null, modifier = Modifier.size(15.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("বেতন খাতা", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    OutlinedButton(
+                        onClick = onOpenPayroll,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        border = BorderStroke(1.dp, MosqueInfoBlue.copy(alpha = 0.7f)),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = MosqueInfoBlue)
+                    ) {
+                        Icon(Icons.Default.Badge, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(5.dp))
+                        Text("বেতন খাতা", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    }
+                    OutlinedButton(
+                        onClick = onViewFinance,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onSurface)
+                    ) {
+                        Icon(Icons.Default.ReceiptLong, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(5.dp))
+                        Text("হিসাব খতিয়ান", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    }
                 }
             }
         }
