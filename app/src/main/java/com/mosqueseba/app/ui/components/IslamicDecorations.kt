@@ -111,6 +111,11 @@ fun RubElHizbDivider(
     modifier: Modifier = Modifier,
     title: String? = null
 ) {
+    val isDark = LocalIsDarkTheme.current
+    val goldColor = if (isDark) MosqueGoldLight else MosqueGoldDeep
+    val badgeBg = if (isDark) MosqueGold.copy(alpha = 0.12f) else MosqueGoldSoft
+    val badgeBorder = if (isDark) MosqueGold.copy(alpha = 0.28f) else MosqueCardBorderGold.copy(alpha = 0.65f)
+
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -124,24 +129,60 @@ fun RubElHizbDivider(
                 .height(1.dp)
                 .background(
                     Brush.horizontalGradient(
-                        listOf(Color.Transparent, MosqueGoldDeep.copy(alpha = 0.5f))
+                        listOf(Color.Transparent, goldColor.copy(alpha = 0.45f))
                     )
                 )
         )
-        Text(
-            text = if (title != null) "  ۞  $title  ۞  " else "  ۞  ",
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Bold,
-            color = MosqueGoldDeep,
-            textAlign = TextAlign.Center
-        )
+        if (title != null) {
+            Surface(
+                color = badgeBg,
+                shape = RoundedCornerShape(12.dp),
+                border = androidx.compose.foundation.BorderStroke(0.8.dp, badgeBorder),
+                modifier = Modifier.padding(horizontal = 8.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp)
+                ) {
+                    Text(
+                        text = "۞",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = goldColor
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = title,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = goldColor,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "۞",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = goldColor
+                    )
+                }
+            }
+        } else {
+            Text(
+                text = "  ۞  ",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                color = goldColor,
+                textAlign = TextAlign.Center
+            )
+        }
         Box(
             modifier = Modifier
                 .weight(1f)
                 .height(1.dp)
                 .background(
                     Brush.horizontalGradient(
-                        listOf(MosqueGoldDeep.copy(alpha = 0.5f), Color.Transparent)
+                        listOf(goldColor.copy(alpha = 0.45f), Color.Transparent)
                     )
                 )
         )
@@ -315,77 +356,95 @@ fun RoleWorkspaceHeader(
         )
     }
 
+    val isDark = LocalIsDarkTheme.current
+    val headerTitleColor = if (isDark) MosqueNightTextPrimary else MaterialTheme.colorScheme.primary
+
     Surface(
-        color = accentColor.copy(alpha = 0.08f),
+        color = accentColor.copy(alpha = if (isDark) 0.12f else 0.08f),
         shape = RoundedCornerShape(14.dp),
-        border = androidx.compose.foundation.BorderStroke(1.dp, accentColor.copy(alpha = 0.25f)),
+        border = androidx.compose.foundation.BorderStroke(1.dp, accentColor.copy(alpha = 0.28f)),
         modifier = modifier
             .fillMaxWidth()
             .clickable { onDutiesClick() }
     ) {
-        Row(
-            modifier = Modifier.padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        Column {
             Box(
                 modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(accentColor),
-                contentAlignment = Alignment.Center
+                    .fillMaxWidth()
+                    .height(2.dp)
+                    .background(
+                        Brush.horizontalGradient(
+                            listOf(Color.Transparent, accentColor.copy(alpha = 0.7f), Color.Transparent)
+                        )
+                    )
+            )
+            Row(
+                modifier = Modifier.padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(22.dp)
-                )
-            }
-            Spacer(modifier = Modifier.width(12.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = title,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                Text(
-                    text = subtitle,
-                    fontSize = 11.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    lineHeight = 15.sp
-                )
-            }
-            Spacer(modifier = Modifier.width(6.dp))
-            Column(
-                horizontalAlignment = Alignment.End,
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = accentColor.copy(alpha = 0.16f)
+                Box(
+                    modifier = Modifier
+                        .size(42.dp)
+                        .clip(CircleShape)
+                        .background(accentColor)
+                        .border(1.5.dp, Color.White.copy(alpha = 0.45f), CircleShape),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "দায়িত্ব",
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = accentColor,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(22.dp)
                     )
                 }
-                if (onProfileClick != null) {
+                Spacer(modifier = Modifier.width(12.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = title,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = headerTitleColor
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = subtitle,
+                        fontSize = 11.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        lineHeight = 15.sp
+                    )
+                }
+                Spacer(modifier = Modifier.width(6.dp))
+                Column(
+                    horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
                     Surface(
-                        onClick = onProfileClick,
                         shape = RoundedCornerShape(8.dp),
-                        color = MosqueEmeraldPrimary
+                        color = accentColor.copy(alpha = 0.16f),
+                        border = androidx.compose.foundation.BorderStroke(0.6.dp, accentColor.copy(alpha = 0.35f))
                     ) {
                         Text(
-                            text = "আমার প্রোফাইল",
+                            text = "দায়িত্ব",
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color.White,
+                            color = accentColor,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                         )
+                    }
+                    if (onProfileClick != null) {
+                        Surface(
+                            onClick = onProfileClick,
+                            shape = RoundedCornerShape(8.dp),
+                            color = MosqueEmeraldPrimary
+                        ) {
+                            Text(
+                                text = "আমার প্রোফাইল",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
+                        }
                     }
                 }
             }

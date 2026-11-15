@@ -1,17 +1,26 @@
 package com.mosqueseba.app.ui.components
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -87,6 +96,17 @@ fun PrayerCard(
     val secondaryColor = MaterialTheme.colorScheme.onSurfaceVariant
     val subtitleHighlight = if (isDark) MosqueGoldLight else MosqueGoldDark
 
+    val infiniteTransition = rememberInfiniteTransition(label = "NextPrayerPulse")
+    val pulseAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.4f,
+        targetValue = 1.0f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1200, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "pulseAlpha"
+    )
+
     MehrabArchCard(
         modifier = Modifier.fillMaxWidth(),
         backgroundColor = MaterialTheme.colorScheme.surface,
@@ -118,12 +138,24 @@ fun PrayerCard(
                             fontWeight = FontWeight.Bold,
                             color = primaryColor
                         )
-                        Text(
-                            text = "পরবর্তী ${nextSummary.nameBn} • বাকি ${nextSummary.remainingTextBn}",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = subtitleHighlight,
-                            fontWeight = FontWeight.SemiBold
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(top = 1.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(6.dp)
+                                    .clip(CircleShape)
+                                    .background(subtitleHighlight.copy(alpha = pulseAlpha))
+                            )
+                            Spacer(modifier = Modifier.width(5.dp))
+                            Text(
+                                text = "পরবর্তী ${nextSummary.nameBn} • বাকি ${nextSummary.remainingTextBn}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = subtitleHighlight,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
                     }
                 }
 
@@ -155,10 +187,22 @@ fun PrayerCard(
                             .then(
                                 if (item.isNext) {
                                     Modifier
-                                        .background(MosqueEmeraldDarkGradient)
+                                        .background(
+                                            Brush.verticalGradient(
+                                                listOf(
+                                                    MosqueEmeraldPrimary,
+                                                    MosqueEmeraldDark
+                                                )
+                                            )
+                                        )
                                         .border(
-                                            width = 1.dp,
-                                            color = MosqueGold,
+                                            width = 1.5.dp,
+                                            brush = Brush.verticalGradient(
+                                                listOf(
+                                                    MosqueGoldLight.copy(alpha = pulseAlpha),
+                                                    MosqueGoldDeep
+                                                )
+                                            ),
                                             shape = RoundedCornerShape(12.dp)
                                         )
                                 } else {
@@ -171,14 +215,23 @@ fun PrayerCard(
                                         )
                                 }
                             )
-                            .padding(vertical = 10.dp, horizontal = 2.dp),
+                            .padding(vertical = 8.dp, horizontal = 2.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
+                        if (item.isNext) {
+                            Box(
+                                modifier = Modifier
+                                    .size(5.dp)
+                                    .clip(CircleShape)
+                                    .background(MosqueGold.copy(alpha = pulseAlpha))
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                        }
                         Text(
                             text = item.nameBn,
                             style = MaterialTheme.typography.labelSmall,
                             color = if (item.isNext) MosqueGold else secondaryColor,
-                            fontWeight = if (item.isNext) FontWeight.Bold else FontWeight.Medium,
+                            fontWeight = if (item.isNext) FontWeight.ExtraBold else FontWeight.Medium,
                             maxLines = 1
                         )
                         Spacer(modifier = Modifier.height(3.dp))
