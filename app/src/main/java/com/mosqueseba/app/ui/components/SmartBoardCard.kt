@@ -98,15 +98,15 @@ fun SmartBoardCard(
     val currentSlide = slides[safeIndex]
 
     val isDark = LocalIsDarkTheme.current
-    val cardBg = if (isDark) MosqueNightSurfaceVariant else MosqueGoldSoft
+    val cardBg = if (isDark) MosqueNightSurfaceVariant else MaterialTheme.colorScheme.surface
     val accentEmerald = if (isDark) MosqueGoldLight else MosqueEmeraldPrimary
-    val titleColor = if (isDark) MosqueGoldLight else MosqueEmeraldDark
+    val titleColor = if (isDark) MosqueNightTextPrimary else MosqueTextPrimary
 
     MehrabArchCard(
         modifier = Modifier.fillMaxWidth(),
         backgroundColor = cardBg,
-        borderColor = MosqueGold.copy(alpha = 0.5f),
-        elevation = 2.dp
+        borderColor = if (isDark) MosqueNightBorder else MosqueCardBorderSubtle,
+        elevation = 1.5.dp
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
             Row(
@@ -168,14 +168,22 @@ fun SmartBoardCard(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        tint = iconTint,
-                        modifier = Modifier.size(28.dp)
-                    )
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(iconTint.copy(alpha = if (isDark) 0.16f else 0.08f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = null,
+                            tint = iconTint,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
                     Spacer(modifier = Modifier.width(10.dp))
-                    Column {
+                    Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = slide.title,
                             style = MaterialTheme.typography.labelMedium,
@@ -185,7 +193,7 @@ fun SmartBoardCard(
                         Text(
                             text = slide.subtitle,
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurface,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             maxLines = 2
                         )
                     }

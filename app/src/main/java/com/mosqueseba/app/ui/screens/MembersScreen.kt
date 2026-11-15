@@ -939,18 +939,10 @@ private fun ChandaMemberCard(
             .testTag("chanda_member_card_${member.id}"),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp, pressedElevation = 5.dp),
-        border = BorderStroke(1.dp, MosqueCardBorderGold)
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp, pressedElevation = 3.dp),
+        border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else MosqueCardBorderSubtle)
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
-            // Subtle gold top line
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(2.dp)
-                    .background(IslamicGoldTrimGradient)
-            )
-
             Column(modifier = Modifier.padding(12.dp)) {
                 // Top Info Row
                 Row(
@@ -1216,16 +1208,10 @@ private fun SalariedMemberCard(
             .testTag("salaried_member_card_${item.key}"),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp, pressedElevation = 5.dp),
-        border = BorderStroke(1.dp, MosqueCardBorderGold)
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp, pressedElevation = 3.dp),
+        border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else MosqueCardBorderSubtle)
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(2.dp)
-                    .background(IslamicGoldTrimGradient)
-            )
             Column(modifier = Modifier.padding(12.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),

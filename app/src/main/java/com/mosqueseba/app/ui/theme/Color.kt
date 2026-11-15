@@ -17,13 +17,13 @@ val MosqueGoldDark = Color(0xFFB45309)       // Deep Royal Ochre
 val MosqueGoldLight = Color(0xFFFEF3C7)      // Warm Gold Shimmer
 val MosqueGoldSoft = Color(0xFFFFFBEB)       // Soft Creamy Ivory Gold
 
-// Islamic Clean Surfaces & Warm Parchment
-val MosqueBgLight = Color(0xFFFBF9F5)        // Warm Islamic Parchment Ivory
+// Islamic Clean Surfaces & Warm Modern Canvas
+val MosqueBgLight = Color(0xFFF8FAF8)        // Crisp, ultra-clean modern Islamic canvas
 val MosqueSurface = Color(0xFFFFFFFF)
 val MosqueCardBg = Color(0xFFFFFFFF)
-val MosqueCardBorder = Color(0xFFE5E7EB)
-val MosqueCardBorderSubtle = Color(0xFFF3F4F6)
-val MosqueCardBorderGold = Color(0xFFFDE68A)
+val MosqueCardBorder = Color(0xFFE2E8F0)
+val MosqueCardBorderSubtle = Color(0xFFEEF2F6)
+val MosqueCardBorderGold = Color(0xFFF3E8D0)
 
 // Typography & Ink Colors
 val MosqueTextPrimary = Color(0xFF0F172A)

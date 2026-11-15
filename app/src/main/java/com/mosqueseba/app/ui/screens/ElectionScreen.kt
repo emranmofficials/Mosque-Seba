@@ -348,7 +348,7 @@ private fun ElectionScheduleTabView(
             Surface(
                 shape = RoundedCornerShape(16.dp),
                 color = MaterialTheme.colorScheme.surface,
-                border = BorderStroke(1.dp, MosqueCardBorderGold),
+                border = BorderStroke(1.dp, MosqueCardBorder),
                 shadowElevation = 2.dp,
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -1067,7 +1067,7 @@ private fun ElectionResultsTabView(
                     )
 
                     Spacer(modifier = Modifier.height(14.dp))
-                    HorizontalDivider(color = MosqueCardBorderGold)
+                    HorizontalDivider(color = MosqueCardBorder)
                     Spacer(modifier = Modifier.height(14.dp))
 
                     if (electedList.isEmpty()) {

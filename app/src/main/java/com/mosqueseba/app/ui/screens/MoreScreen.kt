@@ -765,7 +765,7 @@ fun MoreScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 shape = RoundedCornerShape(14.dp),
                                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                                border = BorderStroke(1.dp, MosqueCardBorderGold.copy(alpha = 0.7f))
+                                border = BorderStroke(1.dp, cardBorder)
                             ) {
                                 Column(modifier = Modifier.padding(14.dp)) {
                                     Row(

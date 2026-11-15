@@ -50,11 +50,12 @@ fun GlobalHeader(
 
     Surface(
         color = Color.Transparent,
-        shadowElevation = 6.dp
+        shadowElevation = 4.dp
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .clip(RoundedCornerShape(bottomStart = 20.dp, bottomEnd = 20.dp))
                 .background(MosqueEmeraldDarkGradient)
         ) {
             Row(

@@ -148,16 +148,19 @@ fun NavigationBottomBar(
     val activeColor = MaterialTheme.colorScheme.primary
     val inactiveTextColor = MaterialTheme.colorScheme.onSurfaceVariant
 
+    val isDark = LocalIsDarkTheme.current
+    val topBorderColor = if (isDark) MosqueNightBorder else MosqueCardBorderSubtle
+
     Surface(
         color = surfaceColor,
-        shadowElevation = 8.dp
+        shadowElevation = 6.dp
     ) {
         Column {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(2.dp)
-                    .background(IslamicGoldTrimGradient)
+                    .height(0.8.dp)
+                    .background(topBorderColor)
             )
             NavigationBar(
                 containerColor = surfaceColor,

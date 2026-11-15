@@ -174,7 +174,7 @@ fun LoginScreen(
             Surface(
                 shape = RoundedCornerShape(14.dp),
                 color = MaterialTheme.colorScheme.surface,
-                border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else MosqueCardBorderGold),
+                border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else MosqueCardBorderSubtle),
                 shadowElevation = 2.dp,
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -800,7 +800,7 @@ fun QuickRoleChip(
     Surface(
         shape = RoundedCornerShape(10.dp),
         color = if (isDark) MosqueNightSurfaceVariant else MosqueBgLight,
-        border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else MosqueCardBorderGold),
+        border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else MosqueCardBorderSubtle),
         modifier = modifier
             .heightIn(min = 48.dp)
             .clip(RoundedCornerShape(10.dp))

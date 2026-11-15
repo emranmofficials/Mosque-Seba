@@ -712,13 +712,13 @@ fun NoticeCardItem(
             .testTag("notice_card_${notice.id}"),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         border = BorderStroke(
             width = 1.dp,
             color = when {
-                notice.priority == "urgent" -> MosqueUrgentRed.copy(alpha = 0.4f)
-                notice.isPinned -> MosqueCardBorderGold
-                else -> MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+                notice.priority == "urgent" -> MosqueUrgentRed.copy(alpha = 0.35f)
+                notice.isPinned -> MosqueGold.copy(alpha = 0.45f)
+                else -> if (isDark) MosqueNightBorder else MosqueCardBorderSubtle
             }
         )
     ) {
@@ -921,10 +921,10 @@ fun MeetingCardItem(
             .testTag("meeting_card_${meeting.id}"),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         border = BorderStroke(
             width = 1.dp,
-            color = if (isCompleted) MosqueSuccessGreen.copy(alpha = 0.35f) else MosqueCardBorderGold.copy(alpha = 0.7f)
+            color = if (isCompleted) MosqueSuccessGreen.copy(alpha = 0.35f) else (if (isDark) MosqueNightBorder else MosqueCardBorderSubtle)
         )
     ) {
         Row(

@@ -76,39 +76,51 @@ fun formatCurrentGregorianDateBn(): String {
 }
 
 /**
- * Islamic Mehrab Arch Card Container
+ * Ultra-Modern Islamic Card Container with Refined Mehrab Curve & Soft Shadows
  */
 @Composable
 fun MehrabArchCard(
     modifier: Modifier = Modifier,
     backgroundColor: Color = MaterialTheme.colorScheme.surface,
-    borderColor: Color = MosqueCardBorderGold,
-    elevation: Dp = 3.dp,
+    borderColor: Color = MosqueCardBorderSubtle,
+    elevation: Dp = 1.5.dp,
+    showAccentTrim: Boolean = false,
     content: @Composable ColumnScope.() -> Unit
 ) {
+    val isDark = LocalIsDarkTheme.current
+    val effectiveBorder = if (borderColor == MosqueCardBorderGold) {
+        if (isDark) MosqueNightBorder else MosqueCardBorderSubtle
+    } else borderColor
+
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .shadow(elevation, shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp, bottomStart = 16.dp, bottomEnd = 16.dp), spotColor = MosqueGoldDeep.copy(alpha = 0.25f)),
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp, bottomStart = 16.dp, bottomEnd = 16.dp),
+            .shadow(
+                elevation = elevation,
+                shape = RoundedCornerShape(20.dp),
+                spotColor = Color(0xFF064E3B).copy(alpha = if (isDark) 0.3f else 0.06f),
+                ambientColor = Color(0xFF064E3B).copy(alpha = if (isDark) 0.2f else 0.04f)
+            ),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = backgroundColor),
-        border = androidx.compose.foundation.BorderStroke(1.dp, borderColor)
+        border = androidx.compose.foundation.BorderStroke(1.dp, effectiveBorder)
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
-            // Gold Arch Accent Header Line
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(3.dp)
-                    .background(IslamicGoldTrimGradient)
-            )
+            if (showAccentTrim) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(2.dp)
+                        .background(IslamicGoldTrimGradient)
+                )
+            }
             content()
         }
     }
 }
 
 /**
- * Islamic Geometric Divider with Star (۞) Motif
+ * Modern Islamic Section Header & Divider
  */
 @Composable
 fun RubElHizbDivider(
@@ -116,79 +128,48 @@ fun RubElHizbDivider(
     title: String? = null
 ) {
     val isDark = LocalIsDarkTheme.current
-    val goldColor = if (isDark) MosqueGoldLight else MosqueGoldDeep
-    val badgeBg = if (isDark) MosqueGold.copy(alpha = 0.12f) else MosqueGoldSoft
-    val badgeBorder = if (isDark) MosqueGold.copy(alpha = 0.28f) else MosqueCardBorderGold.copy(alpha = 0.65f)
+    val primaryText = if (isDark) MosqueNightTextPrimary else MosqueTextPrimary
+    val dividerColor = if (isDark) MosqueNightBorder else MosqueCardBorderSubtle
 
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center
-    ) {
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .height(1.dp)
-                .background(
-                    Brush.horizontalGradient(
-                        listOf(Color.Transparent, goldColor.copy(alpha = 0.45f))
-                    )
+    if (title != null) {
+        Row(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(horizontal = 4.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(3.5.dp, 14.dp)
+                        .clip(RoundedCornerShape(2.dp))
+                        .background(MosqueEmeraldLight)
                 )
-        )
-        if (title != null) {
-            Surface(
-                color = badgeBg,
-                shape = RoundedCornerShape(12.dp),
-                border = androidx.compose.foundation.BorderStroke(0.8.dp, badgeBorder),
-                modifier = Modifier.padding(horizontal = 8.dp)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp)
-                ) {
-                    Text(
-                        text = "۞",
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = goldColor
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = title,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = goldColor,
-                        textAlign = TextAlign.Center
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = "۞",
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = goldColor
-                    )
-                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = primaryText
+                )
             }
-        } else {
-            Text(
-                text = "  ۞  ",
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold,
-                color = goldColor,
-                textAlign = TextAlign.Center
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(0.8.dp)
+                    .padding(start = 12.dp)
+                    .background(dividerColor)
             )
         }
+    } else {
         Box(
-            modifier = Modifier
-                .weight(1f)
-                .height(1.dp)
-                .background(
-                    Brush.horizontalGradient(
-                        listOf(goldColor.copy(alpha = 0.45f), Color.Transparent)
-                    )
-                )
+            modifier = modifier
+                .fillMaxWidth()
+                .height(0.8.dp)
+                .padding(vertical = 4.dp)
+                .background(dividerColor)
         )
     }
 }

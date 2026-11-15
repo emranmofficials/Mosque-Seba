@@ -459,24 +459,17 @@ fun FinanceScreen(
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(18.dp))
+                        .clip(RoundedCornerShape(22.dp))
                         .animateContentSize(spring(stiffness = Spring.StiffnessMediumLow)),
                     colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 5.dp),
-                    border = BorderStroke(1.dp, MosqueGold.copy(alpha = 0.5f))
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                    border = BorderStroke(1.dp, MosqueGold.copy(alpha = 0.35f))
                 ) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
                             .background(MosqueEmeraldDarkGradient)
                     ) {
-                        // Subtle Royal Gold Top Trim
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(2.5.dp)
-                                .background(IslamicGoldTrimGradient)
-                        )
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -1731,10 +1724,10 @@ fun TransactionCardItem(
             .testTag("txn_card_${transaction.transactionCode}"),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         border = BorderStroke(
             width = 1.dp,
-            color = if (transaction.approvalStatus == "pending") MosqueWarningAmber.copy(alpha = 0.55f) else MosqueCardBorderGold
+            color = if (transaction.approvalStatus == "pending") MosqueWarningAmber.copy(alpha = 0.55f) else (if (isDark) MosqueNightBorder else MosqueCardBorderSubtle)
         )
     ) {
         Column(

@@ -245,8 +245,8 @@ fun ExecutiveMosqueHeroCard(
     MehrabArchCard(
         modifier = Modifier.fillMaxWidth(),
         backgroundColor = Color.Transparent,
-        borderColor = MosqueGold.copy(alpha = 0.6f),
-        elevation = 4.dp
+        borderColor = MosqueGold.copy(alpha = 0.35f),
+        elevation = 2.dp
     ) {
         Column(
             modifier = Modifier

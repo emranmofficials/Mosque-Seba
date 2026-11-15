@@ -110,8 +110,8 @@ fun PrayerCard(
     MehrabArchCard(
         modifier = Modifier.fillMaxWidth(),
         backgroundColor = MaterialTheme.colorScheme.surface,
-        borderColor = MosqueCardBorderGold.copy(alpha = 0.6f),
-        elevation = 3.dp
+        borderColor = if (isDark) MosqueNightBorder else MosqueCardBorderSubtle,
+        elevation = 1.5.dp
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
             // Card Title
