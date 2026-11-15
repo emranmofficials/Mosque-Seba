@@ -1235,7 +1235,7 @@ private fun SalariedMemberCard(
                         nameBn = item.nameBn,
                         photoUrl = item.photoUrl,
                         size = 48.dp,
-                        isActive = (item.status == "active")
+                        isActive = item.staff.isActive
                     )
 
                     Spacer(modifier = Modifier.width(12.dp))

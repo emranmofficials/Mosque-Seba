@@ -38,6 +38,7 @@ import com.mosqueseba.app.ui.components.ExecutiveFormDialogShell
 import com.mosqueseba.app.ui.components.MehrabArchCard
 import com.mosqueseba.app.ui.components.MoreFormSection
 import com.mosqueseba.app.ui.components.MosqueConfirmDialog
+import com.mosqueseba.app.ui.components.MosqueMemberAvatar
 import com.mosqueseba.app.ui.components.MosqueToastController
 import com.mosqueseba.app.ui.components.roleIcon
 import com.mosqueseba.app.ui.components.toBengaliDigits
