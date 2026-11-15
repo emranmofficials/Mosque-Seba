@@ -844,7 +844,9 @@ fun DashboardScreen(
                             studentCount = studentCount,
                             pendingWelfareCount = pendingWelfareCases.size,
                             onOpenWelfare = { onOpenDialog("welfare") },
-                            onOpenMadrasa = { onOpenDialog("madrasa") }
+                            onOpenMadrasa = { onOpenDialog("madrasa") },
+                            onOpenNewApplication = { onOpenDialog("welfare") },
+                            onOpenEvents = { onOpenDialog("events") }
                         )
                     }
                 }
@@ -929,7 +931,9 @@ fun DashboardScreen(
                             quoteCount = allSmartBoardQuotes.size,
                             noticeCount = allNotices.size,
                             onOpenPublicity = { onOpenDialog("publicity") },
-                            onOpenNotices = { onOpenDialog("publish_notice") }
+                            onOpenNotices = { onOpenDialog("publish_notice") },
+                            onOpenEvents = { onOpenDialog("events") },
+                            onOpenPrayerSchedule = { onOpenDialog("view_prayers") }
                         )
                     }
                 }
@@ -942,7 +946,7 @@ fun DashboardScreen(
 
                 item(key = "publicity_kpi_div") {
                     StaggeredDashboardItem(index = 3, modifier = Modifier.animateItem()) {
-                        RubElHizbDivider(title = "প্রচার ও প্রযুক্তি সূচক", modifier = Modifier.padding(vertical = 2.dp))
+                        RubElHizbDivider(title = "প্রচার ও তথ্যপ্রযুক্তি সূচক", modifier = Modifier.padding(vertical = 2.dp))
                     }
                 }
 
@@ -966,7 +970,7 @@ fun DashboardScreen(
 
                 item(key = "publicity_actions_div") {
                     StaggeredDashboardItem(index = 4, modifier = Modifier.animateItem()) {
-                        RubElHizbDivider(title = "প্রচার অ্যাকশন", modifier = Modifier.padding(vertical = 2.dp))
+                        RubElHizbDivider(title = "প্রচার ও প্রকাশনা অ্যাকশন", modifier = Modifier.padding(vertical = 2.dp))
                     }
                 }
 
@@ -1007,7 +1011,8 @@ fun DashboardScreen(
                             myChandaSub = myChandaSub,
                             onViewReceipt = { onOpenDialog("view_receipt") },
                             onMakeDonation = { onOpenDialog("my_chanda") },
-                            onOpenTransparency = { onOpenDialog("transparency") }
+                            onOpenTransparency = { onOpenDialog("transparency") },
+                            onViewPrayerSchedule = { onOpenDialog("view_prayers") }
                         )
                     }
                 }
@@ -1515,6 +1520,7 @@ fun PendingWelfareHighlightCard(
     pendingCases: List<WelfareCaseEntity>,
     onOpenWelfare: () -> Unit
 ) {
+    val isDark = LocalIsDarkTheme.current
     val firstCase = pendingCases.first()
     MehrabArchCard(
         backgroundColor = MaterialTheme.colorScheme.surface,
@@ -1531,12 +1537,20 @@ fun PendingWelfareHighlightCard(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.weight(1f)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.VolunteerActivism,
-                        contentDescription = null,
-                        tint = RoleWelfareEduAccent,
-                        modifier = Modifier.size(18.dp)
-                    )
+                    Box(
+                        modifier = Modifier
+                            .size(26.dp)
+                            .clip(CircleShape)
+                            .background(RoleWelfareEduAccent.copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.VolunteerActivism,
+                            contentDescription = null,
+                            tint = RoleWelfareEduAccent,
+                            modifier = Modifier.size(15.dp)
+                        )
+                    }
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = "বিতরণ অপেক্ষমাণ সহায়তা (${toBengaliDigits(pendingCases.size.toString())}টি)",
@@ -1545,33 +1559,85 @@ fun PendingWelfareHighlightCard(
                         color = MaterialTheme.colorScheme.primary
                     )
                 }
-                TextButton(onClick = onOpenWelfare) {
-                    Text("সব দেখুন", fontSize = 11.sp, color = MaterialTheme.colorScheme.primary)
+                TextButton(
+                    onClick = onOpenWelfare,
+                    contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp)
+                ) {
+                    Text("সব দেখুন", fontSize = 11.sp, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
                 }
             }
-            Text(
-                text = "${firstCase.beneficiaryName} • ৳${toBengaliDigits(firstCase.amountApproved.toInt().toString())}",
-                style = MaterialTheme.typography.bodySmall,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Text(
-                text = "${firstCase.category} • ${toBengaliDigits(firstCase.applicationDate)}",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Spacer(modifier = Modifier.height(8.dp))
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            Surface(
+                shape = RoundedCornerShape(10.dp),
+                color = if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft.copy(alpha = 0.45f),
+                border = BorderStroke(1.dp, RoleWelfareEduAccent.copy(alpha = 0.3f)),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(10.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = firstCase.beneficiaryName,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        val approvedAmount = if (firstCase.amountApproved > 0) firstCase.amountApproved else firstCase.amountRequested
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = RoleWelfareEduAccent.copy(alpha = 0.15f)
+                        ) {
+                            Text(
+                                text = "৳${toBengaliDigits(approvedAmount.toInt().toString())}",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = RoleWelfareEduAccent,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "${firstCase.category} • ${toBengaliDigits(firstCase.applicationDate)}",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        if (pendingCases.size > 1) {
+                            Text(
+                                text = "+${toBengaliDigits((pendingCases.size - 1).toString())}টি আরও অপেক্ষমাণ",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MosqueInfoBlue,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
             Button(
                 onClick = onOpenWelfare,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(min = 48.dp),
+                    .height(42.dp),
                 shape = RoundedCornerShape(10.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = RoleWelfareEduAccent)
+                colors = ButtonDefaults.buttonColors(containerColor = RoleWelfareEduAccent),
+                contentPadding = PaddingValues(horizontal = 12.dp)
             ) {
                 Icon(Icons.Default.VolunteerActivism, contentDescription = null, modifier = Modifier.size(16.dp))
                 Spacer(modifier = Modifier.width(6.dp))
-                Text("যাকাত ও সহায়তা বিতরণ খুলুন", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                Text("যাকাত ও কল্যাণ বিতরণ পরিচালনা", fontSize = 12.sp, fontWeight = FontWeight.Bold)
             }
         }
     }
@@ -2127,28 +2193,30 @@ fun MusalliDevotionalCard(
                     onClick = onViewReceipt,
                     modifier = Modifier
                         .weight(1f)
-                        .heightIn(min = 48.dp)
+                        .height(44.dp)
                         .testTag("musalli_receipt_button"),
                     shape = RoundedCornerShape(10.dp),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary),
+                    contentPadding = PaddingValues(horizontal = 4.dp)
                 ) {
-                    Icon(Icons.Default.QrCode2, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text("ডিজিটাল রসিদ", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    Icon(Icons.Default.QrCode2, contentDescription = null, modifier = Modifier.size(15.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("ডিজিটাল রসিদ", fontSize = 11.sp, fontWeight = FontWeight.Bold)
                 }
                 Button(
                     onClick = onMakeDonation,
                     modifier = Modifier
                         .weight(1f)
-                        .heightIn(min = 48.dp)
+                        .height(44.dp)
                         .testTag("musalli_donation_button"),
                     shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary)
+                    colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary),
+                    contentPadding = PaddingValues(horizontal = 4.dp)
                 ) {
-                    Icon(Icons.Default.VolunteerActivism, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text("চাঁদা খাতা দেখুন", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    Icon(Icons.Default.VolunteerActivism, contentDescription = null, modifier = Modifier.size(15.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("চাঁদা খাতা দেখুন", fontSize = 11.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -3406,7 +3474,8 @@ fun MusalliTransparencySummaryCard(
     myChandaSub: String,
     onViewReceipt: () -> Unit,
     onMakeDonation: () -> Unit,
-    onOpenTransparency: () -> Unit
+    onOpenTransparency: () -> Unit,
+    onViewPrayerSchedule: () -> Unit = {}
 ) {
     val isDark = LocalIsDarkTheme.current
     MehrabArchCard(
@@ -3424,7 +3493,7 @@ fun MusalliTransparencySummaryCard(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         modifier = Modifier
-                            .size(30.dp)
+                            .size(32.dp)
                             .clip(CircleShape)
                             .background(RoleMusalliAccent.copy(alpha = 0.15f)),
                         contentAlignment = Alignment.Center
@@ -3472,70 +3541,138 @@ fun MusalliTransparencySummaryCard(
                 border = BorderStroke(1.dp, MosqueGold.copy(alpha = 0.35f)),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Row(
-                    modifier = Modifier.padding(12.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text(
-                            text = "মসজিদের কেন্দ্রীয় তহবিল স্থিতি",
-                            fontSize = 11.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            text = "৳${toBengaliDigits(String.format(Locale.getDefault(), "%,.0f", netBalance))}",
-                            fontSize = 19.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = MosqueSuccessGreen
-                        )
+                Column(modifier = Modifier.padding(12.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = "মসজিদের কেন্দ্রীয় তহবিল স্থিতি",
+                                fontSize = 11.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = "৳${toBengaliDigits(String.format(Locale.getDefault(), "%,.0f", netBalance))}",
+                                fontSize = 19.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = MosqueSuccessGreen
+                            )
+                        }
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text(
+                                text = "আমার প্রদত্ত চাঁদা ($myChandaSub)",
+                                fontSize = 11.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = "৳${toBengaliDigits(String.format(Locale.getDefault(), "%,.0f", myChandaPaid))}",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MosqueGoldDark
+                            )
+                        }
                     }
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text(
-                            text = "আমার প্রদত্ত চাঁদা ($myChandaSub)",
-                            fontSize = 11.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            text = "৳${toBengaliDigits(String.format(Locale.getDefault(), "%,.0f", myChandaPaid))}",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MosqueGoldDark
-                        )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = MosqueSuccessGreen.copy(alpha = if (isDark) 0.2f else 0.1f),
+                        border = BorderStroke(1.dp, MosqueSuccessGreen.copy(alpha = 0.35f)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.VerifiedUser,
+                                contentDescription = null,
+                                tint = MosqueSuccessGreen,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "সকল হিসাব সাধারণ মুসল্লি ও কমিটির জন্য উন্মুক্ত",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = MosqueSuccessGreen
+                            )
+                        }
                     }
                 }
             }
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            Row(
+            Column(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                OutlinedButton(
-                    onClick = onViewReceipt,
-                    modifier = Modifier
-                        .weight(1f)
-                        .heightIn(min = 44.dp),
-                    shape = RoundedCornerShape(10.dp),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(Icons.Default.QrCode2, contentDescription = null, modifier = Modifier.size(15.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("QR ডিজিটাল রসিদ", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    OutlinedButton(
+                        onClick = onViewReceipt,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary),
+                        contentPadding = PaddingValues(horizontal = 4.dp)
+                    ) {
+                        Icon(Icons.Default.QrCode2, contentDescription = null, modifier = Modifier.size(15.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("QR রসিদ", fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+                    }
+                    Button(
+                        onClick = onMakeDonation,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary),
+                        contentPadding = PaddingValues(horizontal = 4.dp)
+                    ) {
+                        Icon(Icons.Default.Payments, contentDescription = null, modifier = Modifier.size(15.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("চাঁদা ও খাতা", fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+                    }
                 }
-                Button(
-                    onClick = onMakeDonation,
-                    modifier = Modifier
-                        .weight(1f)
-                        .heightIn(min = 44.dp),
-                    shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(Icons.Default.Payments, contentDescription = null, modifier = Modifier.size(15.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("চাঁদা প্রদান ও খাতা", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    Button(
+                        onClick = onOpenTransparency,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = MosqueSuccessGreen),
+                        contentPadding = PaddingValues(horizontal = 4.dp)
+                    ) {
+                        Icon(Icons.Default.Assessment, contentDescription = null, modifier = Modifier.size(15.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("স্বচ্ছ তহবিল", fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+                    }
+                    Button(
+                        onClick = onViewPrayerSchedule,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = MosqueInfoBlue),
+                        contentPadding = PaddingValues(horizontal = 4.dp)
+                    ) {
+                        Icon(Icons.Default.AccessTime, contentDescription = null, modifier = Modifier.size(15.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("নামাজের সূচি", fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+                    }
                 }
             }
         }
@@ -3547,7 +3684,9 @@ fun WelfareEduDeskCard(
     studentCount: Int,
     pendingWelfareCount: Int,
     onOpenWelfare: () -> Unit,
-    onOpenMadrasa: () -> Unit
+    onOpenMadrasa: () -> Unit,
+    onOpenNewApplication: () -> Unit = onOpenWelfare,
+    onOpenEvents: () -> Unit = {}
 ) {
     val isDark = LocalIsDarkTheme.current
     MehrabArchCard(
@@ -3565,7 +3704,7 @@ fun WelfareEduDeskCard(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         modifier = Modifier
-                            .size(30.dp)
+                            .size(32.dp)
                             .clip(CircleShape)
                             .background(RoleWelfareEduAccent.copy(alpha = 0.15f)),
                         contentAlignment = Alignment.Center
@@ -3602,69 +3741,146 @@ fun WelfareEduDeskCard(
                 border = BorderStroke(1.dp, MosqueEmeraldPrimary.copy(alpha = 0.35f)),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Row(
-                    modifier = Modifier.padding(12.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text(
-                            text = "বিতরণ অপেক্ষমাণ আবেদন",
-                            fontSize = 11.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            text = "${toBengaliDigits(pendingWelfareCount.toString())} টি কেস",
-                            fontSize = 17.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = if (pendingWelfareCount > 0) MosqueUrgentRed else MosqueSuccessGreen
-                        )
+                Column(modifier = Modifier.padding(12.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = "বিতরণ অপেক্ষমাণ আবেদন",
+                                fontSize = 11.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = "${toBengaliDigits(pendingWelfareCount.toString())} টি কেস",
+                                fontSize = 17.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = if (pendingWelfareCount > 0) MosqueUrgentRed else MosqueSuccessGreen
+                            )
+                        }
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text(
+                                text = "মাদরাসা ও মক্তব ছাত্র",
+                                fontSize = 11.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = "${toBengaliDigits(studentCount.toString())} জন",
+                                fontSize = 17.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MosqueInfoBlue
+                            )
+                        }
                     }
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text(
-                            text = "মাদরাসা ও মক্তব ছাত্র",
-                            fontSize = 11.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            text = "${toBengaliDigits(studentCount.toString())} জন",
-                            fontSize = 17.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MosqueInfoBlue
-                        )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = if (pendingWelfareCount > 0) {
+                            MosqueUrgentRed.copy(alpha = if (isDark) 0.2f else 0.1f)
+                        } else {
+                            MosqueSuccessGreen.copy(alpha = if (isDark) 0.2f else 0.1f)
+                        },
+                        border = BorderStroke(
+                            1.dp,
+                            if (pendingWelfareCount > 0) MosqueUrgentRed.copy(alpha = 0.35f)
+                            else MosqueSuccessGreen.copy(alpha = 0.35f)
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = if (pendingWelfareCount > 0) Icons.Default.Warning else Icons.Default.CheckCircle,
+                                contentDescription = null,
+                                tint = if (pendingWelfareCount > 0) MosqueUrgentRed else MosqueSuccessGreen,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = if (pendingWelfareCount > 0) "জরুরি বিতরণ ও যাচাই কার্যক্রম পর্যালোচনার জন্য অপেক্ষমাণ"
+                                else "সকল কল্যাণ আবেদন ও মক্তব কার্যক্রম সুষ্ঠুভাবে পরিচালিত হচ্ছে",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = if (pendingWelfareCount > 0) MosqueUrgentRed else MosqueSuccessGreen
+                            )
+                        }
                     }
                 }
             }
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            Row(
+            Column(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Button(
-                    onClick = onOpenWelfare,
-                    modifier = Modifier
-                        .weight(1f)
-                        .heightIn(min = 44.dp),
-                    shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = RoleWelfareEduAccent)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(Icons.Default.VolunteerActivism, contentDescription = null, modifier = Modifier.size(15.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("যাকাত ও কল্যাণ", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    Button(
+                        onClick = onOpenWelfare,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = RoleWelfareEduAccent),
+                        contentPadding = PaddingValues(horizontal = 4.dp)
+                    ) {
+                        Icon(Icons.Default.VolunteerActivism, contentDescription = null, modifier = Modifier.size(15.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("যাকাত ও কল্যাণ", fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+                    }
+                    Button(
+                        onClick = onOpenMadrasa,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = MosqueInfoBlue),
+                        contentPadding = PaddingValues(horizontal = 4.dp)
+                    ) {
+                        Icon(Icons.Default.School, contentDescription = null, modifier = Modifier.size(15.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("মক্তব ও হিফজ", fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+                    }
                 }
-                Button(
-                    onClick = onOpenMadrasa,
-                    modifier = Modifier
-                        .weight(1f)
-                        .heightIn(min = 44.dp),
-                    shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MosqueInfoBlue)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(Icons.Default.School, contentDescription = null, modifier = Modifier.size(15.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("মাদরাসা কার্যক্রম", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    Button(
+                        onClick = onOpenNewApplication,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary),
+                        contentPadding = PaddingValues(horizontal = 4.dp)
+                    ) {
+                        Icon(Icons.Default.AddCircle, contentDescription = null, modifier = Modifier.size(15.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("সহায়তা আবেদন", fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+                    }
+                    Button(
+                        onClick = onOpenEvents,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = MosqueGoldDark),
+                        contentPadding = PaddingValues(horizontal = 4.dp)
+                    ) {
+                        Icon(Icons.Default.Celebration, contentDescription = null, modifier = Modifier.size(15.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("ক্যাম্প ও মাহফিল", fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+                    }
                 }
             }
         }
@@ -3676,7 +3892,9 @@ fun PublicityNoticeDeskCard(
     quoteCount: Int,
     noticeCount: Int,
     onOpenPublicity: () -> Unit,
-    onOpenNotices: () -> Unit
+    onOpenNotices: () -> Unit,
+    onOpenEvents: () -> Unit = {},
+    onOpenPrayerSchedule: () -> Unit = {}
 ) {
     val isDark = LocalIsDarkTheme.current
     MehrabArchCard(
@@ -3694,7 +3912,7 @@ fun PublicityNoticeDeskCard(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         modifier = Modifier
-                            .size(30.dp)
+                            .size(32.dp)
                             .clip(CircleShape)
                             .background(RolePublicityAccent.copy(alpha = 0.15f)),
                         contentAlignment = Alignment.Center
@@ -3709,13 +3927,13 @@ fun PublicityNoticeDeskCard(
                     Spacer(modifier = Modifier.width(8.dp))
                     Column {
                         Text(
-                            text = "প্রচার ও তথ্যপ্রযুক্তি ডেস্ক",
+                            text = "প্রচার, প্রকাশনা ও প্রযুক্তি ডেস্ক",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary
                         )
                         Text(
-                            text = "স্মার্ট ডিজিটাল বোর্ড ও দেয়াল বার্তা প্রচার",
+                            text = "স্মার্ট ডিজিটাল বোর্ড, মসজিদ নোটিশ ও দেয়াল বার্তা",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -3731,69 +3949,137 @@ fun PublicityNoticeDeskCard(
                 border = BorderStroke(1.dp, MosqueGold.copy(alpha = 0.35f)),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Row(
-                    modifier = Modifier.padding(12.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text(
-                            text = "সক্রিয় স্মার্ট বার্তা",
-                            fontSize = 11.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            text = "${toBengaliDigits(quoteCount.toString())} টি স্লাইড",
-                            fontSize = 17.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = RolePublicityAccent
-                        )
+                Column(modifier = Modifier.padding(12.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = "সক্রিয় স্মার্ট বার্তা",
+                                fontSize = 11.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = "${toBengaliDigits(quoteCount.toString())} টি স্লাইড",
+                                fontSize = 17.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = RolePublicityAccent
+                            )
+                        }
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text(
+                                text = "প্রকাশিত নোটিশ",
+                                fontSize = 11.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = "${toBengaliDigits(noticeCount.toString())} টি বিজ্ঞপ্তি",
+                                fontSize = 17.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MosqueEmeraldPrimary
+                            )
+                        }
                     }
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text(
-                            text = "প্রকাশিত নোটিশ",
-                            fontSize = 11.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            text = "${toBengaliDigits(noticeCount.toString())} টি বিজ্ঞপ্তি",
-                            fontSize = 17.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MosqueEmeraldPrimary
-                        )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = MosqueEmeraldSoft.copy(alpha = if (isDark) 0.25f else 0.55f),
+                        border = BorderStroke(1.dp, MosqueEmeraldPrimary.copy(alpha = 0.3f)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.CheckCircle,
+                                contentDescription = null,
+                                tint = MosqueEmeraldPrimary,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "ডিজিটাল ডিসপ্লে ও নোটিশ বোর্ড সার্বক্ষণিক সক্রিয়",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
                     }
                 }
             }
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            Row(
+            Column(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Button(
-                    onClick = onOpenPublicity,
-                    modifier = Modifier
-                        .weight(1f)
-                        .heightIn(min = 44.dp),
-                    shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = RolePublicityAccent)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(Icons.Default.ViewCarousel, contentDescription = null, modifier = Modifier.size(15.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("স্মার্ট বোর্ড কনটেন্ট", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    Button(
+                        onClick = onOpenPublicity,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = RolePublicityAccent),
+                        contentPadding = PaddingValues(horizontal = 4.dp)
+                    ) {
+                        Icon(Icons.Default.ViewCarousel, contentDescription = null, modifier = Modifier.size(15.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("স্মার্ট বোর্ড স্লাইড", fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+                    }
+                    Button(
+                        onClick = onOpenNotices,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary),
+                        contentPadding = PaddingValues(horizontal = 4.dp)
+                    ) {
+                        Icon(Icons.Default.Campaign, contentDescription = null, modifier = Modifier.size(15.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("নতুন নোটিশ প্রকাশ", fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+                    }
                 }
-                Button(
-                    onClick = onOpenNotices,
-                    modifier = Modifier
-                        .weight(1f)
-                        .heightIn(min = 44.dp),
-                    shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(Icons.Default.Campaign, contentDescription = null, modifier = Modifier.size(15.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("নতুন নোটিশ", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    Button(
+                        onClick = onOpenEvents,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = MosqueGoldDark),
+                        contentPadding = PaddingValues(horizontal = 4.dp)
+                    ) {
+                        Icon(Icons.Default.Celebration, contentDescription = null, modifier = Modifier.size(15.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("ধর্মীয় অনুষ্ঠান", fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+                    }
+                    Button(
+                        onClick = onOpenPrayerSchedule,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = MosqueInfoBlue),
+                        contentPadding = PaddingValues(horizontal = 4.dp)
+                    ) {
+                        Icon(Icons.Default.AccessTime, contentDescription = null, modifier = Modifier.size(15.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("নামাজের সময়সূচি", fontSize = 11.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+                    }
                 }
             }
         }
