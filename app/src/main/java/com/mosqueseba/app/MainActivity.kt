@@ -1,10 +1,16 @@
 package com.mosqueseba.app
 
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
@@ -14,6 +20,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import com.mosqueseba.app.data.local.entity.ChandaPaymentEntity
 import com.mosqueseba.app.data.local.entity.MemberEntity
 import com.mosqueseba.app.data.local.entity.StaffEntity
@@ -21,8 +28,9 @@ import com.mosqueseba.app.data.model.UserRole
 import com.mosqueseba.app.ui.components.*
 import com.mosqueseba.app.ui.screens.*
 import com.mosqueseba.app.ui.theme.MosqueCommitteeTheme
-import androidx.activity.compose.BackHandler
 import com.mosqueseba.app.ui.viewmodel.MosqueViewModel
+import com.mosqueseba.app.util.MosquePushNotificationHelper
+import kotlinx.coroutines.flow.MutableStateFlow
 
 enum class AppScreen {
     SPLASH,
@@ -34,14 +42,41 @@ enum class AppScreen {
 class MainActivity : ComponentActivity() {
 
     private val viewModel: MosqueViewModel by viewModels()
+    private val deepLinkModule = MutableStateFlow<String?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         configureAppCheck(this, intent)
         enableEdgeToEdge()
+        MosquePushNotificationHelper.initChannels(this)
+        handleIncomingIntent(intent)
 
         setContent {
             val darkModeEnabled by viewModel.darkModeEnabled.collectAsState()
+            val requestedModule by deepLinkModule.collectAsState()
+            val context = LocalContext.current
+
+            // Android 13+ Notification Permission Request
+            val notificationPermissionLauncher = rememberLauncherForActivityResult(
+                contract = ActivityResultContracts.RequestPermission()
+            ) { isGranted ->
+                if (isGranted) {
+                    MosqueToastController.success("পুশ নোটিফিকেশন সফলভাবে সক্রিয় হয়েছে")
+                }
+            }
+
+            LaunchedEffect(Unit) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    if (ContextCompat.checkSelfPermission(
+                            context,
+                            android.Manifest.permission.POST_NOTIFICATIONS
+                        ) != PackageManager.PERMISSION_GRANTED
+                    ) {
+                        notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+                    }
+                }
+            }
+
             MosqueCommitteeTheme(darkTheme = darkModeEnabled) {
                 Box(modifier = Modifier.fillMaxSize()) {
                     var currentScreen by remember { mutableStateOf(AppScreen.SPLASH) }
@@ -94,6 +129,8 @@ class MainActivity : ComponentActivity() {
                             AppScreen.MAIN -> {
                                 MosqueAppShell(
                                     viewModel = viewModel,
+                                    requestedModule = requestedModule,
+                                    onClearDeepLink = { deepLinkModule.value = null },
                                     onLogout = {
                                         viewModel.logout()
                                         currentScreen = AppScreen.LOGIN
@@ -114,12 +151,27 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleIncomingIntent(intent)
+    }
+
+    private fun handleIncomingIntent(intent: Intent?) {
+        val targetModule = intent?.getStringExtra(MosquePushNotificationHelper.EXTRA_OPEN_MODULE)
+        if (!targetModule.isNullOrBlank()) {
+            deepLinkModule.value = targetModule
+        }
+    }
 }
 
 
 @Composable
 fun MosqueAppShell(
     viewModel: MosqueViewModel,
+    requestedModule: String? = null,
+    onClearDeepLink: () -> Unit = {},
     onLogout: () -> Unit = {}
 ) {
     val context = LocalContext.current
@@ -128,6 +180,13 @@ fun MosqueAppShell(
     var overlayUserProfile by remember { mutableStateOf<MemberProfileTarget?>(null) }
     var showAccountHub by remember { mutableStateOf(false) }
     var showNotificationsPage by remember { mutableStateOf(false) }
+
+    LaunchedEffect(requestedModule) {
+        if (!requestedModule.isNullOrBlank()) {
+            overlaySubModule = requestedModule
+            onClearDeepLink()
+        }
+    }
     val currentRole by viewModel.currentUserRole.collectAsState()
     val mosque by viewModel.mosque.collectAsState()
     val allMembers by viewModel.allMembers.collectAsState()

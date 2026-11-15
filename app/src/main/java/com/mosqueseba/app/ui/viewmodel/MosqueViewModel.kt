@@ -16,6 +16,7 @@ import com.mosqueseba.app.data.repository.MosqueRepository
 import com.mosqueseba.app.data.updater.AppUpdateInfo
 import com.mosqueseba.app.data.updater.AppUpdateManager
 import com.mosqueseba.app.ui.components.toBengaliDigits
+import com.mosqueseba.app.util.MosquePushNotificationHelper
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.TimeoutCancellationException
@@ -54,6 +55,7 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
     init {
         val db = MosqueDatabase.getDatabase(application, viewModelScope)
         repository = MosqueRepository(db)
+        MosquePushNotificationHelper.initChannels(application)
         checkForAppUpdates(forceManual = false)
     }
 
@@ -802,6 +804,9 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
                 paidAt = paidAtStr
             )
             repository.recordChandaPayment(payment)
+            if (sessionManager.isNotificationsEnabled()) {
+                MosquePushNotificationHelper.postChandaReceiptNotification(getApplication(), payment)
+            }
             onRecorded?.invoke(payment)
         }
     }
@@ -848,6 +853,9 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
                 createdBy = "${_currentUserRole.value.titleBn}"
             )
             repository.addNotice(notice)
+            if (sessionManager.isNotificationsEnabled()) {
+                MosquePushNotificationHelper.postNoticeNotification(getApplication(), notice)
+            }
         }
     }
 
@@ -899,6 +907,9 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
                 status = "upcoming"
             )
             repository.addMeeting(meeting)
+            if (sessionManager.isNotificationsEnabled()) {
+                MosquePushNotificationHelper.postMeetingNotification(getApplication(), meeting)
+            }
         }
     }
 
@@ -1898,13 +1909,30 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
                 gazetteNotes = gazetteNotes
             )
             repository.createElection(election, _currentUserRole.value.titleBn)
+            if (sessionManager.isNotificationsEnabled()) {
+                MosquePushNotificationHelper.postElectionNotification(getApplication(), election, "তফসিল ঘোষণা")
+            }
         }
     }
 
     fun updateElectionStatus(election: ElectionScheduleEntity, newStatus: String) {
         viewModelScope.launch {
-            repository.updateElection(election.copy(status = newStatus), _currentUserRole.value.titleBn)
+            val updated = election.copy(status = newStatus)
+            repository.updateElection(updated, _currentUserRole.value.titleBn)
+            if (sessionManager.isNotificationsEnabled()) {
+                val milestone = when (newStatus) {
+                    "voting_ongoing" -> "ভোটগ্রহণ শুরু"
+                    "results_published" -> "ফলাফল ও গেজেট প্রকাশ"
+                    "completed" -> "নতুন কমিটি শপথ ও দায়িত্ব গ্রহণ"
+                    else -> "পর্যায় আপডেট"
+                }
+                MosquePushNotificationHelper.postElectionNotification(getApplication(), updated, milestone)
+            }
         }
+    }
+
+    fun sendTestPushNotification() {
+        MosquePushNotificationHelper.postTestNotification(getApplication())
     }
 
     fun addElectionCandidate(

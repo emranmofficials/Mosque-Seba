@@ -34,6 +34,7 @@ import androidx.compose.ui.window.Dialog
 import com.mosqueseba.app.data.local.entity.*
 import com.mosqueseba.app.data.model.UserRole
 import com.mosqueseba.app.ui.components.MehrabArchCard
+import com.mosqueseba.app.ui.components.MosqueToastController
 import com.mosqueseba.app.ui.components.toBengaliDigits
 import com.mosqueseba.app.ui.theme.*
 import com.mosqueseba.app.ui.viewmodel.MosqueViewModel
@@ -748,6 +749,76 @@ fun NotificationsScreen(
                             ) {
                                 Text("চালু করুন", fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.primary)
                             }
+                        }
+                    }
+                }
+            }
+
+            item(key = "push_notification_tester") {
+                val isDarkTester = LocalIsDarkTheme.current
+                Card(
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (isDarkTester) MosqueNightSurfaceVariant else MosqueBgLight
+                    ),
+                    border = BorderStroke(1.dp, if (isDarkTester) MosqueNightBorder else MosqueCardBorderSubtle),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 6.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 9.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(34.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(MosqueEmeraldPrimary.copy(alpha = 0.12f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.NotificationsActive,
+                                    contentDescription = null,
+                                    tint = MosqueEmeraldPrimary,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Column {
+                                Text(
+                                    text = "সিস্টেম পুশ নোটিফিকেশন",
+                                    style = MaterialTheme.typography.labelLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = "নোটিশ, রসিদ ও নির্বাচনের স্ট্যাটাস বার অ্যালার্ট",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                        FilledTonalButton(
+                            onClick = {
+                                viewModel.sendTestPushNotification()
+                                MosqueToastController.success("টেস্ট পুশ নোটিফিকেশন স্ট্যাটাস বারে পাঠানো হয়েছে")
+                            },
+                            shape = RoundedCornerShape(8.dp),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                            colors = ButtonDefaults.filledTonalButtonColors(
+                                containerColor = MosqueEmeraldPrimary.copy(alpha = 0.14f),
+                                contentColor = MosqueEmeraldPrimary
+                            )
+                        ) {
+                            Text("পরীক্ষা", fontWeight = FontWeight.Bold, fontSize = 12.sp)
                         }
                     }
                 }
