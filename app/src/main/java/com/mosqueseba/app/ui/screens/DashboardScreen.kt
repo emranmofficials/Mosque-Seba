@@ -1368,7 +1368,7 @@ fun PendingOfficeDocsHighlightCard(
 ) {
     if (pendingDocs.isEmpty()) return
     val isDark = LocalIsDarkTheme.current
-    val rowBg = if (isDark) MosqueNightSurfaceVariant else MosqueIvoryBackground
+    val rowBg = if (isDark) MosqueNightSurfaceVariant else MosqueBgLight
 
     MehrabArchCard(
         backgroundColor = MaterialTheme.colorScheme.surface,
@@ -2095,9 +2095,9 @@ fun PresidentPendingVouchersCard(
                                 color = MosqueUrgentRed,
                                 fontWeight = FontWeight.SemiBold
                             )
-                            if (txn.note.isNotBlank()) {
+                            if (txn.description.isNotBlank()) {
                                 Text(
-                                    text = txn.note,
+                                    text = txn.description,
                                     fontSize = 10.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     maxLines = 1,
