@@ -134,183 +134,173 @@ fun NoticesScreen(
             .background(MaterialTheme.colorScheme.background),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // 1. Emerald-Gold Hero Header + 2-Tab Switcher + KPI Summary
+        // 1. Clean Modern Page Header + 2-Tab Switcher + Dynamic KPI Summary
+        val isDark = LocalIsDarkTheme.current
         Surface(
-            color = Color.Transparent,
-            shadowElevation = 4.dp
+            color = MaterialTheme.colorScheme.surface,
+            shadowElevation = 0.5.dp,
+            border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else MosqueCardBorderSubtle),
+            modifier = Modifier.fillMaxWidth()
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(MosqueEmeraldDarkGradient)
+                    .padding(horizontal = 14.dp, vertical = 12.dp)
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 14.dp, vertical = 12.dp)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.weight(1f)
                     ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            if (onBack != null) {
-                                IconButton(
-                                    onClick = onBack,
-                                    modifier = Modifier.testTag("notices_back_button")
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                        contentDescription = "পিছনে যান",
-                                        tint = MosqueGoldLight
-                                    )
-                                }
-                                Spacer(modifier = Modifier.width(4.dp))
-                            }
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = "নোটিশ বোর্ড ও কমিটি সভা",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.ExtraBold,
-                                    color = Color.White
-                                )
-                                Text(
-                                    text = "মসজিদ ঘোষণা, জরুরি বার্তা ও সভার কার্যবিবরণী",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MosqueGoldLight.copy(alpha = 0.9f)
+                        if (onBack != null) {
+                            IconButton(
+                                onClick = onBack,
+                                modifier = Modifier.testTag("notices_back_button")
+                            ) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = "পিছনে যান",
+                                    tint = MaterialTheme.colorScheme.primary
                                 )
                             }
+                            Spacer(modifier = Modifier.width(4.dp))
                         }
-
-                        if (selectedTabIndex == 0 && canPublish) {
-                            Button(
-                                onClick = onPublishNoticeClick,
-                                shape = RoundedCornerShape(10.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = MosqueGold,
-                                    contentColor = MosqueEmeraldDark
-                                ),
-                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
-                                modifier = Modifier
-                                    .heightIn(min = 42.dp)
-                                    .testTag("publish_notice_button")
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Campaign,
-                                    contentDescription = "নতুন নোটিশ",
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Spacer(modifier = Modifier.width(5.dp))
-                                Text(
-                                    text = "+ নোটিশ",
-                                    style = MaterialTheme.typography.labelMedium,
-                                    fontWeight = FontWeight.ExtraBold
-                                )
-                            }
-                        } else if (selectedTabIndex == 1 && canSchedule && onScheduleMeetingClick != null) {
-                            Button(
-                                onClick = onScheduleMeetingClick,
-                                shape = RoundedCornerShape(10.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = MosqueGold,
-                                    contentColor = MosqueEmeraldDark
-                                ),
-                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
-                                modifier = Modifier
-                                    .heightIn(min = 42.dp)
-                                    .testTag("schedule_meeting_button")
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.EventAvailable,
-                                    contentDescription = "নতুন সভা আহ্বান",
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Spacer(modifier = Modifier.width(5.dp))
-                                Text(
-                                    text = "+ সভা আহ্বান",
-                                    style = MaterialTheme.typography.labelMedium,
-                                    fontWeight = FontWeight.ExtraBold
-                                )
-                            }
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "নোটিশ বোর্ড ও কমিটি সভা",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = "মসজিদ ঘোষণা, জরুরি বার্তা ও সভার কার্যবিবরণী",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    // Segmented 2-Tab Switcher
-                    Surface(
-                        shape = RoundedCornerShape(14.dp),
-                        color = Color.Black.copy(alpha = 0.22f),
-                        border = BorderStroke(1.dp, MosqueGold.copy(alpha = 0.55f)),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Row(
+                    if (selectedTabIndex == 0 && canPublish) {
+                        Button(
+                            onClick = onPublishNoticeClick,
+                            shape = RoundedCornerShape(10.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MosqueEmeraldPrimary,
+                                contentColor = Color.White
+                            ),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(4.dp),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                .heightIn(min = 40.dp)
+                                .testTag("publish_notice_button")
                         ) {
-                            NoticeTabButton(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .testTag("tab_notices_board"),
-                                selected = selectedTabIndex == 0,
-                                title = "নোটিশ বোর্ড",
-                                countText = toBengaliDigits(notices.size.toString()),
-                                icon = Icons.Default.Campaign,
-                                onClick = { selectedTabIndex = 0 }
+                            Icon(
+                                imageVector = Icons.Default.Campaign,
+                                contentDescription = "নতুন নোটিশ",
+                                modifier = Modifier.size(16.dp)
                             )
-                            NoticeTabButton(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .testTag("tab_committee_meetings"),
-                                selected = selectedTabIndex == 1,
-                                title = "কমিটি সভা",
-                                countText = toBengaliDigits(meetings.size.toString()),
-                                icon = Icons.Default.EventNote,
-                                onClick = { selectedTabIndex = 1 }
+                            Spacer(modifier = Modifier.width(5.dp))
+                            Text(
+                                text = "+ নোটিশ",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    } else if (selectedTabIndex == 1 && canSchedule && onScheduleMeetingClick != null) {
+                        Button(
+                            onClick = onScheduleMeetingClick,
+                            shape = RoundedCornerShape(10.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MosqueEmeraldPrimary,
+                                contentColor = Color.White
+                            ),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+                            modifier = Modifier
+                                .heightIn(min = 40.dp)
+                                .testTag("schedule_meeting_button")
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.EventAvailable,
+                                contentDescription = "নতুন সভা আহ্বান",
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(5.dp))
+                            Text(
+                                text = "+ সভা আহ্বান",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold
                             )
                         }
                     }
+                }
 
-                    Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
-                    // 3-Metric Summary Strip
+                // Segmented 2-Tab Switcher
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft.copy(alpha = 0.5f),
+                    border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else MosqueCardBorderSubtle),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        NoticeHeaderSummaryPill(
-                            modifier = Modifier.weight(1f),
-                            label = "মোট নোটিশ",
-                            value = "${toBengaliDigits(notices.size.toString())} টি",
-                            accent = MosqueGoldLight
+                        NoticeTabButton(
+                            modifier = Modifier
+                                .weight(1f)
+                                .testTag("tab_notices_board"),
+                            selected = selectedTabIndex == 0,
+                            title = "নোটিশ বোর্ড",
+                            countText = toBengaliDigits(notices.size.toString()),
+                            icon = Icons.Default.Campaign,
+                            onClick = { selectedTabIndex = 0 }
                         )
-                        NoticeHeaderSummaryPill(
-                            modifier = Modifier.weight(1f),
-                            label = "জরুরি / পিন",
-                            value = "${toBengaliDigits(urgentOrPinnedCount.toString())} টি",
-                            accent = if (urgentOrPinnedCount > 0) Color(0xFFFCD34D) else Color(0xFF6EE7B7)
-                        )
-                        NoticeHeaderSummaryPill(
-                            modifier = Modifier.weight(1f),
-                            label = "আসন্ন সভা",
-                            value = "${toBengaliDigits(upcomingMeetingsCount.toString())} টি",
-                            accent = Color(0xFF6EE7B7)
+                        NoticeTabButton(
+                            modifier = Modifier
+                                .weight(1f)
+                                .testTag("tab_committee_meetings"),
+                            selected = selectedTabIndex == 1,
+                            title = "কমিটি সভা",
+                            countText = toBengaliDigits(meetings.size.toString()),
+                            icon = Icons.Default.EventNote,
+                            onClick = { selectedTabIndex = 1 }
                         )
                     }
                 }
 
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(2.5.dp)
-                        .background(IslamicGoldTrimGradient)
-                )
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // 3-Metric Summary Strip
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    NoticeHeaderSummaryPill(
+                        modifier = Modifier.weight(1f),
+                        label = "মোট নোটিশ",
+                        value = "${toBengaliDigits(notices.size.toString())} টি",
+                        accent = MosqueEmeraldPrimary
+                    )
+                    NoticeHeaderSummaryPill(
+                        modifier = Modifier.weight(1f),
+                        label = "জরুরি / পিন",
+                        value = "${toBengaliDigits(urgentOrPinnedCount.toString())} টি",
+                        accent = if (urgentOrPinnedCount > 0) MosqueUrgentRed else MosqueSuccessGreen
+                    )
+                    NoticeHeaderSummaryPill(
+                        modifier = Modifier.weight(1f),
+                        label = "আসন্ন সভা",
+                        value = "${toBengaliDigits(upcomingMeetingsCount.toString())} টি",
+                        accent = MosqueGoldDeep
+                    )
+                }
             }
         }
 
@@ -608,42 +598,44 @@ private fun NoticeTabButton(
     icon: ImageVector,
     onClick: () -> Unit
 ) {
+    val isDark = LocalIsDarkTheme.current
     Surface(
         onClick = onClick,
-        modifier = modifier.heightIn(min = 44.dp),
+        modifier = modifier.heightIn(min = 40.dp),
         shape = RoundedCornerShape(10.dp),
-        color = if (selected) MosqueGold else Color.Transparent
+        color = if (selected) MosqueEmeraldPrimary else Color.Transparent,
+        border = if (selected) null else BorderStroke(0.5.dp, if (isDark) MosqueNightBorder else MosqueCardBorderSubtle)
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 7.dp),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = if (selected) MosqueEmeraldDark else Color.White.copy(alpha = 0.85f),
+                tint = if (selected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(16.dp)
             )
             Spacer(modifier = Modifier.width(5.dp))
             Text(
                 text = title,
                 fontSize = 12.sp,
-                fontWeight = FontWeight.ExtraBold,
-                color = if (selected) MosqueEmeraldDark else Color.White,
+                fontWeight = FontWeight.Bold,
+                color = if (selected) Color.White else MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
             Spacer(modifier = Modifier.width(4.dp))
             Surface(
                 shape = CircleShape,
-                color = if (selected) MosqueEmeraldDark else MosqueGold.copy(alpha = 0.25f)
+                color = if (selected) Color.White.copy(alpha = 0.22f) else (if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft)
             ) {
                 Text(
                     text = countText,
                     fontSize = 10.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MosqueGoldLight,
+                    color = if (selected) Color.White else MosqueEmeraldPrimary,
                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 1.dp)
                 )
             }
@@ -658,11 +650,12 @@ private fun NoticeHeaderSummaryPill(
     value: String,
     accent: Color
 ) {
+    val isDark = LocalIsDarkTheme.current
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(10.dp),
-        color = Color.White.copy(alpha = 0.1f),
-        border = BorderStroke(0.8.dp, MosqueGold.copy(alpha = 0.35f))
+        color = if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft.copy(alpha = 0.45f),
+        border = BorderStroke(0.8.dp, if (isDark) MosqueNightBorder else MosqueCardBorderSubtle)
     ) {
         Column(
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 7.dp),
@@ -671,7 +664,7 @@ private fun NoticeHeaderSummaryPill(
             Text(
                 text = label,
                 fontSize = 10.sp,
-                color = Color.White.copy(alpha = 0.8f),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1
             )
             Spacer(modifier = Modifier.height(2.dp))

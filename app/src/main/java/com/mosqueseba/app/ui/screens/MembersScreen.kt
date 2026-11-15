@@ -269,233 +269,223 @@ fun MembersScreen(
                 .background(MaterialTheme.colorScheme.background),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // 1. Islamic Emerald Header + 2-Tab Switcher + Dynamic KPI Summary
+            // 1. Clean Modern Page Header + 2-Tab Switcher + Dynamic KPI Summary
+            val isDark = LocalIsDarkTheme.current
             Surface(
-                color = Color.Transparent,
-                shadowElevation = 4.dp
+                color = MaterialTheme.colorScheme.surface,
+                shadowElevation = 0.5.dp,
+                border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else MosqueCardBorderSubtle),
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(MosqueEmeraldDarkGradient)
+                        .padding(horizontal = 14.dp, vertical = 12.dp)
                 ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 14.dp, vertical = 12.dp)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.weight(1f)
                         ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                if (onBack != null) {
-                                    IconButton(
-                                        onClick = onBack,
-                                        modifier = Modifier.testTag("members_back_button")
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                            contentDescription = "পিছনে যান",
-                                            tint = MosqueGoldLight
-                                        )
-                                    }
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                }
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = "সদস্য পরিষদ ও খেদমত তালিকা",
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.ExtraBold,
-                                        color = Color.White
-                                    )
-                                    Text(
-                                        text = if (currentRole.canManageFinance() || currentRole.canManageMembers()) {
-                                            "${currentRole.titleBn} প্যানেল • সদস্য চাঁদা সংগ্রহ, রসিদ ইস্যু ও স্টাফ বেতন ছাড়পত্র"
-                                        } else {
-                                            "${currentRole.titleBn} ভিউ • মাসিক চাঁদা দাতা ও খেদমতকারী স্টাফ তালিকা"
-                                        },
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MosqueGoldLight.copy(alpha = 0.9f)
-                                    )
-                                }
-                            }
-
-                            if (onAddMemberClick != null) {
-                                Button(
-                                    onClick = onAddMemberClick,
-                                    shape = RoundedCornerShape(10.dp),
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = MosqueGold,
-                                        contentColor = MosqueEmeraldDark
-                                    ),
-                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
-                                    modifier = Modifier
-                                        .heightIn(min = 42.dp)
-                                        .testTag("add_member_button")
+                            if (onBack != null) {
+                                IconButton(
+                                    onClick = onBack,
+                                    modifier = Modifier.testTag("members_back_button")
                                 ) {
                                     Icon(
-                                        imageVector = Icons.Default.PersonAdd,
-                                        contentDescription = "নতুন সদস্য",
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(5.dp))
-                                    Text(
-                                        text = "নতুন সদস্য",
-                                        style = MaterialTheme.typography.labelMedium,
-                                        fontWeight = FontWeight.ExtraBold
+                                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                        contentDescription = "পিছনে যান",
+                                        tint = MaterialTheme.colorScheme.primary
                                     )
                                 }
+                                Spacer(modifier = Modifier.width(4.dp))
+                            }
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "সদস্য পরিষদ ও খেদমত তালিকা",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = if (currentRole.canManageFinance() || currentRole.canManageMembers()) {
+                                        "${currentRole.titleBn} প্যানেল • সদস্য চাঁদা সংগ্রহ ও স্টাফ বেতন"
+                                    } else {
+                                        "${currentRole.titleBn} ভিউ • মাসিক চাঁদা দাতা ও স্টাফ তালিকা"
+                                    },
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(10.dp))
-
-                        // Segmented 2-Tab Switcher (Gold-bordered pill)
-                        Surface(
-                            shape = RoundedCornerShape(14.dp),
-                            color = Color.Black.copy(alpha = 0.22f),
-                            border = BorderStroke(1.dp, MosqueGold.copy(alpha = 0.55f)),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Row(
+                        if (onAddMemberClick != null) {
+                            Button(
+                                onClick = onAddMemberClick,
+                                shape = RoundedCornerShape(10.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MosqueEmeraldPrimary,
+                                    contentColor = Color.White
+                                ),
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(4.dp),
-                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                    .heightIn(min = 40.dp)
+                                    .testTag("add_member_button")
                             ) {
-                                MemberCategoryTabButton(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .testTag("tab_chanda_members"),
-                                    selected = selectedTabIndex == 0,
-                                    title = "মাসিক চাঁদা দাতা",
-                                    countText = toBengaliDigits(chandaMembersAll.size.toString()),
-                                    icon = Icons.Default.Groups,
-                                    onClick = {
-                                        selectedTabIndex = 0
-                                        if (selectedRoleFilter in SALARIED_ROLE_CODES) {
-                                            viewModel.setSelectedRoleFilter(null)
-                                        }
-                                    }
+                                Icon(
+                                    imageVector = Icons.Default.PersonAdd,
+                                    contentDescription = "নতুন সদস্য",
+                                    modifier = Modifier.size(16.dp)
                                 )
-                                MemberCategoryTabButton(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .testTag("tab_salaried_members"),
-                                    selected = selectedTabIndex == 1,
-                                    title = "বেতনভুক্ত সদস্য",
-                                    countText = toBengaliDigits(salariedMembersAll.size.toString()),
-                                    icon = Icons.Default.Badge,
-                                    onClick = {
-                                        selectedTabIndex = 1
-                                        onlyDuesFilter = false
-                                        if (selectedRoleFilter != null && selectedRoleFilter !in SALARIED_ROLE_CODES) {
-                                            viewModel.setSelectedRoleFilter(null)
-                                        }
-                                    }
-                                )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(10.dp))
-
-                        // Dynamic 3-Metric Summary Strip
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            if (selectedTabIndex == 0) {
-                                HeaderSummaryPill(
-                                    modifier = Modifier.weight(1f),
-                                    label = "মোট দাতা",
-                                    value = "${toBengaliDigits(chandaMembersAll.size.toString())} জন",
-                                    accent = MosqueGoldLight
-                                )
-                                HeaderSummaryPill(
-                                    modifier = Modifier.weight(1f),
-                                    label = "মোট জমা",
-                                    value = "৳${toBengaliDigits(String.format("%,.0f", totalChandaDeposited))}",
-                                    accent = Color(0xFF6EE7B7)
-                                )
-                                HeaderSummaryPill(
-                                    modifier = Modifier.weight(1f),
-                                    label = "মোট বকেয়া",
-                                    value = "৳${toBengaliDigits(String.format("%,.0f", totalChandaDue))}",
-                                    accent = if (totalChandaDue > 0) Color(0xFFFCD34D) else Color(0xFF6EE7B7)
-                                )
-                            } else {
-                                HeaderSummaryPill(
-                                    modifier = Modifier.weight(1f),
-                                    label = "মোট স্টাফ",
-                                    value = "${toBengaliDigits(salariedMembersAll.size.toString())} জন",
-                                    accent = MosqueGoldLight
-                                )
-                                HeaderSummaryPill(
-                                    modifier = Modifier.weight(1f),
-                                    label = "মাসিক বেতন",
-                                    value = "৳${toBengaliDigits(String.format("%,.0f", totalMonthlyPayroll))}",
-                                    accent = Color(0xFF6EE7B7)
-                                )
-                                HeaderSummaryPill(
-                                    modifier = Modifier.weight(1f),
-                                    label = "খাবার দাতা",
-                                    value = "${toBengaliDigits(mealWillingCount.toString())} জন",
-                                    accent = MosqueGoldLight
-                                )
-                            }
-                        }
-                        if (selectedTabIndex == 0) {
-                            val collectedThisCycle = remember(memberChandaStats) {
-                                memberChandaStats.values.sumOf { it.first }
-                            }
-                            val targetThisCycle = (collectedThisCycle + totalChandaDue).coerceAtLeast(1.0)
-                            val chandaRatio = (collectedThisCycle / targetThisCycle).toFloat().coerceIn(0f, 1f)
-                            val chandaPct = (chandaRatio * 100).toInt().coerceIn(0, 100)
-
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        text = "চলতি মাসের চাঁদা আদায় অগ্রগতি",
-                                        fontSize = 10.5.sp,
-                                        color = MosqueGoldLight.copy(alpha = 0.9f),
-                                        fontWeight = FontWeight.Medium
-                                    )
-                                    Text(
-                                        text = "${toBengaliDigits(chandaPct.toString())}% আদায়",
-                                        fontSize = 10.5.sp,
-                                        color = MosqueGold,
-                                        fontWeight = FontWeight.ExtraBold
-                                    )
-                                }
-                                LinearProgressIndicator(
-                                    progress = { chandaRatio },
-                                    color = MosqueGold,
-                                    trackColor = Color.White.copy(alpha = 0.18f),
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(6.dp)
-                                        .clip(RoundedCornerShape(3.dp))
+                                Spacer(modifier = Modifier.width(5.dp))
+                                Text(
+                                    text = "নতুন সদস্য",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.ExtraBold
                                 )
                             }
                         }
                     }
 
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(2.5.dp)
-                            .background(IslamicGoldTrimGradient)
-                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // Segmented 2-Tab Switcher (Modern subtle pill container)
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft.copy(alpha = 0.5f),
+                        border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else MosqueCardBorderSubtle),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(4.dp),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            MemberCategoryTabButton(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .testTag("tab_chanda_members"),
+                                selected = selectedTabIndex == 0,
+                                title = "মাসিক চাঁদা দাতা",
+                                countText = toBengaliDigits(chandaMembersAll.size.toString()),
+                                icon = Icons.Default.Groups,
+                                onClick = {
+                                    selectedTabIndex = 0
+                                    if (selectedRoleFilter in SALARIED_ROLE_CODES) {
+                                        viewModel.setSelectedRoleFilter(null)
+                                    }
+                                }
+                            )
+                            MemberCategoryTabButton(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .testTag("tab_salaried_members"),
+                                selected = selectedTabIndex == 1,
+                                title = "বেতনভুক্ত সদস্য",
+                                countText = toBengaliDigits(salariedMembersAll.size.toString()),
+                                icon = Icons.Default.Badge,
+                                onClick = {
+                                    selectedTabIndex = 1
+                                    onlyDuesFilter = false
+                                    if (selectedRoleFilter != null && selectedRoleFilter !in SALARIED_ROLE_CODES) {
+                                        viewModel.setSelectedRoleFilter(null)
+                                    }
+                                }
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // Dynamic 3-Metric Summary Strip
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        if (selectedTabIndex == 0) {
+                            HeaderSummaryPill(
+                                modifier = Modifier.weight(1f),
+                                label = "মোট দাতা",
+                                value = "${toBengaliDigits(chandaMembersAll.size.toString())} জন",
+                                accent = MosqueEmeraldPrimary
+                            )
+                            HeaderSummaryPill(
+                                modifier = Modifier.weight(1f),
+                                label = "মোট জমা",
+                                value = "৳${toBengaliDigits(String.format("%,.0f", totalChandaDeposited))}",
+                                accent = MosqueSuccessGreen
+                            )
+                            HeaderSummaryPill(
+                                modifier = Modifier.weight(1f),
+                                label = "মোট বকেয়া",
+                                value = "৳${toBengaliDigits(String.format("%,.0f", totalChandaDue))}",
+                                accent = if (totalChandaDue > 0) MosqueUrgentRed else MosqueSuccessGreen
+                            )
+                        } else {
+                            HeaderSummaryPill(
+                                modifier = Modifier.weight(1f),
+                                label = "মোট স্টাফ",
+                                value = "${toBengaliDigits(salariedMembersAll.size.toString())} জন",
+                                accent = MosqueEmeraldPrimary
+                            )
+                            HeaderSummaryPill(
+                                modifier = Modifier.weight(1f),
+                                label = "মাসিক বেতন",
+                                value = "৳${toBengaliDigits(String.format("%,.0f", totalMonthlyPayroll))}",
+                                accent = MosqueSuccessGreen
+                            )
+                            HeaderSummaryPill(
+                                modifier = Modifier.weight(1f),
+                                label = "খাবার দাতা",
+                                value = "${toBengaliDigits(mealWillingCount.toString())} জন",
+                                accent = MosqueGoldDeep
+                            )
+                        }
+                    }
+                    if (selectedTabIndex == 0) {
+                        val collectedThisCycle = remember(memberChandaStats) {
+                            memberChandaStats.values.sumOf { it.first }
+                        }
+                        val targetThisCycle = (collectedThisCycle + totalChandaDue).coerceAtLeast(1.0)
+                        val chandaRatio = (collectedThisCycle / targetThisCycle).toFloat().coerceIn(0f, 1f)
+                        val chandaPct = (chandaRatio * 100).toInt().coerceIn(0, 100)
+
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "চলতি মাসের চাঁদা আদায় অগ্রগতি",
+                                    fontSize = 10.5.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontWeight = FontWeight.Medium
+                                )
+                                Text(
+                                    text = "${toBengaliDigits(chandaPct.toString())}% আদায়",
+                                    fontSize = 10.5.sp,
+                                    color = MosqueEmeraldPrimary,
+                                    fontWeight = FontWeight.ExtraBold
+                                )
+                            }
+                            LinearProgressIndicator(
+                                progress = { chandaRatio },
+                                color = MosqueEmeraldPrimary,
+                                trackColor = if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(6.dp)
+                                    .clip(RoundedCornerShape(3.dp))
+                            )
+                        }
+                    }
                 }
             }
 
@@ -822,42 +812,44 @@ private fun MemberCategoryTabButton(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     onClick: () -> Unit
 ) {
+    val isDark = LocalIsDarkTheme.current
     Surface(
         onClick = onClick,
-        modifier = modifier.heightIn(min = 44.dp),
+        modifier = modifier.heightIn(min = 40.dp),
         shape = RoundedCornerShape(10.dp),
-        color = if (selected) MosqueGold else Color.Transparent
+        color = if (selected) MosqueEmeraldPrimary else Color.Transparent,
+        border = if (selected) null else BorderStroke(0.5.dp, if (isDark) MosqueNightBorder else MosqueCardBorderSubtle)
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 7.dp),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = if (selected) MosqueEmeraldDark else Color.White.copy(alpha = 0.85f),
+                tint = if (selected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(16.dp)
             )
             Spacer(modifier = Modifier.width(5.dp))
             Text(
                 text = title,
                 fontSize = 12.sp,
-                fontWeight = FontWeight.ExtraBold,
-                color = if (selected) MosqueEmeraldDark else Color.White,
+                fontWeight = FontWeight.Bold,
+                color = if (selected) Color.White else MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
             Spacer(modifier = Modifier.width(4.dp))
             Surface(
                 shape = CircleShape,
-                color = if (selected) MosqueEmeraldDark else MosqueGold.copy(alpha = 0.25f)
+                color = if (selected) Color.White.copy(alpha = 0.22f) else (if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft)
             ) {
                 Text(
                     text = countText,
                     fontSize = 10.sp,
                     fontWeight = FontWeight.Bold,
-                    color = if (selected) MosqueGoldLight else MosqueGoldLight,
+                    color = if (selected) Color.White else MosqueEmeraldPrimary,
                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 1.dp)
                 )
             }
@@ -872,11 +864,12 @@ private fun HeaderSummaryPill(
     value: String,
     accent: Color
 ) {
+    val isDark = LocalIsDarkTheme.current
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(10.dp),
-        color = Color.White.copy(alpha = 0.1f),
-        border = BorderStroke(0.8.dp, MosqueGold.copy(alpha = 0.35f))
+        color = if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft.copy(alpha = 0.45f),
+        border = BorderStroke(0.8.dp, if (isDark) MosqueNightBorder else MosqueCardBorderSubtle)
     ) {
         Column(
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 7.dp),
@@ -885,7 +878,7 @@ private fun HeaderSummaryPill(
             Text(
                 text = label,
                 fontSize = 10.sp,
-                color = Color.White.copy(alpha = 0.8f),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1
             )
             Spacer(modifier = Modifier.height(2.dp))

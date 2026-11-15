@@ -386,61 +386,50 @@ fun FinanceScreen(
                 .fillMaxSize()
                 .widthIn(max = 840.dp)
         ) {
-            // 0. Role & Responsibility Authorization Banner
+            // 0. Clean Page Control Header
             item(key = "finance_role_badge") {
                 val isDark = LocalIsDarkTheme.current
                 Surface(
-                    shape = RoundedCornerShape(10.dp),
-                    color = if (canAddIncomeExpense) {
-                        if (isDark) MosqueEmeraldDark else MosqueEmeraldSoft
-                    } else {
-                        if (isDark) MosqueNightSurfaceVariant else MosqueGoldSoft
-                    },
-                    border = BorderStroke(
-                        1.dp,
-                        if (canAddIncomeExpense) MosqueEmeraldPrimary.copy(alpha = 0.5f) else MosqueGold.copy(alpha = 0.5f)
-                    ),
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.surface,
+                    border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else MosqueCardBorderSubtle),
+                    shadowElevation = 0.5.dp,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Icon(
-                                imageVector = if (canAddIncomeExpense) Icons.Default.VerifiedUser else Icons.Default.Visibility,
-                                contentDescription = null,
-                                tint = if (canAddIncomeExpense) MosqueEmeraldPrimary else MosqueGoldDeep,
-                                modifier = Modifier.size(16.dp)
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "আয়-ব্যয় ও তহবিল ব্যবস্থাপনা",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = MaterialTheme.colorScheme.onSurface
                             )
-                            Spacer(modifier = Modifier.width(6.dp))
                             Text(
                                 text = if (canAddIncomeExpense) {
                                     "${currentRole.titleBn} • বায়তুলমাল হিসাব ব্যবস্থাপনা ও অডিট নিয়ন্ত্রণ"
                                 } else {
-                                    "${currentRole.titleBn} • উন্মুক্ত ও ১০০% স্বচ্ছ কেন্দ্রীয় হিসাব নিরীক্ষণ ভিউ"
+                                    "${currentRole.titleBn} • উন্মুক্ত ও ১০০% স্বচ্ছ কেন্দ্রীয় হিসাব নিরীক্ষণ"
                                 },
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = if (canAddIncomeExpense) MosqueEmeraldPrimary else MosqueGoldDeep,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )
                         }
                         Surface(
-                            shape = RoundedCornerShape(6.dp),
-                            color = if (canAddIncomeExpense) MosqueEmeraldPrimary.copy(alpha = 0.15f) else MosqueGold.copy(alpha = 0.15f)
+                            shape = RoundedCornerShape(8.dp),
+                            color = if (canAddIncomeExpense) MosqueEmeraldSoft else MosqueGoldSoft
                         ) {
                             Text(
                                 text = if (canAddIncomeExpense) "পরিচালনা মোড" else "স্বচ্ছতা মোড",
                                 fontSize = 10.sp,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = if (canAddIncomeExpense) MosqueEmeraldPrimary else MosqueGoldDark,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                fontWeight = FontWeight.Bold,
+                                color = if (canAddIncomeExpense) MosqueEmeraldPrimary else MosqueGoldDeep,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                             )
                         }
                     }

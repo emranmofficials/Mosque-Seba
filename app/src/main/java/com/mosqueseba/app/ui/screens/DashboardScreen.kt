@@ -173,9 +173,23 @@ fun DashboardScreen(
             }
         }
 
-        // 0. Compact Unified Executive Sanctuary Hero (Consistent for all roles)
-        item(key = "role_hero") {
+        // 0. Top Daily Prayer Schedule & Jamat Times (Primary Top Focus)
+        item(key = "global_top_prayer_card") {
             StaggeredDashboardItem(index = 0, modifier = Modifier.animateItem()) {
+                PrayerCard(onViewFullScheduleClick = { onOpenDialog("view_prayers") })
+            }
+        }
+
+        // 1. Top Digital Notice Board & Urgent Announcements (Immediately following Prayer Times)
+        item(key = "global_top_smart_board") {
+            StaggeredDashboardItem(index = 1, modifier = Modifier.animateItem()) {
+                SmartBoardCard(quotes = allSmartBoardQuotes, includeDateAndPrayerSlides = false)
+            }
+        }
+
+        // 2. Mosque Executive & Operational Overview
+        item(key = "role_hero") {
+            StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
                 ExecutiveMosqueHeroCard(
                     mosque = mosque,
                     currentRole = currentRole,
@@ -183,20 +197,6 @@ fun DashboardScreen(
                     onDutiesClick = { showDutiesDialog = true },
                     onMosqueProfileClick = { onOpenDialog("mosque_profile") }
                 )
-            }
-        }
-
-        // 1. Top Daily Prayer Schedule & Jamat Times (Always at Top)
-        item(key = "global_top_prayer_card") {
-            StaggeredDashboardItem(index = 1, modifier = Modifier.animateItem()) {
-                PrayerCard(onViewFullScheduleClick = { onOpenDialog("view_prayers") })
-            }
-        }
-
-        // 2. Top Digital Notice Board & Urgent Announcements
-        item(key = "global_top_smart_board") {
-            StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
-                SmartBoardCard(quotes = allSmartBoardQuotes, includeDateAndPrayerSlides = false)
             }
         }
 

@@ -88,69 +88,58 @@ fun ElectionScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // Sticky Islamic Header
+        // Modern Page Header
+        val isDark = LocalIsDarkTheme.current
         Surface(
-            color = Color.Transparent,
-            shadowElevation = 4.dp
+            color = MaterialTheme.colorScheme.surface,
+            shadowElevation = 0.5.dp,
+            border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else MosqueCardBorderSubtle),
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Column(
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(MosqueEmeraldDarkGradient)
+                    .padding(horizontal = 8.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 8.dp, vertical = 10.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "ফিরে যান",
-                            tint = MosqueGoldLight
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "কমিটি নির্বাচন ও পুনর্গঠন",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                        Text(
-                            text = "${mosque?.nameBn ?: "মসজিদ সেবা"} • শরিয়াহ ও গঠনতন্ত্র অনুযায়ী",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MosqueGoldLight.copy(alpha = 0.85f)
-                        )
-                    }
-
-                    if (canManageElection && currentElection?.status != "completed") {
-                        FilledTonalButton(
-                            onClick = { showAddCandidateDialog = true },
-                            colors = ButtonDefaults.filledTonalButtonColors(
-                                containerColor = MosqueGold,
-                                contentColor = MosqueEmeraldDark
-                            ),
-                            shape = RoundedCornerShape(10.dp),
-                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
-                            modifier = Modifier.height(36.dp)
-                        ) {
-                            Icon(Icons.Default.PersonAdd, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("মনোনয়ন", fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                        }
-                    }
+                IconButton(onClick = onBack) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "ফিরে যান",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+                Spacer(modifier = Modifier.width(4.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "কমিটি নির্বাচন ও পুনর্গঠন",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = "${mosque?.nameBn ?: "মসজিদ সেবা"} • শরিয়াহ ও গঠনতন্ত্র অনুযায়ী",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
 
-                // Islamic Gold Accent Strip
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(2.dp)
-                        .background(IslamicGoldTrimGradient)
-                )
+                if (canManageElection && currentElection?.status != "completed") {
+                    FilledTonalButton(
+                        onClick = { showAddCandidateDialog = true },
+                        colors = ButtonDefaults.filledTonalButtonColors(
+                            containerColor = MosqueEmeraldPrimary,
+                            contentColor = Color.White
+                        ),
+                        shape = RoundedCornerShape(10.dp),
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+                        modifier = Modifier.height(36.dp)
+                    ) {
+                        Icon(Icons.Default.PersonAdd, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("মনোনয়ন", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
             }
         }
 
