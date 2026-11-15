@@ -206,7 +206,8 @@ fun SplashScreen(
         Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 28.dp)
+                .navigationBarsPadding()
+                .padding(bottom = 20.dp, start = 16.dp, end = 16.dp)
                 .alpha(alphaAnim),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
