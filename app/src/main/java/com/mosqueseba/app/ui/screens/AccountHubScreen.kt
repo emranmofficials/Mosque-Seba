@@ -456,6 +456,28 @@ fun AccountHubScreen(
                             testTag = "account_hub_about_app",
                             onClick = { showAboutAppDialog = true }
                         )
+
+                        HorizontalDivider(
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
+                        )
+
+                        AccountActionRow(
+                            icon = Icons.Default.SystemUpdate,
+                            iconColor = MaterialTheme.colorScheme.primary,
+                            title = "অ্যাপ আপডেট পরীক্ষা করুন",
+                            subtitle = "নতুন কোনো রিলিজ বা সংস্করণ এসেছে কি না যাচাই করুন",
+                            badgeText = "চেক করুন",
+                            testTag = "account_hub_check_update",
+                            onClick = {
+                                Toast.makeText(context, "আপডেট পরীক্ষা করা হচ্ছে...", Toast.LENGTH_SHORT).show()
+                                viewModel.checkForAppUpdates(forceManual = true) { update ->
+                                    if (update == null || !update.isUpdateAvailable) {
+                                        Toast.makeText(context, "আপনার অ্যাপটি সর্বশেষ আপ-টু-ডেট সংস্করণে রয়েছে।", Toast.LENGTH_SHORT).show()
+                                    }
+                                }
+                            }
+                        )
                     }
                 }
             }

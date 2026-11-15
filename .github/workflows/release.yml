@@ -66,26 +66,27 @@ jobs:
           EOF
           fi
 
-      - name: Build Release APK
-        run: gradle :app:assembleRelease --stacktrace
+      - name: Build Official Release APK and AAB
+        run: gradle :app:assembleRelease :app:bundleRelease --stacktrace
 
-      - name: Prepare APK Artifact
+      - name: Prepare Release Artifacts
         run: |
-          mkdir -p release-apk
-          TAG="${GITHUB_REF_NAME:-v1.0.1}"
+          mkdir -p release-artifacts
+          TAG="${GITHUB_REF_NAME:-v1.0.27}"
           if [ -f "app/build/outputs/apk/release/app-release.apk" ]; then
-            cp app/build/outputs/apk/release/app-release.apk "release-apk/Mosque-Seba-${TAG}.apk"
-          else
-            cp app/build/outputs/apk/debug/app-debug.apk "release-apk/Mosque-Seba-${TAG}.apk"
+            cp app/build/outputs/apk/release/app-release.apk "release-artifacts/Mosque-Seba-${TAG}.apk"
           fi
-          ls -la release-apk/
+          if [ -f "app/build/outputs/bundle/release/app-release.aab" ]; then
+            cp app/build/outputs/bundle/release/app-release.aab "release-artifacts/Mosque-Seba-${TAG}.aab"
+          fi
+          ls -la release-artifacts/
 
-      - name: Upload APK as Workflow Artifact
+      - name: Upload Artifacts as Workflow Artifact
         uses: actions/upload-artifact@v4
         continue-on-error: true
         with:
-          name: Mosque-Seba-APK
-          path: release-apk/*.apk
+          name: Mosque-Seba-Release-Packages
+          path: release-artifacts/*
 
       - name: Publish Official GitHub Release
         uses: softprops/action-gh-release@v2
@@ -95,36 +96,30 @@ jobs:
           tag_name: ${{ github.ref_name }}
           draft: false
           prerelease: false
-          files: release-apk/*.apk
+          files: |
+            release-artifacts/*.apk
+            release-artifacts/*.aab
           body: |
             # 🕌 মসজিদ সেবা (Mosque Seba) — ${{ github.ref_name }}
 
             > **অফিসিয়াল স্লোগান:** *মসজিদের খেদমতে আধুনিক প্রযুক্তি, পরিচালনায় স্বচ্ছ আস্থা*  
-            > **Application Package:** `com.mosqueseba.app`
+            > **Application Package:** `com.mosqueseba.app`  
+            > **অফিসিয়াল সাইনিং কি:** স্থায়ী অফিসিয়াল রিলিজ কি-স্টোর দ্বারা স্বাক্ষরিত (পরবর্তী আপডেটে আনইনস্টল করার প্রয়োজন হবে না)
 
-            ## 📲 সরাসরি APK ডাউনলোড করুন:
-            নিচের লিঙ্ক অথবা রিলিজ অ্যাসেট থেকে সরাসরি আপনার অ্যান্ড্রয়েড মোবাইলে ডাউনলোড ও ইন্সটল করুন:
-            👉 **[Mosque-Seba-${{ github.ref_name }}.apk](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/Mosque-Seba-${{ github.ref_name }}.apk)**
+            ## 📲 সরাসরি ডাউনলোড লিংক:
+            - 📦 **অ্যান্ড্রয়েড APK (সরাসরি মোবাইলে ইনস্টলের জন্য):**  
+              👉 **[Mosque-Seba-${{ github.ref_name }}.apk](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/Mosque-Seba-${{ github.ref_name }}.apk)**
+            - 📱 **অফিসিয়াল AAB (Android App Bundle - গুগল প্লে স্টোর / অফিসিয়াল স্টোরের জন্য):**  
+              👉 **[Mosque-Seba-${{ github.ref_name }}.aab](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/Mosque-Seba-${{ github.ref_name }}.aab)**
 
             ---
 
-            ### 🚀 এই রিলিজের ফিক্স ও পরিবর্তনসমূহ:
-            - **কোটলিন কম্পাইলার ফিক্স:** `kotlin.android` প্লাগইন সক্রিয় করে সম্পূর্ণ কোটলিন কোডবেজ এবং রুম ডেটাবেজের সঠিক বাইটকোড কম্পাইলেশন নিশ্চিত করা হয়েছে।
-            - **ক্র্যাশ সমাধান (`ClassNotFoundException`):** অ্যান্ড্রয়েড ১৪ এবং অন্যান্য ডিভাইসে লঞ্চ ক্র্যাশ স্থায়ীভাবে দূরীভূত করা হয়েছে।
-            - **জাভা ১৭ স্ট্যান্ডার্ড:** অ্যান্ড্রয়েড রানটাইম আর্কিটেকচারের সাথে সম্পূর্ণ সামঞ্জস্যপূর্ণ `Java 17` বাইটকোড টার্গেট করা হয়েছে।
-
-            - 🕌 **স্মার্ট ড্যাশবোর্ড ও ওয়াক্ত ট্র্যাকার:** ৫ ওয়াক্তের নামাজের বিস্তারিত সময়সূচি, পরবর্তী ওয়াক্তের কাউন্টডাউন ও কুইক অ্যাকশন।
-            - 👥 **সদস্য ব্যবস্থাপনা:** সাধারণ ও আজীবন সদস্যদের প্রোফাইল ও মাসিক চাঁদার রেকর্ড।
-            - 💰 **স্বচ্ছ ফিন্যান্স ও অডিট:** আয় ও ব্যয়ের লেজার, নগদ/ব্যাংক ব্যালেন্স এবং মাসিক আর্থিক বিবরণী।
-            - 🧾 **ডিজিটাল চাঁদা রসিদ:** তাৎক্ষণিক কিউআর কোড ভেরিফিকেশন সহ ডিজিটাল রসিদ শেয়ারিং।
-            - 📚 **মাদরাসা ও মক্তব:** ছাত্র ভর্তি, পারাভিত্তিক হিফজ ট্র্যাকার (স্টার রেটিং সহ), ফি কালেকশন ও অভিভাবক পোর্টাল।
-            - 👔 **ইমাম ও কর্মচারী পে-রোল:** মাসিক বেতন বণ্টন এবং ফিন্যান্সে স্বয়ংক্রিয় ব্যয় ভাউচার এন্ট্রি।
-            - 🕌 **ডিউটি রোস্টার ও খাবার শিডিউল:** ইমামতি ও আজানের দায়িত্ব বণ্টন এবং খাবার বণ্টন ট্র্যাকার।
-            - 🤝 **সমাজকল্যাণ ও যাকাত তহবিল:** চিকিৎসা, শিক্ষা, বিধবা-এতিম ও খাদ্য সহায়তার আবেদন এবং অনুদান অনুমোদন।
-            - 📅 **মাহফিল ও বিশেষ অনুষ্ঠান:** বাৎসরিক ওয়াজ, শবে কদর, রমজান ইফতার মাহফিলের পূর্ণাঙ্গ শিডিউল।
-            - 📝 **কমিটি সভা ও রেজুলেশন:** সভার শিডিউল, এজেন্ডা এবং গৃহীত সিদ্ধান্তের স্থায়ী রেজুলেশন রেকর্ড।
-            - ✨ **জেমিনি এআই নোটিশ ড্রাফটার:** নোটিশের টাইটেল থেকে তাৎক্ষণিক প্রফেশনাল নোটিশ ড্রাফট।
-            - 🗄️ **রুম ডাটাবেজ (v3):** সম্পূর্ণ অফলাইন-ফার্স্ট ১৭টি এন্টিটি ও প্রি-লোডেড ডাটা।
+            ### 🚀 এই অফিসিয়াল রিলিজের বিশেষ সুবিধাসমূহ:
+            - 🔐 **স্থায়ী অফিসিয়াল সাইনিং কি (No Uninstall Required):** অ্যাপটি স্থায়ী প্রোডাকশন কি-স্টোর দিয়ে সাইন করা হয়েছে। এর ফলে ভবিষ্যৎ যে কোনো সংস্করণে অ্যাপ আনইনস্টল না করেই সরাসরি ১-ক্লিকে ইন-প্লেস আপডেট দেওয়া যাবে এবং আগের কোনো ডাটা নষ্ট হবে না।
+            - 📦 **AAB (Android App Bundle) রিলিজ:** প্লে-স্টোর উপযোগী অফিসিয়াল `.aab` প্যাকেজ অন্তর্ভুক্ত করা হয়েছে।
+            - 🔔 **ইন-অ্যাপ অটো আপডেট নোটিফিকেশন:** নতুন সংস্করণ রিলিজ হওয়া মাত্রই অ্যাপের ভেতরে এবং স্ট্যাটাস বারে স্বয়ংক্রিয় নোটিফিকেশন আসবে, যেখান থেকে সরাসরি আপডেট করা যাবে।
+            - 🕌 **অফিসিয়াল মসজিদ লোগো ইন্টিগ্রেশন:** ড্যাশবোর্ডের হিরো কার্ড এবং ডিজিটাল রশিদে মসজিদ নিবন্ধনের অফিসিয়াল লোগো স্বয়ংক্রিয়ভাবে প্রদর্শিত হয়।
+            - 👥 **সদস্য কার্ডে সুষম ডিজাইন:** সদস্য তালিকা কার্ডের সব কয়টি উপাদান একই উচ্চতা ও প্রস্থে সুবিন্যস্ত।
 
             ---
             *নির্মাণে ও সৌজন্যে: [Emran Mahmud (@emranmofficials)](https://github.com/emranmofficials)*

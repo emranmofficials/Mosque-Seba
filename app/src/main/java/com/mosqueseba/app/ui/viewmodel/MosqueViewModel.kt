@@ -13,6 +13,8 @@ import com.mosqueseba.app.data.local.SessionManager
 import com.mosqueseba.app.data.local.entity.*
 import com.mosqueseba.app.data.model.UserRole
 import com.mosqueseba.app.data.repository.MosqueRepository
+import com.mosqueseba.app.data.updater.AppUpdateInfo
+import com.mosqueseba.app.data.updater.AppUpdateManager
 import com.mosqueseba.app.ui.components.toBengaliDigits
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -46,9 +48,33 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
 
     private val repository: MosqueRepository
 
+    private val _availableUpdate = MutableStateFlow<AppUpdateInfo?>(null)
+    val availableUpdate: StateFlow<AppUpdateInfo?> = _availableUpdate.asStateFlow()
+
     init {
         val db = MosqueDatabase.getDatabase(application, viewModelScope)
         repository = MosqueRepository(db)
+        checkForAppUpdates(forceManual = false)
+    }
+
+    fun checkForAppUpdates(forceManual: Boolean = false, onResult: ((AppUpdateInfo?) -> Unit)? = null) {
+        viewModelScope.launch {
+            val update = AppUpdateManager.checkLatestRelease(getApplication(), forceCheck = forceManual)
+            if (update != null && update.isUpdateAvailable) {
+                val isDismissed = !forceManual && AppUpdateManager.isVersionDismissed(getApplication(), update.latestVersionName)
+                if (!isDismissed) {
+                    _availableUpdate.value = update
+                }
+            } else if (forceManual) {
+                _availableUpdate.value = update
+            }
+            onResult?.invoke(update)
+        }
+    }
+
+    fun dismissUpdateDialog(versionName: String) {
+        AppUpdateManager.dismissVersion(getApplication(), versionName)
+        _availableUpdate.value = null
     }
 
     val sessionManager = SessionManager(application)

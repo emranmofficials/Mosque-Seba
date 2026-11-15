@@ -931,4 +931,15 @@ fun MosqueAppShell(
             }
         )
     }
+
+    // Official App Update Dialog
+    val availableUpdate by viewModel.availableUpdate.collectAsState()
+    if (availableUpdate != null && availableUpdate?.isUpdateAvailable == true) {
+        AppUpdateDialog(
+            updateInfo = availableUpdate!!,
+            onDismiss = {
+                viewModel.dismissUpdateDialog(availableUpdate!!.latestVersionName)
+            }
+        )
+    }
 }

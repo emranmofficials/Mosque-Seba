@@ -1,5 +1,7 @@
 package com.mosqueseba.app.ui.screens
 
+import android.content.Intent
+import android.net.Uri
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -464,7 +466,7 @@ fun NotificationsScreen(
     }
     val context = androidx.compose.ui.platform.LocalContext.current
 
-    val allItems = remember(
+    val roleNotificationItems = remember(
         currentRole,
         savedMemberId,
         currentMember,
@@ -496,6 +498,27 @@ fun NotificationsScreen(
             chandaPayments = chandaPayments,
             welfareCases = welfareCases
         )
+    }
+
+    val availableUpdate by viewModel.availableUpdate.collectAsState()
+    val allItems = remember(roleNotificationItems, availableUpdate) {
+        if (availableUpdate != null && availableUpdate?.isUpdateAvailable == true) {
+            val updateItem = RoleNotificationItem(
+                id = "app_update_${availableUpdate!!.latestVersionName}",
+                title = "নতুন অ্যাপ আপডেট: v${toBengaliDigits(availableUpdate!!.latestVersionName)}",
+                summary = "মসজিদ সেবার সর্বশেষ সংস্করণ প্রকাশিত হয়েছে। ট্যাপ করে সরাসরি আপডেট করুন। কোনো ডাটা নষ্ট হবে না এবং আনইনস্টল করতে হবে না।",
+                metaLine = "সংস্করণ: v${availableUpdate!!.latestVersionName}",
+                badgeText = "জরুরি আপডেট",
+                isUrgent = true,
+                category = NotificationCategory.ACTION_REQUIRED,
+                icon = Icons.Default.SystemUpdate,
+                accentColor = EmeraldDeepPrimary,
+                target = NotificationActionTarget.OpenModule("app_update")
+            )
+            listOf(updateItem) + roleNotificationItems
+        } else {
+            roleNotificationItems
+        }
     }
 
     var selectedFilter by remember { mutableStateOf(NotificationFilter.ALL) }
@@ -793,7 +816,19 @@ fun NotificationsScreen(
                                 is NotificationActionTarget.UnverifiedCashbox -> onNavigateToModule("cashbox")
                                 is NotificationActionTarget.TomorrowFoodApproval -> onNavigateToModule("food")
                                 is NotificationActionTarget.NoticeDetail -> selectedNoticeForDialog = target.notice
-                                is NotificationActionTarget.OpenModule -> onNavigateToModule(target.moduleKey)
+                                is NotificationActionTarget.OpenModule -> {
+                                    if (target.moduleKey == "app_update") {
+                                        val url = availableUpdate?.apkDownloadUrl ?: availableUpdate?.releasePageUrl
+                                        if (!url.isNullOrBlank()) {
+                                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
+                                                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                                            }
+                                            context.startActivity(intent)
+                                        }
+                                    } else {
+                                        onNavigateToModule(target.moduleKey)
+                                    }
+                                }
                             }
                         },
                         onApproveTransaction = { txn ->
