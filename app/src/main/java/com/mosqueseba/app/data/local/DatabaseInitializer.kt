@@ -948,6 +948,88 @@ object DatabaseInitializer {
             )
         )
         quotes.forEach { smartQuoteDao.insertQuote(it) }
+
+        // 19. Committee Election & Reconstruction (পরিচালনা পরিষদ নির্বাচন ও পুনর্গঠন)
+        val electionDao = database.electionDao()
+        val sampleElection = ElectionScheduleEntity(
+            id = "elec-2026",
+            termTitle = "২০২৬–২০২৮ মেয়াদের পরিচালনা পরিষদ নির্বাচন",
+            termStartYear = 2026,
+            termEndYear = 2028,
+            chiefElectionCommissioner = "আলহাজ্ব ড. মো: রফিকুল ইসলাম",
+            commissionerMobile = "01711-889900",
+            scheduleDate = "২০২৫-১২-০১",
+            nominationDeadline = "২০২৫-১২-১৫",
+            votingDate = "২০২৫-১২-২৮",
+            status = "nomination_open",
+            electionType = "সর্বসম্মত ও ব্যালট নির্বাচন",
+            gazetteNotes = "মসজিদের গঠনতন্ত্র অনুযায়ী গণতান্ত্রিক ও শরিয়াহ নির্দেশিত পদ্ধতিতে নির্বাচন ও পুনর্গঠন কার্যক্রম পরিচালিত হচ্ছে।"
+        )
+        electionDao.insertElection(sampleElection)
+
+        val sampleCandidates = listOf(
+            ElectionCandidateEntity(
+                id = "cand-001",
+                electionId = "elec-2026",
+                targetRoleCode = "president",
+                targetRoleTitleBn = "সভাপতি",
+                candidateNameBn = "মো: রফিকুল ইসলাম",
+                candidateMobile = "01711-223344",
+                memberCode = "MEM-101",
+                proposerNameBn = "আলহাজ্ব আব্দুল বারী",
+                seconderNameBn = "ইঞ্জি: আব্দুল্লাহ আল মামুন",
+                status = "valid",
+                symbolOrPanel = "মসজিদ ঐক্য পরিষদ",
+                votesReceived = 142,
+                isElected = true
+            ),
+            ElectionCandidateEntity(
+                id = "cand-002",
+                electionId = "elec-2026",
+                targetRoleCode = "general_secretary",
+                targetRoleTitleBn = "সাধারণ সম্পাদক",
+                candidateNameBn = "ইঞ্জি: আব্দুল্লাহ আল মামুন",
+                candidateMobile = "01912-445566",
+                memberCode = "MEM-103",
+                proposerNameBn = "মো: রফিকুল ইসলাম",
+                seconderNameBn = "হাজী মো: আবুল কাসেম",
+                status = "valid",
+                symbolOrPanel = "মসজিদ ঐক্য পরিষদ",
+                votesReceived = 138,
+                isElected = true
+            ),
+            ElectionCandidateEntity(
+                id = "cand-003",
+                electionId = "elec-2026",
+                targetRoleCode = "treasurer",
+                targetRoleTitleBn = "কোষাধ্যক্ষ",
+                candidateNameBn = "হাজী মো: আবুল কাসেম",
+                candidateMobile = "01814-556677",
+                memberCode = "MEM-105",
+                proposerNameBn = "ইঞ্জি: আব্দুল্লাহ আল মামুন",
+                seconderNameBn = "মো: আসাদুজ্জামান",
+                status = "valid",
+                symbolOrPanel = "স্বচ্ছ তহবিল প্যানেল",
+                votesReceived = 135,
+                isElected = true
+            ),
+            ElectionCandidateEntity(
+                id = "cand-004",
+                electionId = "elec-2026",
+                targetRoleCode = "publicity",
+                targetRoleTitleBn = "প্রচার ও প্রকাশনা সম্পাদক",
+                candidateNameBn = "হাফেজ মাওলানা সাইফুল ইসলাম",
+                candidateMobile = "01715-667788",
+                memberCode = "MEM-108",
+                proposerNameBn = "মাওলানা আব্দুর রাজ্জাক",
+                seconderNameBn = "মো: তানভীর আহমেদ",
+                status = "valid",
+                symbolOrPanel = "দ্বীনি খেদমত প্যানেল",
+                votesReceived = 129,
+                isElected = true
+            )
+        )
+        sampleCandidates.forEach { electionDao.insertCandidate(it) }
     }
 }
 

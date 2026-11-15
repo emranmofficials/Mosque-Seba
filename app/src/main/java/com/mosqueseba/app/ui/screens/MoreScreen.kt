@@ -98,6 +98,7 @@ fun MoreScreen(
     val smartBoardQuotes by viewModel.allSmartBoardQuotes.collectAsState()
     val studentCount by viewModel.studentCount.collectAsState()
     val khademCheckedTasks by viewModel.khademCheckedTasks.collectAsState()
+    val activeElection by viewModel.activeElection.collectAsState()
 
     BackHandler(enabled = selectedSubModule != null && initialSubModule == null) {
         selectedSubModule = null
@@ -116,7 +117,8 @@ fun MoreScreen(
         dutyRosters,
         foodSchedules,
         events,
-        auditLogs
+        auditLogs,
+        activeElection
     ) {
         MoreLiveCounts(
             pendingCashboxCount = cashboxRecords.count { it.depositStatus != "bank_deposited" },
@@ -133,7 +135,8 @@ fun MoreScreen(
             totalRosterCount = dutyRosters.size,
             totalFoodScheduleCount = foodSchedules.size,
             upcomingEventsCount = events.count { it.status != "completed" },
-            auditLogsCount = auditLogs.size
+            auditLogsCount = auditLogs.size,
+            hasActiveElection = activeElection != null
         )
     }
 
@@ -179,6 +182,7 @@ fun MoreScreen(
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = when (selectedSubModule) {
+                                    "election" -> "কমিটি নির্বাচন ও পুনর্গঠন"
                                     "madrasa" -> "মাদরাসা ও মক্তব পরিচালনা"
                                     "chanda" -> "চাঁদা আদায় ও রসিদ রেজিস্টার"
                                     "staff" -> "ইমাম ও কর্মচারী বেতন ও পে-রোল"
@@ -192,7 +196,7 @@ fun MoreScreen(
                                     "about" -> "মসজিদের প্রোফাইল ও কমিটি"
                                     "charter" -> "আদর্শ কমিটি সনদ ও দায়িত্ব"
                                     "cashbox" -> "দান বাক্স (ক্যাশবক্স) ও ব্যাংক জমা"
-                                    "office_docs" -> "দপ্তর, দলিল-চুক্তি ও চিঠিপত্র"
+                                    "office_docs" -> "দプター, দলিল-চুক্তি ও চিঠিপত্র"
                                     "sharia_advisory" -> "শরিয়াহ পর্যালোচনা ও উপদেষ্টা পরিষদ"
                                     "publicity" -> "প্রচার, দেয়াল উক্তি ও স্মার্ট বোর্ড"
                                     "notices" -> "নোটিশ বোর্ড ও ঘোষণা"
@@ -226,6 +230,12 @@ fun MoreScreen(
 
         // Sub-module routing
         when (selectedSubModule) {
+            "election" -> {
+                ElectionScreen(
+                    viewModel = viewModel,
+                    onBack = { selectedSubModule = null }
+                )
+            }
             "charter" -> {
                 CommitteeCharterScreen(viewModel = viewModel)
             }

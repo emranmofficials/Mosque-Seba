@@ -62,7 +62,8 @@ data class MoreLiveCounts(
     val totalRosterCount: Int = 0,
     val totalFoodScheduleCount: Int = 0,
     val upcomingEventsCount: Int = 0,
-    val auditLogsCount: Int = 0
+    val auditLogsCount: Int = 0,
+    val hasActiveElection: Boolean = false
 )
 
 @Composable
@@ -639,6 +640,10 @@ private fun buildRoleOperationModules(
         "${toBengaliDigits(counts.auditLogsCount.toString())} লগ"
     } else null
 
+    val electionBadge = if (counts.hasActiveElection) {
+        "তফসিল চলমান"
+    } else null
+
     return when (currentRole) {
         UserRole.TREASURER -> listOf(
             OperationModuleEntry("staff", "ইমাম ও কর্মচারী বেতন ব্যবস্থাপনা", "পেশ ইমাম, মুয়াজ্জিন ও খাদেমদের বেতন বিতরণ ও পে-রোল", Icons.Default.Badge, MosqueInfoBlue, OperationCategory.EDUCATION_STAFF, staffBadge),
@@ -659,6 +664,7 @@ private fun buildRoleOperationModules(
             OperationModuleEntry("charter", "আদর্শ কমিটি সনদ ও দায়িত্ব", "৩-স্তরীয় কমিটির সকল পদ ও দায়িত্বের তালিকা", Icons.Default.VerifiedUser, MosqueEmeraldDark, OperationCategory.INFO)
         )
         UserRole.GENERAL_SECRETARY -> listOf(
+            OperationModuleEntry("election", "কমিটি নির্বাচন ও পুনর্গঠন", "তফসিল, প্রার্থী মনোনয়ন, ভোটার তালিকা ও ফলাফল গেজেট", Icons.Default.HowToVote, MosqueGoldDeep, OperationCategory.ADMIN, electionBadge, counts.hasActiveElection),
             OperationModuleEntry("notices", "নোটিশ বোর্ড ও ঘোষণা", "জরুরি ও সাধারণ বিজ্ঞপ্তি প্রকাশ এবং পরিচালনা", Icons.Default.Campaign, MosqueEmeraldDark, OperationCategory.ADMIN),
             OperationModuleEntry("roster", "ওয়াক্ত ও নামাজের দায়িত্ব বণ্টন", "ইমাম, মুয়াজ্জিন ও খাদেমের ডিউটি রোস্টার তদারকি", Icons.Default.EventNote, MosqueGoldDeep, OperationCategory.EDUCATION_STAFF, rosterBadge),
             OperationModuleEntry("food", "ইমাম ও খাদেমদের খাবার শিডিউল", "দৈনিক খাবার বণ্টন ও দাতাদের তালিকা", Icons.Default.Restaurant, MosqueInfoBlue, OperationCategory.EDUCATION_STAFF, foodBadge),
@@ -721,6 +727,7 @@ private fun buildRoleOperationModules(
             OperationModuleEntry("prayer", "পূর্ণ নামাজের সময়সূচি ও ওয়াক্ত", "আজান ও জামাতের বিস্তারিত সূচি ও ক্যালেন্ডার", Icons.Default.AccessTime, MosqueEmeraldLight, OperationCategory.INFO)
         )
         UserRole.EXECUTIVE_MEMBER -> listOf(
+            OperationModuleEntry("election", "কমিটি নির্বাচন ও পুনর্গঠন", "তফসিল, প্রার্থী মনোনয়ন, ভোটার তালিকা ও ফলাফল গেজেট", Icons.Default.HowToVote, MosqueGoldDeep, OperationCategory.ADMIN, electionBadge, counts.hasActiveElection),
             OperationModuleEntry("notices", "নোটিশ বোর্ড ও ঘোষণা", "মসজিদের জরুরি বিজ্ঞপ্তি ও সাধারণ নোটিশ দেখুন", Icons.Default.Campaign, MosqueEmeraldDark, OperationCategory.ADMIN),
             OperationModuleEntry("events", "জুমা, ঈদ শৃঙ্খলা ও অনুষ্ঠান", "জামাত শৃঙ্খলা ও মাহফিল ব্যবস্থাপনায় সহায়তা", Icons.Default.Celebration, MosqueGoldDeep, OperationCategory.WELFARE_EVENTS, eventsBadge, counts.upcomingEventsCount > 0),
             OperationModuleEntry("transparency", "মসজিদ স্বচ্ছ তহবিল ও হিসাব", "আয়-ব্যয়, চাঁদা ও ক্রয়-বিক্রয়ের উন্মুক্ত আর্থিক বিবরণী", Icons.Default.AccountBalanceWallet, MosqueSuccessGreen, OperationCategory.FINANCE),
@@ -732,6 +739,7 @@ private fun buildRoleOperationModules(
             OperationModuleEntry("prayer", "পূর্ণ নামাজের সময়সূচি ও ওয়াক্ত", "আজান ও জামাতের বিস্তারিত সূচি ও ক্যালেন্ডার", Icons.Default.AccessTime, MosqueEmeraldLight, OperationCategory.INFO)
         )
         UserRole.ADVISORY_BOARD -> listOf(
+            OperationModuleEntry("election", "নির্বাচন কমিশন ও তদারকি", "নির্বাচন পরিচালনা, তফসিল, প্রার্থী ও গেজেট চূড়ান্তকরণ", Icons.Default.HowToVote, MosqueGoldDeep, OperationCategory.ADMIN, electionBadge, counts.hasActiveElection),
             OperationModuleEntry("meetings", "কমিটি সভা ও এজেন্ডা", "কমিটি সভার আলোচ্যসূচি ও রেজুলেশন পর্যবেক্ষণ", Icons.Default.EventAvailable, MosqueGoldDeep, OperationCategory.ADMIN, meetingsBadge, counts.upcomingMeetingsCount > 0),
             OperationModuleEntry("audit", "স্বচ্ছতা ও সিস্টেম অডিট লগ", "সকল আর্থিক অনুমোদন ও তহবিলের স্বচ্ছ অডিট পর্যবেক্ষণ", Icons.Default.FactCheck, MosqueWarningAmber, OperationCategory.FINANCE, auditBadge),
             OperationModuleEntry("members", "মসজিদ কমিটি ও সদস্য পরিষদ", "সকল স্তরের দায়িত্বশীল ও সাধারণ সদস্যদের পরিচিতি", Icons.Default.Groups, MosqueEmeraldPrimary, OperationCategory.ADMIN),
@@ -766,6 +774,7 @@ private fun buildRoleOperationModules(
             OperationModuleEntry("prayer", "পূর্ণ নামাজের সময়সূচি ও ওয়াক্ত", "আজান ও জামাতের বিস্তারিত সূচি", Icons.Default.AccessTime, MosqueEmeraldLight, OperationCategory.INFO)
         )
         UserRole.GENERAL_MEMBER -> listOf(
+            OperationModuleEntry("election", "কমিটি নির্বাচন ও ভোটার তালিকা", "চলমান তফসিল, প্রার্থী পরিচিতি, ভোটার তালিকা ও ফলাফল", Icons.Default.HowToVote, MosqueGoldDeep, OperationCategory.ADMIN, electionBadge, counts.hasActiveElection),
             OperationModuleEntry("events", "মাহফিল ও বিশেষ অনুষ্ঠান", "বাৎসরিক ওয়াজ, ইফতার মাহফিল ও বিশেষ দ্বীনি আয়োজন", Icons.Default.Celebration, MosqueGoldDeep, OperationCategory.WELFARE_EVENTS, eventsBadge, counts.upcomingEventsCount > 0),
             OperationModuleEntry("welfare", "সমাজকল্যাণ ও যাকাত আবেদন", "যাকাত, চিকিৎসা ও দুস্থ সহায়তার জন্য আবেদনপত্র দাখিল", Icons.Default.Favorite, MosqueEmeraldPrimary, OperationCategory.WELFARE_EVENTS, welfareBadge),
             OperationModuleEntry("food", "ইমাম-খাদেম খাবার পালা তালিকা", "সদস্যদের দৈনিক মেহমানদারি ও খাবারের পালা দেখুন", Icons.Default.Restaurant, MosqueInfoBlue, OperationCategory.EDUCATION_STAFF, foodBadge),
@@ -774,6 +783,7 @@ private fun buildRoleOperationModules(
             OperationModuleEntry("prayer", "পূর্ণ নামাজের সময়সূচি ও ওয়াক্ত", "আজান ও জামাতের বিস্তারিত সূচি ও ক্যালেন্ডার", Icons.Default.AccessTime, MosqueEmeraldLight, OperationCategory.INFO)
         )
         UserRole.VICE_PRESIDENT -> listOf(
+            OperationModuleEntry("election", "কমিটি নির্বাচন ও পুনর্গঠন", "তফসিল, প্রার্থী মনোনয়ন, ভোটার তালিকা ও ফলাফল গেজেট", Icons.Default.HowToVote, MosqueGoldDeep, OperationCategory.ADMIN, electionBadge, counts.hasActiveElection),
             OperationModuleEntry("events", "উন্নয়ন প্রকল্প, মাহফিল ও অনুষ্ঠান", "বিশেষ উপ-কমিটি, নির্মাণ ও ধর্মীয় অনুষ্ঠান তদারকি", Icons.Default.Engineering, MosqueGoldDeep, OperationCategory.WELFARE_EVENTS, eventsBadge, counts.upcomingEventsCount > 0),
             OperationModuleEntry("notices", "নোটিশ বোর্ড ও ঘোষণা", "মসজিদের জরুরি বিজ্ঞপ্তি ও সাধারণ নোটিশ পরিচালনা", Icons.Default.Campaign, MosqueEmeraldDark, OperationCategory.ADMIN),
             OperationModuleEntry("cashbox", "দান বাক্স (ক্যাশবক্স) ও ব্যাংক জমা", "ক্যাশবক্স গণনা, সাক্ষী নিশ্চিতকরণ ও ব্যাংক জমার অনুমোদন", Icons.Default.Inventory2, MosqueGoldDeep, OperationCategory.FINANCE, cashboxBadge, counts.pendingCashboxCount > 0),
@@ -788,6 +798,7 @@ private fun buildRoleOperationModules(
         )
         else -> listOf(
             // PRESIDENT
+            OperationModuleEntry("election", "কমিটি নির্বাচন ও পুনর্গঠন", "তফসিল ঘোষণা, মনোনয়ন, ভোটার তালিকা, ভোট ও ফলাফল গেজেট", Icons.Default.HowToVote, MosqueGoldDeep, OperationCategory.ADMIN, electionBadge, counts.hasActiveElection),
             OperationModuleEntry("meetings", "কমিটি সভা ও এজেন্ডা রেজুলেশন", "কমিটির সকল সাধারণ ও জরুরি সভায় সভাপতিত্ব এবং সিদ্ধান্ত চূড়ান্তকরণ", Icons.Default.Event, MosqueGoldDeep, OperationCategory.ADMIN, meetingsBadge, counts.upcomingMeetingsCount > 0),
             OperationModuleEntry("cashbox", "দান বাক্স (ক্যাশবক্স) ও ব্যাংক জমা", "ক্যাশবক্স গণনা, সাক্ষী নিশ্চিতকরণ ও ব্যাংক জমার অনুমোদন", Icons.Default.Inventory2, MosqueGoldDeep, OperationCategory.FINANCE, cashboxBadge, counts.pendingCashboxCount > 0),
             OperationModuleEntry("chanda", "চাঁদা আদায় ও রসিদ বহি", "সকল পরিশোধিত চাঁদার তালিকা ও ডিজিটাল কিউআর রসিদ", Icons.Default.ReceiptLong, MosqueEmeraldPrimary, OperationCategory.FINANCE, chandaBadge),

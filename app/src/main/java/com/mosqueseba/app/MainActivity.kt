@@ -602,6 +602,10 @@ fun MosqueAppShell(
                                         val idx = currentNavItems.indexOfFirst { it.destinationKey == "treasurer_chanda" }
                                         if (idx != -1) currentTabIndex = idx else overlaySubModule = "chanda"
                                     }
+                                    "election" -> {
+                                        val idx = currentNavItems.indexOfFirst { it.destinationKey == "election" }
+                                        if (idx != -1) currentTabIndex = idx else overlaySubModule = "election"
+                                    }
                                 }
                             }
                         )

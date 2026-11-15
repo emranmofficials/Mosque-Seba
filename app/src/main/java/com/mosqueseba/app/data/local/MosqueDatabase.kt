@@ -33,9 +33,11 @@ import kotlinx.coroutines.launch
         CashboxRecordEntity::class,
         OfficeDocumentEntity::class,
         AdvisoryNoteEntity::class,
-        SmartBoardQuoteEntity::class
+        SmartBoardQuoteEntity::class,
+        ElectionScheduleEntity::class,
+        ElectionCandidateEntity::class
     ],
-    version = 6,
+    version = 7,
     exportSchema = false
 )
 abstract class MosqueDatabase : RoomDatabase() {
@@ -69,11 +71,53 @@ abstract class MosqueDatabase : RoomDatabase() {
     abstract fun officeDocumentDao(): OfficeDocumentDao
     abstract fun advisoryNoteDao(): AdvisoryNoteDao
     abstract fun smartBoardQuoteDao(): SmartBoardQuoteDao
+    abstract fun electionDao(): ElectionDao
 
 
     companion object {
         @Volatile
         private var INSTANCE: MosqueDatabase? = null
+
+        val MIGRATION_6_7 = object : androidx.room.migration.Migration(6, 7) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS election_schedules (
+                        id TEXT NOT NULL PRIMARY KEY,
+                        termTitle TEXT NOT NULL,
+                        termStartYear INTEGER NOT NULL,
+                        termEndYear INTEGER NOT NULL,
+                        chiefElectionCommissioner TEXT NOT NULL,
+                        commissionerMobile TEXT NOT NULL,
+                        scheduleDate TEXT NOT NULL,
+                        nominationDeadline TEXT NOT NULL,
+                        votingDate TEXT NOT NULL,
+                        status TEXT NOT NULL,
+                        electionType TEXT NOT NULL,
+                        gazetteNotes TEXT NOT NULL,
+                        createdAt INTEGER NOT NULL
+                    )
+                """.trimIndent())
+
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS election_candidates (
+                        id TEXT NOT NULL PRIMARY KEY,
+                        electionId TEXT NOT NULL,
+                        targetRoleCode TEXT NOT NULL,
+                        targetRoleTitleBn TEXT NOT NULL,
+                        candidateNameBn TEXT NOT NULL,
+                        candidateMobile TEXT NOT NULL,
+                        memberCode TEXT NOT NULL,
+                        proposerNameBn TEXT NOT NULL,
+                        seconderNameBn TEXT NOT NULL,
+                        status TEXT NOT NULL,
+                        symbolOrPanel TEXT NOT NULL,
+                        votesReceived INTEGER NOT NULL,
+                        isElected INTEGER NOT NULL,
+                        createdAt INTEGER NOT NULL
+                    )
+                """.trimIndent())
+            }
+        }
 
         fun getDatabase(context: Context, scope: CoroutineScope): MosqueDatabase {
             return INSTANCE ?: synchronized(this) {
@@ -83,6 +127,7 @@ abstract class MosqueDatabase : RoomDatabase() {
                     "mosque_management_db"
                 )
                 .addCallback(MosqueDatabaseCallback(scope))
+                .addMigrations(MIGRATION_6_7)
                 .fallbackToDestructiveMigration()
                 .build()
                 INSTANCE = instance

@@ -1859,4 +1859,114 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
             repository.deleteSmartBoardQuote(quote, _currentUserRole.value.titleBn)
         }
     }
+
+    // --- মসজিদ পরিচালনা কমিটি নির্বাচন ও পুনর্গঠন ---
+    val allElections: StateFlow<List<ElectionScheduleEntity>> = repository.allElections
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val activeElection: StateFlow<ElectionScheduleEntity?> = repository.activeElection
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    val allCandidates: StateFlow<List<ElectionCandidateEntity>> = repository.allCandidates
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    fun createElection(
+        termTitle: String,
+        termStartYear: Int,
+        termEndYear: Int,
+        chiefElectionCommissioner: String,
+        commissionerMobile: String,
+        scheduleDate: String,
+        nominationDeadline: String,
+        votingDate: String,
+        electionType: String,
+        gazetteNotes: String
+    ) {
+        viewModelScope.launch {
+            val election = ElectionScheduleEntity(
+                id = "elec-${UUID.randomUUID().toString().take(8)}",
+                termTitle = termTitle,
+                termStartYear = termStartYear,
+                termEndYear = termEndYear,
+                chiefElectionCommissioner = chiefElectionCommissioner,
+                commissionerMobile = commissionerMobile,
+                scheduleDate = scheduleDate,
+                nominationDeadline = nominationDeadline,
+                votingDate = votingDate,
+                status = "nomination_open",
+                electionType = electionType,
+                gazetteNotes = gazetteNotes
+            )
+            repository.createElection(election, _currentUserRole.value.titleBn)
+        }
+    }
+
+    fun updateElectionStatus(election: ElectionScheduleEntity, newStatus: String) {
+        viewModelScope.launch {
+            repository.updateElection(election.copy(status = newStatus), _currentUserRole.value.titleBn)
+        }
+    }
+
+    fun addElectionCandidate(
+        electionId: String,
+        targetRoleCode: String,
+        targetRoleTitleBn: String,
+        candidateNameBn: String,
+        candidateMobile: String,
+        memberCode: String,
+        proposerNameBn: String,
+        seconderNameBn: String,
+        symbolOrPanel: String
+    ) {
+        viewModelScope.launch {
+            val candidate = ElectionCandidateEntity(
+                id = "cand-${UUID.randomUUID().toString().take(8)}",
+                electionId = electionId,
+                targetRoleCode = targetRoleCode,
+                targetRoleTitleBn = targetRoleTitleBn,
+                candidateNameBn = candidateNameBn,
+                candidateMobile = candidateMobile,
+                memberCode = memberCode,
+                proposerNameBn = proposerNameBn,
+                seconderNameBn = seconderNameBn,
+                status = "valid",
+                symbolOrPanel = symbolOrPanel.ifBlank { "ঐক্য প্যানেল" }
+            )
+            repository.addCandidate(candidate, _currentUserRole.value.titleBn)
+        }
+    }
+
+    fun markCandidateElected(candidate: ElectionCandidateEntity, isElected: Boolean, votes: Int = 0) {
+        viewModelScope.launch {
+            repository.updateCandidate(
+                candidate.copy(
+                    isElected = isElected,
+                    status = if (isElected) "elected" else "valid",
+                    votesReceived = votes
+                ),
+                _currentUserRole.value.titleBn
+            )
+        }
+    }
+
+    fun deleteCandidate(candidate: ElectionCandidateEntity) {
+        viewModelScope.launch {
+            repository.deleteCandidate(candidate, _currentUserRole.value.titleBn)
+        }
+    }
+
+    fun activateNewCommittee(election: ElectionScheduleEntity) {
+        viewModelScope.launch {
+            repository.activateNewCommittee(election, _currentUserRole.value.titleBn)
+            val m = mosque.value
+            if (m != null) {
+                repository.updateMosque(
+                    m.copy(
+                        committeeStartYear = election.termStartYear,
+                        committeeEndYear = election.termEndYear
+                    )
+                )
+            }
+        }
+    }
 }

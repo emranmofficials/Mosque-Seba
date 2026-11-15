@@ -318,4 +318,38 @@ interface SmartBoardQuoteDao {
     suspend fun deleteQuote(quote: SmartBoardQuoteEntity): Int
 }
 
+@Dao
+interface ElectionDao {
+    @Query("SELECT * FROM election_schedules ORDER BY createdAt DESC")
+    fun getAllElections(): Flow<List<ElectionScheduleEntity>>
+
+    @Query("SELECT * FROM election_schedules WHERE status != 'completed' ORDER BY createdAt DESC LIMIT 1")
+    fun getActiveElection(): Flow<ElectionScheduleEntity?>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertElection(election: ElectionScheduleEntity): Long
+
+    @Update
+    suspend fun updateElection(election: ElectionScheduleEntity): Int
+
+    @Delete
+    suspend fun deleteElection(election: ElectionScheduleEntity): Int
+
+    @Query("SELECT * FROM election_candidates WHERE electionId = :electionId ORDER BY createdAt ASC")
+    fun getCandidatesForElection(electionId: String): Flow<List<ElectionCandidateEntity>>
+
+    @Query("SELECT * FROM election_candidates ORDER BY createdAt ASC")
+    fun getAllCandidates(): Flow<List<ElectionCandidateEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertCandidate(candidate: ElectionCandidateEntity): Long
+
+    @Update
+    suspend fun updateCandidate(candidate: ElectionCandidateEntity): Int
+
+    @Delete
+    suspend fun deleteCandidate(candidate: ElectionCandidateEntity): Int
+}
+
+
 

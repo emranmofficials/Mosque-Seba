@@ -300,4 +300,41 @@ data class SmartBoardQuoteEntity(
     val createdAt: Long = System.currentTimeMillis()
 )
 
+// --- মসজিদ পরিচালনা কমিটি নির্বাচন ও পুনর্গঠন মডিউল ---
+@Entity(tableName = "election_schedules")
+data class ElectionScheduleEntity(
+    @PrimaryKey val id: String,
+    val termTitle: String, // যেমন: "২০২৬–২০২৮ মেয়াদের পরিচালনা পরিষদ নির্বাচন"
+    val termStartYear: Int = 2026,
+    val termEndYear: Int = 2028,
+    val chiefElectionCommissioner: String, // প্রধান নির্বাচন কমিশনার
+    val commissionerMobile: String = "",
+    val scheduleDate: String, // তফসিল ঘোষণার তারিখ
+    val nominationDeadline: String, // মনোনয়ন দাখিলের শেষ তারিখ
+    val votingDate: String, // ভোটগ্রহণ বা ফলাফল ঘোষণার তারিখ
+    val status: String = "nomination_open", // upcoming, nomination_open, voting, completed
+    val electionType: String = "সর্বসম্মত ও ব্যালট নির্বাচন",
+    val gazetteNotes: String = "",
+    val createdAt: Long = System.currentTimeMillis()
+)
+
+@Entity(tableName = "election_candidates")
+data class ElectionCandidateEntity(
+    @PrimaryKey val id: String,
+    val electionId: String,
+    val targetRoleCode: String, // president, general_secretary, treasurer, etc.
+    val targetRoleTitleBn: String, // সভাপতি, সাধারণ সম্পাদক, ইত্যাদি
+    val candidateNameBn: String,
+    val candidateMobile: String = "",
+    val memberCode: String = "",
+    val proposerNameBn: String = "", // প্রস্তাবক
+    val seconderNameBn: String = "", // সমর্থক
+    val status: String = "valid", // submitted, valid, elected, withdrawn
+    val symbolOrPanel: String = "ঐক্য প্যানেল", // প্রতীক বা প্যানেল
+    val votesReceived: Int = 0,
+    val isElected: Boolean = false,
+    val createdAt: Long = System.currentTimeMillis()
+)
+
+
 

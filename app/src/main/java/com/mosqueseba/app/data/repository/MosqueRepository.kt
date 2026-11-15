@@ -455,6 +455,46 @@ class MosqueRepository(private val database: MosqueDatabase) {
         )
     }
 
+    // Election & Reconstruction
+    val allElections: Flow<List<ElectionScheduleEntity>> = database.electionDao().getAllElections()
+    val activeElection: Flow<ElectionScheduleEntity?> = database.electionDao().getActiveElection()
+    val allCandidates: Flow<List<ElectionCandidateEntity>> = database.electionDao().getAllCandidates()
+    fun getCandidatesForElection(electionId: String): Flow<List<ElectionCandidateEntity>> =
+        database.electionDao().getCandidatesForElection(electionId)
+
+    suspend fun createElection(election: ElectionScheduleEntity, actor: String) {
+        database.electionDao().insertElection(election)
+        logAudit("ELECTION_SCHEDULED", "নতুন নির্বাচনী তফসিল ঘোষণা: ${election.termTitle}", actor)
+    }
+
+    suspend fun updateElection(election: ElectionScheduleEntity, actor: String) {
+        database.electionDao().updateElection(election)
+        logAudit("ELECTION_UPDATED", "নির্বাচনী তথ্য/স্ট্যাটাস হালনাগাদ: ${election.termTitle} (${election.status})", actor)
+    }
+
+    suspend fun addCandidate(candidate: ElectionCandidateEntity, actor: String) {
+        database.electionDao().insertCandidate(candidate)
+        logAudit("CANDIDATE_NOMINATED", "প্রার্থী মনোনয়ন দাখিল: ${candidate.candidateNameBn} (${candidate.targetRoleTitleBn})", actor)
+    }
+
+    suspend fun updateCandidate(candidate: ElectionCandidateEntity, actor: String) {
+        database.electionDao().updateCandidate(candidate)
+        logAudit("CANDIDATE_UPDATED", "প্রার্থীর তথ্য হালনাগাদ: ${candidate.candidateNameBn} (${candidate.status})", actor)
+    }
+
+    suspend fun deleteCandidate(candidate: ElectionCandidateEntity, actor: String) {
+        database.electionDao().deleteCandidate(candidate)
+        logAudit("CANDIDATE_DELETED", "প্রার্থী মনোনয়ন প্রত্যাহার/বাতিল: ${candidate.candidateNameBn}", actor)
+    }
+
+    suspend fun activateNewCommittee(
+        election: ElectionScheduleEntity,
+        actor: String
+    ) {
+        database.electionDao().updateElection(election.copy(status = "completed"))
+        logAudit("COMMITTEE_RECONSTRUCTED", "নতুন নির্বাচিত কমিটি কার্যকর করা হয়েছে: ${election.termTitle}", actor)
+    }
+
     private suspend fun logAudit(action: String, details: String, actor: String = "কমিটি প্রশাসন") {
         val time = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
         database.auditDao().insertLog(
