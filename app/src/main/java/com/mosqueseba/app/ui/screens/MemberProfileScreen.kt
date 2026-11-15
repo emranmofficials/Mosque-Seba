@@ -245,16 +245,14 @@ fun MemberProfileScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // Top Emerald Header Bar
+        // Top Modern Clean Control Bar
         Surface(
-            color = Color.Transparent,
-            shadowElevation = 4.dp
+            color = MaterialTheme.colorScheme.surface,
+            tonalElevation = 1.dp,
+            shadowElevation = 0.5.dp,
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(MosqueEmeraldDarkGradient)
-            ) {
+            Column(modifier = Modifier.fillMaxWidth()) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -271,7 +269,7 @@ fun MemberProfileScreen(
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                     contentDescription = "ফিরে যান",
-                                    tint = Color.White
+                                    tint = MaterialTheme.colorScheme.primary
                                 )
                             }
                             Spacer(modifier = Modifier.width(4.dp))
@@ -286,13 +284,13 @@ fun MemberProfileScreen(
                                     else -> "সদস্য বিস্তারিত প্রোফাইল"
                                 },
                                 style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = Color.White
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
                             )
                             Text(
                                 text = "আইডি: ${toBengaliDigits(displayCode)}",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = MosqueGoldLight
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
@@ -305,16 +303,14 @@ fun MemberProfileScreen(
                             Icon(
                                 imageVector = Icons.Default.Edit,
                                 contentDescription = "তথ্য সম্পাদনা",
-                                tint = MosqueGoldLight
+                                tint = MaterialTheme.colorScheme.primary
                             )
                         }
                     }
                 }
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(2.dp)
-                        .background(IslamicGoldTrimGradient)
+                HorizontalDivider(
+                    color = if (isDark) MosqueNightBorder else MosqueCardBorderSubtle,
+                    thickness = 0.8.dp
                 )
             }
         }
@@ -335,7 +331,7 @@ fun MemberProfileScreen(
         }
 
         LazyColumn(
-            contentPadding = PaddingValues(14.dp),
+            contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 100.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier.fillMaxSize()
         ) {
@@ -343,7 +339,7 @@ fun MemberProfileScreen(
             item {
                 MehrabArchCard(
                     backgroundColor = MaterialTheme.colorScheme.surface,
-                    borderColor = MosqueCardBorderGold
+                    borderColor = if (isDark) MosqueNightBorder else MosqueCardBorderSubtle
                 ) {
                     Column(
                         modifier = Modifier

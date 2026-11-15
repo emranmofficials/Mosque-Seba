@@ -211,7 +211,7 @@ fun HeroCard(
 @Composable
 fun ExecutiveMosqueHeroCard(
     mosque: MosqueEntity?,
-    currentRole: UserRole,
+    currentRole: UserRole = UserRole.PRESIDENT,
     showHijriDate: Boolean = true,
     onDutiesClick: () -> Unit,
     onMosqueProfileClick: (() -> Unit)? = null
@@ -371,33 +371,6 @@ fun ExecutiveMosqueHeroCard(
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )
-                        }
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Surface(
-                            shape = RoundedCornerShape(6.dp),
-                            color = Color.White.copy(alpha = 0.14f),
-                            border = BorderStroke(0.7.dp, MosqueGold.copy(alpha = 0.45f))
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                            ) {
-                                Icon(
-                                    imageVector = currentRole.roleIcon(),
-                                    contentDescription = null,
-                                    tint = MosqueGoldLight,
-                                    modifier = Modifier.size(11.dp)
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(
-                                    text = currentRole.titleBn,
-                                    fontSize = 10.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MosqueGoldLight,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
                         }
                     }
                 }

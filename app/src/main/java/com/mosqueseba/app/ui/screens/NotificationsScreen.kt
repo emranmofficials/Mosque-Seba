@@ -548,16 +548,15 @@ fun NotificationsScreen(
             .background(MaterialTheme.colorScheme.background),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // 1. Emerald-Gold Header
+        // 1. Modern Clean Surface Header
+        val isDark = LocalIsDarkTheme.current
         Surface(
-            color = Color.Transparent,
-            shadowElevation = 4.dp
+            color = MaterialTheme.colorScheme.surface,
+            tonalElevation = 1.dp,
+            shadowElevation = 0.5.dp,
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(MosqueEmeraldDarkGradient)
-            ) {
+            Column(modifier = Modifier.fillMaxWidth()) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -571,7 +570,7 @@ fun NotificationsScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "ফিরে যান",
-                            tint = MosqueGoldLight
+                            tint = MaterialTheme.colorScheme.primary
                         )
                     }
                     Spacer(modifier = Modifier.width(4.dp))
@@ -579,15 +578,15 @@ fun NotificationsScreen(
                         Text(
                             text = "বিজ্ঞপ্তি ও বার্তা কেন্দ্র",
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
                         Text(
                             text = "${currentRole.titleBn} • গুরুত্বপূর্ণ সতর্কতা ও আপডেট",
                             style = MaterialTheme.typography.labelSmall,
-                            color = MosqueGoldLight.copy(alpha = 0.9f),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
@@ -597,9 +596,9 @@ fun NotificationsScreen(
                             onClick = {
                                 viewModel.markAllNotificationsAsRead(allItems.map { it.id })
                             },
-                            shape = RoundedCornerShape(10.dp),
-                            color = MosqueGold.copy(alpha = 0.22f),
-                            border = BorderStroke(1.dp, MosqueGold.copy(alpha = 0.7f)),
+                            shape = RoundedCornerShape(8.dp),
+                            color = if (isDark) MosqueEmeraldPrimary.copy(alpha = 0.22f) else MosqueEmeraldSoft,
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.35f)),
                             modifier = Modifier.testTag("notifications_mark_all_read")
                         ) {
                             Row(
@@ -609,15 +608,15 @@ fun NotificationsScreen(
                                 Icon(
                                     imageVector = Icons.Default.DoneAll,
                                     contentDescription = null,
-                                    tint = MosqueGoldLight,
+                                    tint = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.size(14.dp)
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
                                     text = "সব পঠিত",
                                     fontSize = 11.sp,
-                                    fontWeight = FontWeight.ExtraBold,
-                                    color = MosqueGoldLight
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
                                 )
                             }
                         }
@@ -635,27 +634,25 @@ fun NotificationsScreen(
                         modifier = Modifier.weight(1f),
                         label = "মোট বিজ্ঞপ্তি",
                         value = "${toBengaliDigits(allItems.size.toString())} টি",
-                        accent = Color.White
+                        accent = MaterialTheme.colorScheme.primary
                     )
                     NotificationStatPill(
                         modifier = Modifier.weight(1f),
                         label = "অপঠিত",
                         value = "${toBengaliDigits(unreadCount.toString())} টি",
-                        accent = if (unreadCount > 0) Color(0xFFFCD34D) else Color(0xFF6EE7B7)
+                        accent = if (unreadCount > 0) MosqueWarningAmber else (if (isDark) MosqueGreenAccent else MosqueSuccessGreen)
                     )
                     NotificationStatPill(
                         modifier = Modifier.weight(1f),
                         label = "জরুরি / করণীয়",
                         value = "${toBengaliDigits(urgentCount.toString())} টি",
-                        accent = if (urgentCount > 0) Color(0xFFFCA5A5) else Color(0xFF6EE7B7)
+                        accent = if (urgentCount > 0) MosqueUrgentRed else (if (isDark) MosqueGreenAccent else MosqueSuccessGreen)
                     )
                 }
 
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(2.5.dp)
-                        .background(IslamicGoldTrimGradient)
+                HorizontalDivider(
+                    color = if (isDark) MosqueNightBorder else MosqueCardBorderSubtle,
+                    thickness = 0.8.dp
                 )
             }
         }
@@ -701,7 +698,7 @@ fun NotificationsScreen(
 
         // 3. Notification Feed
         LazyColumn(
-            contentPadding = PaddingValues(14.dp),
+            contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 100.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
             modifier = Modifier
                 .fillMaxSize()
@@ -961,27 +958,29 @@ private fun NotificationStatPill(
     value: String,
     accent: Color
 ) {
+    val isDark = LocalIsDarkTheme.current
     Surface(
         modifier = modifier,
-        color = Color.White.copy(alpha = 0.12f),
         shape = RoundedCornerShape(10.dp),
-        border = BorderStroke(0.8.dp, Color.White.copy(alpha = 0.2f))
+        color = if (isDark) MosqueNightSurfaceVariant else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+        border = BorderStroke(0.8.dp, if (isDark) MosqueNightBorder else MosqueCardBorderSubtle)
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 7.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 text = value,
                 fontSize = 13.sp,
-                fontWeight = FontWeight.ExtraBold,
+                fontWeight = FontWeight.Bold,
                 color = accent,
                 maxLines = 1
             )
+            Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = label,
                 fontSize = 10.sp,
-                color = Color.White.copy(alpha = 0.85f),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -1008,16 +1007,16 @@ private fun NotificationFeedCard(
         else -> MaterialTheme.colorScheme.surface
     }
     val borderColor = when {
-        !isRead && item.isUrgent -> item.accentColor.copy(alpha = 0.55f)
-        !isRead -> MosqueEmeraldPrimary.copy(alpha = 0.45f)
-        else -> MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+        !isRead && item.isUrgent -> item.accentColor.copy(alpha = 0.65f)
+        !isRead -> MaterialTheme.colorScheme.primary.copy(alpha = 0.45f)
+        else -> if (isDark) MosqueNightBorder else MosqueCardBorderSubtle
     }
 
     Card(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = containerColor),
         border = BorderStroke(1.dp, borderColor),
-        elevation = CardDefaults.cardElevation(defaultElevation = if (isRead) 1.dp else 3.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = if (isRead) 1.dp else 2.dp),
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onCardClick)

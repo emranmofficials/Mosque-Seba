@@ -144,7 +144,7 @@ fun DashboardScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .widthIn(max = 840.dp),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 14.dp),
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 100.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
         val onKpiClickHandler: (String) -> Unit = { key ->
@@ -173,23 +173,9 @@ fun DashboardScreen(
             }
         }
 
-        // 0. Top Daily Prayer Schedule & Jamat Times (Primary Top Focus)
-        item(key = "global_top_prayer_card") {
-            StaggeredDashboardItem(index = 0, modifier = Modifier.animateItem()) {
-                PrayerCard(onViewFullScheduleClick = { onOpenDialog("view_prayers") })
-            }
-        }
-
-        // 1. Top Digital Notice Board & Urgent Announcements (Immediately following Prayer Times)
-        item(key = "global_top_smart_board") {
-            StaggeredDashboardItem(index = 1, modifier = Modifier.animateItem()) {
-                SmartBoardCard(quotes = allSmartBoardQuotes, includeDateAndPrayerSlides = false)
-            }
-        }
-
-        // 2. Mosque Executive & Operational Overview
+        // 0. Mosque Executive & Operational Overview (Hero Card at the very top of all cards)
         item(key = "role_hero") {
-            StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
+            StaggeredDashboardItem(index = 0, modifier = Modifier.animateItem()) {
                 ExecutiveMosqueHeroCard(
                     mosque = mosque,
                     currentRole = currentRole,
@@ -197,6 +183,20 @@ fun DashboardScreen(
                     onDutiesClick = { showDutiesDialog = true },
                     onMosqueProfileClick = { onOpenDialog("mosque_profile") }
                 )
+            }
+        }
+
+        // 1. Top Daily Prayer Schedule & Jamat Times
+        item(key = "global_top_prayer_card") {
+            StaggeredDashboardItem(index = 1, modifier = Modifier.animateItem()) {
+                PrayerCard(onViewFullScheduleClick = { onOpenDialog("view_prayers") })
+            }
+        }
+
+        // 2. Top Digital Notice Board & Urgent Announcements
+        item(key = "global_top_smart_board") {
+            StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
+                SmartBoardCard(quotes = allSmartBoardQuotes, includeDateAndPrayerSlides = false)
             }
         }
 

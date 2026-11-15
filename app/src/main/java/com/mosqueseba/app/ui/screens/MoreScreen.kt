@@ -146,18 +146,17 @@ fun MoreScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // Cohesive Emerald-Gold Sticky Header for Sub-modules (skip for submodules that already provide their own complete header)
-        val subModulesWithOwnHeader = setOf("election", "notices", "members")
+        // Modern Clean Sticky Header for Sub-modules (skip for submodules that already provide their own complete header)
+        val subModulesWithOwnHeader = setOf("election", "notices", "members", "about")
         if (selectedSubModule != null && selectedSubModule !in subModulesWithOwnHeader) {
+            val isDark = LocalIsDarkTheme.current
             Surface(
-                color = Color.Transparent,
-                shadowElevation = 4.dp
+                color = MaterialTheme.colorScheme.surface,
+                tonalElevation = 1.dp,
+                shadowElevation = 0.5.dp,
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(MosqueEmeraldDarkGradient)
-                ) {
+                Column(modifier = Modifier.fillMaxWidth()) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -174,12 +173,12 @@ fun MoreScreen(
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                     contentDescription = "ফিরে যান",
-                                    tint = MosqueGoldLight
+                                    tint = MaterialTheme.colorScheme.primary
                                 )
                             }
                             Spacer(modifier = Modifier.width(4.dp))
                         } else {
-                            Spacer(modifier = Modifier.width(6.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
                         }
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
@@ -198,7 +197,7 @@ fun MoreScreen(
                                     "about" -> "মসজিদের প্রোফাইল ও কমিটি"
                                     "charter" -> "আদর্শ কমিটি সনদ ও দায়িত্ব"
                                     "cashbox" -> "দান বাক্স (ক্যাশবক্স) ও ব্যাংক জমা"
-                                    "office_docs" -> "দプター, দলিল-চুক্তি ও চিঠিপত্র"
+                                    "office_docs" -> "দপ্তর, দলিল-চুক্তি ও চিঠিপত্র"
                                     "sharia_advisory" -> "শরিয়াহ পর্যালোচনা ও উপদেষ্টা পরিষদ"
                                     "publicity" -> "প্রচার, দেয়াল উক্তি ও স্মার্ট বোর্ড"
                                     "notices" -> "নোটিশ বোর্ড ও ঘোষণা"
@@ -208,23 +207,21 @@ fun MoreScreen(
                                     else -> "অপারেশন মডিউল"
                                 },
                                 style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )
                             Text(
                                 text = "মসজিদ কমিটি অপারেশনাল মডিউল",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = MosqueGoldLight.copy(alpha = 0.88f)
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(2.5.dp)
-                            .background(IslamicGoldTrimGradient)
+                    HorizontalDivider(
+                        color = if (isDark) MosqueNightBorder else MosqueCardBorderSubtle,
+                        thickness = 0.8.dp
                     )
                 }
             }
@@ -304,7 +301,7 @@ fun MoreScreen(
                 val myPaidTotal = displayedPayments.sumOf { it.amountPaid }
 
                 LazyColumn(
-                    contentPadding = PaddingValues(14.dp),
+                    contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 100.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     item {
@@ -472,7 +469,7 @@ fun MoreScreen(
                 } else activeStaff
 
                 LazyColumn(
-                    contentPadding = PaddingValues(14.dp),
+                    contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 100.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     item {
@@ -647,7 +644,7 @@ fun MoreScreen(
                 val cardBorder = if (isDark) MosqueNightBorder else MosqueCardBorderSubtle
                 val (_, nextSummary) = com.mosqueseba.app.ui.components.computeTodayPrayerSchedule()
                 LazyColumn(
-                    contentPadding = PaddingValues(14.dp),
+                    contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 100.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     item {
@@ -733,7 +730,7 @@ fun MoreScreen(
                 val isDark = LocalIsDarkTheme.current
                 val cardBorder = if (isDark) MosqueNightBorder else MosqueCardBorderSubtle
                 LazyColumn(
-                    contentPadding = PaddingValues(14.dp),
+                    contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 100.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     if (currentRole == UserRole.KHADEM) {
@@ -1024,7 +1021,7 @@ fun MoreScreen(
                 }
 
                 LazyColumn(
-                    contentPadding = PaddingValues(14.dp),
+                    contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 100.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     item {
@@ -1666,7 +1663,7 @@ fun MoreScreen(
                 val mosqueName = mosque?.nameBn ?: "বায়তুল জান্নাত জামে মসজিদ"
                 // Meetings & Agenda
                 LazyColumn(
-                    contentPadding = PaddingValues(14.dp),
+                    contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 100.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     item {
@@ -1826,7 +1823,7 @@ fun MoreScreen(
                 }
                 // Welfare & Zakat Management (PRD §26)
                 LazyColumn(
-                    contentPadding = PaddingValues(14.dp),
+                    contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 100.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     item {
@@ -2049,7 +2046,7 @@ fun MoreScreen(
                 val cardBorder = if (isDark) MosqueNightBorder else MosqueCardBorderSubtle
                 // Mosque Events & Programs (PRD §25)
                 LazyColumn(
-                    contentPadding = PaddingValues(14.dp),
+                    contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 100.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     item {
@@ -2189,7 +2186,7 @@ fun MoreScreen(
                 val cardBorder = if (isDark) MosqueNightBorder else MosqueCardBorderSubtle
                 // Audit Logs
                 LazyColumn(
-                    contentPadding = PaddingValues(14.dp),
+                    contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 100.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     item {

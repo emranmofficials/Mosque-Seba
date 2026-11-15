@@ -135,14 +135,12 @@ fun MosqueProfileScreen(
     ) {
         if (showTopBar) {
             Surface(
-                color = Color.Transparent,
-                shadowElevation = 4.dp
+                color = MaterialTheme.colorScheme.surface,
+                tonalElevation = 1.dp,
+                shadowElevation = 0.5.dp,
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(MosqueEmeraldDarkGradient)
-                ) {
+                Column(modifier = Modifier.fillMaxWidth()) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -162,7 +160,7 @@ fun MosqueProfileScreen(
                                     Icon(
                                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                         contentDescription = "ফিরে যান",
-                                        tint = MosqueGoldLight
+                                        tint = MaterialTheme.colorScheme.primary
                                     )
                                 }
                                 Spacer(modifier = Modifier.width(4.dp))
@@ -171,15 +169,15 @@ fun MosqueProfileScreen(
                                 Text(
                                     text = "মসজিদের প্রোফাইল",
                                     style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.ExtraBold,
-                                    color = Color.White,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
                                 )
                                 Text(
                                     text = "কমিটি আইডি: $committeeId",
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = MosqueGoldLight.copy(alpha = 0.9f)
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
@@ -192,24 +190,22 @@ fun MosqueProfileScreen(
                                 Icon(
                                     imageVector = Icons.Default.Edit,
                                     contentDescription = "মসজিদের তথ্য সম্পাদনা",
-                                    tint = MosqueGoldLight
+                                    tint = MaterialTheme.colorScheme.primary
                                 )
                             }
                         }
                     }
 
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(2.5.dp)
-                            .background(IslamicGoldTrimGradient)
+                    HorizontalDivider(
+                        color = if (isDark) MosqueNightBorder else MosqueCardBorderSubtle,
+                        thickness = 0.8.dp
                     )
                 }
             }
         }
 
         LazyColumn(
-            contentPadding = PaddingValues(14.dp),
+            contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 100.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier.fillMaxSize()
         ) {
@@ -217,7 +213,7 @@ fun MosqueProfileScreen(
             item {
                 MehrabArchCard(
                     backgroundColor = MaterialTheme.colorScheme.surface,
-                    borderColor = if (isDark) MosqueNightBorder else MosqueCardBorderGold,
+                    borderColor = if (isDark) MosqueNightBorder else MosqueCardBorderSubtle,
                     elevation = 4.dp
                 ) {
                     Column(
@@ -619,7 +615,7 @@ private fun MosqueStatPill(
         modifier = modifier,
         shape = RoundedCornerShape(14.dp),
         color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else MosqueCardBorderGold)
+        border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else MosqueCardBorderSubtle)
     ) {
         Column(
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 12.dp),

@@ -634,7 +634,7 @@ fun MembersScreen(
             ) { tab ->
                 if (tab == 0) {
                     LazyColumn(
-                        contentPadding = PaddingValues(14.dp),
+                        contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 100.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp),
                         modifier = Modifier.fillMaxSize()
                     ) {
@@ -669,7 +669,7 @@ fun MembersScreen(
                     }
                 } else {
                     LazyColumn(
-                        contentPadding = PaddingValues(14.dp),
+                        contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 100.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp),
                         modifier = Modifier.fillMaxSize()
                     ) {

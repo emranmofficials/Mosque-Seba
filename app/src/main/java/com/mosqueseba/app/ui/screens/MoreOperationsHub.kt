@@ -129,90 +129,80 @@ fun MoreOperationsHub(
             .background(MaterialTheme.colorScheme.background),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // 1. Emerald-Gold Hero Header
+        // 1. Modern Clean Control Bar Header
+        val isDark = LocalIsDarkTheme.current
         Surface(
-            color = Color.Transparent,
-            shadowElevation = 4.dp
+            color = MaterialTheme.colorScheme.surface,
+            tonalElevation = 1.dp,
+            shadowElevation = 0.5.dp,
+            modifier = Modifier.fillMaxWidth()
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(MosqueEmeraldDarkGradient)
+                    .padding(horizontal = 14.dp, vertical = 12.dp)
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 14.dp, vertical = 12.dp)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "আরও সেবা ও অপারেশন",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = Color.White
-                            )
-                            Text(
-                                text = "মসজিদ পরিচালনা, দপ্তর ও সেবামূলক মডিউলসমূহ",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MosqueGoldLight.copy(alpha = 0.9f)
-                            )
-                        }
-
-                        Surface(
-                            shape = RoundedCornerShape(10.dp),
-                            color = MosqueGold.copy(alpha = 0.2f),
-                            border = BorderStroke(1.dp, MosqueGold.copy(alpha = 0.65f))
-                        ) {
-                            Text(
-                                text = currentRole.titleBn,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = MosqueGoldLight,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
-                            )
-                        }
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "আরও সেবা ও অপারেশন",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = "মসজিদ পরিচালনা, দপ্তর ও সেবামূলক মডিউলসমূহ",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
 
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = if (isDark) MosqueEmeraldPrimary.copy(alpha = 0.22f) else MosqueEmeraldSoft,
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.35f))
                     ) {
-                        MoreHeaderSummaryPill(
-                            modifier = Modifier.weight(1f),
-                            label = "সক্রিয় মডিউল",
-                            value = "${toBengaliDigits(allRoleModules.size.toString())} টি",
-                            accent = MosqueGoldLight
-                        )
-                        MoreHeaderSummaryPill(
-                            modifier = Modifier.weight(1f),
-                            label = "আসন্ন সভা ও ইভেন্ট",
-                            value = "${toBengaliDigits((liveCounts.upcomingMeetingsCount + liveCounts.upcomingEventsCount).toString())} টি",
-                            accent = Color(0xFF6EE7B7)
-                        )
-                        MoreHeaderSummaryPill(
-                            modifier = Modifier.weight(1f),
-                            label = "অপেক্ষমাণ কাজ",
-                            value = "${toBengaliDigits(pendingTotal.toString())} টি",
-                            accent = if (pendingTotal > 0) Color(0xFFFCD34D) else Color(0xFF6EE7B7)
+                        Text(
+                            text = currentRole.titleBn,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
                         )
                     }
                 }
 
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(2.5.dp)
-                        .background(IslamicGoldTrimGradient)
-                )
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    MoreHeaderSummaryPill(
+                        modifier = Modifier.weight(1f),
+                        label = "সক্রিয় মডিউল",
+                        value = "${toBengaliDigits(allRoleModules.size.toString())} টি",
+                        accent = MaterialTheme.colorScheme.primary
+                    )
+                    MoreHeaderSummaryPill(
+                        modifier = Modifier.weight(1f),
+                        label = "আসন্ন সভা ও ইভেন্ট",
+                        value = "${toBengaliDigits((liveCounts.upcomingMeetingsCount + liveCounts.upcomingEventsCount).toString())} টি",
+                        accent = if (isDark) MosqueGreenAccent else MosqueSuccessGreen
+                    )
+                    MoreHeaderSummaryPill(
+                        modifier = Modifier.weight(1f),
+                        label = "অপেক্ষমাণ কাজ",
+                        value = "${toBengaliDigits(pendingTotal.toString())} টি",
+                        accent = if (pendingTotal > 0) MosqueWarningAmber else (if (isDark) MosqueGreenAccent else MosqueSuccessGreen)
+                    )
+                }
             }
         }
 
@@ -299,7 +289,7 @@ fun MoreOperationsHub(
 
         // 3. Quick Access Grid + Categorized Module Cards
         LazyColumn(
-            contentPadding = PaddingValues(14.dp),
+            contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 100.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
             modifier = Modifier
                 .weight(1f)
@@ -426,11 +416,12 @@ private fun MoreHeaderSummaryPill(
     value: String,
     accent: Color
 ) {
+    val isDark = LocalIsDarkTheme.current
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(10.dp),
-        color = Color.White.copy(alpha = 0.1f),
-        border = BorderStroke(0.8.dp, MosqueGold.copy(alpha = 0.35f))
+        color = if (isDark) MosqueNightSurfaceVariant else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+        border = BorderStroke(0.8.dp, if (isDark) MosqueNightBorder else MosqueCardBorderSubtle)
     ) {
         Column(
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 7.dp),
@@ -439,7 +430,7 @@ private fun MoreHeaderSummaryPill(
             Text(
                 text = label,
                 fontSize = 10.sp,
-                color = Color.White.copy(alpha = 0.8f),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -447,7 +438,7 @@ private fun MoreHeaderSummaryPill(
             Text(
                 text = value,
                 fontSize = 12.sp,
-                fontWeight = FontWeight.ExtraBold,
+                fontWeight = FontWeight.Bold,
                 color = accent,
                 maxLines = 1
             )
@@ -515,8 +506,8 @@ private fun QuickAccessGridCard(
             .testTag("more_quick_${module.key}"),
         shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, MosqueCardBorderGold.copy(alpha = 0.7f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else MosqueCardBorderSubtle),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Column(
             modifier = Modifier
