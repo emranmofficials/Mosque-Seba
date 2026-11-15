@@ -326,6 +326,7 @@ fun MadrasaScreen(viewModel: MosqueViewModel, initialTab: Int = 0) {
                     }
                 }
             }
+        }
             2 -> {
                 // Fee Collection
                 LazyColumn(
