@@ -450,7 +450,8 @@ fun DashboardScreen(
                             pendingDocsCount = pendingReplyDocs,
                             onScheduleMeeting = { onOpenDialog("schedule_meeting") },
                             onDraftNotice = { onOpenDialog("publish_notice") },
-                            onOpenOfficeDocs = { onOpenDialog("office_docs") }
+                            onOpenOfficeDocs = { onOpenDialog("office_docs") },
+                            onViewMeetings = { onOpenDialog("meetings") }
                         )
                     }
                 }
@@ -468,7 +469,7 @@ fun DashboardScreen(
 
                 item(key = "sec_kpi_div") {
                     StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
-                        RubElHizbDivider(title = "প্রশাসনিক সূচক ও সদস্য তথ্য", modifier = Modifier.padding(vertical = 2.dp))
+                        RubElHizbDivider(title = "প্রশাসনিক সূচক ও দ্রুত সেবা", modifier = Modifier.padding(vertical = 2.dp))
                     }
                 }
 
@@ -504,12 +505,6 @@ fun DashboardScreen(
                     }
                 }
 
-                item(key = "sec_actions_div") {
-                    StaggeredDashboardItem(index = 4, modifier = Modifier.animateItem()) {
-                        RubElHizbDivider(title = "সচিবালয় কুইক অ্যাকশন", modifier = Modifier.padding(vertical = 2.dp))
-                    }
-                }
-
                 item(key = "sec_actions_grid") {
                     StaggeredDashboardItem(index = 4, modifier = Modifier.animateItem()) {
                         QuickActionsGrid(
@@ -521,7 +516,7 @@ fun DashboardScreen(
 
                 item(key = "sec_meetings_div") {
                     StaggeredDashboardItem(index = 5, modifier = Modifier.animateItem()) {
-                        RubElHizbDivider(title = "আসন্ন সভা ও এজেন্ডা", modifier = Modifier.padding(vertical = 2.dp))
+                        RubElHizbDivider(title = "আসন্ন সভা ও ডিজিটাল বোর্ড", modifier = Modifier.padding(vertical = 2.dp))
                     }
                 }
 
@@ -539,6 +534,12 @@ fun DashboardScreen(
                 item(key = "sec_smart_board") {
                     StaggeredDashboardItem(index = 6, modifier = Modifier.animateItem()) {
                         SmartBoardCard(quotes = allSmartBoardQuotes, includeDateAndPrayerSlides = false)
+                    }
+                }
+
+                item(key = "sec_prayer_div") {
+                    StaggeredDashboardItem(index = 7, modifier = Modifier.animateItem()) {
+                        RubElHizbDivider(title = "নামাজের সূচি", modifier = Modifier.padding(vertical = 2.dp))
                     }
                 }
 
@@ -1362,7 +1363,10 @@ fun PendingOfficeDocsHighlightCard(
     pendingDocs: List<OfficeDocumentEntity>,
     onOpenOfficeDocs: () -> Unit
 ) {
-    val firstDoc = pendingDocs.first()
+    if (pendingDocs.isEmpty()) return
+    val isDark = LocalIsDarkTheme.current
+    val rowBg = if (isDark) MosqueNightSurfaceVariant else MosqueIvoryBackground
+
     MehrabArchCard(
         backgroundColor = MaterialTheme.colorScheme.surface,
         borderColor = RoleOfficeAccent.copy(alpha = 0.55f),
@@ -1378,47 +1382,129 @@ fun PendingOfficeDocsHighlightCard(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.weight(1f)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.MarkEmailUnread,
-                        contentDescription = null,
-                        tint = RoleOfficeAccent,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = "জবাব অপেক্ষমাণ চিঠি (${toBengaliDigits(pendingDocs.size.toString())}টি)",
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .background(RoleOfficeAccent.copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.MarkEmailUnread,
+                            contentDescription = null,
+                            tint = RoleOfficeAccent,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Column {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "জরুরি দাপ্তরিক ডাক ও চিঠিপত্র",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Surface(
+                                shape = RoundedCornerShape(6.dp),
+                                color = RoleOfficeAccent.copy(alpha = 0.12f)
+                            ) {
+                                Text(
+                                    text = "${toBengaliDigits(pendingDocs.size.toString())}টি জবাব অপেক্ষমাণ",
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = RoleOfficeAccent,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
+                        Text(
+                            text = "আগত চিঠির প্রাতিষ্ঠানিক জবাব তৈরি ও রেজিস্টার",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
-                TextButton(onClick = onOpenOfficeDocs) {
-                    Text("সব নথি", fontSize = 11.sp, color = MaterialTheme.colorScheme.primary)
+                TextButton(
+                    onClick = onOpenOfficeDocs,
+                    contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp)
+                ) {
+                    Text(
+                        text = "সব নথি",
+                        fontSize = 11.sp,
+                        color = RoleOfficeAccent,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
-            Text(
-                text = firstDoc.title,
-                style = MaterialTheme.typography.bodySmall,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Text(
-                text = "${firstDoc.category} • প্রেরক: ${firstDoc.counterparty} • ${toBengaliDigits(firstDoc.docDate)}",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+
             Spacer(modifier = Modifier.height(8.dp))
+
+            pendingDocs.take(2).forEach { doc ->
+                Surface(
+                    shape = RoundedCornerShape(10.dp),
+                    color = rowBg,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.35f)),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 3.dp)
+                ) {
+                    Column(modifier = Modifier.padding(10.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Surface(
+                                shape = RoundedCornerShape(4.dp),
+                                color = RoleOfficeAccent.copy(alpha = 0.1f)
+                            ) {
+                                Text(
+                                    text = doc.category,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = RoleOfficeAccent,
+                                    modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
+                                )
+                            }
+                            Text(
+                                text = toBengaliDigits(doc.docDate),
+                                fontSize = 10.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = doc.title,
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Text(
+                            text = "প্রেরক: ${doc.counterparty} • স্মারক: ${doc.docCode}",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
             Button(
                 onClick = onOpenOfficeDocs,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(min = 48.dp),
+                    .height(42.dp),
                 shape = RoundedCornerShape(10.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = RoleOfficeAccent)
             ) {
                 Icon(Icons.Default.EditNote, contentDescription = null, modifier = Modifier.size(16.dp))
                 Spacer(modifier = Modifier.width(6.dp))
-                Text("জবাব তৈরি ও ফাইল খুলুন", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                Text("জবাব তৈরি ও নথি রেজিস্টার খুলুন", fontSize = 11.sp, fontWeight = FontWeight.Bold)
             }
         }
     }
@@ -2364,7 +2450,8 @@ fun SecretariatExecutiveHubCard(
     pendingDocsCount: Int,
     onScheduleMeeting: () -> Unit,
     onDraftNotice: () -> Unit,
-    onOpenOfficeDocs: () -> Unit
+    onOpenOfficeDocs: () -> Unit,
+    onViewMeetings: () -> Unit
 ) {
     val isDark = LocalIsDarkTheme.current
     MehrabArchCard(
@@ -2374,6 +2461,7 @@ fun SecretariatExecutiveHubCard(
         elevation = 3.dp
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
+            // Header
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -2382,7 +2470,7 @@ fun SecretariatExecutiveHubCard(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         modifier = Modifier
-                            .size(30.dp)
+                            .size(32.dp)
                             .clip(CircleShape)
                             .background(RoleSecretaryAccent.copy(alpha = 0.15f)),
                         contentAlignment = Alignment.Center
@@ -2400,7 +2488,7 @@ fun SecretariatExecutiveHubCard(
                             text = "প্রশাসনিক সচিবালয় ও কার্যবিবরণী ডেস্ক",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
                             text = "কমিটি সভা, রেজোলিউশন ও অফিস নথি",
@@ -2409,105 +2497,248 @@ fun SecretariatExecutiveHubCard(
                         )
                     }
                 }
+                TextButton(
+                    onClick = onViewMeetings,
+                    contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp)
+                ) {
+                    Text(
+                        text = "সকল সভা",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(10.dp))
 
+            // Main Meeting Surface
             Surface(
                 shape = RoundedCornerShape(12.dp),
                 color = if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft.copy(alpha = 0.5f),
                 border = BorderStroke(1.dp, MosqueEmeraldPrimary.copy(alpha = 0.35f)),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Row(
-                    modifier = Modifier.padding(12.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
+                Column(modifier = Modifier.padding(12.dp)) {
+                    if (nextMeeting != null) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "আসন্ন কমিটি সভা",
+                                fontSize = 11.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Surface(
+                                shape = RoundedCornerShape(6.dp),
+                                color = MosqueEmeraldPrimary.copy(alpha = 0.12f)
+                            ) {
+                                Text(
+                                    text = "নির্ধারিত সভা",
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MosqueEmeraldPrimary,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "আসন্ন কমিটি সভা",
-                            fontSize = 11.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            text = nextMeeting?.title ?: "কোনো সভা নির্ধারিত নেই",
+                            text = nextMeeting.title,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
-                        if (nextMeeting != null) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.CalendarMonth,
+                                contentDescription = null,
+                                tint = MosqueEmeraldPrimary,
+                                modifier = Modifier.size(13.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
                             Text(
                                 text = "তারিখ: ${nextMeeting.meetingDate}",
                                 fontSize = 11.sp,
                                 color = MosqueEmeraldPrimary,
                                 fontWeight = FontWeight.SemiBold
                             )
+                            if (nextMeeting.location.isNotBlank()) {
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Icon(
+                                    imageVector = Icons.Default.Place,
+                                    contentDescription = null,
+                                    tint = RoleSecretaryAccent,
+                                    modifier = Modifier.size(13.dp)
+                                )
+                                Spacer(modifier = Modifier.width(3.dp))
+                                Text(
+                                    text = nextMeeting.location,
+                                    fontSize = 11.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         }
-                    }
-                    if (pendingDocsCount > 0) {
-                        Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            color = RoleOfficeAccent.copy(alpha = 0.15f),
-                            border = BorderStroke(0.8.dp, RoleOfficeAccent.copy(alpha = 0.4f)),
-                            modifier = Modifier.clickable(onClick = onOpenOfficeDocs)
-                        ) {
+                        if (nextMeeting.agenda.isNotBlank()) {
+                            Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = "জবাব বাকি: ${toBengaliDigits(pendingDocsCount.toString())}টি",
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = RoleOfficeAccent,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                text = "এজেন্ডা: ${nextMeeting.agenda}",
+                                fontSize = 11.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
+                    } else {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.12f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.EventBusy,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.outline,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Column {
+                                Text(
+                                    text = "বর্তমানে কোনো আসন্ন সভা নির্ধারিত নেই",
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = "নতুন সভার নোটিশ জারি করতে নিচের বাটন ব্যবহার করুন",
+                                    fontSize = 11.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Alert Badges (if any pending office documents)
+            if (pendingDocsCount > 0) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = RoleOfficeAccent.copy(alpha = 0.12f),
+                    border = BorderStroke(0.8.dp, RoleOfficeAccent.copy(alpha = 0.4f)),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(onClick = onOpenOfficeDocs)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 7.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.MarkEmailUnread,
+                                contentDescription = null,
+                                tint = RoleOfficeAccent,
+                                modifier = Modifier.size(15.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "দাপ্তরিক ডাক: ${toBengaliDigits(pendingDocsCount.toString())}টি চিঠির জবাব দেওয়া বাকি",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = RoleOfficeAccent
+                            )
+                        }
+                        Text(
+                            text = "নথি দেখুন →",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = RoleOfficeAccent
+                        )
                     }
                 }
             }
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            Row(
+            // 4 Uniform Grid Action Buttons (2x2)
+            Column(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Button(
-                    onClick = onScheduleMeeting,
-                    modifier = Modifier
-                        .weight(1f)
-                        .heightIn(min = 44.dp),
-                    shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(Icons.Default.EventAvailable, contentDescription = null, modifier = Modifier.size(15.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("নতুন সভা", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    Button(
+                        onClick = onScheduleMeeting,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary)
+                    ) {
+                        Icon(Icons.Default.EventAvailable, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(5.dp))
+                        Text("নতুন সভা আহ্বান", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    }
+                    Button(
+                        onClick = onDraftNotice,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = RoleSecretaryAccent)
+                    ) {
+                        Icon(Icons.Default.AutoAwesome, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(5.dp))
+                        Text("AI নোটিশ ড্রাফট", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    }
                 }
-                Button(
-                    onClick = onDraftNotice,
-                    modifier = Modifier
-                        .weight(1f)
-                        .heightIn(min = 44.dp),
-                    shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MosqueGoldDeep)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(Icons.Default.AutoAwesome, contentDescription = null, modifier = Modifier.size(15.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("AI নোটিশ ড্রাফট", fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                }
-                OutlinedButton(
-                    onClick = onOpenOfficeDocs,
-                    modifier = Modifier
-                        .weight(1f)
-                        .heightIn(min = 44.dp),
-                    shape = RoundedCornerShape(10.dp),
-                    border = BorderStroke(1.dp, RoleSecretaryAccent),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = RoleSecretaryAccent)
-                ) {
-                    Icon(Icons.Default.FolderShared, contentDescription = null, modifier = Modifier.size(15.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("চিঠি ও নথি", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    OutlinedButton(
+                        onClick = onOpenOfficeDocs,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        border = BorderStroke(1.dp, RoleOfficeAccent.copy(alpha = 0.7f)),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = RoleOfficeAccent)
+                    ) {
+                        Icon(Icons.Default.FolderShared, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(5.dp))
+                        Text("চিঠি ও অফিস নথি", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    }
+                    OutlinedButton(
+                        onClick = onViewMeetings,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onSurface)
+                    ) {
+                        Icon(Icons.Default.Assignment, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(5.dp))
+                        Text("কার্যবিবরণী খাতা", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    }
                 }
             }
         }
