@@ -705,6 +705,7 @@ fun NoticeCardItem(
         "important" -> "গুরুত্বপূর্ণ"
         else -> "সাধারণ"
     }
+    val isDark = LocalIsDarkTheme.current
 
     Card(
         modifier = Modifier
@@ -914,6 +915,7 @@ fun MeetingCardItem(
 ) {
     val isCompleted = meeting.status == "completed"
     val statusColor = if (isCompleted) MosqueSuccessGreen else MosqueGoldDeep
+    val isDark = LocalIsDarkTheme.current
 
     Card(
         modifier = Modifier
