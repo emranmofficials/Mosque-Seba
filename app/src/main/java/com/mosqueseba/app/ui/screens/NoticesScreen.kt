@@ -128,21 +128,31 @@ fun NoticesScreen(
         }
     }
 
-    Column(
+    val isDark = LocalIsDarkTheme.current
+
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background),
-        horizontalAlignment = Alignment.CenterHorizontally
+        contentAlignment = Alignment.TopCenter
     ) {
-        // 1. Clean Modern Page Header + 2-Tab Switcher + Dynamic KPI Summary
-        val isDark = LocalIsDarkTheme.current
-        Surface(
-            color = MaterialTheme.colorScheme.surface,
-            shadowElevation = 0.5.dp,
-            border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else MosqueCardBorderSubtle),
-            modifier = Modifier.fillMaxWidth()
+        LazyColumn(
+            contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 100.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .widthIn(max = 840.dp)
         ) {
-            Column(
+            // 1. Clean Modern Page Header + 2-Tab Switcher + Dynamic KPI Summary
+            item(key = "notices_control_panel") {
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.surface,
+                    shadowElevation = 0.5.dp,
+                    border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else MosqueCardBorderSubtle),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 14.dp, vertical = 12.dp)
@@ -303,11 +313,15 @@ fun NoticesScreen(
                 }
             }
         }
+    }
 
-        // 2. Search & Filter Card (Matching MembersScreen & FinanceScreen)
+    // 2. Search & Filter Card (Matching MembersScreen & FinanceScreen)
+    item(key = "notices_search_filter") {
         Surface(
+            shape = RoundedCornerShape(12.dp),
             color = MaterialTheme.colorScheme.surface,
-            shadowElevation = 1.dp,
+            shadowElevation = 0.5.dp,
+            border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else MosqueCardBorderSubtle),
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(
@@ -420,17 +434,10 @@ fun NoticesScreen(
                 }
             }
         }
+    }
 
-        // 3. Content List
-        LazyColumn(
-            contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 100.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .widthIn(max = 840.dp)
-        ) {
-            if (selectedTabIndex == 0) {
+    // 3. Content List
+    if (selectedTabIndex == 0) {
                 if (filteredNotices.isEmpty()) {
                     item {
                         EmptyNoticesMeetingsState(

@@ -263,21 +263,31 @@ fun MembersScreen(
             }
         )
     } else {
-        Column(
+        val isDark = LocalIsDarkTheme.current
+
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background),
-            horizontalAlignment = Alignment.CenterHorizontally
+            contentAlignment = Alignment.TopCenter
         ) {
-            // 1. Clean Modern Page Header + 2-Tab Switcher + Dynamic KPI Summary
-            val isDark = LocalIsDarkTheme.current
-            Surface(
-                color = MaterialTheme.colorScheme.surface,
-                shadowElevation = 0.5.dp,
-                border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else MosqueCardBorderSubtle),
-                modifier = Modifier.fillMaxWidth()
+            LazyColumn(
+                contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 100.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .widthIn(max = 840.dp)
             ) {
-                Column(
+                // 1. Clean Modern Page Header + 2-Tab Switcher + Dynamic KPI Summary
+                item(key = "members_control_panel") {
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.surface,
+                        shadowElevation = 0.5.dp,
+                        border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else MosqueCardBorderSubtle),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 14.dp, vertical = 12.dp)
@@ -488,11 +498,15 @@ fun MembersScreen(
                     }
                 }
             }
+        }
 
-            // 2. Search & Role Filter Section
+        // 2. Search & Role Filter Section
+        item(key = "members_search_filter") {
             Surface(
+                shape = RoundedCornerShape(12.dp),
                 color = MaterialTheme.colorScheme.surface,
-                shadowElevation = 1.dp,
+                shadowElevation = 0.5.dp,
+                border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else MosqueCardBorderSubtle),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(
@@ -621,88 +635,68 @@ fun MembersScreen(
                     }
                 }
             }
+        }
+    }
 
-            // 3. Animated List Content
-            AnimatedContent(
-                targetState = selectedTabIndex,
-                transitionSpec = { fadeIn() togetherWith fadeOut() },
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .widthIn(max = 840.dp),
-                label = "MemberTabContent"
-            ) { tab ->
-                if (tab == 0) {
-                    LazyColumn(
-                        contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 100.dp),
-                        verticalArrangement = Arrangement.spacedBy(10.dp),
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        if (filteredChandaMembers.isEmpty()) {
-                            item {
-                                EmptyMemberState(message = "কোনো চাঁদা দাতা সদস্য পাওয়া যায়নি")
-                            }
-                        } else {
-                            items(filteredChandaMembers, key = { it.id }) { member ->
-                                val stats = memberChandaStats[member.id] ?: Triple(0.0, 0.0, member.monthlyChanda)
-                                ChandaMemberCard(
-                                    member = member,
-                                    defaultMosqueAddress = mosque?.address ?: "",
-                                    paidThisCycle = stats.first,
-                                    totalDeposited = stats.second,
-                                    dueAmount = stats.third,
-                                    canManageFinance = currentRole.canManageFinance(),
-                                    onCardClick = { activeProfileTarget = MemberProfileTarget.ChandaMember(member.id) },
-                                    onDueClick = { dueBreakdownMember = member },
-                                    onPaidClick = { depositHistoryMember = member },
-                                    onCollectClick = {
-                                        val suggested = if (stats.third > 0.0) stats.third else member.monthlyChanda
-                                        chandaTargetMember = member to suggested
-                                    },
-                                    modifier = Modifier.animateItem(
-                                        fadeInSpec = spring(stiffness = Spring.StiffnessMediumLow),
-                                        placementSpec = spring(stiffness = Spring.StiffnessMediumLow)
-                                    )
-                                )
-                            }
-                        }
-                    }
-                } else {
-                    LazyColumn(
-                        contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 100.dp),
-                        verticalArrangement = Arrangement.spacedBy(10.dp),
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        if (filteredSalariedMembers.isEmpty()) {
-                            item {
-                                EmptyMemberState(message = "কোনো বেতনভুক্ত সদস্য পাওয়া যায়নি")
-                            }
-                        } else {
-                            items(filteredSalariedMembers, key = { it.key }) { staffItem ->
-                                SalariedMemberCard(
-                                    item = staffItem,
-                                    canManageFinance = currentRole.canManageFinance(),
-                                    onCardClick = {
-                                        activeProfileTarget = MemberProfileTarget.SalariedStaff(
-                                            staffId = staffItem.staff.id,
-                                            memberId = staffItem.member?.id
-                                        )
-                                    },
-                                    onPaySalaryClick = {
-                                        paySalaryTargetStaff = staffItem.staff
-                                    },
-                                    modifier = Modifier.animateItem(
-                                        fadeInSpec = spring(stiffness = Spring.StiffnessMediumLow),
-                                        placementSpec = spring(stiffness = Spring.StiffnessMediumLow)
-                                    )
-                                )
-                            }
-                        }
-                    }
-                }
+    // 3. Member List Content
+    if (selectedTabIndex == 0) {
+        if (filteredChandaMembers.isEmpty()) {
+            item {
+                EmptyMemberState(message = "কোনো চাঁদা দাতা সদস্য পাওয়া যায়নি")
+            }
+        } else {
+            items(filteredChandaMembers, key = { it.id }) { member ->
+                val stats = memberChandaStats[member.id] ?: Triple(0.0, 0.0, member.monthlyChanda)
+                ChandaMemberCard(
+                    member = member,
+                    defaultMosqueAddress = mosque?.address ?: "",
+                    paidThisCycle = stats.first,
+                    totalDeposited = stats.second,
+                    dueAmount = stats.third,
+                    canManageFinance = currentRole.canManageFinance(),
+                    onCardClick = { activeProfileTarget = MemberProfileTarget.ChandaMember(member.id) },
+                    onDueClick = { dueBreakdownMember = member },
+                    onPaidClick = { depositHistoryMember = member },
+                    onCollectClick = {
+                        val suggested = if (stats.third > 0.0) stats.third else member.monthlyChanda
+                        chandaTargetMember = member to suggested
+                    },
+                    modifier = Modifier.animateItem(
+                        fadeInSpec = spring(stiffness = Spring.StiffnessMediumLow),
+                        placementSpec = spring(stiffness = Spring.StiffnessMediumLow)
+                    )
+                )
+            }
+        }
+    } else {
+        if (filteredSalariedMembers.isEmpty()) {
+            item {
+                EmptyMemberState(message = "কোনো বেতনভুক্ত সদস্য পাওয়া যায়নি")
+            }
+        } else {
+            items(filteredSalariedMembers, key = { it.key }) { staffItem ->
+                SalariedMemberCard(
+                    item = staffItem,
+                    canManageFinance = currentRole.canManageFinance(),
+                    onCardClick = {
+                        activeProfileTarget = MemberProfileTarget.SalariedStaff(
+                            staffId = staffItem.staff.id,
+                            memberId = staffItem.member?.id
+                        )
+                    },
+                    onPaySalaryClick = {
+                        paySalaryTargetStaff = staffItem.staff
+                    },
+                    modifier = Modifier.animateItem(
+                        fadeInSpec = spring(stiffness = Spring.StiffnessMediumLow),
+                        placementSpec = spring(stiffness = Spring.StiffnessMediumLow)
+                    )
+                )
             }
         }
     }
+}
+}
 
     // --- Dialogs shared across MembersScreen & MemberProfileScreen ---
 

@@ -380,7 +380,7 @@ fun FinanceScreen(
         contentAlignment = Alignment.TopCenter
     ) {
         LazyColumn(
-            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 14.dp),
+            contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 14.dp, bottom = 100.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier
                 .fillMaxSize()
