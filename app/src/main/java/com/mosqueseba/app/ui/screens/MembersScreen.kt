@@ -1079,14 +1079,14 @@ private fun ChandaMemberCard(
                 HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Bottom Action Strip: বকেয়া বাটন | জমা বাটন | চাঁদা গ্রহণ বাটন
+                // Bottom Action Strip: বকেয়া কার্ড | জমা কার্ড | চাঁদা গ্রহণ বাটন (সকলের সাইজ সমান)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     val hasDue = dueAmount > 0.0
-                    // 1. বকেয়া button
+                    // 1. বকেয়া কার্ড
                     Surface(
                         onClick = onDueClick,
                         shape = RoundedCornerShape(10.dp),
@@ -1097,11 +1097,13 @@ private fun ChandaMemberCard(
                         ),
                         modifier = Modifier
                             .weight(1f)
-                            .heightIn(min = 42.dp)
+                            .height(46.dp)
                             .testTag("member_due_button_${member.id}")
                     ) {
                         Column(
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 5.dp),
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = 4.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center
                         ) {
@@ -1109,18 +1111,20 @@ private fun ChandaMemberCard(
                                 text = "বকেয়া",
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.SemiBold,
-                                color = if (hasDue) MosqueUrgentRed else MosqueSuccessGreen
+                                color = if (hasDue) MosqueUrgentRed else MosqueSuccessGreen,
+                                maxLines = 1
                             )
                             Text(
                                 text = "৳${toBengaliDigits(String.format("%,.0f", dueAmount))}",
-                                fontSize = 12.sp,
+                                fontSize = 11.5.sp,
                                 fontWeight = FontWeight.ExtraBold,
-                                color = if (hasDue) MosqueUrgentRed else MosqueSuccessGreen
+                                color = if (hasDue) MosqueUrgentRed else MosqueSuccessGreen,
+                                maxLines = 1
                             )
                         }
                     }
 
-                    // 2. জমা button
+                    // 2. জমা কার্ড
                     Surface(
                         onClick = onPaidClick,
                         shape = RoundedCornerShape(10.dp),
@@ -1128,11 +1132,13 @@ private fun ChandaMemberCard(
                         border = BorderStroke(1.dp, primaryColor.copy(alpha = 0.35f)),
                         modifier = Modifier
                             .weight(1f)
-                            .heightIn(min = 42.dp)
+                            .height(46.dp)
                             .testTag("member_paid_button_${member.id}")
                     ) {
                         Column(
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 5.dp),
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = 4.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center
                         ) {
@@ -1140,18 +1146,20 @@ private fun ChandaMemberCard(
                                 text = "জমা",
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.SemiBold,
-                                color = secondaryColor
+                                color = secondaryColor,
+                                maxLines = 1
                             )
                             Text(
                                 text = "৳${toBengaliDigits(String.format("%,.0f", totalDeposited))}",
-                                fontSize = 12.sp,
+                                fontSize = 11.5.sp,
                                 fontWeight = FontWeight.ExtraBold,
-                                color = primaryColor
+                                color = primaryColor,
+                                maxLines = 1
                             )
                         }
                     }
 
-                    // 3. চাঁদা গ্রহণ button
+                    // 3. চাঁদা গ্রহণ বাটন
                     if (canManageFinance) {
                         Button(
                             onClick = onCollectClick,
@@ -1160,24 +1168,30 @@ private fun ChandaMemberCard(
                                 containerColor = MosqueEmeraldPrimary,
                                 contentColor = Color.White
                             ),
-                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+                            contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
                             modifier = Modifier
-                                .weight(1.2f)
-                                .heightIn(min = 42.dp)
+                                .weight(1f)
+                                .height(46.dp)
                                 .testTag("member_collect_button_${member.id}")
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Payments,
-                                contentDescription = null,
-                                modifier = Modifier.size(15.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = "চাঁদা গ্রহণ",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.ExtraBold,
-                                maxLines = 1
-                            )
+                            Row(
+                                modifier = Modifier.fillMaxSize(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Payments,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Spacer(modifier = Modifier.width(3.dp))
+                                Text(
+                                    text = "চাঁদা গ্রহণ",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    maxLines = 1
+                                )
+                            }
                         }
                     }
                 }
@@ -1307,26 +1321,34 @@ private fun SalariedMemberCard(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    // 1. মাসিক বেতন কার্ড
                     Surface(
                         shape = RoundedCornerShape(10.dp),
                         color = softBadgeBg,
                         border = BorderStroke(1.dp, primaryColor.copy(alpha = 0.3f)),
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(46.dp)
                     ) {
                         Column(
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = 4.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
                         ) {
-                            Text("মাসিক বেতন", fontSize = 10.sp, color = secondaryColor)
+                            Text("মাসিক বেতন", fontSize = 10.sp, color = secondaryColor, maxLines = 1)
                             Text(
                                 text = "৳${toBengaliDigits(String.format("%,.0f", item.salaryAmount))}",
-                                fontSize = 12.sp,
+                                fontSize = 11.5.sp,
                                 fontWeight = FontWeight.ExtraBold,
-                                color = primaryColor
+                                color = primaryColor,
+                                maxLines = 1
                             )
                         }
                     }
 
+                    // 2. পরিশোধিত / অবস্থা কার্ড
                     Surface(
                         shape = RoundedCornerShape(10.dp),
                         color = if (item.isPaidCurrentCycle) MosqueSuccessGreen.copy(alpha = 0.12f) else goldBadgeBg,
@@ -1334,17 +1356,22 @@ private fun SalariedMemberCard(
                             1.dp,
                             if (item.isPaidCurrentCycle) MosqueSuccessGreen.copy(alpha = 0.35f) else MosqueCardBorderGold
                         ),
-                        modifier = Modifier.weight(1.1f)
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(46.dp)
                     ) {
                         Column(
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = 4.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
                         ) {
                             Text(
                                 text = if (item.totalPaidSalary > 0.0) {
-                                    "পরিশোধিত (${toBengaliDigits(item.paidCount.toString())} বার)"
+                                    "পরিশোধ (${toBengaliDigits(item.paidCount.toString())})"
                                 } else {
-                                    "চলতি মাসের অবস্থা"
+                                    "চলতি মাস"
                                 },
                                 fontSize = 10.sp,
                                 color = secondaryColor,
@@ -1366,24 +1393,31 @@ private fun SalariedMemberCard(
                         }
                     }
 
+                    // 3. বেতন দিন বাটন
                     if (canManageFinance) {
                         Button(
                             onClick = onPaySalaryClick,
                             shape = RoundedCornerShape(10.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary),
-                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+                            contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
                             modifier = Modifier
-                                .weight(1.1f)
-                                .heightIn(min = 48.dp)
+                                .weight(1f)
+                                .height(46.dp)
                                 .testTag("pay_salary_btn_${item.key}")
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Payments,
-                                contentDescription = null,
-                                modifier = Modifier.size(14.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("বেতন দিন", fontSize = 11.sp, fontWeight = FontWeight.ExtraBold)
+                            Row(
+                                modifier = Modifier.fillMaxSize(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Payments,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Spacer(modifier = Modifier.width(3.dp))
+                                Text("বেতন দিন", fontSize = 11.sp, fontWeight = FontWeight.ExtraBold, maxLines = 1)
+                            }
                         }
                     }
                 }

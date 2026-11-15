@@ -250,8 +250,12 @@ fun GlobalHeader(
 fun loadLocalThumbnail(path: String?, maxDim: Int = 256): ImageBitmap? {
     if (path.isNullOrBlank()) return null
     return try {
-        val file = File(path)
-        if (!file.exists()) return null
+        val cleanPath = when {
+            path.startsWith("file://") -> path.removePrefix("file://")
+            else -> path.trim()
+        }
+        val file = File(cleanPath)
+        if (!file.exists() || !file.isFile) return null
         val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
         BitmapFactory.decodeFile(file.absolutePath, bounds)
         var sampleSize = 1
