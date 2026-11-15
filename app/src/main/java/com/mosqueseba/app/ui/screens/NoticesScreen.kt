@@ -440,11 +440,9 @@ fun NoticesScreen(
                             canManage = canPublish,
                             onTogglePin = {
                                 viewModel.togglePinNotice(notice)
-                                Toast.makeText(
-                                    context,
-                                    if (notice.isPinned) "নোটিশ আনপিন করা হয়েছে।" else "নোটিশটি পিন করা হয়েছে।",
-                                    Toast.LENGTH_SHORT
-                                ).show()
+                                MosqueToastController.info(
+                                    if (notice.isPinned) "নোটিশ আনপিন করা হয়েছে।" else "নোটিশটি পিন করা হয়েছে।"
+                                )
                             },
                             onEdit = { editingNotice = notice },
                             onShare = { shareNoticeText(context, mosqueName, notice) },
@@ -473,11 +471,9 @@ fun NoticesScreen(
                             canManage = canSchedule,
                             onToggleStatus = {
                                 viewModel.toggleMeetingStatus(meeting)
-                                Toast.makeText(
-                                    context,
-                                    if (meeting.status == "completed") "সভা আসন্ন হিসেবে চিহ্নিত হয়েছে।" else "সভা সম্পন্ন হিসেবে চিহ্নিত হয়েছে।",
-                                    Toast.LENGTH_SHORT
-                                ).show()
+                                MosqueToastController.info(
+                                    if (meeting.status == "completed") "সভা আসন্ন হিসেবে চিহ্নিত হয়েছে।" else "সভা সম্পন্ন হিসেবে চিহ্নিত হয়েছে।"
+                                )
                             },
                             onEdit = { editingMeeting = meeting },
                             onEditResolution = { resolutionTargetMeeting = meeting },
@@ -506,7 +502,7 @@ fun NoticesScreen(
                     priority = priority,
                     isPinned = isPinned
                 )
-                Toast.makeText(context, "নোটিশ সফলভাবে হালনাগাদ হয়েছে।", Toast.LENGTH_SHORT).show()
+                MosqueToastController.success("নোটিশ সফলভাবে হালনাগাদ হয়েছে।", "নোটিশ হালনাগাদ")
             }
         )
     }
@@ -524,7 +520,7 @@ fun NoticesScreen(
             onConfirm = {
                 viewModel.deleteNotice(target)
                 pendingDeleteNotice = null
-                Toast.makeText(context, "নোটিশটি মুছে ফেলা হয়েছে।", Toast.LENGTH_SHORT).show()
+                MosqueToastController.warning("নোটিশটি মুছে ফেলা হয়েছে।", "নোটিশ মোছা হয়েছে")
             }
         )
     }
@@ -542,7 +538,7 @@ fun NoticesScreen(
                     location = location,
                     agenda = agenda
                 )
-                Toast.makeText(context, "সভার তথ্য সফলভাবে হালনাগাদ হয়েছে।", Toast.LENGTH_SHORT).show()
+                MosqueToastController.success("সভার তথ্য সফলভাবে হালনাগাদ হয়েছে।", "সভা হালনাগাদ")
             }
         )
     }
@@ -558,7 +554,7 @@ fun NoticesScreen(
                     resolution = resolution,
                     markCompleted = markCompleted
                 )
-                Toast.makeText(context, "সভার কার্যবিবরণী সংরক্ষিত হয়েছে।", Toast.LENGTH_SHORT).show()
+                MosqueToastController.success("সভার কার্যবিবরণী সংরক্ষিত হয়েছে।", "কার্যবিবরণী সংরক্ষিত")
             }
         )
     }
@@ -576,7 +572,7 @@ fun NoticesScreen(
             onConfirm = {
                 viewModel.deleteMeeting(target)
                 pendingDeleteMeeting = null
-                Toast.makeText(context, "সভাটি তালিকা থেকে মুছে ফেলা হয়েছে।", Toast.LENGTH_SHORT).show()
+                MosqueToastController.warning("সভাটি তালিকা থেকে মুছে ফেলা হয়েছে।", "সভা মোছা হয়েছে")
             }
         )
     }

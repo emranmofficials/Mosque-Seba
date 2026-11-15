@@ -195,11 +195,10 @@ fun DashboardScreen(
                             pendingTransactions = pendingTransactions,
                             onApprove = { txn ->
                                 viewModel.updateTransactionStatus(txn, true)
-                                Toast.makeText(
-                                    context,
+                                MosqueToastController.success(
                                     "${txn.categoryNameBn} ভাউচারটি অনুমোদিত হয়েছে।",
-                                    Toast.LENGTH_SHORT
-                                ).show()
+                                    "ভাউচার অনুমোদিত"
+                                )
                             },
                             onReject = { txn -> pendingRejectVoucher = txn },
                             onViewAll = { onOpenDialog("pending_approval") }
@@ -1228,11 +1227,10 @@ fun DashboardScreen(
             isDestructive = true,
             onConfirm = {
                 viewModel.updateTransactionStatus(txn, false)
-                Toast.makeText(
-                    context,
+                MosqueToastController.warning(
                     "${txn.categoryNameBn} ভাউচারটি বাতিল করা হয়েছে।",
-                    Toast.LENGTH_SHORT
-                ).show()
+                    "ভাউচার বাতিল"
+                )
                 pendingRejectVoucher = null
             },
             onDismiss = { pendingRejectVoucher = null }

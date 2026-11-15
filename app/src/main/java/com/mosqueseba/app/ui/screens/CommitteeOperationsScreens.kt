@@ -615,7 +615,7 @@ fun CashboxScreen(
                                     OutlinedButton(
                                         onClick = {
                                             viewModel.verifyCashboxAsWitness(rec)
-                                            Toast.makeText(context, "সাক্ষী হিসেবে যাচাই নিশ্চিত হয়েছে।", Toast.LENGTH_SHORT).show()
+                                            MosqueToastController.success("সাক্ষী হিসেবে যাচাই নিশ্চিত হয়েছে।", "যাচাই সম্পন্ন")
                                         },
                                         modifier = Modifier
                                             .weight(1f)
@@ -657,11 +657,10 @@ fun CashboxScreen(
             onDismiss = { showOpenCashboxDialog = false },
             onConfirm = { boxType, amount, witnesses, bank, slip, notes ->
                 viewModel.recordCashboxOpening(boxType, amount, witnesses, bank, slip, notes)
-                Toast.makeText(
-                    context,
+                MosqueToastController.success(
                     "৳${toBengaliDigits(amount.toInt().toString())} দান বাক্স গণনা সংরক্ষিত হয়েছে।",
-                    Toast.LENGTH_SHORT
-                ).show()
+                    "ক্যাশবক্স গণনা সম্পন্ন"
+                )
                 showOpenCashboxDialog = false
             }
         )
@@ -673,7 +672,7 @@ fun CashboxScreen(
             onDismiss = { depositTargetRecord = null },
             onConfirm = { bankName, slipNo ->
                 viewModel.markCashboxBankDeposited(target, bankName, slipNo)
-                Toast.makeText(context, "$bankName-এ জমা সম্পন্ন হিসেবে রেকর্ড হয়েছে।", Toast.LENGTH_SHORT).show()
+                MosqueToastController.success("$bankName-এ জমা সম্পন্ন হিসেবে রেকর্ড হয়েছে।", "ব্যাংক জমা সফল")
                 depositTargetRecord = null
             }
         )
@@ -1107,7 +1106,7 @@ fun OfficeDocumentsScreen(
             onDismiss = { showAddDocDialog = false },
             onConfirm = { title, cat, party, summary, status ->
                 viewModel.addOfficeDocument(title, cat, party, summary, status)
-                Toast.makeText(context, "নতুন দাপ্তরিক নথি সংরক্ষিত হয়েছে।", Toast.LENGTH_SHORT).show()
+                MosqueToastController.success("নতুন দাপ্তরিক নথি সংরক্ষিত হয়েছে।", "নথি সংরক্ষিত")
                 showAddDocDialog = false
             }
         )
@@ -1119,7 +1118,7 @@ fun OfficeDocumentsScreen(
             onDismiss = { replyTargetDoc = null },
             onConfirm = { replyNote, status ->
                 viewModel.updateOfficeDocumentReply(doc, replyNote, status)
-                Toast.makeText(context, "নথির স্ট্যাটাস ও জবাব হালনাগাদ হয়েছে।", Toast.LENGTH_SHORT).show()
+                MosqueToastController.success("নথির স্ট্যাটাস ও জবাব হালনাগাদ হয়েছে।", "জবাব সংরক্ষিত")
                 replyTargetDoc = null
             }
         )
@@ -1471,7 +1470,7 @@ fun ShariaAdvisoryScreen(
                                 OutlinedButton(
                                     onClick = {
                                         viewModel.updateAdvisoryNoteStatus(note, "গৃহীত")
-                                        Toast.makeText(context, "পরামর্শটি 'গৃহীত' হিসেবে চিহ্নিত হয়েছে।", Toast.LENGTH_SHORT).show()
+                                        MosqueToastController.info("পরামর্শটি 'গৃহীত' হিসেবে চিহ্নিত হয়েছে।", "গৃহীত চিহ্নিত")
                                     },
                                     modifier = Modifier
                                         .weight(1f)
@@ -1484,7 +1483,7 @@ fun ShariaAdvisoryScreen(
                                 Button(
                                     onClick = {
                                         viewModel.updateAdvisoryNoteStatus(note, "বাস্তবায়িত")
-                                        Toast.makeText(context, "পরামর্শটি 'বাস্তবায়িত' হিসেবে চিহ্নিত হয়েছে।", Toast.LENGTH_SHORT).show()
+                                        MosqueToastController.success("পরামর্শটি 'বাস্তবায়িত' হিসেবে চিহ্নিত হয়েছে।", "বাস্তবায়িত চিহ্নিত")
                                     },
                                     modifier = Modifier
                                         .weight(1f)
@@ -1509,7 +1508,7 @@ fun ShariaAdvisoryScreen(
             onDismiss = { showAddDialog = null },
             onConfirm = { topic, rec, compliance ->
                 viewModel.submitAdvisoryNote(noteType, topic, rec, compliance)
-                Toast.makeText(context, "মতামত ও সুপারিশ সফলভাবে দাখিল হয়েছে।", Toast.LENGTH_SHORT).show()
+                MosqueToastController.success("মতামত ও সুপারিশ সফলভাবে দাখিল হয়েছে।", "পরামর্শ দাখিল")
                 showAddDialog = null
             }
         )
@@ -1700,11 +1699,9 @@ fun PublicitySmartBoardScreen(
                                     IconButton(
                                         onClick = {
                                             viewModel.togglePinSmartBoardQuote(quote)
-                                            Toast.makeText(
-                                                context,
-                                                if (quote.isPinned) "বোর্ড থেকে পিন সরানো হয়েছে।" else "স্মার্ট বোর্ডে পিন করা হয়েছে।",
-                                                Toast.LENGTH_SHORT
-                                            ).show()
+                                            MosqueToastController.info(
+                                                if (quote.isPinned) "বোর্ড থেকে পিন সরানো হয়েছে।" else "স্মার্ট বোর্ডে পিন করা হয়েছে।"
+                                            )
                                         },
                                         modifier = Modifier.minimumInteractiveComponentSize()
                                     ) {
@@ -1758,7 +1755,7 @@ fun PublicitySmartBoardScreen(
             onDismiss = { showAddQuoteDialog = false },
             onConfirm = { cat, title, msg, pinned ->
                 viewModel.addSmartBoardQuote(cat, title, msg, pinned)
-                Toast.makeText(context, "স্মার্ট বোর্ডে নতুন প্রচার বার্তা প্রকাশিত হয়েছে।", Toast.LENGTH_SHORT).show()
+                MosqueToastController.success("স্মার্ট বোর্ডে নতুন প্রচার বার্তা প্রকাশিত হয়েছে।", "বার্তা প্রকাশিত")
                 showAddQuoteDialog = false
             }
         )
@@ -1774,7 +1771,7 @@ fun PublicitySmartBoardScreen(
             confirmTag = "confirm_delete_quote_button",
             onConfirm = {
                 viewModel.deleteSmartBoardQuote(quote)
-                Toast.makeText(context, "প্রচার বার্তা মুছে ফেলা হয়েছে।", Toast.LENGTH_SHORT).show()
+                MosqueToastController.warning("প্রচার বার্তা মুছে ফেলা হয়েছে।", "বার্তা অপসারিত")
                 pendingDeleteQuote = null
             },
             onDismiss = { pendingDeleteQuote = null }

@@ -714,11 +714,10 @@ fun MembersScreen(
                     selectedMonthCount = monthCount,
                     onRecorded = { createdPayment ->
                         receiptPreviewPayment = createdPayment
-                        Toast.makeText(
-                            context,
-                            "৳${toBengaliDigits(amount.toInt().toString())} চাঁদা গৃহীত হয়েছে এবং স্বয়ংক্রিয়ভাবে মোট আয়ের সাথে যুক্ত হয়েছে।",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        MosqueToastController.success(
+                            "৳${toBengaliDigits(amount.toInt().toString())} চাঁদা গৃহীত হয়েছে এবং আয়ে যুক্ত হয়েছে।",
+                            "চাঁদা রসিদ প্রস্তুত"
+                        )
                     }
                 )
                 chandaTargetMember = null
@@ -782,11 +781,10 @@ fun MembersScreen(
                     bonus = bonus,
                     paymentMethod = paymentMethod,
                     onDisbursed = { payroll ->
-                        Toast.makeText(
-                            context,
-                            "${staff.nameBn}-এর বেতন ৳${toBengaliDigits(payroll.netSalary.toInt().toString())} পরিশোধিত এবং স্বয়ংক্রিয়ভাবে মোট ব্যয়ের সাথে যুক্ত হয়েছে।",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        MosqueToastController.success(
+                            "${staff.nameBn}-এর বেতন ৳${toBengaliDigits(payroll.netSalary.toInt().toString())} পরিশোধিত হয়েছে।",
+                            "বেতন পরিশোধ সফল"
+                        )
                     }
                 )
                 paySalaryTargetStaff = null

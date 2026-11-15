@@ -1234,11 +1234,11 @@ fun MemberProfileScreen(
                 if (resolvedMember != null) {
                     viewModel.toggleMemberStatus(resolvedMember)
                     val nextState = if (isActive) "নিষ্ক্রিয়" else "সক্রিয়"
-                    Toast.makeText(context, "${resolvedMember.nameBn}-কে $nextState করা হয়েছে।", Toast.LENGTH_SHORT).show()
+                    MosqueToastController.info("${resolvedMember.nameBn}-কে $nextState করা হয়েছে।", "স্ট্যাটাস পরিবর্তন")
                 } else if (resolvedStaff != null) {
                     viewModel.toggleStaffStatus(resolvedStaff)
                     val nextState = if (resolvedStaff.isActive) "নিষ্ক্রিয়" else "সক্রিয়"
-                    Toast.makeText(context, "${resolvedStaff.nameBn}-কে $nextState করা হয়েছে।", Toast.LENGTH_SHORT).show()
+                    MosqueToastController.info("${resolvedStaff.nameBn}-কে $nextState করা হয়েছে।", "স্ট্যাটাস পরিবর্তন")
                 }
             },
             onDeleteMember = {
@@ -1248,7 +1248,7 @@ fun MemberProfileScreen(
                 } else if (resolvedStaff != null) {
                     viewModel.removeStaff(resolvedStaff)
                 }
-                Toast.makeText(context, "$targetName তালিকা থেকে অপসারিত হয়েছে।", Toast.LENGTH_SHORT).show()
+                MosqueToastController.warning("$targetName তালিকা থেকে অপসারিত হয়েছে।", "অপসারণ সম্পন্ন")
                 onBack()
             },
             onDismiss = { showEditMemberDialog = false },
@@ -1271,7 +1271,7 @@ fun MemberProfileScreen(
                         salaryAmount = salaryAmount,
                         staffMealRequired = staffMealRequired
                     )
-                    Toast.makeText(context, "$nameBn-এর তথ্য হালনাগাদ হয়েছে।", Toast.LENGTH_SHORT).show()
+                    MosqueToastController.success("$nameBn-এর তথ্য সফলভাবে হালনাগাদ হয়েছে।", "তথ্য হালনাগাদ")
                 } else if (resolvedStaff != null) {
                     viewModel.promoteStaffAndUpdateDetails(
                         staff = resolvedStaff,
@@ -1289,7 +1289,7 @@ fun MemberProfileScreen(
                         salaryAmount = salaryAmount,
                         staffMealRequired = staffMealRequired
                     )
-                    Toast.makeText(context, "$nameBn-এর প্রোফাইল হালনাগাদ হয়েছে।", Toast.LENGTH_SHORT).show()
+                    MosqueToastController.success("$nameBn-এর প্রোফাইল সফলভাবে হালনাগাদ হয়েছে।", "প্রোফাইল হালনাগাদ")
                 }
             }
         )

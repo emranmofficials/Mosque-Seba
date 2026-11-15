@@ -43,63 +43,73 @@ class MainActivity : ComponentActivity() {
         setContent {
             val darkModeEnabled by viewModel.darkModeEnabled.collectAsState()
             MosqueCommitteeTheme(darkTheme = darkModeEnabled) {
-                var currentScreen by remember { mutableStateOf(AppScreen.SPLASH) }
+                Box(modifier = Modifier.fillMaxSize()) {
+                    var currentScreen by remember { mutableStateOf(AppScreen.SPLASH) }
 
-                BackHandler(enabled = currentScreen == AppScreen.REGISTRATION) {
-                    currentScreen = AppScreen.LOGIN
-                }
+                    BackHandler(enabled = currentScreen == AppScreen.REGISTRATION) {
+                        currentScreen = AppScreen.LOGIN
+                    }
 
-                AnimatedContent(
-                    targetState = currentScreen,
-                    transitionSpec = {
-                        fadeIn(animationSpec = tween(300)) togetherWith fadeOut(animationSpec = tween(250))
-                    },
-                    label = "AppScreenTransition"
-                ) { screen ->
-                    when (screen) {
-                        AppScreen.SPLASH -> {
-                            SplashScreen(
-                                onSplashFinished = {
-                                    currentScreen = if (viewModel.sessionManager.isLoggedIn()) {
-                                        AppScreen.MAIN
-                                    } else {
-                                        AppScreen.LOGIN
+                    AnimatedContent(
+                        targetState = currentScreen,
+                        transitionSpec = {
+                            fadeIn(animationSpec = tween(300)) togetherWith fadeOut(animationSpec = tween(250))
+                        },
+                        label = "AppScreenTransition"
+                    ) { screen ->
+                        when (screen) {
+                            AppScreen.SPLASH -> {
+                                SplashScreen(
+                                    onSplashFinished = {
+                                        currentScreen = if (viewModel.sessionManager.isLoggedIn()) {
+                                            AppScreen.MAIN
+                                        } else {
+                                            AppScreen.LOGIN
+                                        }
                                     }
-                                }
-                            )
-                        }
-                        AppScreen.LOGIN -> {
-                            LoginScreen(
-                                viewModel = viewModel,
-                                onLoginSuccess = {
-                                    currentScreen = AppScreen.MAIN
-                                },
-                                onNavigateToRegister = {
-                                    currentScreen = AppScreen.REGISTRATION
-                                }
-                            )
-                        }
-                        AppScreen.REGISTRATION -> {
-                            RegistrationScreen(
-                                viewModel = viewModel,
-                                onNavigateBackToLogin = {
-                                    currentScreen = AppScreen.LOGIN
-                                },
-                                onRegistrationSuccess = {
-                                    currentScreen = AppScreen.MAIN
-                                }
-                            )
-                        }
-                        AppScreen.MAIN -> {
-                            MosqueAppShell(
-                                viewModel = viewModel,
-                                onLogout = {
-                                    viewModel.logout()
-                                    currentScreen = AppScreen.LOGIN
-                                }
-                            )
+                                )
+                            }
+                            AppScreen.LOGIN -> {
+                                LoginScreen(
+                                    viewModel = viewModel,
+                                    onLoginSuccess = {
+                                        currentScreen = AppScreen.MAIN
+                                    },
+                                    onNavigateToRegister = {
+                                        currentScreen = AppScreen.REGISTRATION
+                                    }
+                                )
+                            }
+                            AppScreen.REGISTRATION -> {
+                                RegistrationScreen(
+                                    viewModel = viewModel,
+                                    onNavigateBackToLogin = {
+                                        currentScreen = AppScreen.LOGIN
+                                    },
+                                    onRegistrationSuccess = {
+                                        currentScreen = AppScreen.MAIN
+                                    }
+                                )
+                            }
+                            AppScreen.MAIN -> {
+                                MosqueAppShell(
+                                    viewModel = viewModel,
+                                    onLogout = {
+                                        viewModel.logout()
+                                        currentScreen = AppScreen.LOGIN
+                                    }
+                                )
+                            }
                         }
                     }
+
+                    // Global Floating Islamic Toast Host
+                    MosqueToastHost(
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .statusBarsPadding()
+                            .padding(top = 10.dp, start = 14.dp, end = 14.dp)
+                    )
                 }
             }
         }
@@ -292,7 +302,7 @@ fun MosqueAppShell(
                         if (target != null) {
                             overlayUserProfile = target
                         } else {
-                            Toast.makeText(context, "ব্যক্তিগত প্রোফাইল তথ্য লোড হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন।", Toast.LENGTH_SHORT).show()
+                            MosqueToastController.info("ব্যক্তিগত প্রোফাইল তথ্য লোড হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন।")
                         }
                     },
                     onAvatarClick = {
@@ -374,7 +384,7 @@ fun MosqueAppShell(
                         if (target != null) {
                             overlayUserProfile = target
                         } else {
-                            Toast.makeText(context, "ব্যক্তিগত প্রোফাইল তথ্য পাওয়া যায়নি।", Toast.LENGTH_SHORT).show()
+                            MosqueToastController.warning("ব্যক্তিগত প্রোফাইল তথ্য পাওয়া যায়নি।")
                         }
                     }
                 )
@@ -784,11 +794,10 @@ fun MosqueAppShell(
                     salaryAmount = salaryAmount,
                     staffMealRequired = staffMealRequired
                 )
-                Toast.makeText(
-                    context,
+                MosqueToastController.success(
                     "$nameBn-কে সদস্য তালিকায় যুক্ত করা হয়েছে।",
-                    Toast.LENGTH_SHORT
-                ).show()
+                    "সদস্য এন্ট্রি সম্পন্ন"
+                )
             }
         )
     }
@@ -811,11 +820,10 @@ fun MosqueAppShell(
                     paymentMethod = method
                 )
                 val typeLabel = if (type == "INCOME") "আয়" else "ব্যয়"
-                Toast.makeText(
-                    context,
+                MosqueToastController.success(
                     "৳${toBengaliDigits(amount.toInt().toString())} $typeLabel এন্ট্রি সংরক্ষিত হয়েছে।",
-                    Toast.LENGTH_SHORT
-                ).show()
+                    "হিসাব এন্ট্রি সফল"
+                )
             }
         )
     }
@@ -841,11 +849,10 @@ fun MosqueAppShell(
                     selectedMonthCount = monthCount,
                     onRecorded = { createdPayment ->
                         chandaReceiptPreview = createdPayment
-                        Toast.makeText(
-                            context,
-                            "৳${toBengaliDigits(amount.toInt().toString())} চাঁদা গৃহীত হয়েছে এবং স্বয়ংক্রিয়ভাবে মোট আয়ের সাথে যুক্ত হয়েছে।",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        MosqueToastController.success(
+                            "৳${toBengaliDigits(amount.toInt().toString())} চাঁদা গৃহীত হয়েছে এবং আয়ে যুক্ত হয়েছে।",
+                            "চাঁদা রসিদ প্রস্তুত"
+                        )
                     }
                 )
                 chandaPreselectedTarget = null
@@ -866,11 +873,10 @@ fun MosqueAppShell(
                     bonus = bonus,
                     paymentMethod = paymentMethod,
                     onDisbursed = { payroll ->
-                        Toast.makeText(
-                            context,
-                            "${staff.nameBn}-এর বেতন ৳${toBengaliDigits(payroll.netSalary.toInt().toString())} পরিশোধিত এবং স্বয়ংক্রিয়ভাবে মোট ব্যয়ের সাথে যুক্ত হয়েছে।",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        MosqueToastController.success(
+                            "${staff.nameBn}-এর বেতন ৳${toBengaliDigits(payroll.netSalary.toInt().toString())} পরিশোধিত হয়েছে।",
+                            "বেতন পরিশোধ সফল"
+                        )
                     }
                 )
                 paySalaryTargetStaff = null
@@ -903,11 +909,10 @@ fun MosqueAppShell(
                     priority = priority,
                     isPinned = isPinned
                 )
-                Toast.makeText(
-                    context,
+                MosqueToastController.success(
                     "নোটিশটি সফলভাবে প্রকাশিত হয়েছে।",
-                    Toast.LENGTH_SHORT
-                ).show()
+                    "নোটিশ প্রকাশিত"
+                )
             }
         )
     }
@@ -923,11 +928,10 @@ fun MosqueAppShell(
                     location = location,
                     agenda = agenda
                 )
-                Toast.makeText(
-                    context,
+                MosqueToastController.success(
                     "কমিটি সভা সফলভাবে নির্ধারিত হয়েছে।",
-                    Toast.LENGTH_SHORT
-                ).show()
+                    "সভা নির্ধারিত"
+                )
             }
         )
     }

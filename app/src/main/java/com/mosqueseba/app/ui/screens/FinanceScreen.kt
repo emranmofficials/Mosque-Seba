@@ -1561,11 +1561,10 @@ fun FinanceScreen(
                         onClick = { selectedVoucherTxn = txn },
                         onApprove = {
                             viewModel.updateTransactionStatus(txn, true)
-                            Toast.makeText(
-                                context,
+                            MosqueToastController.success(
                                 "লেনদেনটি অনুমোদিত হয়েছে (৳${toBengaliDigits(txn.amount.toInt().toString())})।",
-                                Toast.LENGTH_SHORT
-                            ).show()
+                                "ভাউচার অনুমোদিত"
+                            )
                         },
                         onReject = { pendingRejectTxn = txn }
                     )
@@ -1605,11 +1604,10 @@ fun FinanceScreen(
             onApprove = {
                 viewModel.updateTransactionStatus(latestTxn, true)
                 selectedVoucherTxn = null
-                Toast.makeText(
-                    context,
+                MosqueToastController.success(
                     "ভাউচারটি অনুমোদিত হয়েছে (৳${toBengaliDigits(latestTxn.amount.toInt().toString())})।",
-                    Toast.LENGTH_SHORT
-                ).show()
+                    "ভাউচার অনুমোদিত"
+                )
             },
             onReject = {
                 selectedVoucherTxn = null
@@ -1631,11 +1629,10 @@ fun FinanceScreen(
             onConfirm = {
                 viewModel.updateTransactionStatus(target, false)
                 pendingRejectTxn = null
-                Toast.makeText(
-                    context,
+                MosqueToastController.warning(
                     "লেনদেনটি প্রত্যাখ্যান করা হয়েছে।",
-                    Toast.LENGTH_SHORT
-                ).show()
+                    "ভাউচার প্রত্যাখ্যাত"
+                )
             }
         )
     }

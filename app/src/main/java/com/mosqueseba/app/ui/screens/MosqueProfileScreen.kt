@@ -279,11 +279,10 @@ fun MosqueProfileScreen(
                                 onClick = {
                                     clipboardManager.setText(AnnotatedString(committeeId))
                                     copiedCommitteeId = true
-                                    Toast.makeText(
-                                        context,
+                                    MosqueToastController.info(
                                         "কমিটি আইডি ($committeeId) কপি করা হয়েছে",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
+                                        "কপি সম্পন্ন"
+                                    )
                                 },
                                 shape = RoundedCornerShape(8.dp),
                                 color = MosqueGoldLight.copy(alpha = 0.55f),
@@ -596,7 +595,7 @@ fun MosqueProfileScreen(
             onDismiss = { showEditDialog = false },
             onSave = { updated ->
                 viewModel.updateMosqueDetails(updated)
-                Toast.makeText(context, "মসজিদের প্রোফাইল হালনাগাদ হয়েছে", Toast.LENGTH_SHORT).show()
+                MosqueToastController.success("মসজিদের প্রোফাইল সফলভাবে হালনাগাদ হয়েছে", "হালনাগাদ সম্পন্ন")
                 showEditDialog = false
             }
         )
