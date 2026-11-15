@@ -560,17 +560,20 @@ fun DashboardScreen(
                             remainingText = nextPrayerSummary.remainingTextBn,
                             onViewFullSchedule = { onOpenDialog("view_prayers") },
                             onOpenAdvisory = { onOpenDialog("sharia_advisory") },
-                            onOpenSmartBoard = { onOpenDialog("publicity") }
+                            onOpenSmartBoard = { onOpenDialog("publicity") },
+                            onOpenMadrasa = { onOpenDialog("madrasa") }
                         )
                     }
                 }
 
-                item(key = "imam_madrasa_desk") {
-                    StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
-                        ImamMadrasaHifzDeskCard(
-                            studentCount = studentCount,
-                            onOpenMadrasa = { onOpenDialog("madrasa") }
-                        )
+                if (studentCount > 0) {
+                    item(key = "imam_madrasa_desk") {
+                        StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
+                            ImamMadrasaHifzDeskCard(
+                                studentCount = studentCount,
+                                onOpenMadrasa = { onOpenDialog("madrasa") }
+                            )
+                        }
                     }
                 }
 
@@ -596,7 +599,7 @@ fun DashboardScreen(
 
                 item(key = "imam_kpi_div") {
                     StaggeredDashboardItem(index = 3, modifier = Modifier.animateItem()) {
-                        RubElHizbDivider(title = "দ্বীনি ও একাডেমিক কার্যক্রম", modifier = Modifier.padding(vertical = 2.dp))
+                        RubElHizbDivider(title = "দ্বীনি সূচক ও ইমামতি সেবা", modifier = Modifier.padding(vertical = 2.dp))
                     }
                 }
 
@@ -632,12 +635,6 @@ fun DashboardScreen(
                             nextPrayerSubtitle = "${nextPrayerSummary.iqamahTimeBn} (বাকি ${nextPrayerSummary.remainingTextBn})",
                             onKpiClick = onKpiClickHandler
                         )
-                    }
-                }
-
-                item(key = "imam_actions_div") {
-                    StaggeredDashboardItem(index = 5, modifier = Modifier.animateItem()) {
-                        RubElHizbDivider(title = "ইমামতি কুইক অ্যাকশন", modifier = Modifier.padding(vertical = 2.dp))
                     }
                 }
 
@@ -689,7 +686,9 @@ fun DashboardScreen(
                             nextPrayerIqamah = nextPrayerSummary.iqamahTimeBn,
                             remainingText = nextPrayerSummary.remainingTextBn,
                             onViewFullSchedule = { onOpenDialog("view_prayers") },
-                            onOpenRoster = { onOpenDialog("roster") }
+                            onOpenRoster = { onOpenDialog("roster") },
+                            onOpenFood = { onOpenDialog("food") },
+                            onOpenSmartBoard = { onOpenDialog("publicity") }
                         )
                     }
                 }
@@ -705,7 +704,7 @@ fun DashboardScreen(
 
                 item(key = "muazzin_kpi_div") {
                     StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
-                        RubElHizbDivider(title = "দৈনিক আজান ও খেদমত সূচি", modifier = Modifier.padding(vertical = 2.dp))
+                        RubElHizbDivider(title = "খেদমত সূচক ও দ্রুত সেবা", modifier = Modifier.padding(vertical = 2.dp))
                     }
                 }
 
@@ -733,18 +732,18 @@ fun DashboardScreen(
                     }
                 }
 
-                item(key = "muazzin_actions_div") {
-                    StaggeredDashboardItem(index = 4, modifier = Modifier.animateItem()) {
-                        RubElHizbDivider(title = "মুয়াজ্জিন কুইক অ্যাকশন", modifier = Modifier.padding(vertical = 2.dp))
-                    }
-                }
-
                 item(key = "muazzin_actions_grid") {
                     StaggeredDashboardItem(index = 4, modifier = Modifier.animateItem()) {
                         QuickActionsGrid(
                             role = currentRole,
                             onActionClick = { actionKey -> onOpenDialog(actionKey) }
                         )
+                    }
+                }
+
+                item(key = "muazzin_prayer_div") {
+                    StaggeredDashboardItem(index = 5, modifier = Modifier.animateItem()) {
+                        RubElHizbDivider(title = "সালাত সূচি ও মসজিদ দেয়াল বার্তা", modifier = Modifier.padding(vertical = 2.dp))
                     }
                 }
 
@@ -768,7 +767,8 @@ fun DashboardScreen(
                         KhademFacilityChecklistCard(
                             checkedTasks = khademCheckedTasks,
                             onToggleTask = { taskId -> viewModel.toggleKhademTask(taskId) },
-                            onOpenRoster = { onOpenDialog("roster") }
+                            onOpenRoster = { onOpenDialog("roster") },
+                            onOpenFood = { onOpenDialog("food") }
                         )
                     }
                 }
@@ -784,7 +784,7 @@ fun DashboardScreen(
 
                 item(key = "khadem_kpi_div") {
                     StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
-                        RubElHizbDivider(title = "দৈনিক খেদমত ও সূচি", modifier = Modifier.padding(vertical = 2.dp))
+                        RubElHizbDivider(title = "খেদমত সূচক ও দ্রুত সেবা", modifier = Modifier.padding(vertical = 2.dp))
                     }
                 }
 
@@ -808,18 +808,18 @@ fun DashboardScreen(
                     }
                 }
 
-                item(key = "khadem_actions_div") {
-                    StaggeredDashboardItem(index = 4, modifier = Modifier.animateItem()) {
-                        RubElHizbDivider(title = "খেদমত কুইক অ্যাকশন", modifier = Modifier.padding(vertical = 2.dp))
-                    }
-                }
-
                 item(key = "khadem_actions_grid") {
                     StaggeredDashboardItem(index = 4, modifier = Modifier.animateItem()) {
                         QuickActionsGrid(
                             role = currentRole,
                             onActionClick = { actionKey -> onOpenDialog(actionKey) }
                         )
+                    }
+                }
+
+                item(key = "khadem_prayer_div") {
+                    StaggeredDashboardItem(index = 5, modifier = Modifier.animateItem()) {
+                        RubElHizbDivider(title = "সালাত সূচি ও মসজিদ দেয়াল বার্তা", modifier = Modifier.padding(vertical = 2.dp))
                     }
                 }
 
@@ -2752,7 +2752,8 @@ fun ImamMehrabDutyCard(
     remainingText: String,
     onViewFullSchedule: () -> Unit,
     onOpenAdvisory: () -> Unit,
-    onOpenSmartBoard: () -> Unit
+    onOpenSmartBoard: () -> Unit,
+    onOpenMadrasa: () -> Unit
 ) {
     val isDark = LocalIsDarkTheme.current
     MehrabArchCard(
@@ -2762,6 +2763,7 @@ fun ImamMehrabDutyCard(
         elevation = 3.dp
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
+            // Header
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -2770,7 +2772,7 @@ fun ImamMehrabDutyCard(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         modifier = Modifier
-                            .size(30.dp)
+                            .size(32.dp)
                             .clip(CircleShape)
                             .background(RoleImamAccent.copy(alpha = 0.15f)),
                         contentAlignment = Alignment.Center
@@ -2788,7 +2790,7 @@ fun ImamMehrabDutyCard(
                             text = "মিহরাব ও ইমামতি ডেস্ক",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
                             text = "পাঁচ ওয়াক্ত সালাত, খুতবা ও দ্বীনি পরামর্শ",
@@ -2814,6 +2816,7 @@ fun ImamMehrabDutyCard(
 
             Spacer(modifier = Modifier.height(10.dp))
 
+            // Prayer Surface
             Surface(
                 shape = RoundedCornerShape(12.dp),
                 color = if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft.copy(alpha = 0.5f),
@@ -2833,7 +2836,7 @@ fun ImamMehrabDutyCard(
                         )
                         Text(
                             text = "$nextPrayerName • ইকামত: $nextPrayerIqamah",
-                            fontSize = 15.sp,
+                            fontSize = 16.sp,
                             fontWeight = FontWeight.ExtraBold,
                             color = MosqueEmeraldPrimary
                         )
@@ -2855,46 +2858,70 @@ fun ImamMehrabDutyCard(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            Row(
+            // 4 Uniform Grid Action Buttons (2x2)
+            Column(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Button(
-                    onClick = onViewFullSchedule,
-                    modifier = Modifier
-                        .weight(1f)
-                        .heightIn(min = 44.dp),
-                    shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(Icons.Default.AccessTime, contentDescription = null, modifier = Modifier.size(15.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("নামাজের সূচি", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    Button(
+                        onClick = onViewFullSchedule,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary)
+                    ) {
+                        Icon(Icons.Default.AccessTime, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(5.dp))
+                        Text("নামাজের সূচি", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    }
+                    Button(
+                        onClick = onOpenAdvisory,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = RoleImamAccent)
+                    ) {
+                        Icon(Icons.Default.MenuBook, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(5.dp))
+                        Text("শরিয়াহ ফতোয়া", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    }
                 }
-                Button(
-                    onClick = onOpenAdvisory,
-                    modifier = Modifier
-                        .weight(1f)
-                        .heightIn(min = 44.dp),
-                    shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MosqueGoldDeep)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(Icons.Default.MenuBook, contentDescription = null, modifier = Modifier.size(15.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("শরিয়াহ ফতোয়া", fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                }
-                OutlinedButton(
-                    onClick = onOpenSmartBoard,
-                    modifier = Modifier
-                        .weight(1f)
-                        .heightIn(min = 44.dp),
-                    shape = RoundedCornerShape(10.dp),
-                    border = BorderStroke(1.dp, RoleImamAccent),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = RoleImamAccent)
-                ) {
-                    Icon(Icons.Default.Campaign, contentDescription = null, modifier = Modifier.size(15.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("দেয়াল বার্তা", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    OutlinedButton(
+                        onClick = onOpenSmartBoard,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        border = BorderStroke(1.dp, RoleImamAccent.copy(alpha = 0.7f)),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = RoleImamAccent)
+                    ) {
+                        Icon(Icons.Default.Campaign, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(5.dp))
+                        Text("দেয়াল বার্তা", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    }
+                    OutlinedButton(
+                        onClick = onOpenMadrasa,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        border = BorderStroke(1.dp, MosqueInfoBlue.copy(alpha = 0.7f)),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = MosqueInfoBlue)
+                    ) {
+                        Icon(Icons.Default.School, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(5.dp))
+                        Text("মক্তব ও হিফজ", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    }
                 }
             }
         }
@@ -3023,7 +3050,9 @@ fun MuazzinAzanDutyCard(
     nextPrayerIqamah: String,
     remainingText: String,
     onViewFullSchedule: () -> Unit,
-    onOpenRoster: () -> Unit
+    onOpenRoster: () -> Unit,
+    onOpenFood: () -> Unit,
+    onOpenSmartBoard: () -> Unit
 ) {
     val isDark = LocalIsDarkTheme.current
     MehrabArchCard(
@@ -3033,6 +3062,7 @@ fun MuazzinAzanDutyCard(
         elevation = 3.dp
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
+            // Header
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -3041,7 +3071,7 @@ fun MuazzinAzanDutyCard(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         modifier = Modifier
-                            .size(30.dp)
+                            .size(32.dp)
                             .clip(CircleShape)
                             .background(MosqueEmeraldPrimary.copy(alpha = 0.15f)),
                         contentAlignment = Alignment.Center
@@ -3059,7 +3089,7 @@ fun MuazzinAzanDutyCard(
                             text = "আজান, ইকামত ও সাউন্ড কন্ট্রোল ডেস্ক",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
                             text = "৫ ওয়াক্ত আজান আহ্বান ও সময়নিষ্ঠা",
@@ -3073,7 +3103,7 @@ fun MuazzinAzanDutyCard(
                     color = MosqueEmeraldPrimary.copy(alpha = 0.15f)
                 ) {
                     Text(
-                        text = "মুয়াজ্জিন",
+                        text = "সম্মানিত মুয়াজ্জিন",
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
                         color = MosqueEmeraldPrimary,
@@ -3084,6 +3114,7 @@ fun MuazzinAzanDutyCard(
 
             Spacer(modifier = Modifier.height(10.dp))
 
+            // Azan / Jamat Surface
             Surface(
                 shape = RoundedCornerShape(12.dp),
                 color = if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft.copy(alpha = 0.5f),
@@ -3125,34 +3156,70 @@ fun MuazzinAzanDutyCard(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            Row(
+            // 4 Uniform Grid Action Buttons (2x2)
+            Column(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Button(
-                    onClick = onViewFullSchedule,
-                    modifier = Modifier
-                        .weight(1f)
-                        .heightIn(min = 44.dp),
-                    shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(Icons.Default.AccessTime, contentDescription = null, modifier = Modifier.size(15.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("আজান সময়সূচি", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    Button(
+                        onClick = onViewFullSchedule,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary)
+                    ) {
+                        Icon(Icons.Default.AccessTime, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(5.dp))
+                        Text("আজান সময়সূচি", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    }
+                    Button(
+                        onClick = onOpenRoster,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldDark)
+                    ) {
+                        Icon(Icons.Default.Schedule, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(5.dp))
+                        Text("ডিউটি রোস্টার", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    }
                 }
-                OutlinedButton(
-                    onClick = onOpenRoster,
-                    modifier = Modifier
-                        .weight(1f)
-                        .heightIn(min = 44.dp),
-                    shape = RoundedCornerShape(10.dp),
-                    border = BorderStroke(1.dp, MosqueEmeraldPrimary),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MosqueEmeraldPrimary)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(Icons.Default.Schedule, contentDescription = null, modifier = Modifier.size(15.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("ডিউটি রোস্টার", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    OutlinedButton(
+                        onClick = onOpenFood,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        border = BorderStroke(1.dp, MosqueGold.copy(alpha = 0.7f)),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = MosqueGoldDark)
+                    ) {
+                        Icon(Icons.Default.Restaurant, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(5.dp))
+                        Text("আজকের খানা সূচি", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    }
+                    OutlinedButton(
+                        onClick = onOpenSmartBoard,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onSurface)
+                    ) {
+                        Icon(Icons.Default.Campaign, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(5.dp))
+                        Text("দেয়াল বার্তা", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    }
                 }
             }
         }
@@ -3163,7 +3230,8 @@ fun MuazzinAzanDutyCard(
 fun KhademFacilityChecklistCard(
     checkedTasks: Set<String>,
     onToggleTask: (String) -> Unit,
-    onOpenRoster: () -> Unit
+    onOpenRoster: () -> Unit,
+    onOpenFood: () -> Unit
 ) {
     val isDark = LocalIsDarkTheme.current
     val tasks = listOf(
@@ -3181,6 +3249,7 @@ fun KhademFacilityChecklistCard(
         elevation = 3.dp
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
+            // Header
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -3189,7 +3258,7 @@ fun KhademFacilityChecklistCard(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         modifier = Modifier
-                            .size(30.dp)
+                            .size(32.dp)
                             .clip(CircleShape)
                             .background(MosqueEmeraldPrimary.copy(alpha = 0.15f)),
                         contentAlignment = Alignment.Center
@@ -3207,7 +3276,7 @@ fun KhademFacilityChecklistCard(
                             text = "মসজিদ পবিত্রতা ও খেদমত চেকলিস্ট",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
                             text = "দৈনিক ৪-দফা পরিচ্ছন্নতা ও রক্ষণাবেক্ষণ",
@@ -3229,6 +3298,19 @@ fun KhademFacilityChecklistCard(
                     )
                 }
             }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Animated Visual Progress Bar
+            LinearProgressIndicator(
+                progress = { doneCount / 4f },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(6.dp)
+                    .clip(RoundedCornerShape(3.dp)),
+                color = if (doneCount == 4) MosqueSuccessGreen else MosqueEmeraldPrimary,
+                trackColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
+            )
 
             Spacer(modifier = Modifier.height(10.dp))
 
@@ -3280,19 +3362,38 @@ fun KhademFacilityChecklistCard(
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
-            TextButton(
-                onClick = onOpenRoster,
-                modifier = Modifier.align(Alignment.End),
-                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 2.dp)
+            // 2 Uniform Bottom Action Buttons
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text(
-                    text = "সম্পূর্ণ খেদমত লগ ও রোস্টার দেখুন →",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold
-                )
+                OutlinedButton(
+                    onClick = onOpenFood,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(42.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    border = BorderStroke(1.dp, MosqueGold.copy(alpha = 0.7f)),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MosqueGoldDark)
+                ) {
+                    Icon(Icons.Default.Restaurant, contentDescription = null, modifier = Modifier.size(15.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("আজকের খানা সূচি", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                }
+                Button(
+                    onClick = onOpenRoster,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(42.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary)
+                ) {
+                    Icon(Icons.Default.Schedule, contentDescription = null, modifier = Modifier.size(15.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("ডিউটি রোস্টার ও লগ", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                }
             }
         }
     }
