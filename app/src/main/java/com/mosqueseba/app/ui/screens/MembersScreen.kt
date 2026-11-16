@@ -514,35 +514,14 @@ fun MembersScreen(
                         .fillMaxWidth()
                         .padding(horizontal = 14.dp, vertical = 10.dp)
                 ) {
-                    OutlinedTextField(
+                    MosqueSearchBar(
                         value = searchQuery,
                         onValueChange = { viewModel.setMemberSearchQuery(it) },
-                        placeholder = {
-                            Text(
-                                text = if (selectedTabIndex == 0) {
-                                    "চাঁদা দাতা খুঁজুন (নাম, মোবাইল, আইডি)"
-                                } else {
-                                    "বেতনভুক্ত সদস্য খুঁজুন (নাম, পদবি, মোবাইল)"
-                                },
-                                fontSize = 13.sp
-                            )
+                        placeholder = if (selectedTabIndex == 0) {
+                            "চাঁদা দাতা খুঁজুন (নাম, মোবাইল, কোড)..."
+                        } else {
+                            "বেতনভুক্ত সদস্য খুঁজুন (নাম, পদবি, মোবাইল)..."
                         },
-                        leadingIcon = {
-                            Icon(Icons.Default.Search, contentDescription = "অনুসন্ধান", tint = MosqueEmeraldPrimary)
-                        },
-                        trailingIcon = {
-                            if (searchQuery.isNotEmpty()) {
-                                IconButton(onClick = { viewModel.setMemberSearchQuery("") }) {
-                                    Icon(Icons.Default.Clear, contentDescription = "মুছুন", tint = MosqueTextMuted)
-                                }
-                            }
-                        },
-                        shape = RoundedCornerShape(12.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MosqueEmeraldPrimary,
-                            unfocusedBorderColor = MosqueCardBorderGold
-                        ),
-                        singleLine = true,
                         modifier = Modifier
                             .fillMaxWidth()
                             .testTag("member_search_input")
@@ -644,27 +623,29 @@ fun MembersScreen(
                 EmptyMemberState(message = "কোনো চাঁদা দাতা সদস্য পাওয়া যায়নি")
             }
         } else {
-            items(filteredChandaMembers, key = { it.id }) { member ->
+            itemsIndexed(filteredChandaMembers, key = { _, it -> it.id }) { index, member ->
                 val stats = memberChandaStats[member.id] ?: Triple(0.0, 0.0, member.monthlyChanda)
-                ChandaMemberCard(
-                    member = member,
-                    defaultMosqueAddress = mosque?.address ?: "",
-                    paidThisCycle = stats.first,
-                    totalDeposited = stats.second,
-                    dueAmount = stats.third,
-                    canManageFinance = currentRole.canManageFinance(),
-                    onCardClick = { activeProfileTarget = MemberProfileTarget.ChandaMember(member.id) },
-                    onDueClick = { dueBreakdownMember = member },
-                    onPaidClick = { depositHistoryMember = member },
-                    onCollectClick = {
-                        val suggested = if (stats.third > 0.0) stats.third else member.monthlyChanda
-                        chandaTargetMember = member to suggested
-                    },
-                    modifier = Modifier.animateItem(
-                        fadeInSpec = spring(stiffness = Spring.StiffnessMediumLow),
-                        placementSpec = spring(stiffness = Spring.StiffnessMediumLow)
+                StaggeredItemEntrance(index = index) {
+                    ChandaMemberCard(
+                        member = member,
+                        defaultMosqueAddress = mosque?.address ?: "",
+                        paidThisCycle = stats.first,
+                        totalDeposited = stats.second,
+                        dueAmount = stats.third,
+                        canManageFinance = currentRole.canManageFinance(),
+                        onCardClick = { activeProfileTarget = MemberProfileTarget.ChandaMember(member.id) },
+                        onDueClick = { dueBreakdownMember = member },
+                        onPaidClick = { depositHistoryMember = member },
+                        onCollectClick = {
+                            val suggested = if (stats.third > 0.0) stats.third else member.monthlyChanda
+                            chandaTargetMember = member to suggested
+                        },
+                        modifier = Modifier.animateItem(
+                            fadeInSpec = spring(stiffness = Spring.StiffnessMediumLow),
+                            placementSpec = spring(stiffness = Spring.StiffnessMediumLow)
+                        )
                     )
-                )
+                }
             }
         }
     } else {
@@ -673,24 +654,26 @@ fun MembersScreen(
                 EmptyMemberState(message = "কোনো বেতনভুক্ত সদস্য পাওয়া যায়নি")
             }
         } else {
-            items(filteredSalariedMembers, key = { it.key }) { staffItem ->
-                SalariedMemberCard(
-                    item = staffItem,
-                    canManageFinance = currentRole.canManageFinance(),
-                    onCardClick = {
-                        activeProfileTarget = MemberProfileTarget.SalariedStaff(
-                            staffId = staffItem.staff.id,
-                            memberId = staffItem.member?.id
+            itemsIndexed(filteredSalariedMembers, key = { _, it -> it.key }) { index, staffItem ->
+                StaggeredItemEntrance(index = index) {
+                    SalariedMemberCard(
+                        item = staffItem,
+                        canManageFinance = currentRole.canManageFinance(),
+                        onCardClick = {
+                            activeProfileTarget = MemberProfileTarget.SalariedStaff(
+                                staffId = staffItem.staff.id,
+                                memberId = staffItem.member?.id
+                            )
+                        },
+                        onPaySalaryClick = {
+                            paySalaryTargetStaff = staffItem.staff
+                        },
+                        modifier = Modifier.animateItem(
+                            fadeInSpec = spring(stiffness = Spring.StiffnessMediumLow),
+                            placementSpec = spring(stiffness = Spring.StiffnessMediumLow)
                         )
-                    },
-                    onPaySalaryClick = {
-                        paySalaryTargetStaff = staffItem.staff
-                    },
-                    modifier = Modifier.animateItem(
-                        fadeInSpec = spring(stiffness = Spring.StiffnessMediumLow),
-                        placementSpec = spring(stiffness = Spring.StiffnessMediumLow)
                     )
-                )
+                }
             }
         }
     }

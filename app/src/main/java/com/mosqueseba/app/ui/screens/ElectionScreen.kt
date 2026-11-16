@@ -935,28 +935,26 @@ private fun ElectionVotersTabView(
         }
 
         item {
-            OutlinedTextField(
+            MosqueSearchBar(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
-                placeholder = { Text("নাম, কোড বা মোবাইল দিয়ে খুঁজুন...") },
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = MosqueTextSecondary) },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
+                placeholder = "নাম, কোড বা মোবাইল দিয়ে খুঁজুন...",
+                modifier = Modifier.fillMaxWidth()
             )
         }
 
-        items(filteredVoters, key = { it.id }) { voter ->
-            Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = MaterialTheme.colorScheme.surface,
-                border = BorderStroke(1.dp, MosqueCardBorder),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Row(
-                    modifier = Modifier.padding(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
+        itemsIndexed(filteredVoters, key = { _, it -> it.id }) { index, voter ->
+            StaggeredItemEntrance(index = index) {
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.surface,
+                    border = BorderStroke(1.dp, MosqueCardBorder),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                     MosqueMemberAvatar(
                         nameBn = voter.nameBn,
                         photoUrl = voter.photoUrl,
@@ -993,6 +991,7 @@ private fun ElectionVotersTabView(
                 }
             }
         }
+    }
     }
 }
 

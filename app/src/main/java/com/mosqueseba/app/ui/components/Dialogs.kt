@@ -1680,25 +1680,10 @@ fun ReceiveChandaDialog(
                                         it.mobile.contains(memberSearch)
                                 }
                             }
-                            OutlinedTextField(
+                            MosqueSearchBar(
                                 value = memberSearch,
                                 onValueChange = { memberSearch = it },
-                                placeholder = { Text("নাম, কোড বা মোবাইল দিয়ে খুঁজুন...", fontSize = 12.sp) },
-                                leadingIcon = {
-                                    Icon(
-                                        Icons.Default.Search,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                },
-                                trailingIcon = {
-                                    if (memberSearch.isNotBlank()) {
-                                        IconButton(onClick = { memberSearch = "" }) {
-                                            Icon(Icons.Default.Close, contentDescription = "মুছুন", modifier = Modifier.size(16.dp))
-                                        }
-                                    }
-                                },
-                                singleLine = true,
+                                placeholder = "নাম, কোড বা মোবাইল দিয়ে খুঁজুন...",
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .testTag("chanda_member_search")

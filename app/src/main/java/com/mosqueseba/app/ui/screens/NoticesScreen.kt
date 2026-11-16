@@ -329,47 +329,18 @@ fun NoticesScreen(
                     .fillMaxWidth()
                     .padding(horizontal = 14.dp, vertical = 10.dp)
             ) {
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = { searchQuery = it },
-                    placeholder = {
-                        Text(
-                            text = if (selectedTabIndex == 0) {
-                                "নোটিশ খুঁজুন (শিরোনাম, বিবরণ, প্রচারক)"
-                            } else {
-                                "সভা খুঁজুন (নাম, স্থান, এজেন্ডা, সিদ্ধান্ত)"
-                            },
-                            fontSize = 13.sp
-                        )
-                    },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = "অনুসন্ধান",
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    },
-                    trailingIcon = {
-                        if (searchQuery.isNotEmpty()) {
-                            IconButton(onClick = { searchQuery = "" }) {
-                                Icon(
-                                    imageVector = Icons.Default.Clear,
-                                    contentDescription = "অনুসন্ধান মুছুন",
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-                    },
-                    shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MosqueCardBorderGold
-                    ),
-                    singleLine = true,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("notices_search_input")
-                )
+                    MosqueSearchBar(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        placeholder = if (selectedTabIndex == 0) {
+                            "নোটিশ খুঁজুন (শিরোনাম, বিবরণ, প্রচারক)..."
+                        } else {
+                            "সভা খুঁজুন (নাম, স্থান, এজেন্ডা, সিদ্ধান্ত)..."
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("notice_search_input")
+                    )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
@@ -452,20 +423,22 @@ fun NoticesScreen(
                         )
                     }
                 } else {
-                    items(filteredNotices, key = { it.id }) { notice ->
-                        NoticeCardItem(
-                            notice = notice,
-                            canManage = canPublish,
-                            onTogglePin = {
-                                viewModel.togglePinNotice(notice)
-                                MosqueToastController.info(
-                                    if (notice.isPinned) "নোটিশ আনপিন করা হয়েছে।" else "নোটিশটি পিন করা হয়েছে।"
-                                )
-                            },
-                            onEdit = { editingNotice = notice },
-                            onShare = { shareNoticeText(context, mosqueName, notice) },
-                            onDeleteRequest = { pendingDeleteNotice = notice }
-                        )
+                    itemsIndexed(filteredNotices, key = { _, it -> it.id }) { index, notice ->
+                        StaggeredItemEntrance(index = index) {
+                            NoticeCardItem(
+                                notice = notice,
+                                canManage = canPublish,
+                                onTogglePin = {
+                                    viewModel.togglePinNotice(notice)
+                                    MosqueToastController.info(
+                                        if (notice.isPinned) "নোটিশ আনপিন করা হয়েছে।" else "নোটিশটি পিন করা হয়েছে।"
+                                    )
+                                },
+                                onEdit = { editingNotice = notice },
+                                onShare = { shareNoticeText(context, mosqueName, notice) },
+                                onDeleteRequest = { pendingDeleteNotice = notice }
+                            )
+                        }
                     }
                 }
             } else {
@@ -483,21 +456,23 @@ fun NoticesScreen(
                         )
                     }
                 } else {
-                    items(filteredMeetings, key = { it.id }) { meeting ->
-                        MeetingCardItem(
-                            meeting = meeting,
-                            canManage = canSchedule,
-                            onToggleStatus = {
-                                viewModel.toggleMeetingStatus(meeting)
-                                MosqueToastController.info(
-                                    if (meeting.status == "completed") "সভা আসন্ন হিসেবে চিহ্নিত হয়েছে।" else "সভা সম্পন্ন হিসেবে চিহ্নিত হয়েছে।"
-                                )
-                            },
-                            onEdit = { editingMeeting = meeting },
-                            onEditResolution = { resolutionTargetMeeting = meeting },
-                            onShare = { shareMeetingText(context, mosqueName, meeting) },
-                            onDeleteRequest = { pendingDeleteMeeting = meeting }
-                        )
+                    itemsIndexed(filteredMeetings, key = { _, it -> it.id }) { index, meeting ->
+                        StaggeredItemEntrance(index = index) {
+                            MeetingCardItem(
+                                meeting = meeting,
+                                canManage = canSchedule,
+                                onToggleStatus = {
+                                    viewModel.toggleMeetingStatus(meeting)
+                                    MosqueToastController.info(
+                                        if (meeting.status == "completed") "সভা আসন্ন হিসেবে চিহ্নিত হয়েছে।" else "সভা সম্পন্ন হিসেবে চিহ্নিত হয়েছে।"
+                                    )
+                                },
+                                onEdit = { editingMeeting = meeting },
+                                onEditResolution = { resolutionTargetMeeting = meeting },
+                                onShare = { shareMeetingText(context, mosqueName, meeting) },
+                                onDeleteRequest = { pendingDeleteMeeting = meeting }
+                            )
+                        }
                     }
                 }
             }

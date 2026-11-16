@@ -56,6 +56,7 @@ fun AccountHubScreen(
     onBack: () -> Unit,
     onOpenMosqueProfile: () -> Unit,
     onOpenMyProfile: (() -> Unit)? = null,
+    onOpenOnboarding: () -> Unit = {},
     onLogout: () -> Unit
 ) {
     BackHandler { onBack() }
@@ -612,6 +613,18 @@ fun AccountHubScreen(
                             subtitle = "লগইন, চাঁদা রসিদ, বেতন ও ভূমিকা-ভিত্তিক ব্যবহারবিধি",
                             testTag = "account_hub_help_faq",
                             onClick = { showHelplineGuideDialog = true }
+                        )
+                        HorizontalDivider(
+                            color = if (isDark) MosqueNightBorder else MosqueCardBorderSubtle,
+                            modifier = Modifier.padding(horizontal = 14.dp)
+                        )
+                        AccountActionRow(
+                            icon = Icons.Default.Explore,
+                            iconColor = MosqueEmeraldPrimary,
+                            title = "অ্যাপ পরিচিতি ও অনবোর্ডিং (Onboarding)",
+                            subtitle = "অ্যাপের মূল ৪টি মডিউলের পরিচিতি স্লাইডগুলো পুনরায় দেখুন",
+                            testTag = "account_hub_onboarding_guide",
+                            onClick = onOpenOnboarding
                         )
                     }
                 }

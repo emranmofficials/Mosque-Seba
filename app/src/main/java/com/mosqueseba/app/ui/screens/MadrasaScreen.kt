@@ -187,8 +187,9 @@ fun MadrasaScreen(viewModel: MosqueViewModel, initialTab: Int = 0) {
                                 )
                             }
                         } else {
-                            items(students, key = { it.id }) { student ->
-                                Card(
+                            itemsIndexed(students, key = { _, it -> it.id }) { index, student ->
+                                StaggeredItemEntrance(index = index) {
+                                    Card(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clickable { selectedStudentForDetails = student }
@@ -317,6 +318,7 @@ fun MadrasaScreen(viewModel: MosqueViewModel, initialTab: Int = 0) {
                                     }
                                 }
                             }
+                        }
                         }
                     }
                 }
@@ -2256,22 +2258,10 @@ private fun GuardianMemberPickerDialog(
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                OutlinedTextField(
+                MosqueSearchBar(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
-                    placeholder = { Text("নাম, কোড বা মোবাইল নম্বর দিয়ে খুঁজুন...", fontSize = 13.sp) },
-                    leadingIcon = {
-                        Icon(Icons.Default.Search, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                    },
-                    trailingIcon = {
-                        if (searchQuery.isNotBlank()) {
-                            IconButton(onClick = { searchQuery = "" }) {
-                                Icon(Icons.Default.Clear, contentDescription = "মুছুন")
-                            }
-                        }
-                    },
-                    singleLine = true,
-                    shape = RoundedCornerShape(10.dp),
+                    placeholder = "নাম, কোড বা মোবাইল নম্বর দিয়ে খুঁজুন...",
                     modifier = Modifier.fillMaxWidth()
                 )
 

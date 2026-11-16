@@ -955,22 +955,10 @@ fun OfficeDocumentsScreen(
         }
 
         item {
-            OutlinedTextField(
+            MosqueSearchBar(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
-                placeholder = { Text("শিরোনাম, নথি কোড বা প্রেরক খুঁজুন...", fontSize = 13.sp) },
-                leadingIcon = {
-                    Icon(Icons.Default.Search, contentDescription = "খুঁজুন")
-                },
-                trailingIcon = {
-                    if (searchQuery.isNotEmpty()) {
-                        IconButton(onClick = { searchQuery = "" }) {
-                            Icon(Icons.Default.Clear, contentDescription = "অনুসন্ধান মুছুন")
-                        }
-                    }
-                },
-                singleLine = true,
-                shape = RoundedCornerShape(12.dp),
+                placeholder = "শিরোনাম, নথি কোড বা প্রেরক খুঁজুন...",
                 modifier = Modifier
                     .fillMaxWidth()
                     .testTag("office_doc_search_field")
@@ -1012,13 +1000,14 @@ fun OfficeDocumentsScreen(
                 )
             }
         } else {
-            items(filteredDocs, key = { it.id }) { doc ->
+            itemsIndexed(filteredDocs, key = { _, it -> it.id }) { index, doc ->
                 val statusColor = when (doc.status) {
                     "জবাব অপেক্ষমান" -> MosqueWarningAmber
                     "জবাব প্রেরিত" -> MosqueInfoBlue
                     else -> MosqueSuccessGreen
                 }
-                Card(
+                StaggeredItemEntrance(index = index) {
+                    Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(14.dp),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -1109,6 +1098,7 @@ fun OfficeDocumentsScreen(
                     }
                 }
             }
+        }
         }
     }
 

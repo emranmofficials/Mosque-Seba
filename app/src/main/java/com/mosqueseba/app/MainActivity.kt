@@ -35,6 +35,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 
 enum class AppScreen {
     SPLASH,
+    ONBOARDING,
     LOGIN,
     REGISTRATION,
     MAIN
@@ -97,6 +98,19 @@ class MainActivity : ComponentActivity() {
                             AppScreen.SPLASH -> {
                                 SplashScreen(
                                     onSplashFinished = {
+                                        val isOnboarded = viewModel.sessionManager.isOnboardingCompleted()
+                                        currentScreen = when {
+                                            !isOnboarded -> AppScreen.ONBOARDING
+                                            viewModel.sessionManager.isLoggedIn() -> AppScreen.MAIN
+                                            else -> AppScreen.LOGIN
+                                        }
+                                    }
+                                )
+                            }
+                            AppScreen.ONBOARDING -> {
+                                OnboardingScreen(
+                                    onOnboardingFinished = {
+                                        viewModel.sessionManager.setOnboardingCompleted(true)
                                         currentScreen = if (viewModel.sessionManager.isLoggedIn()) {
                                             AppScreen.MAIN
                                         } else {
@@ -132,6 +146,9 @@ class MainActivity : ComponentActivity() {
                                     viewModel = viewModel,
                                     requestedModule = requestedModule,
                                     onClearDeepLink = { deepLinkModule.value = null },
+                                    onOpenOnboarding = {
+                                        currentScreen = AppScreen.ONBOARDING
+                                    },
                                     onLogout = {
                                         viewModel.logout()
                                         currentScreen = AppScreen.LOGIN
@@ -173,6 +190,7 @@ fun MosqueAppShell(
     viewModel: MosqueViewModel,
     requestedModule: String? = null,
     onClearDeepLink: () -> Unit = {},
+    onOpenOnboarding: () -> Unit = {},
     onLogout: () -> Unit = {}
 ) {
     val context = LocalContext.current
@@ -495,6 +513,10 @@ fun MosqueAppShell(
                     },
                     onOpenMyProfile = {
                         currentUserProfileTarget?.let { overlayUserProfile = it }
+                    },
+                    onOpenOnboarding = {
+                        showAccountHub = false
+                        onOpenOnboarding()
                     },
                     onLogout = onLogout
                 )

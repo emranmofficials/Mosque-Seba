@@ -1013,31 +1013,10 @@ fun FinanceScreen(
                             .fillMaxWidth()
                             .padding(horizontal = 14.dp, vertical = 10.dp)
                     ) {
-                        OutlinedTextField(
+                        MosqueSearchBar(
                             value = searchQuery,
                             onValueChange = { searchQuery = it },
-                            placeholder = {
-                                Text(
-                                    text = "ভাউচার, খাত বা বিবরণ খুঁজুন",
-                                    fontSize = 13.sp
-                                )
-                            },
-                            leadingIcon = {
-                                Icon(Icons.Default.Search, contentDescription = "অনুসন্ধান", tint = MosqueEmeraldPrimary)
-                            },
-                            trailingIcon = {
-                                if (searchQuery.isNotEmpty()) {
-                                    IconButton(onClick = { searchQuery = "" }) {
-                                        Icon(Icons.Default.Clear, contentDescription = "মুছুন", tint = MosqueTextMuted)
-                                    }
-                                }
-                            },
-                            shape = RoundedCornerShape(12.dp),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = MosqueEmeraldPrimary,
-                                unfocusedBorderColor = MosqueCardBorderGold
-                            ),
-                            singleLine = true,
+                            placeholder = "ভাউচার, খাত বা বিবরণ খুঁজুন...",
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .testTag("finance_search_input")
@@ -1535,22 +1514,24 @@ fun FinanceScreen(
                     }
                 }
             } else {
-                items(displayedTransactions, key = { it.id }) { txn ->
+                itemsIndexed(displayedTransactions, key = { _, it -> it.id }) { index, txn ->
                     val channel = resolveTransactionChannel(txn, paymentMethodsById)
-                    TransactionCardItem(
-                        transaction = txn,
-                        channelLabel = channelLabelBn(channel),
-                        canApprove = currentRole.canApproveFinance(),
-                        onClick = { selectedVoucherTxn = txn },
-                        onApprove = {
-                            viewModel.updateTransactionStatus(txn, true)
-                            MosqueToastController.success(
-                                "লেনদেনটি অনুমোদিত হয়েছে (৳${toBengaliDigits(txn.amount.toInt().toString())})।",
-                                "ভাউচার অনুমোদিত"
-                            )
-                        },
-                        onReject = { pendingRejectTxn = txn }
-                    )
+                    StaggeredItemEntrance(index = index) {
+                        TransactionCardItem(
+                            transaction = txn,
+                            channelLabel = channelLabelBn(channel),
+                            canApprove = currentRole.canApproveFinance(),
+                            onClick = { selectedVoucherTxn = txn },
+                            onApprove = {
+                                viewModel.updateTransactionStatus(txn, true)
+                                MosqueToastController.success(
+                                    "লেনদেনটি অনুমোদিত হয়েছে (৳${toBengaliDigits(txn.amount.toInt().toString())})।",
+                                    "ভাউচার অনুমোদিত"
+                                )
+                            },
+                            onReject = { pendingRejectTxn = txn }
+                        )
+                    }
                 }
             }
         }

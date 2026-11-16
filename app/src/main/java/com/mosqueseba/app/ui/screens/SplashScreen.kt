@@ -29,6 +29,11 @@ import com.mosqueseba.app.ui.components.toBengaliDigits
 import com.mosqueseba.app.ui.theme.*
 import kotlinx.coroutines.delay
 
+/**
+ * প্রিমিয়াম রিডিজাইন করা স্প্ল্যাশ স্ক্রিন:
+ * অ্যাপ চালু হওয়ার সাথে সাথে মসৃণ ইসলামিক গ্রেডিয়েন্ট, সোনালী আলোকবৃত্ত এবং
+ * থ্রিডি লোগো অ্যানিমেশন প্রদর্শন করে।
+ */
 @Composable
 fun SplashScreen(
     onSplashFinished: () -> Unit
@@ -37,12 +42,12 @@ fun SplashScreen(
 
     val alphaAnim by animateFloatAsState(
         targetValue = if (startAnimation) 1f else 0f,
-        animationSpec = tween(durationMillis = 900, easing = FastOutSlowInEasing),
+        animationSpec = tween(durationMillis = 800, easing = FastOutSlowInEasing),
         label = "SplashAlpha"
     )
 
     val scaleAnim by animateFloatAsState(
-        targetValue = if (startAnimation) 1f else 0.78f,
+        targetValue = if (startAnimation) 1f else 0.75f,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
             stiffness = Spring.StiffnessLow
@@ -50,19 +55,30 @@ fun SplashScreen(
         label = "SplashScale"
     )
 
-    val pulseAnim by rememberInfiniteTransition(label = "RingPulse").animateFloat(
+    val ringTransition = rememberInfiniteTransition(label = "RingPulseTransition")
+    val pulseAnim by ringTransition.animateFloat(
         initialValue = 1f,
-        targetValue = 1.08f,
+        targetValue = 1.12f,
         animationSpec = infiniteRepeatable(
-            animation = tween(1200, easing = FastOutSlowInEasing),
+            animation = tween(1400, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
         ),
-        label = "Pulse"
+        label = "PulseRing"
+    )
+
+    val outerPulseAnim by ringTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = 1.22f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1800, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "OuterPulseRing"
     )
 
     LaunchedEffect(Unit) {
         startAnimation = true
-        delay(2200)
+        delay(2100)
         onSplashFinished()
     }
 
@@ -81,10 +97,20 @@ fun SplashScreen(
             ),
         contentAlignment = Alignment.Center
     ) {
-        // Decorative background gold glow circle
+        // Outer decorative ambient glow ring
         Box(
             modifier = Modifier
-                .size(340.dp)
+                .size(380.dp)
+                .scale(outerPulseAnim)
+                .alpha(0.04f)
+                .clip(CircleShape)
+                .background(MosqueGold)
+        )
+
+        // Inner decorative gold glow ring
+        Box(
+            modifier = Modifier
+                .size(280.dp)
                 .scale(pulseAnim)
                 .alpha(0.08f)
                 .clip(CircleShape)
@@ -96,29 +122,35 @@ fun SplashScreen(
             verticalArrangement = Arrangement.Center,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 28.dp)
+                .padding(horizontal = 24.dp)
                 .scale(scaleAnim)
                 .alpha(alphaAnim)
         ) {
-            // Bismillah Calligraphic Header
-            Text(
-                text = "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = MosqueGold.copy(alpha = 0.92f),
-                textAlign = TextAlign.Center
-            )
+            // Bismillah Calligraphic Header with soft gold glow
+            Surface(
+                color = Color.White.copy(alpha = 0.08f),
+                shape = RoundedCornerShape(20.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, MosqueGold.copy(alpha = 0.3f)),
+                modifier = Modifier.padding(bottom = 24.dp)
+            ) {
+                Text(
+                    text = "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MosqueGold.copy(alpha = 0.95f),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(horizontal = 18.dp, vertical = 6.dp)
+                )
+            }
 
-            Spacer(modifier = Modifier.height(26.dp))
-
-            // 3D Mosque Logo with glowing gold halo ring
+            // 3D Mosque Logo with glowing dual golden border
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .size(136.dp)
-                    .shadow(elevation = 16.dp, shape = RoundedCornerShape(32.dp), spotColor = MosqueGold)
+                    .size(132.dp)
+                    .shadow(elevation = 20.dp, shape = RoundedCornerShape(32.dp), spotColor = MosqueGold)
                     .border(
-                        width = 2.dp,
+                        width = 2.5.dp,
                         brush = Brush.linearGradient(
                             listOf(MosqueGold, Color(0xFFFFF2B2), MosqueGoldDeep)
                         ),
@@ -137,7 +169,7 @@ fun SplashScreen(
 
             Spacer(modifier = Modifier.height(22.dp))
 
-            // Primary App Title in Bengali & English
+            // Primary App Title in Bengali
             Text(
                 text = "মসজিদ সেবা",
                 fontSize = 32.sp,
@@ -147,10 +179,11 @@ fun SplashScreen(
                 textAlign = TextAlign.Center
             )
 
+            // Sub-tagline with golden accent lines
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center,
-                modifier = Modifier.padding(top = 2.dp)
+                modifier = Modifier.padding(top = 4.dp)
             ) {
                 Box(
                     modifier = Modifier
@@ -163,7 +196,7 @@ fun SplashScreen(
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Bold,
                     color = MosqueGold,
-                    letterSpacing = 2.5.sp
+                    letterSpacing = 2.sp
                 )
                 Box(
                     modifier = Modifier
@@ -173,7 +206,7 @@ fun SplashScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
             // Official Slogan Banner
             Box(
@@ -181,20 +214,20 @@ fun SplashScreen(
                     .clip(RoundedCornerShape(20.dp))
                     .background(Color.White.copy(alpha = 0.08f))
                     .border(1.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(20.dp))
-                    .padding(horizontal = 14.dp, vertical = 6.dp)
+                    .padding(horizontal = 16.dp, vertical = 7.dp)
             ) {
                 Text(
                     text = "মসজিদের খেদমতে আধুনিক প্রযুক্তি, পরিচালনায় স্বচ্ছ আস্থা",
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium,
-                    color = Color.White.copy(alpha = 0.9f),
+                    color = Color.White.copy(alpha = 0.92f),
                     textAlign = TextAlign.Center
                 )
             }
 
-            Spacer(modifier = Modifier.height(44.dp))
+            Spacer(modifier = Modifier.height(40.dp))
 
-            // Elegant Spinner
+            // Stylized Spinner
             CircularProgressIndicator(
                 modifier = Modifier.size(26.dp),
                 color = MosqueGold,
@@ -222,7 +255,7 @@ fun SplashScreen(
                 text = "সংস্করণ ${toBengaliDigits(BuildConfig.VERSION_NAME)} • অফিসিয়াল সংস্করণ",
                 fontSize = 10.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = MosqueGold.copy(alpha = 0.8f)
+                color = MosqueGold.copy(alpha = 0.85f)
             )
         }
     }

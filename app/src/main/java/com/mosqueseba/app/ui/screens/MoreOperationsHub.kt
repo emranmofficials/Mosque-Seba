@@ -232,43 +232,14 @@ fun MoreOperationsHub(
                     .fillMaxWidth()
                     .padding(horizontal = 14.dp, vertical = 10.dp)
             ) {
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = { searchQuery = it },
-                    placeholder = {
-                        Text(
-                            text = "মডিউল খুঁজুন (যেমন: মাদরাসা, ক্যাশবক্স, রোস্টার)",
-                            fontSize = 13.sp
-                        )
-                    },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = "অনুসন্ধান",
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    },
-                    trailingIcon = {
-                        if (searchQuery.isNotEmpty()) {
-                            IconButton(onClick = { searchQuery = "" }) {
-                                Icon(
-                                    imageVector = Icons.Default.Clear,
-                                    contentDescription = "অনুসন্ধান মুছুন",
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-                    },
-                    shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MosqueCardBorderGold
-                    ),
-                    singleLine = true,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("more_search_input")
-                )
+                    MosqueSearchBar(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        placeholder = "মডিউল খুঁজুন (যেমন: মাদরাসা, ক্যাশবক্স, রোস্টার)...",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("more_search_input")
+                    )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
@@ -372,20 +343,22 @@ fun MoreOperationsHub(
                             badgeText = "${toBengaliDigits(quickAccessModules.size.toString())} টি"
                         )
                     }
-                    items(quickAccessModules.chunked(2)) { pair ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            pair.forEach { mod ->
-                                QuickAccessGridCard(
-                                    module = mod,
-                                    modifier = Modifier.weight(1f),
-                                    onClick = { onSelectModule(mod.key) }
-                                )
-                            }
-                            if (pair.size == 1) {
-                                Spacer(modifier = Modifier.weight(1f))
+                    itemsIndexed(quickAccessModules.chunked(2)) { index, pair ->
+                        StaggeredItemEntrance(index = index) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                pair.forEach { mod ->
+                                    QuickAccessGridCard(
+                                        module = mod,
+                                        modifier = Modifier.weight(1f),
+                                        onClick = { onSelectModule(mod.key) }
+                                    )
+                                }
+                                if (pair.size == 1) {
+                                    Spacer(modifier = Modifier.weight(1f))
+                                }
                             }
                         }
                     }
@@ -400,16 +373,18 @@ fun MoreOperationsHub(
                             badgeText = "${toBengaliDigits(mods.size.toString())} টি"
                         )
                     }
-                    items(mods, key = { "${category.name}_${it.key}" }) { mod ->
-                        OperationMenuItem(
-                            title = mod.title,
-                            description = mod.description,
-                            icon = mod.icon,
-                            iconColor = mod.iconColor,
-                            badgeText = mod.badgeText,
-                            badgeIsAlert = mod.badgeIsAlert,
-                            onClick = { onSelectModule(mod.key) }
-                        )
+                    itemsIndexed(mods, key = { _, it -> "${category.name}_${it.key}" }) { idx, mod ->
+                        StaggeredItemEntrance(index = idx) {
+                            OperationMenuItem(
+                                title = mod.title,
+                                description = mod.description,
+                                icon = mod.icon,
+                                iconColor = mod.iconColor,
+                                badgeText = mod.badgeText,
+                                badgeIsAlert = mod.badgeIsAlert,
+                                onClick = { onSelectModule(mod.key) }
+                            )
+                        }
                     }
                 }
             }

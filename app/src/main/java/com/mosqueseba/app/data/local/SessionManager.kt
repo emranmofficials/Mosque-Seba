@@ -24,6 +24,7 @@ class SessionManager(context: Context) {
         private const val KEY_SHOW_HIJRI_BANNER = "key_show_hijri_banner"
         private const val KEY_DARK_MODE_ENABLED = "key_dark_mode_enabled"
         private const val KEY_READ_NOTIFICATION_IDS = "key_read_notification_ids"
+        private const val KEY_ONBOARDING_COMPLETED = "key_onboarding_completed"
         private const val DEFAULT_MOSQUE_ID = "mosque-001"
     }
 
@@ -129,6 +130,12 @@ class SessionManager(context: Context) {
         prefs.edit().putBoolean(KEY_DARK_MODE_ENABLED, enabled).apply()
     }
 
+    fun isOnboardingCompleted(): Boolean = prefs.getBoolean(KEY_ONBOARDING_COMPLETED, false)
+
+    fun setOnboardingCompleted(completed: Boolean) {
+        prefs.edit().putBoolean(KEY_ONBOARDING_COMPLETED, completed).apply()
+    }
+
     fun getReadNotificationIds(): Set<String> =
         prefs.getStringSet(KEY_READ_NOTIFICATION_IDS, emptySet())?.toSet() ?: emptySet()
 
@@ -171,12 +178,14 @@ class SessionManager(context: Context) {
         val notif = isNotificationsEnabled()
         val hijri = isHijriBannerVisible()
         val darkMode = isDarkModeEnabled()
+        val onboarding = isOnboardingCompleted()
         prefs.edit()
             .clear()
             .putString(KEY_ACTIVE_MOSQUE_ID, currentMosque)
             .putBoolean(KEY_NOTIFICATIONS_ENABLED, notif)
             .putBoolean(KEY_SHOW_HIJRI_BANNER, hijri)
             .putBoolean(KEY_DARK_MODE_ENABLED, darkMode)
+            .putBoolean(KEY_ONBOARDING_COMPLETED, onboarding)
             .apply()
     }
 }
