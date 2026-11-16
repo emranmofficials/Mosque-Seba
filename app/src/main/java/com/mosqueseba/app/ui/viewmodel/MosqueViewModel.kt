@@ -980,6 +980,9 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
     fun getAttendanceByDate(date: String): Flow<List<MadrasaAttendanceEntity>> =
         repository.getAttendanceByDate(date)
 
+    fun getAttendanceForStudent(studentId: String): Flow<List<MadrasaAttendanceEntity>> =
+        repository.getAttendanceForStudent(studentId)
+
     fun recordAttendanceBatch(attendanceList: List<MadrasaAttendanceEntity>) {
         viewModelScope.launch {
             repository.recordAttendanceBatch(attendanceList)
@@ -1008,6 +1011,12 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
                 joinDate = dateStr
             )
             repository.addStudent(student)
+        }
+    }
+
+    fun updateStudent(student: StudentEntity) {
+        viewModelScope.launch {
+            repository.updateStudent(student)
         }
     }
 

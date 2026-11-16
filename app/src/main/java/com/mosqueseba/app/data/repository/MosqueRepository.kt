@@ -166,8 +166,16 @@ class MosqueRepository(private val database: MosqueDatabase) {
         logAudit("STUDENT_ENROLLED", "নতুন শিক্ষার্থী ভর্তি: ${student.nameBn} (${student.studentCode})")
     }
 
+    suspend fun updateStudent(student: StudentEntity) {
+        database.studentDao().updateStudent(student)
+        logAudit("STUDENT_UPDATED", "শিক্ষার্থীর তথ্য হালনাগাদ: ${student.nameBn} (${student.studentCode})")
+    }
+
     fun getAttendanceByDate(date: String): Flow<List<MadrasaAttendanceEntity>> =
         database.madrasaAttendanceDao().getAttendanceByDate(date)
+
+    fun getAttendanceForStudent(studentId: String): Flow<List<MadrasaAttendanceEntity>> =
+        database.madrasaAttendanceDao().getAttendanceForStudent(studentId)
 
     suspend fun recordAttendanceBatch(list: List<MadrasaAttendanceEntity>) {
         database.madrasaAttendanceDao().recordAttendanceBatch(list)

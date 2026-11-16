@@ -169,6 +169,9 @@ interface MadrasaAttendanceDao {
     @Query("SELECT * FROM madrasa_attendance WHERE date = :date ORDER BY studentNameBn ASC")
     fun getAttendanceByDate(date: String): Flow<List<MadrasaAttendanceEntity>>
 
+    @Query("SELECT * FROM madrasa_attendance WHERE studentId = :studentId ORDER BY date DESC")
+    fun getAttendanceForStudent(studentId: String): Flow<List<MadrasaAttendanceEntity>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun recordAttendance(attendance: MadrasaAttendanceEntity): Long
 
