@@ -636,7 +636,6 @@ fun MembersScreen(
                 }
             }
         }
-    }
 
     // 3. Member List Content
     if (selectedTabIndex == 0) {
@@ -694,6 +693,7 @@ fun MembersScreen(
                 )
             }
         }
+    }
     }
 }
 }
