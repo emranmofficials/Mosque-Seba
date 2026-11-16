@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mosqueseba.app.ui.components.MehrabArchCard
 import com.mosqueseba.app.ui.components.RubElHizbDivider
+import com.mosqueseba.app.ui.components.mosqueStandardFieldColors
 import com.mosqueseba.app.ui.components.toBengaliDigits
 import com.mosqueseba.app.ui.theme.*
 import com.mosqueseba.app.ui.viewmodel.MosqueViewModel
@@ -136,15 +137,7 @@ fun RegistrationScreen(
     }
 
     val isDark = LocalIsDarkTheme.current
-    val fieldColors = OutlinedTextFieldDefaults.colors(
-        focusedBorderColor = MosqueEmeraldPrimary,
-        unfocusedBorderColor = if (isDark) MosqueNightBorder else MosqueCardBorder,
-        focusedLabelColor = MosqueEmeraldPrimary,
-        unfocusedLabelColor = MosqueTextSecondary,
-        cursorColor = MosqueEmeraldPrimary,
-        focusedContainerColor = MaterialTheme.colorScheme.surface,
-        unfocusedContainerColor = if (isDark) MosqueNightSurfaceVariant.copy(alpha = 0.5f) else MosqueBgLight.copy(alpha = 0.45f)
-    )
+    val fieldColors = mosqueStandardFieldColors(isDark)
 
     Column(
         modifier = Modifier
@@ -364,8 +357,9 @@ fun RegistrationScreen(
                                     colors = fieldColors,
                                     modifier = Modifier
                                         .fillMaxWidth()
+                                        .heightIn(min = 52.dp)
                                         .testTag("president_name_bn_input"),
-                                    shape = RoundedCornerShape(12.dp)
+                                    shape = RoundedCornerShape(14.dp)
                                 )
 
                                 Spacer(modifier = Modifier.height(10.dp))
@@ -381,8 +375,9 @@ fun RegistrationScreen(
                                     colors = fieldColors,
                                     modifier = Modifier
                                         .fillMaxWidth()
+                                        .heightIn(min = 52.dp)
                                         .testTag("president_mobile_input"),
-                                    shape = RoundedCornerShape(12.dp)
+                                    shape = RoundedCornerShape(14.dp)
                                 )
 
                                 Spacer(modifier = Modifier.height(10.dp))
@@ -398,8 +393,9 @@ fun RegistrationScreen(
                                     colors = fieldColors,
                                     modifier = Modifier
                                         .fillMaxWidth()
+                                        .heightIn(min = 52.dp)
                                         .testTag("president_email_input"),
-                                    shape = RoundedCornerShape(12.dp)
+                                    shape = RoundedCornerShape(14.dp)
                                 )
 
                                 Spacer(modifier = Modifier.height(10.dp))
@@ -414,8 +410,9 @@ fun RegistrationScreen(
                                     colors = fieldColors,
                                     modifier = Modifier
                                         .fillMaxWidth()
+                                        .heightIn(min = 52.dp)
                                         .testTag("president_nid_input"),
-                                    shape = RoundedCornerShape(12.dp)
+                                    shape = RoundedCornerShape(14.dp)
                                 )
 
                                 RubElHizbDivider(title = "চাঁদা ও দায়িত্বশীলতা")
@@ -435,8 +432,9 @@ fun RegistrationScreen(
                                     colors = fieldColors,
                                     modifier = Modifier
                                         .fillMaxWidth()
+                                        .heightIn(min = 52.dp)
                                         .testTag("president_chanda_input"),
-                                    shape = RoundedCornerShape(12.dp)
+                                    shape = RoundedCornerShape(14.dp)
                                 )
 
                                 Spacer(modifier = Modifier.height(12.dp))
@@ -534,8 +532,9 @@ fun RegistrationScreen(
                                     colors = fieldColors,
                                     modifier = Modifier
                                         .fillMaxWidth()
+                                        .heightIn(min = 52.dp)
                                         .testTag("president_password_input"),
-                                    shape = RoundedCornerShape(12.dp)
+                                    shape = RoundedCornerShape(14.dp)
                                 )
 
                                 Spacer(modifier = Modifier.height(10.dp))
@@ -551,8 +550,9 @@ fun RegistrationScreen(
                                     colors = fieldColors,
                                     modifier = Modifier
                                         .fillMaxWidth()
+                                        .heightIn(min = 52.dp)
                                         .testTag("president_confirm_password_input"),
-                                    shape = RoundedCornerShape(12.dp)
+                                    shape = RoundedCornerShape(14.dp)
                                 )
 
                                 Spacer(modifier = Modifier.height(20.dp))
@@ -658,8 +658,9 @@ fun RegistrationScreen(
                                     colors = fieldColors,
                                     modifier = Modifier
                                         .fillMaxWidth()
+                                        .heightIn(min = 52.dp)
                                         .testTag("mosque_name_bn_input"),
-                                    shape = RoundedCornerShape(12.dp)
+                                    shape = RoundedCornerShape(14.dp)
                                 )
 
                                 OutlinedTextField(
@@ -671,8 +672,9 @@ fun RegistrationScreen(
                                     colors = fieldColors,
                                     modifier = Modifier
                                         .fillMaxWidth()
+                                        .heightIn(min = 52.dp)
                                         .testTag("mosque_address_input"),
-                                    shape = RoundedCornerShape(12.dp)
+                                    shape = RoundedCornerShape(14.dp)
                                 )
 
                                 Spacer(modifier = Modifier.height(10.dp))
@@ -690,8 +692,9 @@ fun RegistrationScreen(
                                         colors = fieldColors,
                                         modifier = Modifier
                                             .weight(1f)
+                                            .heightIn(min = 52.dp)
                                             .testTag("mosque_district_input"),
-                                        shape = RoundedCornerShape(12.dp)
+                                        shape = RoundedCornerShape(14.dp)
                                     )
                                     OutlinedTextField(
                                         value = upazila,
@@ -702,8 +705,9 @@ fun RegistrationScreen(
                                         colors = fieldColors,
                                         modifier = Modifier
                                             .weight(1f)
+                                            .heightIn(min = 52.dp)
                                             .testTag("mosque_upazila_input"),
-                                        shape = RoundedCornerShape(12.dp)
+                                        shape = RoundedCornerShape(14.dp)
                                     )
                                 }
 
@@ -719,8 +723,9 @@ fun RegistrationScreen(
                                     colors = fieldColors,
                                     modifier = Modifier
                                         .fillMaxWidth()
+                                        .heightIn(min = 52.dp)
                                         .testTag("mosque_established_year_input"),
-                                    shape = RoundedCornerShape(12.dp)
+                                    shape = RoundedCornerShape(14.dp)
                                 )
 
                                 Spacer(modifier = Modifier.height(10.dp))
@@ -737,8 +742,9 @@ fun RegistrationScreen(
                                         colors = fieldColors,
                                         modifier = Modifier
                                             .weight(1f)
+                                            .heightIn(min = 52.dp)
                                             .testTag("mosque_start_year_input"),
-                                        shape = RoundedCornerShape(12.dp)
+                                        shape = RoundedCornerShape(14.dp)
                                     )
                                     OutlinedTextField(
                                         value = endYear,
@@ -748,8 +754,9 @@ fun RegistrationScreen(
                                         colors = fieldColors,
                                         modifier = Modifier
                                             .weight(1f)
+                                            .heightIn(min = 52.dp)
                                             .testTag("mosque_end_year_input"),
-                                        shape = RoundedCornerShape(12.dp)
+                                        shape = RoundedCornerShape(14.dp)
                                     )
                                 }
 
@@ -765,8 +772,9 @@ fun RegistrationScreen(
                                     colors = fieldColors,
                                     modifier = Modifier
                                         .fillMaxWidth()
+                                        .heightIn(min = 52.dp)
                                         .testTag("mosque_waqf_reg_input"),
-                                    shape = RoundedCornerShape(12.dp)
+                                    shape = RoundedCornerShape(14.dp)
                                 )
 
                                 Spacer(modifier = Modifier.height(10.dp))
@@ -786,8 +794,9 @@ fun RegistrationScreen(
                                     colors = fieldColors,
                                     modifier = Modifier
                                         .fillMaxWidth()
+                                        .heightIn(min = 52.dp)
                                         .testTag("mosque_capacity_input"),
-                                    shape = RoundedCornerShape(12.dp)
+                                    shape = RoundedCornerShape(14.dp)
                                 )
 
                                 Spacer(modifier = Modifier.height(10.dp))
@@ -801,8 +810,9 @@ fun RegistrationScreen(
                                     colors = fieldColors,
                                     modifier = Modifier
                                         .fillMaxWidth()
+                                        .heightIn(min = 52.dp)
                                         .testTag("mosque_bank_info_input"),
-                                    shape = RoundedCornerShape(12.dp)
+                                    shape = RoundedCornerShape(14.dp)
                                 )
 
                                 Spacer(modifier = Modifier.height(20.dp))

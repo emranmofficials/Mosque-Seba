@@ -35,9 +35,10 @@ import kotlinx.coroutines.launch
         AdvisoryNoteEntity::class,
         SmartBoardQuoteEntity::class,
         ElectionScheduleEntity::class,
-        ElectionCandidateEntity::class
+        ElectionCandidateEntity::class,
+        MosquePropertyEntity::class
     ],
-    version = 7,
+    version = 8,
     exportSchema = false
 )
 abstract class MosqueDatabase : RoomDatabase() {
@@ -72,6 +73,7 @@ abstract class MosqueDatabase : RoomDatabase() {
     abstract fun advisoryNoteDao(): AdvisoryNoteDao
     abstract fun smartBoardQuoteDao(): SmartBoardQuoteDao
     abstract fun electionDao(): ElectionDao
+    abstract fun mosquePropertyDao(): MosquePropertyDao
 
 
     companion object {
@@ -119,6 +121,27 @@ abstract class MosqueDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_7_8 = object : androidx.room.migration.Migration(7, 8) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS mosque_properties (
+                        id TEXT NOT NULL PRIMARY KEY,
+                        title TEXT NOT NULL,
+                        category TEXT NOT NULL,
+                        areaOrQuantity TEXT NOT NULL,
+                        locationOrDagNo TEXT NOT NULL,
+                        deedOrRegNo TEXT NOT NULL,
+                        estimatedValueOrIncome TEXT NOT NULL,
+                        photoUrl TEXT,
+                        status TEXT NOT NULL,
+                        description TEXT NOT NULL,
+                        recordedDate TEXT NOT NULL,
+                        createdAt INTEGER NOT NULL
+                    )
+                """.trimIndent())
+            }
+        }
+
         fun getDatabase(context: Context, scope: CoroutineScope): MosqueDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -127,7 +150,7 @@ abstract class MosqueDatabase : RoomDatabase() {
                     "mosque_management_db"
                 )
                 .addCallback(MosqueDatabaseCallback(scope))
-                .addMigrations(MIGRATION_6_7)
+                .addMigrations(MIGRATION_6_7, MIGRATION_7_8)
                 .fallbackToDestructiveMigration()
                 .build()
                 INSTANCE = instance

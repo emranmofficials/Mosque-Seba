@@ -1030,6 +1030,60 @@ object DatabaseInitializer {
             )
         )
         sampleCandidates.forEach { electionDao.insertCandidate(it) }
+
+        // 22. Mosque Properties & Waqf Assets
+        val propertyDao = database.mosquePropertyDao()
+        val sampleProperties = listOf(
+            MosquePropertyEntity(
+                id = "prop-001",
+                title = "মসজিদের মূল জমি ও কমপ্লেক্স",
+                category = "জমি / প্লট",
+                areaOrQuantity = "১২.৫ শতক",
+                locationOrDagNo = "সিএস/এসএ দাগ ১২৪, আরএস দাগ ৪১০, মিরপুর মৌজা",
+                deedOrRegNo = "ওয়াকফ দলিল নং-৪৫২১/১৯৯৮",
+                estimatedValueOrIncome = "আনুমানিক বাজারমূল্য: ১ কোটি ২০ লাখ টাকা",
+                status = "সংরক্ষিত",
+                description = "মসজিদের প্রধান ভবন, অজুখানা, মিনার এবং অভ্যন্তরীণ প্রাঙ্গণ সংলগ্ন মূল ওয়াকফকৃত জমি।",
+                recordedDate = "১৯৯৮-০৩-১৫"
+            ),
+            MosquePropertyEntity(
+                id = "prop-002",
+                title = "মসজিদ ওয়াকফ মার্কেট ও দোকানসমূহ",
+                category = "বাণিজ্যিক দোকান / মার্কেট",
+                areaOrQuantity = "৪ টি পাকা দোকান",
+                locationOrDagNo = "মসজিদ কমপ্লেক্সের দক্ষিণ-পূর্ব সীমানা সংলগ্ন",
+                deedOrRegNo = "চুক্তিপত্র নং-০৮/২০২২",
+                estimatedValueOrIncome = "মাসিক ভাড়া আয়: ৳ ৪০,০০০ (বাৎসরিক ৳ ৪,৮০,০০০)",
+                status = "ভাড়া/ইজারাকৃত",
+                description = "মসজিদের পরিচালনা তহবিল ও নিয়মিত ব্যয়ের জন্য ৪টি বাণিজ্যিক দোকান ইজারা প্রদানকৃত। নিয়মিত ভাড়া মসজিদ অ্যাকাউন্টে জমা হয়।",
+                recordedDate = "২০২২-০২-০১"
+            ),
+            MosquePropertyEntity(
+                id = "prop-003",
+                title = "হিফজখানা ও দ্বিমুখী সম্প্রসারিত ভবন",
+                category = "ভবন ও অবকাঠামো",
+                areaOrQuantity = "৩ তলা বিশিষ্ট পাকা ভবন",
+                locationOrDagNo = "মসজিদ উত্তর ব্লক সংলগ্ন",
+                deedOrRegNo = "বিল্ডিং প্ল্যান নং-ডিএমপি-৭৮",
+                estimatedValueOrIncome = "নির্মাণ ব্যয়: ৳ ৬৫ লাখ টাকা",
+                status = "সক্রিয়",
+                description = "১ম তলায় অজুখানা ও স্টাফ কক্ষ, ২য় ও ৩য় তলায় নূরানী ও হিফজ মাদরাসার শিক্ষা কক্ষ ও আবাসিক ব্যবস্থা।",
+                recordedDate = "২০২০-১১-১০"
+            ),
+            MosquePropertyEntity(
+                id = "prop-004",
+                title = "স্ট্যান্ডবাই বিদ্যুৎ ব্যাকআপ জেনারেটর ও সোলার সিস্টেম",
+                category = "যন্ত্রপাতি ও মূল সম্পদ",
+                areaOrQuantity = "১ টি ৪০ কেভিএ ডিজেল জেনারেটর + ৫ কিলোওয়াট সোলার",
+                locationOrDagNo = "মসজিদ পাওয়ার হাউস ও ছাদ",
+                deedOrRegNo = "ক্রয় রসিদ নং-জেন-২০২৩/১৪",
+                estimatedValueOrIncome = "সম্পদ মূল্য: ৳ ৮ লাখ ৫০ হাজার টাকা",
+                status = "সক্রিয়",
+                description = "লোডশেডিং ও বিদ্যুৎ বিভ্রাটে পুরো মসজিদের লাইট, ফ্যান, সাউন্ড সিস্টেম ও পানির পাম্প সচল রাখার স্বয়ংক্রিয় ব্যাকআপ।",
+                recordedDate = "২০২৩-০৬-২০"
+            )
+        )
+        sampleProperties.forEach { propertyDao.insertProperty(it) }
     }
 }
 

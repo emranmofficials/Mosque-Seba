@@ -91,3 +91,90 @@ fun MosqueSearchBar(
             .heightIn(min = 50.dp)
     )
 }
+
+/**
+ * অ্যাপের সকল ফর্ম এবং ডায়ালগের জন্য স্ট্যান্ডার্ড ইনপুট ফিল্ড কালার প্যালেট।
+ */
+@Composable
+fun mosqueStandardFieldColors(isDark: Boolean = isSystemInDarkTheme()): TextFieldColors =
+    OutlinedTextFieldDefaults.colors(
+        focusedContainerColor = if (isDark) MosqueNightSurfaceVariant else Color.White,
+        unfocusedContainerColor = if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft.copy(alpha = 0.35f),
+        focusedBorderColor = MaterialTheme.colorScheme.primary,
+        unfocusedBorderColor = if (isDark) MosqueNightBorder else MosqueCardBorder,
+        focusedLabelColor = MaterialTheme.colorScheme.primary,
+        unfocusedLabelColor = MosqueTextSecondary,
+        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+        unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+        cursorColor = MaterialTheme.colorScheme.primary
+    )
+
+/**
+ * অ্যাপের সকল ফর্ম এবং স্ক্রিনের জন্য স্ট্যান্ডার্ড ও অভিন্ন টেক্সট ফিল্ড।
+ * স্ট্যান্ডার্ড সাইজ (min 52.dp), প্রিমিয়াম কর্নার (14.dp) ও থিম-অ্যাওয়ার কনটেইনার প্রদান করে।
+ */
+@Composable
+fun MosqueStandardTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String? = null,
+    placeholder: String? = null,
+    modifier: Modifier = Modifier,
+    leadingIcon: (@Composable () -> Unit)? = null,
+    trailingIcon: (@Composable () -> Unit)? = null,
+    isError: Boolean = false,
+    supportingText: (@Composable () -> Unit)? = null,
+    visualTransformation: androidx.compose.ui.text.input.VisualTransformation = androidx.compose.ui.text.input.VisualTransformation.None,
+    keyboardOptions: androidx.compose.foundation.text.KeyboardOptions = androidx.compose.foundation.text.KeyboardOptions.Default,
+    singleLine: Boolean = true,
+    maxLines: Int = if (singleLine) 1 else 4,
+    readOnly: Boolean = false,
+    enabled: Boolean = true
+) {
+    val isDark = isSystemInDarkTheme()
+
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = label?.let {
+            {
+                Text(
+                    text = it,
+                    fontSize = 13.5.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        },
+        placeholder = placeholder?.let {
+            {
+                Text(
+                    text = it,
+                    fontSize = 13.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        },
+        leadingIcon = leadingIcon,
+        trailingIcon = trailingIcon,
+        isError = isError,
+        supportingText = supportingText,
+        visualTransformation = visualTransformation,
+        keyboardOptions = keyboardOptions,
+        singleLine = singleLine,
+        maxLines = maxLines,
+        readOnly = readOnly,
+        enabled = enabled,
+        shape = RoundedCornerShape(14.dp),
+        textStyle = TextStyle(
+            fontSize = 14.sp,
+            color = MaterialTheme.colorScheme.onSurface
+        ),
+        colors = mosqueStandardFieldColors(isDark),
+        modifier = modifier
+            .fillMaxWidth()
+            .heightIn(min = 52.dp)
+    )
+}

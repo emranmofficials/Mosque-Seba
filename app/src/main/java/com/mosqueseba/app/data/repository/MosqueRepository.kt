@@ -503,6 +503,24 @@ class MosqueRepository(private val database: MosqueDatabase) {
         logAudit("COMMITTEE_RECONSTRUCTED", "নতুন নির্বাচিত কমিটি কার্যকর করা হয়েছে: ${election.termTitle}", actor)
     }
 
+    // Mosque Properties
+    val allProperties: Flow<List<MosquePropertyEntity>> = database.mosquePropertyDao().getAllProperties()
+
+    suspend fun addProperty(property: MosquePropertyEntity, actor: String = "কমিটি প্রশাসন") {
+        database.mosquePropertyDao().insertProperty(property)
+        logAudit("PROPERTY_ADDED", "নতুন সম্পত্তি রেকর্ড: ${property.title} (${property.category})", actor)
+    }
+
+    suspend fun updateProperty(property: MosquePropertyEntity, actor: String = "কমিটি প্রশাসন") {
+        database.mosquePropertyDao().updateProperty(property)
+        logAudit("PROPERTY_UPDATED", "সম্পত্তি তথ্য হালনাগাদ: ${property.title}", actor)
+    }
+
+    suspend fun deleteProperty(property: MosquePropertyEntity, actor: String = "কমিটি প্রশাসন") {
+        database.mosquePropertyDao().deleteProperty(property)
+        logAudit("PROPERTY_DELETED", "সম্পত্তি রেকর্ড অপসারিত: ${property.title}", actor)
+    }
+
     private suspend fun logAudit(action: String, details: String, actor: String = "কমিটি প্রশাসন") {
         val time = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
         database.auditDao().insertLog(

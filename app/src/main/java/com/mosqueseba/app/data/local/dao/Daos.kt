@@ -354,5 +354,23 @@ interface ElectionDao {
     suspend fun deleteCandidate(candidate: ElectionCandidateEntity): Int
 }
 
+@Dao
+interface MosquePropertyDao {
+    @Query("SELECT * FROM mosque_properties ORDER BY createdAt DESC")
+    fun getAllProperties(): Flow<List<MosquePropertyEntity>>
+
+    @Query("SELECT * FROM mosque_properties WHERE id = :id LIMIT 1")
+    suspend fun getPropertyById(id: String): MosquePropertyEntity?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertProperty(property: MosquePropertyEntity): Long
+
+    @Update
+    suspend fun updateProperty(property: MosquePropertyEntity): Int
+
+    @Delete
+    suspend fun deleteProperty(property: MosquePropertyEntity): Int
+}
+
 
 

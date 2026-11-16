@@ -336,5 +336,22 @@ data class ElectionCandidateEntity(
     val createdAt: Long = System.currentTimeMillis()
 )
 
+// --- মসজিদের স্থাবর ও অস্থাবর সম্পত্তি ও ওয়াকফ রেকর্ড ---
+@Entity(tableName = "mosque_properties")
+data class MosquePropertyEntity(
+    @PrimaryKey val id: String,
+    val title: String,
+    val category: String, // জমি / প্লট, বাণিজ্যিক দোকান / মার্কেট, ভবন ও অবকাঠামো, পুকুর / বাগান, যন্ত্রপাতি ও মূল সম্পদ
+    val areaOrQuantity: String,
+    val locationOrDagNo: String,
+    val deedOrRegNo: String = "",
+    val estimatedValueOrIncome: String = "",
+    val photoUrl: String? = null,
+    val status: String = "সংরক্ষিত", // সংরক্ষিত, সক্রিয়, ভাড়া/ইজারাকৃত
+    val description: String = "",
+    val recordedDate: String = "",
+    val createdAt: Long = System.currentTimeMillis()
+)
+
 
 

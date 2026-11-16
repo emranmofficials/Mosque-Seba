@@ -1,12 +1,16 @@
 package com.mosqueseba.app.ui.theme
 
+import android.app.Activity
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
 
 val LocalIsDarkTheme = staticCompositionLocalOf { false }
 
@@ -54,6 +58,18 @@ fun MosqueCommitteeTheme(
     content: @Composable () -> Unit
 ) {
     val colorScheme = if (darkTheme) MosqueDarkColorScheme else MosqueLightColorScheme
+    val view = LocalView.current
+    if (!view.isInEditMode) {
+        SideEffect {
+            val window = (view.context as? Activity)?.window
+            if (window != null) {
+                val insetsController = WindowCompat.getInsetsController(window, view)
+                // অ্যাপের টপ বার ডার্ক এমারেল্ড গ্রীন হওয়ায় সিস্টেম বার আইকন ও ঘড়ি/ব্যাটারি টেক্সট উজ্জ্বল সাদা (Light) হবে
+                insetsController.isAppearanceLightStatusBars = false
+                insetsController.isAppearanceLightNavigationBars = !darkTheme
+            }
+        }
+    }
     CompositionLocalProvider(LocalIsDarkTheme provides darkTheme) {
         MaterialTheme(
             colorScheme = colorScheme,

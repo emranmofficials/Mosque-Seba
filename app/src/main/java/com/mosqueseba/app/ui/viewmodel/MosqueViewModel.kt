@@ -2006,4 +2006,26 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
             }
         }
     }
+
+    // --- মসজিদের স্থাবর ও অস্থাবর সম্পত্তি (Mosque Properties & Assets) ---
+    val mosqueProperties: StateFlow<List<MosquePropertyEntity>> = repository.allProperties
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    fun saveMosqueProperty(property: MosquePropertyEntity) {
+        viewModelScope.launch {
+            val propId = if (property.id.isBlank()) "PROP-${UUID.randomUUID().toString().take(8).uppercase()}" else property.id
+            val existing = mosqueProperties.value.find { it.id == propId }
+            if (existing != null) {
+                repository.updateProperty(property.copy(id = propId), _currentUserRole.value.titleBn)
+            } else {
+                repository.addProperty(property.copy(id = propId), _currentUserRole.value.titleBn)
+            }
+        }
+    }
+
+    fun deleteMosqueProperty(property: MosquePropertyEntity) {
+        viewModelScope.launch {
+            repository.deleteProperty(property, _currentUserRole.value.titleBn)
+        }
+    }
 }

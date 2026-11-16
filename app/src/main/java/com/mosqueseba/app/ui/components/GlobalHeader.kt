@@ -90,42 +90,47 @@ fun GlobalHeader(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.weight(1f)
                 ) {
-                    val mosqueLogoBitmap = remember(mosqueLogoUrl) { loadLocalThumbnail(mosqueLogoUrl, 192) }
-                    // Official Mosque Logo -> Opens Mosque Profile
+                    // Official Mosque Seba App Logo -> Permanent in Header (Never replaced by mosque logo)
                     Surface(
                         onClick = onMosqueProfileClick,
                         shape = RoundedCornerShape(12.dp),
-                        color = if (mosqueLogoBitmap != null) Color.White else Color.White.copy(alpha = 0.15f),
+                        color = Color.White.copy(alpha = 0.15f),
                         border = androidx.compose.foundation.BorderStroke(
                             1.dp,
-                            MosqueGold.copy(alpha = 0.75f)
+                            MosqueGold.copy(alpha = 0.85f)
                         ),
                         modifier = Modifier
                             .size(46.dp)
-                            .testTag("header_mosque_profile_button")
+                            .testTag("header_app_logo_button")
                     ) {
                         Box(contentAlignment = Alignment.Center) {
-                            if (mosqueLogoBitmap != null) {
-                                Image(
-                                    bitmap = mosqueLogoBitmap,
-                                    contentDescription = mosqueName?.takeIf { it.isNotBlank() } ?: "মসজিদের প্রোফাইল দেখুন",
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier.fillMaxSize()
-                                )
-                            } else {
-                                Image(
-                                    painter = painterResource(id = R.drawable.app_logo),
-                                    contentDescription = mosqueName?.takeIf { it.isNotBlank() } ?: "মসজিদের প্রোফাইল দেখুন",
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier.fillMaxSize()
-                                )
-                            }
+                            Image(
+                                painter = painterResource(id = R.drawable.app_logo),
+                                contentDescription = "মসজিদ সেবা লোগো",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
+                            )
                         }
                     }
 
                     Spacer(modifier = Modifier.width(10.dp))
 
                     Column(modifier = Modifier.weight(1f)) {
+                        if (!mosqueName.isNullOrBlank()) {
+                            Text(
+                                text = mosqueName,
+                                fontSize = 11.5.sp,
+                                color = MosqueGoldLight,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(4.dp))
+                                    .clickable(onClick = onMosqueProfileClick)
+                            )
+                            Spacer(modifier = Modifier.height(1.dp))
+                        }
+
                         Text(
                             text = resolvedName,
                             style = MaterialTheme.typography.titleMedium,
