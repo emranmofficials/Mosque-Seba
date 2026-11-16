@@ -1862,7 +1862,7 @@ fun TransactionCardItem(
                         Text(
                             text = "অনুমোদক: $approver",
                             style = MaterialTheme.typography.labelSmall,
-                            color = MosqueEmeraldDark,
+                            color = if (isDark) MosqueNightTextPrimary else MosqueEmeraldDark,
                             fontSize = 11.sp,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
@@ -1909,7 +1909,7 @@ fun TransactionCardItem(
                     Text(
                         text = "কর্তৃপক্ষের অনুমোদন আবশ্যক:",
                         style = MaterialTheme.typography.labelSmall,
-                        color = MosqueTextSecondary,
+                        color = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary,
                         modifier = Modifier.weight(1f)
                     )
 

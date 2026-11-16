@@ -208,6 +208,15 @@ fun DashboardScreen(
             }
         }
 
+        // 1.6. Top Holy Ramadan Countdown & Schedule Card
+        item(key = "global_top_ramadan_card") {
+            StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
+                RamadanDashboardCard(
+                    onOpenHub = { onOpenDialog("ramadan_hub") }
+                )
+            }
+        }
+
         // 2. Top Digital Notice Board & Urgent Announcements
         item(key = "global_top_smart_board") {
             StaggeredDashboardItem(index = 3, modifier = Modifier.animateItem()) {

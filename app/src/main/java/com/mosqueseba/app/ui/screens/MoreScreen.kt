@@ -48,6 +48,7 @@ import com.mosqueseba.app.ui.components.MosqueMemberAvatar
 import com.mosqueseba.app.ui.components.OfficialReceiptDialog
 import com.mosqueseba.app.ui.components.PaySalaryFormDialog
 import com.mosqueseba.app.ui.components.ScheduleMeetingDialog
+import com.mosqueseba.app.ui.components.RamadanHubDialog
 import com.mosqueseba.app.ui.components.toBengaliDigits
 import com.mosqueseba.app.ui.theme.*
 import com.mosqueseba.app.ui.viewmodel.MosqueViewModel
@@ -101,6 +102,7 @@ fun MoreScreen(
     val studentCount by viewModel.studentCount.collectAsState()
     val khademCheckedTasks by viewModel.khademCheckedTasks.collectAsState()
     val activeElection by viewModel.activeElection.collectAsState()
+    val isDark = LocalIsDarkTheme.current
 
     BackHandler(enabled = selectedSubModule != null && initialSubModule == null) {
         selectedSubModule = null
@@ -148,7 +150,7 @@ fun MoreScreen(
             .background(MaterialTheme.colorScheme.background)
     ) {
         // Modern Clean Sticky Header for Sub-modules (skip for submodules that already provide their own complete header)
-        val subModulesWithOwnHeader = setOf("election", "notices", "members", "about", "islamic_calendar")
+        val subModulesWithOwnHeader = setOf("election", "notices", "members", "about", "islamic_calendar", "ramadan_hub")
         if (selectedSubModule != null && selectedSubModule !in subModulesWithOwnHeader) {
             val isDark = LocalIsDarkTheme.current
             Surface(
@@ -247,6 +249,19 @@ fun MoreScreen(
                     onDraftNotice = { title, content ->
                         if (initialSubModule != null) onBack?.invoke() else selectedSubModule = null
                         onOpenPublishNotice()
+                    }
+                )
+                MoreOperationsHub(
+                    currentRole = currentRole,
+                    liveCounts = liveCounts,
+                    onSelectModule = { moduleKey -> selectedSubModule = moduleKey }
+                )
+            }
+            "ramadan_hub" -> {
+                RamadanHubDialog(
+                    viewModel = viewModel,
+                    onDismiss = {
+                        if (initialSubModule != null) onBack?.invoke() else selectedSubModule = null
                     }
                 )
                 MoreOperationsHub(
@@ -1739,7 +1754,7 @@ fun MoreScreen(
                             ) {
                                 Text(
                                     text = "বর্তমানে কোনো নির্ধারিত সভা নেই",
-                                    color = MosqueTextSecondary
+                                    color = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
                                 )
                             }
                         }

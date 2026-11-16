@@ -67,7 +67,7 @@ fun LoginScreen(
         focusedBorderColor = MosqueEmeraldPrimary,
         unfocusedBorderColor = if (isDark) MosqueNightBorder else MosqueCardBorder,
         focusedLabelColor = MosqueEmeraldPrimary,
-        unfocusedLabelColor = MosqueTextSecondary,
+        unfocusedLabelColor = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary,
         cursorColor = MosqueEmeraldPrimary,
         focusedContainerColor = MaterialTheme.colorScheme.surface,
         unfocusedContainerColor = if (isDark) MosqueNightSurfaceVariant.copy(alpha = 0.5f) else MosqueBgLight.copy(alpha = 0.45f)
@@ -241,7 +241,7 @@ fun LoginScreen(
                                 text = if (selectedTab == 0) "সভাপতি অ্যাকাউন্টে প্রবেশ" else "সদস্য ও স্টাফ লগইন",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.ExtraBold,
-                                color = MosqueEmeraldDark
+                                color = if (isDark) MosqueNightTextPrimary else MosqueEmeraldDark
                             )
                             Text(
                                 text = if (selectedTab == 0) {
@@ -250,7 +250,7 @@ fun LoginScreen(
                                     "নিবন্ধিত মোবাইল নম্বর এবং শেষ ৬টি সংখ্যা পাসওয়ার্ড হিসেবে দিন"
                                 },
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MosqueTextSecondary
+                                color = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
                             )
                         }
                     }
@@ -301,7 +301,7 @@ fun LoginScreen(
                                     Icon(
                                         imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
                                         contentDescription = "পাসওয়ার্ড দেখুন/লুকান",
-                                        tint = MosqueTextSecondary
+                                        tint = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
                                     )
                                 }
                             },
@@ -343,7 +343,7 @@ fun LoginScreen(
                                     Icon(
                                         imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
                                         contentDescription = "পাসওয়ার্ড দেখুন/লুকান",
-                                        tint = MosqueTextSecondary
+                                        tint = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
                                     )
                                 }
                             },
@@ -665,12 +665,12 @@ fun LoginScreen(
                                 text = "আপনার মসজিদ যুক্ত নেই?",
                                 fontWeight = FontWeight.ExtraBold,
                                 fontSize = 14.sp,
-                                color = MosqueEmeraldDark
+                                color = if (isDark) MosqueNightTextPrimary else MosqueEmeraldDark
                             )
                             Text(
                                 text = "শুধুমাত্র সভাপতি নতুন মসজিদ নিবন্ধন করতে পারবেন",
                                 fontSize = 11.sp,
-                                color = MosqueTextSecondary
+                                color = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
                             )
                         }
                     }
@@ -719,7 +719,7 @@ fun LoginScreen(
                             text = "লগইন সহায়তা ও নিয়মাবলি",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.ExtraBold,
-                            color = MosqueEmeraldDark
+                            color = if (isDark) MosqueNightTextPrimary else MosqueEmeraldDark
                         )
                     }
                     Spacer(modifier = Modifier.height(12.dp))
@@ -729,7 +729,7 @@ fun LoginScreen(
                         text = "• সভাপতি লগইন: শুধুমাত্র কমিটি আইডি, ইমেইল ও পাসওয়ার্ড দিয়ে প্রবেশ করবেন (ডিফল্ট: rafiqul.islam@example.com / 123456)।\n• অন্যান্য ইউজার লগইন: কমিটি আইডি, নিবন্ধিত মোবাইল নম্বর এবং মোবাইল নম্বরের শেষ ৬টি সংখ্যা পাসওয়ার্ড হিসেবে ব্যবহার করবেন।\n• উদাহরণ (কোষাধ্যক্ষ): 01715-556677 (পাসওয়ার্ড: 556677)\n• উদাহরণ (সাধারণ সম্পাদক): 01912-445566 (পাসওয়ার্ড: 445566)\n• সভাপতি বা দায়িত্বপ্রাপ্ত ইউজার সদস্য যুক্ত করলেই সেই সদস্য ইউজার হিসেবে যুক্ত হবেন।",
                         style = MaterialTheme.typography.bodySmall,
                         lineHeight = 20.sp,
-                        color = MosqueTextPrimary
+                        color = if (isDark) MosqueNightTextPrimary else MosqueTextPrimary
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Button(
@@ -757,6 +757,7 @@ private fun LoginRoleTabButton(
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
+    val isDark = LocalIsDarkTheme.current
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape(10.dp),
@@ -774,7 +775,7 @@ private fun LoginRoleTabButton(
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = if (selected) MosqueGoldLight else MosqueTextSecondary,
+                tint = if (selected) MosqueGoldLight else if (isDark) MosqueNightTextSecondary else MosqueTextSecondary,
                 modifier = Modifier.size(16.dp)
             )
             Spacer(modifier = Modifier.width(6.dp))
@@ -782,7 +783,7 @@ private fun LoginRoleTabButton(
                 text = title,
                 fontWeight = if (selected) FontWeight.Bold else FontWeight.SemiBold,
                 fontSize = 13.sp,
-                color = if (selected) Color.White else MosqueTextSecondary,
+                color = if (selected) Color.White else if (isDark) MosqueNightTextSecondary else MosqueTextSecondary,
                 maxLines = 1
             )
         }

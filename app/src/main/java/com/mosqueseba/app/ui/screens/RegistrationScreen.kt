@@ -320,12 +320,12 @@ fun RegistrationScreen(
                                             text = "সভাপতির ব্যক্তিগত ও অ্যাকাউন্ট তথ্য",
                                             fontWeight = FontWeight.ExtraBold,
                                             style = MaterialTheme.typography.titleMedium,
-                                            color = MosqueEmeraldDark
+                                            color = if (isDark) MosqueNightTextPrimary else MosqueEmeraldDark
                                         )
                                         Text(
                                             text = "কমিটির প্রধান হিসেবে আপনার প্রোফাইল ও লগইন তথ্য দিন",
                                             style = MaterialTheme.typography.bodySmall,
-                                            color = MosqueTextSecondary
+                                            color = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
                                         )
                                     }
                                 }
@@ -470,14 +470,14 @@ fun RegistrationScreen(
                                                 text = "বেতনভুক্ত সদস্যদের (ইমাম, মুয়াজ্জিন, খাদেম) খাবার দিতে রাজি আছেন কি? *",
                                                 style = MaterialTheme.typography.bodySmall,
                                                 fontWeight = FontWeight.Bold,
-                                                color = MosqueEmeraldDark
+                                                color = if (isDark) MosqueNightTextPrimary else MosqueEmeraldDark
                                             )
                                         }
                                         Spacer(modifier = Modifier.height(4.dp))
                                         Text(
                                             text = "দায়িত্বশীল হিসেবে জায়গির/খাবার ব্যবস্থাপনায় আপনার সম্মতি নিশ্চিত করুন",
                                             style = MaterialTheme.typography.labelSmall,
-                                            color = MosqueTextSecondary
+                                            color = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
                                         )
                                         Spacer(modifier = Modifier.height(10.dp))
                                         Row(
@@ -522,7 +522,7 @@ fun RegistrationScreen(
                                             Icon(
                                                 imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
                                                 contentDescription = "পাসওয়ার্ড দেখুন/লুকান",
-                                                tint = MosqueTextSecondary
+                                                tint = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
                                             )
                                         }
                                     },
@@ -620,12 +620,12 @@ fun RegistrationScreen(
                                             text = "মসজিদ ও কমিটির বিবরণ",
                                             fontWeight = FontWeight.ExtraBold,
                                             style = MaterialTheme.typography.titleMedium,
-                                            color = MosqueEmeraldDark
+                                            color = if (isDark) MosqueNightTextPrimary else MosqueEmeraldDark
                                         )
                                         Text(
                                             text = "মসজিদের অফিসিয়াল লোগো, পরিচিতি ও মেয়াদকাল দিন",
                                             style = MaterialTheme.typography.bodySmall,
-                                            color = MosqueTextSecondary
+                                            color = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
                                         )
                                     }
                                 }
@@ -893,12 +893,12 @@ fun RegistrationScreen(
                                             text = "নিবন্ধনের সারসংক্ষেপ",
                                             fontWeight = FontWeight.ExtraBold,
                                             style = MaterialTheme.typography.titleMedium,
-                                            color = MosqueEmeraldDark
+                                            color = if (isDark) MosqueNightTextPrimary else MosqueEmeraldDark
                                         )
                                         Text(
                                             text = "প্রদত্ত তথ্যসমূহ ও ছবি যাচাই করে নিবন্ধন সম্পন্ন করুন",
                                             style = MaterialTheme.typography.bodySmall,
-                                            color = MosqueTextSecondary
+                                            color = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
                                         )
                                     }
                                 }
@@ -945,7 +945,7 @@ fun RegistrationScreen(
                                                 Text(
                                                     text = "মসজিদের তথ্য",
                                                     fontWeight = FontWeight.Bold,
-                                                    color = MosqueEmeraldDark,
+                                                    color = if (isDark) MosqueNightTextPrimary else MosqueEmeraldDark,
                                                     fontSize = 14.sp
                                                 )
                                                 Text(
@@ -1021,7 +1021,7 @@ fun RegistrationScreen(
                                                 Text(
                                                     text = "সভাপতির তথ্য",
                                                     fontWeight = FontWeight.Bold,
-                                                    color = MosqueEmeraldDark,
+                                                    color = if (isDark) MosqueNightTextPrimary else MosqueEmeraldDark,
                                                     fontSize = 14.sp
                                                 )
                                                 Text(
@@ -1073,7 +1073,7 @@ fun RegistrationScreen(
                                         Text(
                                             text = "আমি প্রত্যয়ন করছি যে প্রদত্ত তথ্যসমূহ সঠিক এবং মসজিদের সেবায় আমানতদারি রক্ষা করব।",
                                             style = MaterialTheme.typography.bodySmall,
-                                            color = MosqueEmeraldDark,
+                                            color = if (isDark) MosqueNightTextPrimary else MosqueEmeraldDark,
                                             fontWeight = FontWeight.Medium
                                         )
                                     }
@@ -1185,7 +1185,7 @@ fun RegistrationScreen(
                 Text(
                     text = "ইতিমধ্যে অ্যাকাউন্ট আছে? ",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MosqueTextSecondary
+                    color = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
                 )
                 Text(
                     text = "লগইন করুন",
@@ -1275,12 +1275,12 @@ private fun PresidentPhotoUploadBanner(
                 text = "সভাপতির প্রোফাইল ছবি (ঐচ্ছিক)",
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
-                color = MosqueEmeraldDark
+                color = if (isDark) MosqueNightTextPrimary else MosqueEmeraldDark
             )
             Text(
                 text = if (bitmap != null) "প্রোফাইল ছবি সফলভাবে সংযুক্ত হয়েছে" else "প্রোফাইল ও কমিটি তালিকায় প্রদর্শনের জন্য ছবি আপলোড করুন",
                 style = MaterialTheme.typography.labelSmall,
-                color = if (bitmap != null) MosqueSuccessGreen else MosqueTextSecondary,
+                color = if (bitmap != null) MosqueSuccessGreen else if (isDark) MosqueNightTextSecondary else MosqueTextSecondary,
                 textAlign = TextAlign.Center
             )
 
@@ -1417,12 +1417,12 @@ private fun MosqueOfficialLogoUploadBanner(
                 text = "মসজিদের অফিসিয়াল লোগো (ঐচ্ছিক)",
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
-                color = MosqueEmeraldDark
+                color = if (isDark) MosqueNightTextPrimary else MosqueEmeraldDark
             )
             Text(
                 text = if (bitmap != null) "অফিসিয়াল লোগো সফলভাবে সংযুক্ত হয়েছে" else "রসিদ, নোটিশ বোর্ড ও ড্যাশবোর্ডের জন্য মসজিদের লোগো আপলোড করুন",
                 style = MaterialTheme.typography.labelSmall,
-                color = if (bitmap != null) MosqueSuccessGreen else MosqueTextSecondary,
+                color = if (bitmap != null) MosqueSuccessGreen else if (isDark) MosqueNightTextSecondary else MosqueTextSecondary,
                 textAlign = TextAlign.Center
             )
 
@@ -1479,19 +1479,20 @@ private fun MosqueOfficialLogoUploadBanner(
 
 @Composable
 fun SummaryRow(label: String, value: String) {
+    val isDark = LocalIsDarkTheme.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 3.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(text = label, style = MaterialTheme.typography.bodySmall, color = MosqueTextSecondary)
+        Text(text = label, style = MaterialTheme.typography.bodySmall, color = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary)
         Spacer(modifier = Modifier.width(8.dp))
         Text(
             text = value,
             style = MaterialTheme.typography.bodySmall,
             fontWeight = FontWeight.SemiBold,
-            color = MosqueTextPrimary,
+            color = if (isDark) MosqueNightTextPrimary else MosqueTextPrimary,
             textAlign = TextAlign.End
         )
     }

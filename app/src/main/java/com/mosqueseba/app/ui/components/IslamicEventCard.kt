@@ -16,6 +16,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -218,6 +219,7 @@ fun IslamicCalendarHubDialog(
 
     var selectedCategory by remember { mutableStateOf<IslamicEventCategory?>(null) }
     var detailEvent by remember { mutableStateOf<IslamicEvent?>(null) }
+    var showRamadanDialog by remember { mutableStateOf(false) }
 
     val allCountdowns = remember(hijriDayOffset) {
         IslamicCalendarEngine.getEventCountdowns(hijriDayOffset)
@@ -324,6 +326,68 @@ fun IslamicCalendarHubDialog(
 
                     Spacer(modifier = Modifier.height(10.dp))
 
+                    // Quick Ramadan Hub Access Banner
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { showRamadanDialog = true },
+                        shape = RoundedCornerShape(12.dp),
+                        color = if (isDark) MosqueNightSurfaceVariant else MosqueGoldSoft,
+                        border = BorderStroke(1.dp, if (isDark) MosqueGoldDeep.copy(alpha = 0.4f) else MosqueCardBorderGold)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(32.dp)
+                                        .clip(CircleShape)
+                                        .background(MosqueGoldDeep.copy(alpha = 0.15f)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.DarkMode,
+                                        contentDescription = null,
+                                        tint = MosqueGoldDeep,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                                Column {
+                                    Text(
+                                        text = "মাহে রমজান হাব ও ৩০ দিনের সময়সূচি",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (isDark) MosqueNightTextPrimary else MosqueEmeraldDark
+                                    )
+                                    Text(
+                                        text = "সেহরি-ইফতারের সময়, মাসায়েল, দোয়া ও ফিতরা সহায়িকা",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+                            }
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                                contentDescription = "রমজান হাব খুলুন",
+                                tint = MosqueGoldDeep,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
                     // Category Filter Chips
                     CategoryFilterChipsRow(
                         selectedCategory = selectedCategory,
@@ -353,6 +417,13 @@ fun IslamicCalendarHubDialog(
                 }
             }
         }
+    }
+
+    if (showRamadanDialog) {
+        RamadanHubDialog(
+            viewModel = viewModel,
+            onDismiss = { showRamadanDialog = false }
+        )
     }
 
     // Detail Dialog for Selected Event

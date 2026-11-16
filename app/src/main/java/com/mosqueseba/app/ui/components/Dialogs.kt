@@ -275,8 +275,8 @@ fun AddMemberDialog(
                                 )
                             },
                             shape = RoundedCornerShape(14.dp),
-                            color = MosqueBgLight,
-                            border = BorderStroke(1.dp, MosqueCardBorderGold),
+                            color = if (isDark) MosqueNightSurfaceVariant else MosqueBgLight,
+                            border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else MosqueCardBorderGold),
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Row(
@@ -289,7 +289,7 @@ fun AddMemberDialog(
                                     modifier = Modifier
                                         .size(56.dp)
                                         .clip(CircleShape)
-                                        .background(MosqueEmeraldSoft)
+                                        .background(if (isDark) MosqueNightSurface else MosqueEmeraldSoft)
                                         .border(1.5.dp, MosqueGold, CircleShape),
                                     contentAlignment = Alignment.Center
                                 ) {
@@ -316,12 +316,12 @@ fun AddMemberDialog(
                                         text = if (photoPreview != null) "প্রোফাইল ছবি সংযুক্ত হয়েছে" else "প্রোফাইল ছবি আপলোড (ঐচ্ছিক)",
                                         style = MaterialTheme.typography.labelLarge,
                                         fontWeight = FontWeight.Bold,
-                                        color = MosqueEmeraldDark
+                                        color = if (isDark) MosqueNightTextPrimary else MosqueEmeraldDark
                                     )
                                     Text(
                                         text = if (photoPreview != null) "পরিবর্তন করতে ট্যাপ করুন" else "গ্যালারি থেকে ছবি নির্বাচন করুন",
                                         style = MaterialTheme.typography.labelSmall,
-                                        color = MosqueTextSecondary
+                                        color = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
                                     )
                                 }
                                 if (photoPath != null) {
@@ -386,7 +386,7 @@ fun AddMemberDialog(
                             text = "কমিটি বা খেদমত পদবি নির্বাচন *",
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold,
-                            color = MosqueEmeraldDark
+                            color = if (isDark) MosqueNightTextPrimary else MosqueEmeraldDark
                         )
                         Spacer(modifier = Modifier.height(6.dp))
 
@@ -395,7 +395,7 @@ fun AddMemberDialog(
                                 onClick = { if (canEditRoleAndSalary) roleDropdownExpanded = true },
                                 enabled = canEditRoleAndSalary,
                                 shape = RoundedCornerShape(12.dp),
-                                color = if (canEditRoleAndSalary) MosqueEmeraldSoft.copy(alpha = 0.65f) else MosqueBgLight,
+                                color = if (canEditRoleAndSalary) (if (isDark) MosqueEmeraldPrimary.copy(alpha = 0.22f) else MosqueEmeraldSoft.copy(alpha = 0.65f)) else (if (isDark) MosqueNightSurfaceVariant else MosqueBgLight),
                                 border = BorderStroke(1.dp, MosqueEmeraldPrimary.copy(alpha = if (canEditRoleAndSalary) 0.55f else 0.25f)),
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -432,7 +432,7 @@ fun AddMemberDialog(
                                                 text = selectedRole.titleBn,
                                                 fontSize = 13.5.sp,
                                                 fontWeight = FontWeight.Bold,
-                                                color = MosqueEmeraldDark
+                                                color = if (isDark) MosqueNightTextPrimary else MosqueEmeraldDark
                                             )
                                             Text(
                                                 text = if (!canEditRoleAndSalary) {
@@ -443,7 +443,7 @@ fun AddMemberDialog(
                                                     "মাসিক চাঁদা দাতা তালিকা"
                                                 },
                                                 fontSize = 10.5.sp,
-                                                color = MosqueTextSecondary
+                                                color = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
                                             )
                                         }
                                     }
@@ -490,7 +490,7 @@ fun AddMemberDialog(
                                                     text = role.titleBn,
                                                     fontSize = 13.sp,
                                                     fontWeight = if (selectedRole == role) FontWeight.Bold else FontWeight.Medium,
-                                                    color = MosqueEmeraldDark
+                                                    color = if (isDark) MosqueNightTextPrimary else MosqueEmeraldDark
                                                 )
                                                 Text(
                                                     text = if (itemIsStaff) "বেতনভুক্ত সদস্য" else "মাসিক চাঁদা দাতা",
@@ -539,11 +539,11 @@ fun AddMemberDialog(
 
                             // Mandatory Staff Meal Confirmation Card
                             Surface(
-                                color = if (staffMealError != null) MosqueUrgentRed.copy(alpha = 0.06f) else MosqueGoldSoft.copy(alpha = 0.55f),
+                                color = if (staffMealError != null) MosqueUrgentRed.copy(alpha = 0.06f) else (if (isDark) MosqueNightSurfaceVariant else MosqueGoldSoft.copy(alpha = 0.55f)),
                                 shape = RoundedCornerShape(12.dp),
                                 border = BorderStroke(
                                     1.dp,
-                                    if (staffMealError != null) MosqueUrgentRed else MosqueCardBorderGold
+                                    if (staffMealError != null) MosqueUrgentRed else (if (isDark) MosqueNightBorder else MosqueCardBorderGold)
                                 ),
                                 modifier = Modifier.fillMaxWidth()
                             ) {
@@ -552,7 +552,7 @@ fun AddMemberDialog(
                                         Icon(
                                             imageVector = Icons.Default.Restaurant,
                                             contentDescription = null,
-                                            tint = MosqueEmeraldDark,
+                                            tint = if (isDark) MosqueGoldLight else MosqueEmeraldDark,
                                             modifier = Modifier.size(18.dp)
                                         )
                                         Spacer(modifier = Modifier.width(6.dp))
@@ -560,14 +560,14 @@ fun AddMemberDialog(
                                             text = "বেতনভুক্ত সদস্য হিসেবে খাবার নিতে চান কি না? *",
                                             style = MaterialTheme.typography.labelLarge,
                                             fontWeight = FontWeight.Bold,
-                                            color = MosqueEmeraldDark
+                                            color = if (isDark) MosqueNightTextPrimary else MosqueEmeraldDark
                                         )
                                     }
                                     Spacer(modifier = Modifier.height(3.dp))
                                     Text(
                                         text = "মসজিদ বা সদস্যদের পক্ষ থেকে দৈনিক খাবারের (জায়গির) ব্যবস্থা নেবেন কি না তা নিশ্চিত করুন।",
                                         style = MaterialTheme.typography.labelSmall,
-                                        color = MosqueTextSecondary,
+                                        color = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary,
                                         lineHeight = 15.sp
                                     )
                                     Spacer(modifier = Modifier.height(10.dp))
@@ -625,9 +625,9 @@ fun AddMemberDialog(
                             Spacer(modifier = Modifier.height(10.dp))
 
                             Surface(
-                                color = MosqueGoldSoft.copy(alpha = 0.45f),
+                                color = if (isDark) MosqueNightSurfaceVariant else MosqueGoldSoft.copy(alpha = 0.45f),
                                 shape = RoundedCornerShape(12.dp),
-                                border = BorderStroke(1.dp, MosqueCardBorderGold),
+                                border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else MosqueCardBorderGold),
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 Column(modifier = Modifier.padding(12.dp)) {
@@ -635,7 +635,7 @@ fun AddMemberDialog(
                                         Icon(
                                             imageVector = Icons.Default.Restaurant,
                                             contentDescription = null,
-                                            tint = MosqueEmeraldDark,
+                                            tint = if (isDark) MosqueGoldLight else MosqueEmeraldDark,
                                             modifier = Modifier.size(18.dp)
                                         )
                                         Spacer(modifier = Modifier.width(6.dp))
@@ -643,14 +643,14 @@ fun AddMemberDialog(
                                             text = "বেতনভুক্ত স্টাফদের খাবার (জায়গির) প্রদান:",
                                             style = MaterialTheme.typography.labelLarge,
                                             fontWeight = FontWeight.Bold,
-                                            color = MosqueEmeraldDark
+                                            color = if (isDark) MosqueNightTextPrimary else MosqueEmeraldDark
                                         )
                                     }
                                     Spacer(modifier = Modifier.height(3.dp))
                                     Text(
                                         text = "ইমাম, মুয়াজ্জিন ও খাদেমদের পালাক্রমে খাবার দিতে রাজি আছেন কি?",
                                         style = MaterialTheme.typography.labelSmall,
-                                        color = MosqueTextSecondary
+                                        color = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
                                     )
                                     Spacer(modifier = Modifier.height(10.dp))
                                     Row(
@@ -759,7 +759,7 @@ fun AddMemberDialog(
                             Text(
                                 text = "সদস্যের স্থায়ী আইডি (${toBengaliDigits(initialMember?.memberCode ?: initialStaff?.id?.uppercase() ?: "MEM-NEW")}) অপরিবর্তিত রেখে পদবি, সক্রিয় অবস্থা বা তালিকাভুক্তি নিয়ন্ত্রণ করুন।",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = MosqueTextSecondary,
+                                color = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary,
                                 lineHeight = 15.sp
                             )
                             Spacer(modifier = Modifier.height(10.dp))
@@ -838,7 +838,7 @@ fun AddMemberDialog(
                             .weight(0.9f)
                             .heightIn(min = 48.dp)
                     ) {
-                        Text("বাতিল", color = MosqueTextSecondary, fontWeight = FontWeight.Bold)
+                        Text("বাতিল", color = if (isDark) MosqueNightTextPrimary else MosqueTextSecondary, fontWeight = FontWeight.Bold)
                     }
                     Button(
                         onClick = {
@@ -1224,7 +1224,7 @@ fun AddTransactionDialog(
                                     "বেতনভুক্ত সদস্য তালিকা থেকে বেতন প্রদান করলে তা স্বয়ংক্রিয়ভাবে মোট ব্যয়ের সাথে যুক্ত হয় — এখানে ম্যানুয়ালি যুক্ত করতে হবে না।"
                                 },
                                 style = MaterialTheme.typography.labelSmall,
-                                color = MosqueEmeraldDark,
+                                color = if (isDark) MosqueNightTextPrimary else MosqueEmeraldDark,
                                 fontWeight = FontWeight.SemiBold,
                                 lineHeight = 15.sp
                             )
@@ -1237,7 +1237,7 @@ fun AddTransactionDialog(
                             text = "খাত নির্বাচন করুন",
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.Bold,
-                            color = MosqueEmeraldDark
+                            color = if (isDark) MosqueNightTextPrimary else MosqueEmeraldDark
                         )
                         val currentCats = (if (isIncome) incomeCategories else expenseCategories) + "অন্যান্য (কাস্টম)"
                         currentCats.chunked(2).forEach { rowCats ->
@@ -1322,7 +1322,7 @@ fun AddTransactionDialog(
                             amountError = null
                         },
                         label = { Text("টাকার পরিমাণ (৳) *") },
-                        prefix = { Text("৳ ", fontWeight = FontWeight.Bold, color = MosqueEmeraldDark) },
+                        prefix = { Text("৳ ", fontWeight = FontWeight.Bold, color = if (isDark) MosqueGoldLight else MosqueEmeraldDark) },
                         isError = amountError != null,
                         supportingText = amountError?.let { err -> { Text(err, color = MosqueUrgentRed, fontSize = 11.sp) } },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -1338,7 +1338,7 @@ fun AddTransactionDialog(
                             text = if (isIncome) "জমার মাধ্যম" else "পরিশোধের মাধ্যম",
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.Bold,
-                            color = MosqueEmeraldDark
+                            color = if (isDark) MosqueNightTextPrimary else MosqueEmeraldDark
                         )
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -1402,7 +1402,7 @@ fun AddTransactionDialog(
                             .weight(0.9f)
                             .heightIn(min = 48.dp)
                     ) {
-                        Text("বাতিল", color = MosqueTextSecondary, fontWeight = FontWeight.Bold)
+                        Text("বাতিল", color = if (isDark) MosqueNightTextPrimary else MosqueTextSecondary, fontWeight = FontWeight.Bold)
                     }
                     Button(
                         onClick = {
@@ -1669,7 +1669,7 @@ fun ReceiveChandaDialog(
                             text = if (preselectedMember != null) "সদস্যের তথ্য" else "সদস্য বাছাই করুন",
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.Bold,
-                            color = MosqueEmeraldDark
+                            color = if (isDark) MosqueNightTextPrimary else MosqueEmeraldDark
                         )
 
                         if (preselectedMember == null) {
@@ -1758,8 +1758,8 @@ fun ReceiveChandaDialog(
                         } else {
                             Surface(
                                 shape = RoundedCornerShape(12.dp),
-                                color = MosqueBgLight,
-                                border = BorderStroke(1.dp, MosqueCardBorderGold),
+                                color = if (isDark) MosqueNightSurfaceVariant else MosqueBgLight,
+                                border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else MosqueCardBorderGold),
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .testTag("chanda_member_summary")
@@ -1781,7 +1781,7 @@ fun ReceiveChandaDialog(
                                             text = selectedMember?.nameBn ?: "",
                                             style = MaterialTheme.typography.titleSmall,
                                             fontWeight = FontWeight.Bold,
-                                            color = MosqueEmeraldDark,
+                                            color = if (isDark) MosqueNightTextPrimary else MosqueEmeraldDark,
                                             maxLines = 1,
                                             overflow = TextOverflow.Ellipsis
                                         )
@@ -1790,7 +1790,7 @@ fun ReceiveChandaDialog(
                                             Text(
                                                 text = "${r.titleBn} • ${toBengaliDigits(m.memberCode)} • ${toBengaliDigits(m.mobile)}",
                                                 style = MaterialTheme.typography.labelSmall,
-                                                color = MosqueTextSecondary,
+                                                color = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary,
                                                 maxLines = 1,
                                                 overflow = TextOverflow.Ellipsis
                                             )
@@ -1845,7 +1845,7 @@ fun ReceiveChandaDialog(
                                 text = "দ্রুত বকেয়া ও অগ্রিম নির্বাচন",
                                 style = MaterialTheme.typography.labelLarge,
                                 fontWeight = FontWeight.Bold,
-                                color = MosqueEmeraldDark
+                                color = if (isDark) MosqueNightTextPrimary else MosqueEmeraldDark
                             )
                             Text(
                                 text = "${toBengaliDigits(selectedMonthCount.toString())} মাস নির্বাচিত",
@@ -1949,7 +1949,7 @@ fun ReceiveChandaDialog(
                                 text = "মাসভিত্তিক তালিকা (ট্যাপ করে বাছাই করুন)",
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = MosqueTextSecondary
+                                color = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
                             )
                             TextButton(
                                 onClick = {
@@ -2120,7 +2120,7 @@ fun ReceiveChandaDialog(
                                     },
                                     style = MaterialTheme.typography.labelMedium,
                                     fontWeight = FontWeight.Bold,
-                                    color = MosqueEmeraldDark,
+                                    color = if (isDark) MosqueNightTextPrimary else MosqueEmeraldDark,
                                     modifier = Modifier.weight(1f)
                                 )
                                 if (monthlyRate > 0.0 && !useCustomMonthText && selectedMonthLabels.isNotEmpty()) {
@@ -2153,7 +2153,7 @@ fun ReceiveChandaDialog(
                                 amountError = null
                             },
                             label = { Text("আদায়ের মোট পরিমাণ (৳) *") },
-                            prefix = { Text("৳ ", fontWeight = FontWeight.Bold, color = MosqueEmeraldDark) },
+                            prefix = { Text("৳ ", fontWeight = FontWeight.Bold, color = if (isDark) MosqueGoldLight else MosqueEmeraldDark) },
                             trailingIcon = {
                                 if (!useCustomMonthText && calculatedTotal > 0.0 && enteredAmount != calculatedTotal) {
                                     TextButton(
@@ -2204,7 +2204,7 @@ fun ReceiveChandaDialog(
                             text = "পরিশোধের পদ্ধতি",
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.Bold,
-                            color = MosqueEmeraldDark
+                            color = if (isDark) MosqueNightTextPrimary else MosqueEmeraldDark
                         )
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -2258,7 +2258,7 @@ fun ReceiveChandaDialog(
                             Text(
                                 text = "চাঁদা গ্রহণ করলে তা স্বয়ংক্রিয়ভাবে 'মাসিক সদস্য চাঁদা' খাতে মসজিদের মোট আয়ের সাথে যুক্ত হবে (ম্যানুয়ালি যুক্ত করতে হবে না)।",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = MosqueEmeraldDark,
+                                color = if (isDark) MosqueNightTextPrimary else MosqueEmeraldDark,
                                 fontWeight = FontWeight.SemiBold,
                                 lineHeight = 15.sp
                             )
@@ -2283,7 +2283,7 @@ fun ReceiveChandaDialog(
                             .weight(0.9f)
                             .heightIn(min = 48.dp)
                     ) {
-                        Text("বাতিল", color = MosqueTextSecondary, fontWeight = FontWeight.Bold)
+                        Text("বাতিল", color = if (isDark) MosqueNightTextPrimary else MosqueTextSecondary, fontWeight = FontWeight.Bold)
                     }
                     Button(
                         onClick = {
@@ -2338,6 +2338,7 @@ private fun ChandaMiniStat(
     valueColor: Color,
     modifier: Modifier = Modifier
 ) {
+    val isDark = LocalIsDarkTheme.current
     Surface(
         shape = RoundedCornerShape(10.dp),
         color = containerColor,
@@ -2351,7 +2352,7 @@ private fun ChandaMiniStat(
                 text = label,
                 style = MaterialTheme.typography.labelSmall,
                 fontSize = 10.sp,
-                color = MosqueTextSecondary,
+                color = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -3218,7 +3219,7 @@ fun PublishNoticeDialog(
                             .weight(0.9f)
                             .heightIn(min = 48.dp)
                     ) {
-                        Text("বাতিল", color = MosqueTextSecondary, fontWeight = FontWeight.Bold)
+                        Text("বাতিল", color = if (isDark) MosqueNightTextPrimary else MosqueTextSecondary, fontWeight = FontWeight.Bold)
                     }
                     Button(
                         onClick = {
@@ -3442,7 +3443,7 @@ fun ScheduleMeetingDialog(
                             Text(
                                 text = "সভার ধরন দ্রুত বাছাই করুন:",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = MosqueTextSecondary,
+                                color = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary,
                                 fontWeight = FontWeight.SemiBold
                             )
                             Spacer(modifier = Modifier.height(6.dp))
@@ -3635,7 +3636,7 @@ fun ScheduleMeetingDialog(
                             .weight(0.9f)
                             .heightIn(min = 48.dp)
                     ) {
-                        Text("বাতিল", color = MosqueTextSecondary, fontWeight = FontWeight.Bold)
+                        Text("বাতিল", color = if (isDark) MosqueNightTextPrimary else MosqueTextSecondary, fontWeight = FontWeight.Bold)
                     }
                     Button(
                         onClick = {
@@ -3893,7 +3894,7 @@ fun MeetingResolutionDialog(
                             .weight(0.9f)
                             .heightIn(min = 48.dp)
                     ) {
-                        Text("বাতিল", color = MosqueTextSecondary, fontWeight = FontWeight.Bold)
+                        Text("বাতিল", color = if (isDark) MosqueNightTextPrimary else MosqueTextSecondary, fontWeight = FontWeight.Bold)
                     }
                     Button(
                         onClick = {

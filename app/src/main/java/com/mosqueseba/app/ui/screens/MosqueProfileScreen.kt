@@ -637,7 +637,7 @@ fun MosqueProfileScreen(
                                     Text(
                                         text = "মোট সম্পত্তি: ${toBengaliDigits(mosqueProperties.size.toString())} টি রেকর্ড",
                                         style = MaterialTheme.typography.labelSmall,
-                                        color = MosqueTextSecondary
+                                        color = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
                                     )
                                 }
                             }
@@ -651,7 +651,7 @@ fun MosqueProfileScreen(
                                     contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
                                     shape = RoundedCornerShape(10.dp),
                                     colors = ButtonDefaults.filledTonalButtonColors(
-                                        containerColor = MosqueEmeraldSoft,
+                                        containerColor = if (isDark) MosqueEmeraldPrimary.copy(alpha = 0.22f) else MosqueEmeraldSoft,
                                         contentColor = MosqueEmeraldPrimary
                                     ),
                                     modifier = Modifier.testTag("add_mosque_property_button")
@@ -685,14 +685,14 @@ fun MosqueProfileScreen(
                                 Icon(
                                     imageVector = Icons.Default.HomeWork,
                                     contentDescription = null,
-                                    tint = MosqueTextSecondary.copy(alpha = 0.5f),
+                                    tint = (if (isDark) MosqueNightTextSecondary else MosqueTextSecondary).copy(alpha = 0.5f),
                                     modifier = Modifier.size(44.dp)
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(
                                     text = "কোনো সম্পত্তির রেকর্ড সংরক্ষিত নেই",
                                     style = MaterialTheme.typography.bodyMedium,
-                                    color = MosqueTextSecondary
+                                    color = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
                                 )
                                 if (canEditMosque) {
                                     Spacer(modifier = Modifier.height(8.dp))
@@ -802,7 +802,7 @@ private fun MosqueStatPill(
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelSmall,
-                color = MosqueTextSecondary,
+                color = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary,
                 fontSize = 11.sp
             )
             Spacer(modifier = Modifier.height(4.dp))
@@ -826,6 +826,7 @@ private fun OfficeholderRow(
     showDivider: Boolean = true,
     onCall: (String) -> Unit
 ) {
+    val isDark = LocalIsDarkTheme.current
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier
@@ -868,7 +869,7 @@ private fun OfficeholderRow(
                         Text(
                             text = mobile,
                             style = MaterialTheme.typography.labelSmall,
-                            color = MosqueTextSecondary
+                            color = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
                         )
                     }
                 }
@@ -987,7 +988,7 @@ private fun EditMosqueProfileDialog(
                         modifier = Modifier
                             .size(56.dp)
                             .clip(RoundedCornerShape(14.dp))
-                            .background(MosqueEmeraldSoft)
+                            .background(if (LocalIsDarkTheme.current) MosqueNightSurface else MosqueEmeraldSoft)
                             .border(1.5.dp, MosqueGold, RoundedCornerShape(14.dp)),
                         contentAlignment = Alignment.Center
                     ) {
@@ -1014,12 +1015,12 @@ private fun EditMosqueProfileDialog(
                             text = if (logoPreview != null) "অফিসিয়াল লোগো সংযুক্ত" else "মসজিদের লোগো আপলোড (ঐচ্ছিক)",
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.Bold,
-                            color = MosqueEmeraldDark
+                            color = if (LocalIsDarkTheme.current) MosqueNightTextPrimary else MosqueEmeraldDark
                         )
                         Text(
                             text = "পরিবর্তন করতে ট্যাপ করুন",
                             style = MaterialTheme.typography.labelSmall,
-                            color = MosqueTextSecondary
+                            color = if (LocalIsDarkTheme.current) MosqueNightTextSecondary else MosqueTextSecondary
                         )
                     }
                     if (logoPath != null) {
@@ -1296,7 +1297,7 @@ private fun MosquePropertyCard(
                 Text(
                     text = property.description,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MosqueTextSecondary,
+                    color = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -1311,6 +1312,7 @@ private fun PropertyDetailChipRow(
     value: String,
     isHighlight: Boolean = false
 ) {
+    val isDark = LocalIsDarkTheme.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -1321,7 +1323,7 @@ private fun PropertyDetailChipRow(
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall,
-            color = MosqueTextSecondary,
+            color = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary,
             fontSize = 11.sp
         )
         Text(
@@ -1453,7 +1455,7 @@ private fun AddEditMosquePropertyDialog(
                         modifier = Modifier
                             .size(56.dp)
                             .clip(RoundedCornerShape(12.dp))
-                            .background(MosqueEmeraldSoft)
+                            .background(if (LocalIsDarkTheme.current) MosqueNightSurface else MosqueEmeraldSoft)
                             .border(1.5.dp, MosqueGold, RoundedCornerShape(12.dp)),
                         contentAlignment = Alignment.Center
                     ) {
@@ -1480,12 +1482,12 @@ private fun AddEditMosquePropertyDialog(
                             text = if (photoPreview != null) "ছবি / দলিল কপি সংযুক্ত" else "সম্পত্তি বা দলিলের ছবি আপলোড",
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.Bold,
-                            color = MosqueEmeraldDark
+                            color = if (LocalIsDarkTheme.current) MosqueNightTextPrimary else MosqueEmeraldDark
                         )
                         Text(
                             text = "গ্যালারি থেকে ফটো নির্বাচন করতে ট্যাপ করুন",
                             style = MaterialTheme.typography.labelSmall,
-                            color = MosqueTextSecondary
+                            color = if (LocalIsDarkTheme.current) MosqueNightTextSecondary else MosqueTextSecondary
                         )
                     }
                     if (photoPath != null) {
@@ -1514,7 +1516,7 @@ private fun AddEditMosquePropertyDialog(
             )
             Spacer(modifier = Modifier.height(8.dp))
 
-            Text("সম্পত্তির ক্যাটাগরি *", style = MaterialTheme.typography.labelMedium, color = MosqueTextSecondary)
+            Text("সম্পত্তির ক্যাটাগরি *", style = MaterialTheme.typography.labelMedium, color = if (LocalIsDarkTheme.current) MosqueNightTextSecondary else MosqueTextSecondary)
             Spacer(modifier = Modifier.height(4.dp))
             var categoryExpanded by remember { mutableStateOf(false) }
             Box {
@@ -1589,7 +1591,7 @@ private fun AddEditMosquePropertyDialog(
             )
 
             Spacer(modifier = Modifier.height(8.dp))
-            Text("বর্তমান ব্যবহারের অবস্থা *", style = MaterialTheme.typography.labelMedium, color = MosqueTextSecondary)
+            Text("বর্তমান ব্যবহারের অবস্থা *", style = MaterialTheme.typography.labelMedium, color = if (LocalIsDarkTheme.current) MosqueNightTextSecondary else MosqueTextSecondary)
             Spacer(modifier = Modifier.height(4.dp))
             var statusExpanded by remember { mutableStateOf(false) }
             Box {

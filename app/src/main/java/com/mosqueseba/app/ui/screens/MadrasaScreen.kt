@@ -1388,7 +1388,7 @@ fun MadrasaScreen(viewModel: MosqueViewModel, initialTab: Int = 0) {
                 Text(
                     text = "পাঠের মান: ${toBengaliDigits(qualityScore.toString())}/৫",
                     style = MaterialTheme.typography.labelMedium,
-                    color = MosqueTextSecondary,
+                    color = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary,
                     fontWeight = FontWeight.SemiBold
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -1485,7 +1485,7 @@ fun MadrasaScreen(viewModel: MosqueViewModel, initialTab: Int = 0) {
                 Text(
                     text = "শিক্ষার্থী নির্বাচন করুন:",
                     style = MaterialTheme.typography.labelMedium,
-                    color = MosqueTextSecondary,
+                    color = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary,
                     fontWeight = FontWeight.SemiBold
                 )
                 Spacer(modifier = Modifier.height(6.dp))

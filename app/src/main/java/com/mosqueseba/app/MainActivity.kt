@@ -350,6 +350,7 @@ fun MosqueAppShell(
     var chandaReceiptPreview by remember { mutableStateOf<ChandaPaymentEntity?>(null) }
     var showPublishNoticeDialog by remember { mutableStateOf(false) }
     var showScheduleMeetingDialog by remember { mutableStateOf(false) }
+    var showRamadanHubDialog by remember { mutableStateOf(false) }
     var openFinanceReportRequest by remember { mutableIntStateOf(0) }
     var openFinancePendingRequest by remember { mutableIntStateOf(0) }
 
@@ -699,6 +700,9 @@ fun MosqueAppShell(
                                     "islamic_calendar" -> {
                                         overlaySubModule = "islamic_calendar"
                                     }
+                                    "ramadan_hub" -> {
+                                        showRamadanHubDialog = true
+                                    }
                                 }
                             }
                         )
@@ -850,7 +854,7 @@ fun MosqueAppShell(
                     onOpenReceiveChanda = { showReceiveChandaDialog = true },
                     onOpenScheduleMeeting = { showScheduleMeetingDialog = true }
                 )
-                "charter", "cashbox", "office_docs", "sharia_advisory", "publicity", "events", "prayer", "islamic_calendar" -> MoreScreen(
+                "charter", "cashbox", "office_docs", "sharia_advisory", "publicity", "events", "prayer", "islamic_calendar", "ramadan_hub" -> MoreScreen(
                     viewModel = viewModel,
                     initialSubModule = destination,
                     onOpenReceiveChanda = { showReceiveChandaDialog = true },
@@ -1030,6 +1034,14 @@ fun MosqueAppShell(
                     "সভা নির্ধারিত"
                 )
             }
+        )
+    }
+
+    // Holy Ramadan Hub Dialog
+    if (showRamadanHubDialog) {
+        RamadanHubDialog(
+            viewModel = viewModel,
+            onDismiss = { showRamadanHubDialog = false }
         )
     }
 

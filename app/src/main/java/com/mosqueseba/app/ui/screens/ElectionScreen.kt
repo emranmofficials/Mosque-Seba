@@ -163,7 +163,7 @@ fun ElectionScreen(
                                 imageVector = tab.icon,
                                 contentDescription = null,
                                 modifier = Modifier.size(16.dp),
-                                tint = if (isSelected) MaterialTheme.colorScheme.primary else MosqueTextSecondary
+                                tint = if (isSelected) MaterialTheme.colorScheme.primary else if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
@@ -327,6 +327,7 @@ private fun ElectionScheduleTabView(
     onAnnounceClick: () -> Unit,
     onAdvancePhase: (String) -> Unit
 ) {
+    val isDark = LocalIsDarkTheme.current
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 100.dp),
@@ -362,7 +363,7 @@ private fun ElectionScheduleTabView(
                                 Text(
                                     text = "বর্তমান সক্রিয় পরিষদ মেয়াদ",
                                     style = MaterialTheme.typography.labelMedium,
-                                    color = MosqueTextSecondary
+                                    color = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
                                 )
                                 Text(
                                     text = "${toBengaliDigits(mosque?.committeeStartYear?.toString() ?: "২০২৪")}–${toBengaliDigits(mosque?.committeeEndYear?.toString() ?: "২০২৬")} মেয়াদকাল",
@@ -404,7 +405,7 @@ private fun ElectionScheduleTabView(
                             text = "প্রধান নির্বাচন কমিশনার: ${election.chiefElectionCommissioner}" +
                                     if (election.commissionerMobile.isNotBlank()) " (${election.commissionerMobile})" else "",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MosqueTextSecondary
+                            color = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
@@ -417,7 +418,7 @@ private fun ElectionScheduleTabView(
                         Text(
                             text = "পরবর্তী মেয়াদের কোনো নির্বাচনী তফসিল এখনো ঘোষণা করা হয়নি।",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MosqueTextSecondary
+                            color = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
                         )
                         if (canManage) {
                             Spacer(modifier = Modifier.height(10.dp))
@@ -541,6 +542,7 @@ private fun RoadmapPhaseCard(
     isActive: Boolean,
     isPassed: Boolean
 ) {
+    val isDark = LocalIsDarkTheme.current
     Surface(
         shape = RoundedCornerShape(12.dp),
         color = if (isActive) MosqueEmeraldSoft.copy(alpha = 0.5f) else MaterialTheme.colorScheme.surface,
@@ -573,7 +575,7 @@ private fun RoadmapPhaseCard(
                     Text(
                         text = toBengaliDigits(stepNumber.toString()),
                         fontWeight = FontWeight.Bold,
-                        color = if (isActive) MosqueEmeraldDark else MosqueTextSecondary,
+                        color = if (isActive) (if (isDark) MosqueNightTextPrimary else MosqueEmeraldDark) else (if (isDark) MosqueNightTextSecondary else MosqueTextSecondary),
                         fontSize = 14.sp
                     )
                 }
@@ -604,7 +606,7 @@ private fun RoadmapPhaseCard(
                 Text(
                     text = description,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MosqueTextSecondary
+                    color = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
                 )
             }
         }
@@ -623,6 +625,7 @@ private fun ElectionCandidatesTabView(
     onVoteEntry: (ElectionCandidateEntity) -> Unit,
     onDelete: (ElectionCandidateEntity) -> Unit
 ) {
+    val isDark = LocalIsDarkTheme.current
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 100.dp),
@@ -685,7 +688,7 @@ private fun ElectionCandidatesTabView(
                             text = "এখনো কোনো প্রার্থীর মনোনয়ন দাখিল হয়নি",
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
-                            color = MosqueTextSecondary
+                            color = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
@@ -733,6 +736,7 @@ private fun CandidateCard(
     onVoteEntry: () -> Unit,
     onDelete: () -> Unit
 ) {
+    val isDark = LocalIsDarkTheme.current
     val linkedMember = remember(candidate.memberCode, candidate.candidateNameBn, allMembers) {
         allMembers.firstOrNull {
             (candidate.memberCode.isNotBlank() && it.memberCode == candidate.memberCode) ||
@@ -778,7 +782,7 @@ private fun CandidateCard(
                             text = "প্যানেল/প্রতীক: ${candidate.symbolOrPanel}" +
                                     if (candidate.memberCode.isNotBlank()) " • কোড: ${candidate.memberCode}" else "",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MosqueTextSecondary
+                            color = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
                         )
                     }
                 }
@@ -819,7 +823,7 @@ private fun CandidateCard(
                     Text(
                         text = "প্রস্তাবক: ${candidate.proposerNameBn.ifBlank { "স্বতঃস্ফূর্ত" }} • সমর্থক: ${candidate.seconderNameBn.ifBlank { "সাধারণ সদস্যবৃন্দ" }}",
                         style = MaterialTheme.typography.labelSmall,
-                        color = MosqueTextSecondary
+                        color = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
                     )
                     if (candidate.votesReceived > 0) {
                         Text(
@@ -860,6 +864,7 @@ private fun ElectionVotersTabView(
     members: List<MemberEntity>,
     mosque: com.mosqueseba.app.data.local.entity.MosqueEntity?
 ) {
+    val isDark = LocalIsDarkTheme.current
     val context = LocalContext.current
     var searchQuery by remember { mutableStateOf("") }
 
@@ -894,7 +899,7 @@ private fun ElectionVotersTabView(
                         Text(
                             text = "মোট বৈধ ভোটাধিকার সদস্য",
                             style = MaterialTheme.typography.labelMedium,
-                            color = MosqueTextSecondary
+                            color = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
                         )
                         Text(
                             text = "${toBengaliDigits(members.size.toString())} জন মুসল্লি",
@@ -973,7 +978,7 @@ private fun ElectionVotersTabView(
                         Text(
                             text = "কোড: ${voter.memberCode} • মোবাইল: ${voter.mobile}",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MosqueTextSecondary
+                            color = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
                         )
                     }
 
@@ -1007,6 +1012,7 @@ private fun ElectionResultsTabView(
     canManage: Boolean,
     onActivateCommittee: () -> Unit
 ) {
+    val isDark = LocalIsDarkTheme.current
     val electedList = remember(candidates) {
         candidates.filter { it.isElected }
     }
@@ -1047,7 +1053,7 @@ private fun ElectionResultsTabView(
                     Text(
                         text = election?.termTitle ?: "২০২৬–২০২৮ মেয়াদের পূর্ণাঙ্গ ফলাফল",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MosqueTextSecondary,
+                        color = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary,
                         textAlign = TextAlign.Center
                     )
 
@@ -1059,7 +1065,7 @@ private fun ElectionResultsTabView(
                         Text(
                             text = "এখনো কোনো প্রার্থীকে নির্বাচিত হিসেবে ঘোষণা করা হয়নি। 'প্রার্থী ও মনোনয়ন' ট্যাব থেকে ফলাফল এন্ট্রি করুন।",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MosqueTextSecondary,
+                            color = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary,
                             textAlign = TextAlign.Center,
                             modifier = Modifier.padding(vertical = 16.dp)
                         )
@@ -1350,6 +1356,7 @@ private fun AddCandidateNominationDialog(
         panel: String
     ) -> Unit
 ) {
+    val isDark = LocalIsDarkTheme.current
     val roles = listOf(
         "president" to "সভাপতি",
         "vice_president" to "সহ-সভাপতি",
@@ -1420,7 +1427,7 @@ private fun AddCandidateNominationDialog(
                         value = memberSearchQuery,
                         onValueChange = { memberSearchQuery = it },
                         placeholder = { Text("নাম, কোড বা মোবাইল নম্বর দিয়ে খুঁজুন...", fontSize = 12.sp) },
-                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = MosqueTextSecondary) },
+                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary) },
                         trailingIcon = {
                             if (memberSearchQuery.isNotBlank()) {
                                 IconButton(onClick = { memberSearchQuery = "" }) {
@@ -1493,7 +1500,7 @@ private fun AddCandidateNominationDialog(
                                             Text(
                                                 text = "কোড: ${m.memberCode} • ${m.mobile}",
                                                 fontSize = 11.sp,
-                                                color = MosqueTextSecondary
+                                                color = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
                                             )
                                         }
                                         if (selectedMember?.id == m.id && memberPickerMode == "CANDIDATE") {
@@ -1551,7 +1558,7 @@ private fun AddCandidateNominationDialog(
                         showMemberPicker = true
                     },
                     shape = RoundedCornerShape(12.dp),
-                    color = if (selectedMember != null) MosqueEmeraldSoft.copy(alpha = 0.5f) else MosqueBgLight,
+                    color = if (selectedMember != null) (if (isDark) MosqueEmeraldPrimary.copy(alpha = 0.2f) else MosqueEmeraldSoft.copy(alpha = 0.5f)) else (if (isDark) MosqueNightSurfaceVariant else MosqueBgLight),
                     border = BorderStroke(
                         1.dp,
                         if (selectedMember != null) MosqueEmeraldPrimary else MosqueGold.copy(alpha = 0.65f)
@@ -1576,12 +1583,12 @@ private fun AddCandidateNominationDialog(
                                         text = selectedMember!!.nameBn,
                                         style = MaterialTheme.typography.titleSmall,
                                         fontWeight = FontWeight.Bold,
-                                        color = MosqueEmeraldDark
+                                        color = if (isDark) MosqueNightTextPrimary else MosqueEmeraldDark
                                     )
                                     Text(
                                         text = "কোড: ${selectedMember!!.memberCode} • ${selectedMember!!.mobile}",
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = MosqueTextSecondary
+                                        color = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
                                     )
                                 }
                             } else {
@@ -1753,6 +1760,7 @@ private fun CandidateVoteDialog(
     onDismiss: () -> Unit,
     onConfirm: (votes: Int, isElected: Boolean) -> Unit
 ) {
+    val isDark = LocalIsDarkTheme.current
     var votesStr by remember { mutableStateOf(candidate.votesReceived.toString()) }
     var isElected by remember { mutableStateOf(candidate.isElected) }
 
@@ -1773,7 +1781,7 @@ private fun CandidateVoteDialog(
                 Text(
                     text = "${candidate.candidateNameBn} (${candidate.targetRoleTitleBn})",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MosqueTextSecondary
+                    color = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
                 )
                 Spacer(modifier = Modifier.height(12.dp))
 

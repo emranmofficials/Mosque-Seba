@@ -185,7 +185,7 @@ fun ExecutiveFormDialogShell(
                     ) {
                         Text(
                             text = "বাতিল",
-                            color = MosqueTextSecondary,
+                            color = if (isDark) MosqueNightTextPrimary else MosqueTextSecondary,
                             fontWeight = FontWeight.Bold,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
@@ -438,7 +438,7 @@ fun PaySalaryFormDialog(
                 Text(
                     text = "বেতন প্রদান করলে তা স্বয়ংক্রিয়ভাবে 'ইমাম ও কর্মচারীদের বেতন' খাতে মসজিদের মোট ব্যয়ের সাথে যুক্ত হবে — ম্যানুয়ালি যুক্ত করতে হবে না।",
                     style = MaterialTheme.typography.labelSmall,
-                    color = MosqueEmeraldDark,
+                    color = if (isDark) MosqueNightTextPrimary else MosqueEmeraldDark,
                     fontWeight = FontWeight.SemiBold,
                     lineHeight = 15.sp
                 )

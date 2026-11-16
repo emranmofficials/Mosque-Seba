@@ -809,6 +809,14 @@ private fun buildRoleOperationModules(
             icon = Icons.Default.Event,
             iconColor = MosqueGoldDark,
             category = OperationCategory.INFO
+        ),
+        OperationModuleEntry(
+            key = "ramadan_hub",
+            title = "মাহে রমজান হাব ও সময়সূচি",
+            description = "সেহরি ও ইফতারের সূচি, মাসায়েল, দোয়া ও ফিতরা সহায়িকা",
+            icon = Icons.Default.DarkMode,
+            iconColor = MosqueGoldDeep,
+            category = OperationCategory.INFO
         )
     )
 }
