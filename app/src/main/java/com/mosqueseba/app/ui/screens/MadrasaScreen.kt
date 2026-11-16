@@ -106,7 +106,7 @@ fun MadrasaScreen(viewModel: MosqueViewModel, initialTab: Int = 0) {
             0 -> {
                 // Students List
                 LazyColumn(
-                    contentPadding = PaddingValues(14.dp),
+                    contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 100.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     item {
@@ -218,7 +218,7 @@ fun MadrasaScreen(viewModel: MosqueViewModel, initialTab: Int = 0) {
             1 -> {
                 // Hifz Tracker
                 LazyColumn(
-                    contentPadding = PaddingValues(14.dp),
+                    contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 100.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     item {
@@ -330,7 +330,7 @@ fun MadrasaScreen(viewModel: MosqueViewModel, initialTab: Int = 0) {
             2 -> {
                 // Fee Collection
                 LazyColumn(
-                    contentPadding = PaddingValues(14.dp),
+                    contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 100.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     item {
@@ -438,7 +438,7 @@ fun MadrasaScreen(viewModel: MosqueViewModel, initialTab: Int = 0) {
                     val studentHifz = hifzList.filter { it.studentId == currentStudent.id }
 
                     LazyColumn(
-                        contentPadding = PaddingValues(14.dp),
+                        contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 100.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         item {
@@ -589,7 +589,7 @@ fun MadrasaScreen(viewModel: MosqueViewModel, initialTab: Int = 0) {
                 val lateCount = students.count { attendanceStatusMap[it.id] == "late" }
 
                 LazyColumn(
-                    contentPadding = PaddingValues(14.dp),
+                    contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 100.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     item {

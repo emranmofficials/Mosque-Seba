@@ -493,6 +493,9 @@ fun MosqueAppShell(
                     onOpenMosqueProfile = {
                         overlaySubModule = "about"
                     },
+                    onOpenMyProfile = {
+                        currentUserProfileTarget?.let { overlayUserProfile = it }
+                    },
                     onLogout = onLogout
                 )
             } else {
