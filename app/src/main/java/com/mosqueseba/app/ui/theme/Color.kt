@@ -24,6 +24,7 @@ val MosqueCardBg = Color(0xFFFFFFFF)
 val MosqueCardBorder = Color(0xFFE2E8F0)
 val MosqueCardBorderSubtle = Color(0xFFEEF2F6)
 val MosqueCardBorderGold = Color(0xFFF3E8D0)
+val MosqueBorderGold = Color(0xFFF3E8D0)
 val MosqueGoldSubtle = Color(0xFFF3E8D0)
 
 // Typography & Ink Colors

@@ -3464,7 +3464,7 @@ fun ScheduleMeetingDialog(
                                         border = FilterChipDefaults.filterChipBorder(
                                             enabled = true,
                                             selected = title == preset,
-                                            borderColor = if (isDark) MosqueNightBorder else MosqueBorderGold,
+                                            borderColor = if (isDark) MosqueNightBorder else MosqueCardBorderGold,
                                             selectedBorderColor = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary
                                         )
                                     )
