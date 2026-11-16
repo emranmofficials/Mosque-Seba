@@ -1148,7 +1148,7 @@ private fun MosquePropertyCard(
                         .size(68.dp)
                         .clip(RoundedCornerShape(12.dp))
                         .background(MosqueEmeraldSoft)
-                        .border(1.dp, MosqueGoldSubtle, RoundedCornerShape(12.dp))
+                        .border(1.dp, MosqueCardBorderGold, RoundedCornerShape(12.dp))
                         .clickable(enabled = property.photoUrl != null) {
                             property.photoUrl?.let { onPreviewImage(it) }
                         },
