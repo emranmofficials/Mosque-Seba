@@ -266,8 +266,16 @@ fun MoreOperationsHub(
                                 )
                             },
                             colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = MosqueEmeraldPrimary,
-                                selectedLabelColor = Color.White
+                                selectedContainerColor = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary,
+                                selectedLabelColor = if (isDark) MosqueEmeraldDark else Color.White,
+                                containerColor = if (isDark) MosqueNightSurfaceVariant else MosqueBgLight,
+                                labelColor = if (isDark) MosqueNightTextPrimary else MosqueTextPrimary
+                            ),
+                            border = FilterChipDefaults.filterChipBorder(
+                                enabled = true,
+                                selected = selectedCategory == category,
+                                borderColor = if (isDark) MosqueNightBorder else MosqueCardBorderSubtle,
+                                selectedBorderColor = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary
                             ),
                             modifier = Modifier.testTag("more_filter_${category.name.lowercase()}")
                         )

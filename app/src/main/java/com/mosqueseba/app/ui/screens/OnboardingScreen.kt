@@ -50,7 +50,7 @@ private data class OnboardingSlideData(
 fun OnboardingScreen(
     onOnboardingFinished: () -> Unit
 ) {
-    val isDark = isSystemInDarkTheme()
+    val isDark = LocalIsDarkTheme.current
     val scope = rememberCoroutineScope()
 
     val slides = remember {

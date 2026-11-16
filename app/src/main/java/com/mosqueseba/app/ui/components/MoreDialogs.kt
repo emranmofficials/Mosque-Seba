@@ -236,14 +236,14 @@ fun MoreFormSection(
             ) {
                 Surface(
                     shape = RoundedCornerShape(8.dp),
-                    color = MosqueEmeraldSoft,
+                    color = if (isDark) MosqueEmeraldPrimary.copy(alpha = 0.22f) else MosqueEmeraldSoft,
                     modifier = Modifier.size(28.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             imageVector = icon,
                             contentDescription = null,
-                            tint = MosqueEmeraldPrimary,
+                            tint = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary,
                             modifier = Modifier.size(16.dp)
                         )
                     }
@@ -306,10 +306,11 @@ fun PaySalaryFormDialog(
             }
         }
     ) {
+        val isDark = LocalIsDarkTheme.current
         Surface(
             shape = RoundedCornerShape(12.dp),
-            color = MosqueEmeraldSoft.copy(alpha = 0.65f),
-            border = BorderStroke(1.dp, MosqueCardBorderGold),
+            color = if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft.copy(alpha = 0.65f),
+            border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else MosqueCardBorderGold),
             modifier = Modifier.fillMaxWidth()
         ) {
             Row(
@@ -320,16 +321,16 @@ fun PaySalaryFormDialog(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column {
-                    Text("মূল নির্ধারিত বেতন", fontSize = 11.sp, color = MosqueTextSecondary)
+                    Text("মূল নির্ধারিত বেতন", fontSize = 11.sp, color = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary)
                     Text(
                         text = "৳${toBengaliDigits(String.format("%,.0f", baseSalary))}",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.ExtraBold,
-                        color = MosqueEmeraldDark
+                        color = if (isDark) MosqueGreenAccent else MosqueEmeraldDark
                     )
                 }
                 Column(horizontalAlignment = Alignment.End) {
-                    Text("মোট প্রদেয় (ব্যয় খাত)", fontSize = 11.sp, color = MosqueTextSecondary)
+                    Text("মোট প্রদেয় (ব্যয় খাত)", fontSize = 11.sp, color = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary)
                     Text(
                         text = "৳${toBengaliDigits(String.format("%,.0f", netTotal))}",
                         style = MaterialTheme.typography.titleMedium,
@@ -349,7 +350,13 @@ fun PaySalaryFormDialog(
                             month = preset
                             monthError = null
                         },
-                        label = { Text(preset, fontSize = 11.sp) }
+                        label = { Text(preset, fontSize = 11.sp) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary,
+                            selectedLabelColor = if (isDark) MosqueEmeraldDark else Color.White,
+                            containerColor = if (isDark) MosqueNightSurfaceVariant else MosqueBgLight,
+                            labelColor = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
+                        )
                     )
                 }
             }
@@ -363,9 +370,12 @@ fun PaySalaryFormDialog(
                 label = { Text("বেতনের মাস *") },
                 isError = monthError != null,
                 supportingText = monthError?.let { err -> { Text(err, color = MosqueUrgentRed, fontSize = 11.sp) } },
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = mosqueStandardFieldColors(isDark),
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 52.dp)
             )
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
@@ -373,16 +383,19 @@ fun PaySalaryFormDialog(
                 onValueChange = { bonus = it.filter { ch -> ch.isDigit() } },
                 label = { Text("বোনাস / অতিরিক্ত ভাতা (৳)") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = mosqueStandardFieldColors(isDark),
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 52.dp)
             )
             Spacer(modifier = Modifier.height(10.dp))
             Text(
                 text = "পরিশোধের মাধ্যম:",
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Bold,
-                color = MosqueEmeraldDark
+                color = if (isDark) MosqueGoldLight else MosqueEmeraldDark
             )
             Spacer(modifier = Modifier.height(6.dp))
             Row(
@@ -395,8 +408,10 @@ fun PaySalaryFormDialog(
                         onClick = { paymentMethod = key },
                         label = { Text(label, fontSize = 11.sp) },
                         colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = MosqueEmeraldPrimary,
-                            selectedLabelColor = Color.White
+                            selectedContainerColor = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary,
+                            selectedLabelColor = if (isDark) MosqueEmeraldDark else Color.White,
+                            containerColor = if (isDark) MosqueNightSurfaceVariant else MosqueBgLight,
+                            labelColor = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
                         )
                     )
                 }
@@ -476,6 +491,7 @@ fun AddRosterFormDialog(
             }
         }
     ) {
+        val isDark = LocalIsDarkTheme.current
         MoreFormSection(title = "দায়িত্বপ্রাপ্ত স্টাফ নির্বাচন", icon = Icons.Default.Person) {
             LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 items(activeStaff, key = { it.id }) { staff ->
@@ -491,8 +507,10 @@ fun AddRosterFormDialog(
                         },
                         label = { Text("${staff.nameBn} (${staff.designationBn})", fontSize = 11.sp) },
                         colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = MosqueEmeraldPrimary,
-                            selectedLabelColor = Color.White
+                            selectedContainerColor = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary,
+                            selectedLabelColor = if (isDark) MosqueEmeraldDark else Color.White,
+                            containerColor = if (isDark) MosqueNightSurfaceVariant else MosqueBgLight,
+                            labelColor = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
                         )
                     )
                 }
@@ -507,7 +525,12 @@ fun AddRosterFormDialog(
                             dayOfWeek = preset
                             dayError = null
                         },
-                        label = { Text(preset, fontSize = 11.sp) }
+                        label = { Text(preset, fontSize = 11.sp) },
+                        colors = SuggestionChipDefaults.suggestionChipColors(
+                            containerColor = if (isDark) MosqueNightSurfaceVariant else MosqueBgLight,
+                            labelColor = if (isDark) MosqueNightTextPrimary else MosqueTextPrimary
+                        ),
+                        border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else MosqueCardBorderSubtle)
                     )
                 }
             }
@@ -521,9 +544,12 @@ fun AddRosterFormDialog(
                 label = { Text("বার / দিন *") },
                 isError = dayError != null,
                 supportingText = dayError?.let { err -> { Text(err, color = MosqueUrgentRed, fontSize = 11.sp) } },
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = mosqueStandardFieldColors(isDark),
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 52.dp)
             )
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
@@ -535,9 +561,12 @@ fun AddRosterFormDialog(
                 label = { Text("নামাজের ওয়াক্ত *") },
                 isError = prayerError != null,
                 supportingText = prayerError?.let { err -> { Text(err, color = MosqueUrgentRed, fontSize = 11.sp) } },
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = mosqueStandardFieldColors(isDark),
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 52.dp)
             )
             Spacer(modifier = Modifier.height(8.dp))
             LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -545,7 +574,13 @@ fun AddRosterFormDialog(
                     FilterChip(
                         selected = roleTitle == preset,
                         onClick = { roleTitle = preset },
-                        label = { Text(preset, fontSize = 11.sp) }
+                        label = { Text(preset, fontSize = 11.sp) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary,
+                            selectedLabelColor = if (isDark) MosqueEmeraldDark else Color.White,
+                            containerColor = if (isDark) MosqueNightSurfaceVariant else MosqueBgLight,
+                            labelColor = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
+                        )
                     )
                 }
             }
@@ -559,16 +594,20 @@ fun AddRosterFormDialog(
                 label = { Text("দায়িত্ব (ইমামতি / আজান) *") },
                 isError = roleError != null,
                 supportingText = roleError?.let { err -> { Text(err, color = MosqueUrgentRed, fontSize = 11.sp) } },
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = mosqueStandardFieldColors(isDark),
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 52.dp)
             )
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
                 value = notes,
                 onValueChange = { notes = it },
                 label = { Text("বিশেষ নোট (ঐচ্ছিক)") },
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = mosqueStandardFieldColors(isDark),
                 modifier = Modifier.fillMaxWidth()
             )
         }
@@ -636,17 +675,30 @@ fun AddFoodScheduleFormDialog(
             }
         }
     ) {
+        val isDark = LocalIsDarkTheme.current
         MoreFormSection(title = "তারিখ নির্বাচন", icon = Icons.Default.Schedule) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 FilterChip(
                     selected = dateStr == todayIso,
                     onClick = { dateStr = todayIso; dateError = null },
-                    label = { Text("আজ (${toBengaliDigits(todayIso)})", fontSize = 11.sp) }
+                    label = { Text("আজ (${toBengaliDigits(todayIso)})", fontSize = 11.sp) },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary,
+                        selectedLabelColor = if (isDark) MosqueEmeraldDark else Color.White,
+                        containerColor = if (isDark) MosqueNightSurfaceVariant else MosqueBgLight,
+                        labelColor = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
+                    )
                 )
                 FilterChip(
                     selected = dateStr == tomorrowIso,
                     onClick = { dateStr = tomorrowIso; dateError = null },
-                    label = { Text("আগামীকাল", fontSize = 11.sp) }
+                    label = { Text("আগামীকাল", fontSize = 11.sp) },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary,
+                        selectedLabelColor = if (isDark) MosqueEmeraldDark else Color.White,
+                        containerColor = if (isDark) MosqueNightSurfaceVariant else MosqueBgLight,
+                        labelColor = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
+                    )
                 )
             }
             Spacer(modifier = Modifier.height(6.dp))
@@ -656,9 +708,12 @@ fun AddFoodScheduleFormDialog(
                 label = { Text("তারিখ (বছর-মাস-দিন) *") },
                 isError = dateError != null,
                 supportingText = dateError?.let { err -> { Text(err, color = MosqueUrgentRed, fontSize = 11.sp) } },
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = mosqueStandardFieldColors(isDark),
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 52.dp)
             )
         }
 
@@ -667,7 +722,7 @@ fun AddFoodScheduleFormDialog(
                 Text(
                     text = "খাবার দিতে রাজি সদস্য (${toBengaliDigits(willingDonors.size.toString())} জন) — ট্যাপ করে নির্বাচন করুন:",
                     fontSize = 11.5.sp,
-                    color = MosqueEmeraldDark,
+                    color = if (isDark) MosqueNightTextPrimary else MosqueEmeraldDark,
                     fontWeight = FontWeight.SemiBold
                 )
                 Spacer(modifier = Modifier.height(6.dp))
@@ -697,8 +752,10 @@ fun AddFoodScheduleFormDialog(
                                 )
                             },
                             colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = MosqueEmeraldPrimary,
-                                selectedLabelColor = Color.White
+                                selectedContainerColor = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary,
+                                selectedLabelColor = if (isDark) MosqueEmeraldDark else Color.White,
+                                containerColor = if (isDark) MosqueNightSurfaceVariant else MosqueBgLight,
+                                labelColor = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
                             )
                         )
                     }
@@ -715,9 +772,12 @@ fun AddFoodScheduleFormDialog(
                 label = { Text("খাবার প্রদানকারী দাতার নাম *") },
                 isError = providerError != null,
                 supportingText = providerError?.let { err -> { Text(err, color = MosqueUrgentRed, fontSize = 11.sp) } },
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = mosqueStandardFieldColors(isDark),
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 52.dp)
             )
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
@@ -730,15 +790,18 @@ fun AddFoodScheduleFormDialog(
                 isError = mobileError != null,
                 supportingText = mobileError?.let { err -> { Text(err, color = MosqueUrgentRed, fontSize = 11.sp) } },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = mosqueStandardFieldColors(isDark),
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 52.dp)
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = "খাবার প্রাপক বেতনভুক্ত স্টাফ নির্বাচন:",
                 fontSize = 11.5.sp,
-                color = MosqueTextSecondary,
+                color = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary,
                 fontWeight = FontWeight.SemiBold
             )
             Spacer(modifier = Modifier.height(6.dp))
@@ -752,8 +815,10 @@ fun AddFoodScheduleFormDialog(
                         },
                         label = { Text(option, fontSize = 11.sp) },
                         colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = MosqueGoldDeep,
-                            selectedLabelColor = Color.White
+                            selectedContainerColor = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary,
+                            selectedLabelColor = if (isDark) MosqueEmeraldDark else Color.White,
+                            containerColor = if (isDark) MosqueNightSurfaceVariant else MosqueBgLight,
+                            labelColor = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
                         )
                     )
                 }
@@ -768,9 +833,12 @@ fun AddFoodScheduleFormDialog(
                 label = { Text("প্রাপক স্টাফ *") },
                 isError = receiverError != null,
                 supportingText = receiverError?.let { err -> { Text(err, color = MosqueUrgentRed, fontSize = 11.sp) } },
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = mosqueStandardFieldColors(isDark),
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 52.dp)
             )
         }
     }
@@ -839,6 +907,7 @@ fun AutoFoodScheduleDialog(
             }
         }
     ) {
+        val isDark = LocalIsDarkTheme.current
         MoreFormSection(title = "দাতা ও প্রাপক অনুপাত", icon = Icons.Default.Groups) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -847,30 +916,30 @@ fun AutoFoodScheduleDialog(
                 Surface(
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(10.dp),
-                    color = MosqueEmeraldSoft
+                    color = if (isDark) MosqueEmeraldPrimary.copy(alpha = 0.22f) else MosqueEmeraldSoft
                 ) {
                     Column(modifier = Modifier.padding(10.dp)) {
-                        Text("রাজি দাতা সদস্য", fontSize = 11.sp, color = MosqueTextSecondary)
+                        Text("রাজি দাতা সদস্য", fontSize = 11.sp, color = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary)
                         Text(
                             text = "${toBengaliDigits(willingDonors.size.toString())} জন",
                             fontSize = 16.sp,
                             fontWeight = FontWeight.ExtraBold,
-                            color = MosqueEmeraldDark
+                            color = if (isDark) MosqueGreenAccent else MosqueEmeraldDark
                         )
                     }
                 }
                 Surface(
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(10.dp),
-                    color = MosqueGoldLight.copy(alpha = 0.25f)
+                    color = if (isDark) MosqueGold.copy(alpha = 0.2f) else MosqueGoldLight.copy(alpha = 0.25f)
                 ) {
                     Column(modifier = Modifier.padding(10.dp)) {
-                        Text("খাবার প্রাপক স্টাফ", fontSize = 11.sp, color = MosqueTextSecondary)
+                        Text("খাবার প্রাপক স্টাফ", fontSize = 11.sp, color = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary)
                         Text(
                             text = "${toBengaliDigits(allStaffLabels.size.toString())} জন",
                             fontSize = 16.sp,
                             fontWeight = FontWeight.ExtraBold,
-                            color = MosqueGoldDeep
+                            color = if (isDark) MosqueGoldLight else MosqueGoldDeep
                         )
                     }
                 }
@@ -880,7 +949,7 @@ fun AutoFoodScheduleDialog(
             if (willingDonors.isEmpty()) {
                 Surface(
                     shape = RoundedCornerShape(10.dp),
-                    color = MosqueUrgentRed.copy(alpha = 0.1f),
+                    color = MosqueUrgentRed.copy(alpha = if (isDark) 0.15f else 0.1f),
                     border = BorderStroke(1.dp, MosqueUrgentRed.copy(alpha = 0.3f)),
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -895,7 +964,7 @@ fun AutoFoodScheduleDialog(
                 Text(
                     text = "রোটেশন সিরিয়াল: ${willingDonors.take(5).joinToString(" → ") { it.nameBn }}${if (willingDonors.size > 5) " (+${toBengaliDigits((willingDonors.size - 5).toString())} জন)" else ""}",
                     fontSize = 11.5.sp,
-                    color = MosqueEmeraldDark,
+                    color = if (isDark) MosqueGoldLight else MosqueEmeraldDark,
                     fontWeight = FontWeight.Medium
                 )
             }
@@ -906,12 +975,24 @@ fun AutoFoodScheduleDialog(
                 FilterChip(
                     selected = startDateIso == todayIso,
                     onClick = { startDateIso = todayIso; startDateError = null },
-                    label = { Text("আজ থেকে শুরু", fontSize = 11.sp) }
+                    label = { Text("আজ থেকে শুরু", fontSize = 11.sp) },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary,
+                        selectedLabelColor = if (isDark) MosqueEmeraldDark else Color.White,
+                        containerColor = if (isDark) MosqueNightSurfaceVariant else MosqueBgLight,
+                        labelColor = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
+                    )
                 )
                 FilterChip(
                     selected = startDateIso == tomorrowIso,
                     onClick = { startDateIso = tomorrowIso; startDateError = null },
-                    label = { Text("আগামীকাল থেকে", fontSize = 11.sp) }
+                    label = { Text("আগামীকাল থেকে", fontSize = 11.sp) },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary,
+                        selectedLabelColor = if (isDark) MosqueEmeraldDark else Color.White,
+                        containerColor = if (isDark) MosqueNightSurfaceVariant else MosqueBgLight,
+                        labelColor = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
+                    )
                 )
             }
             Spacer(modifier = Modifier.height(6.dp))
@@ -921,12 +1002,15 @@ fun AutoFoodScheduleDialog(
                 label = { Text("শুরুর তারিখ (বছর-মাস-দিন) *") },
                 isError = startDateError != null,
                 supportingText = startDateError?.let { err -> { Text(err, color = MosqueUrgentRed, fontSize = 11.sp) } },
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = mosqueStandardFieldColors(isDark),
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 52.dp)
             )
             Spacer(modifier = Modifier.height(8.dp))
-            Text("কত দিনের শিডিউল তৈরি হবে:", fontSize = 11.5.sp, color = MosqueTextSecondary, fontWeight = FontWeight.SemiBold)
+            Text("কত দিনের শিডিউল তৈরি হবে:", fontSize = 11.5.sp, color = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary, fontWeight = FontWeight.SemiBold)
             Spacer(modifier = Modifier.height(6.dp))
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(durationOptions) { (days, label) ->
@@ -935,14 +1019,16 @@ fun AutoFoodScheduleDialog(
                         onClick = { daysCount = days },
                         label = { Text(label, fontSize = 11.5.sp) },
                         colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = MosqueEmeraldPrimary,
-                            selectedLabelColor = Color.White
+                            selectedContainerColor = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary,
+                            selectedLabelColor = if (isDark) MosqueEmeraldDark else Color.White,
+                            containerColor = if (isDark) MosqueNightSurfaceVariant else MosqueBgLight,
+                            labelColor = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
                         )
                     )
                 }
             }
             Spacer(modifier = Modifier.height(8.dp))
-            Text("কাদের জন্য খাবার শিডিউল ভাগ হবে:", fontSize = 11.5.sp, color = MosqueTextSecondary, fontWeight = FontWeight.SemiBold)
+            Text("কাদের জন্য খাবার শিডিউল ভাগ হবে:", fontSize = 11.5.sp, color = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary, fontWeight = FontWeight.SemiBold)
             Spacer(modifier = Modifier.height(6.dp))
             LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 item {
@@ -951,8 +1037,10 @@ fun AutoFoodScheduleDialog(
                         onClick = { selectedMode = "ALL" },
                         label = { Text("সবাই (${toBengaliDigits(allStaffLabels.size.toString())} জন স্টাফ)", fontSize = 11.sp) },
                         colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = MosqueGoldDeep,
-                            selectedLabelColor = Color.White
+                            selectedContainerColor = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary,
+                            selectedLabelColor = if (isDark) MosqueEmeraldDark else Color.White,
+                            containerColor = if (isDark) MosqueNightSurfaceVariant else MosqueBgLight,
+                            labelColor = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
                         )
                     )
                 }
@@ -962,8 +1050,10 @@ fun AutoFoodScheduleDialog(
                         onClick = { selectedMode = label },
                         label = { Text(label.substringBefore(" ("), fontSize = 11.sp) },
                         colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = MosqueGoldDeep,
-                            selectedLabelColor = Color.White
+                            selectedContainerColor = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary,
+                            selectedLabelColor = if (isDark) MosqueEmeraldDark else Color.White,
+                            containerColor = if (isDark) MosqueNightSurfaceVariant else MosqueBgLight,
+                            labelColor = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
                         )
                     )
                 }
@@ -973,7 +1063,7 @@ fun AutoFoodScheduleDialog(
         MoreFormSection(title = "স্বয়ংক্রিয় ভাগ ও নোটিফিকেশন প্রিভিউ", icon = Icons.Default.RestaurantMenu) {
             Surface(
                 shape = RoundedCornerShape(10.dp),
-                color = MosqueInfoBlue.copy(alpha = 0.08f),
+                color = MosqueInfoBlue.copy(alpha = if (isDark) 0.15f else 0.08f),
                 border = BorderStroke(1.dp, MosqueInfoBlue.copy(alpha = 0.25f)),
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -982,24 +1072,24 @@ fun AutoFoodScheduleDialog(
                         text = "অটো-বণ্টন সারসংক্ষেপ:",
                         fontSize = 11.5.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MosqueInfoBlue
+                        color = if (isDark) MosqueInfoBlue else MosqueInfoBlue
                     )
                     Text(
                         text = "• প্রতিদিন ${toBengaliDigits(targetStaffLabels.size.toString())} জন ভিন্ন দাতা সদস্য ${toBengaliDigits(targetStaffLabels.size.toString())} জন স্টাফের খাবার দেবেন (মোট ${toBengaliDigits(plannedSlotCount.toString())} টি পালা)।",
                         fontSize = 11.sp,
-                        color = MosqueTextPrimary
+                        color = if (isDark) MosqueNightTextPrimary else MosqueTextPrimary
                     )
                     if (avgCycleDays > 0) {
                         Text(
                             text = "• ${toBengaliDigits(willingDonors.size.toString())} জন সদস্যের মধ্যে ভাগ হলে গড়ে প্রতি ${toBengaliDigits(String.format(Locale.ENGLISH, "%.1f", avgCycleDays))} দিন পর পর একজনের পালা আসবে।",
                             fontSize = 11.sp,
-                            color = MosqueTextPrimary
+                            color = if (isDark) MosqueNightTextPrimary else MosqueTextPrimary
                         )
                     }
                     Text(
                         text = "• প্রতিটি পালার ১ দিন আগে নির্ধারিত সদস্যের নোটিফিকেশনে সম্মতি বা অপারগতা জানানোর অনুরোধ যাবে।",
                         fontSize = 11.sp,
-                        color = MosqueEmeraldDark,
+                        color = if (isDark) MosqueGreenAccent else MosqueEmeraldDark,
                         fontWeight = FontWeight.Medium
                     )
                 }
@@ -1058,6 +1148,7 @@ fun AddWelfareDialog(
             }
         }
     ) {
+        val isDark = LocalIsDarkTheme.current
         MoreFormSection(title = "সুবিধাভোগী ও সহায়তার খাত", icon = Icons.Default.VolunteerActivism) {
             OutlinedTextField(
                 value = name,
@@ -1068,12 +1159,15 @@ fun AddWelfareDialog(
                 label = { Text("আবেদনকারী / সুবিধাভোগীর নাম *") },
                 isError = nameError != null,
                 supportingText = nameError?.let { err -> { Text(err, color = MosqueUrgentRed, fontSize = 11.sp) } },
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = mosqueStandardFieldColors(isDark),
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 52.dp)
             )
             Spacer(modifier = Modifier.height(8.dp))
-            Text("সহায়তার খাত নির্বাচন:", style = MaterialTheme.typography.labelMedium, color = MosqueTextSecondary, fontWeight = FontWeight.SemiBold)
+            Text("সহায়তার খাত নির্বাচন:", style = MaterialTheme.typography.labelMedium, color = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary, fontWeight = FontWeight.SemiBold)
             Spacer(modifier = Modifier.height(6.dp))
             LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 items(categories) { cat ->
@@ -1082,8 +1176,10 @@ fun AddWelfareDialog(
                         onClick = { category = cat },
                         label = { Text(cat, fontSize = 11.5.sp) },
                         colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = MosqueEmeraldPrimary,
-                            selectedLabelColor = Color.White
+                            selectedContainerColor = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary,
+                            selectedLabelColor = if (isDark) MosqueEmeraldDark else Color.White,
+                            containerColor = if (isDark) MosqueNightSurfaceVariant else MosqueBgLight,
+                            labelColor = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
                         )
                     )
                 }
@@ -1099,9 +1195,12 @@ fun AddWelfareDialog(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                 isError = mobileError != null,
                 supportingText = mobileError?.let { err -> { Text(err, color = MosqueUrgentRed, fontSize = 11.sp) } },
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = mosqueStandardFieldColors(isDark),
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 52.dp)
             )
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
@@ -1114,9 +1213,12 @@ fun AddWelfareDialog(
                 isError = amountError != null,
                 supportingText = amountError?.let { err -> { Text(err, color = MosqueUrgentRed, fontSize = 11.sp) } },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = mosqueStandardFieldColors(isDark),
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 52.dp)
             )
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
@@ -1124,7 +1226,8 @@ fun AddWelfareDialog(
                 onValueChange = { remarks = it },
                 label = { Text("বিবরণ বা যাচাইকৃত সুপারিশ") },
                 minLines = 2,
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = mosqueStandardFieldColors(isDark),
                 modifier = Modifier.fillMaxWidth()
             )
         }
@@ -1148,6 +1251,7 @@ fun AddEventDialog(
     var speakerError by remember { mutableStateOf<String?>(null) }
     var venueError by remember { mutableStateOf<String?>(null) }
 
+    val isDark = LocalIsDarkTheme.current
     val eventPresets = listOf("তাফসিরুল কুরআন মাহফিল", "শবে কদর দোয়া মাহফিল", "সীরাতুন্নবী (সা:) সেমিনার", "ইফতার মাহফিল")
 
     ExecutiveFormDialogShell(
@@ -1190,7 +1294,19 @@ fun AddEventDialog(
                             title = preset
                             titleError = null
                         },
-                        label = { Text(preset, fontSize = 11.sp) }
+                        label = { Text(preset, fontSize = 11.sp, fontWeight = if (title == preset) FontWeight.SemiBold else FontWeight.Normal) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary,
+                            selectedLabelColor = if (isDark) MosqueEmeraldDark else Color.White,
+                            containerColor = if (isDark) MosqueNightSurfaceVariant else MosqueBgLight,
+                            labelColor = if (isDark) MosqueNightTextPrimary else MosqueEmeraldDark
+                        ),
+                        border = FilterChipDefaults.filterChipBorder(
+                            enabled = true,
+                            selected = title == preset,
+                            borderColor = if (isDark) MosqueNightBorder else MosqueBorderGold,
+                            selectedBorderColor = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary
+                        )
                     )
                 }
             }
@@ -1204,9 +1320,10 @@ fun AddEventDialog(
                 label = { Text("অনুষ্ঠানের নাম *") },
                 isError = titleError != null,
                 supportingText = titleError?.let { err -> { Text(err, color = MosqueUrgentRed, fontSize = 11.sp) } },
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = mosqueStandardFieldColors(isDark),
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)
             )
             Spacer(modifier = Modifier.height(8.dp))
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -1216,17 +1333,19 @@ fun AddEventDialog(
                     label = { Text("তারিখ *") },
                     isError = dateError != null,
                     supportingText = dateError?.let { err -> { Text(err, color = MosqueUrgentRed, fontSize = 11.sp) } },
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = mosqueStandardFieldColors(isDark),
                     singleLine = true,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f).heightIn(min = 52.dp)
                 )
                 OutlinedTextField(
                     value = timeStr,
                     onValueChange = { timeStr = it },
                     label = { Text("সময় *") },
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = mosqueStandardFieldColors(isDark),
                     singleLine = true,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f).heightIn(min = 52.dp)
                 )
             }
         }
@@ -1238,9 +1357,10 @@ fun AddEventDialog(
                 label = { Text("প্রধান বক্তা / মেহমান *") },
                 isError = speakerError != null,
                 supportingText = speakerError?.let { err -> { Text(err, color = MosqueUrgentRed, fontSize = 11.sp) } },
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = mosqueStandardFieldColors(isDark),
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)
             )
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
@@ -1249,9 +1369,10 @@ fun AddEventDialog(
                 label = { Text("অনুষ্ঠানের স্থান *") },
                 isError = venueError != null,
                 supportingText = venueError?.let { err -> { Text(err, color = MosqueUrgentRed, fontSize = 11.sp) } },
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = mosqueStandardFieldColors(isDark),
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)
             )
             Spacer(modifier = Modifier.height(8.dp))
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -1260,17 +1381,19 @@ fun AddEventDialog(
                     onValueChange = { budget = it.filter { ch -> ch.isDigit() } },
                     label = { Text("বাজেট (৳) *") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = mosqueStandardFieldColors(isDark),
                     singleLine = true,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f).heightIn(min = 52.dp)
                 )
                 OutlinedTextField(
                     value = lead,
                     onValueChange = { lead = it },
                     label = { Text("দলনেতা") },
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = mosqueStandardFieldColors(isDark),
                     singleLine = true,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f).heightIn(min = 52.dp)
                 )
             }
         }

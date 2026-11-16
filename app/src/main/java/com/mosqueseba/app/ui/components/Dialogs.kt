@@ -926,10 +926,11 @@ private fun MemberFormSectionCard(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     content: @Composable ColumnScope.() -> Unit
 ) {
+    val isDark = LocalIsDarkTheme.current
     Surface(
         shape = RoundedCornerShape(16.dp),
-        color = Color.White,
-        border = BorderStroke(1.dp, MosqueCardBorderGold),
+        color = if (isDark) MosqueNightSurface else Color.White,
+        border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else MosqueCardBorderGold),
         shadowElevation = 1.dp,
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -940,14 +941,14 @@ private fun MemberFormSectionCard(
             ) {
                 Surface(
                     shape = RoundedCornerShape(8.dp),
-                    color = MosqueEmeraldSoft,
+                    color = if (isDark) MosqueEmeraldPrimary.copy(alpha = 0.22f) else MosqueEmeraldSoft,
                     modifier = Modifier.size(28.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             imageVector = icon,
                             contentDescription = null,
-                            tint = MosqueEmeraldPrimary,
+                            tint = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary,
                             modifier = Modifier.size(16.dp)
                         )
                     }
@@ -957,7 +958,7 @@ private fun MemberFormSectionCard(
                     text = title,
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.ExtraBold,
-                    color = MosqueEmeraldDark
+                    color = if (isDark) MosqueGoldLight else MosqueEmeraldDark
                 )
             }
             content()
@@ -2373,20 +2374,21 @@ private fun QuickMonthPresetChip(
     accentGold: Boolean = false,
     onClick: () -> Unit
 ) {
+    val isDark = LocalIsDarkTheme.current
     val bgColor = when {
-        selected -> MosqueEmeraldPrimary
-        accentGold -> MosqueGoldLight.copy(alpha = 0.55f)
-        else -> MosqueBgLight
+        selected -> if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary
+        accentGold -> if (isDark) MosqueGoldDark.copy(alpha = 0.35f) else MosqueGoldLight.copy(alpha = 0.55f)
+        else -> if (isDark) MosqueNightSurfaceVariant else MosqueBgLight
     }
     val textColor = when {
-        selected -> Color.White
-        accentGold -> MosqueEmeraldDark
-        else -> MosqueEmeraldDark
+        selected -> if (isDark) MosqueEmeraldDark else Color.White
+        accentGold -> if (isDark) MosqueGoldLight else MosqueEmeraldDark
+        else -> if (isDark) MosqueNightTextPrimary else MosqueEmeraldDark
     }
     val borderColor = when {
-        selected -> MosqueEmeraldDark
+        selected -> if (isDark) MosqueGreenAccent else MosqueEmeraldDark
         accentGold -> MosqueGold
-        else -> MosqueCardBorder
+        else -> if (isDark) MosqueNightBorder else MosqueCardBorder
     }
     Surface(
         onClick = onClick,
@@ -2419,13 +2421,22 @@ private fun ChandaMethodOptionCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val isDark = LocalIsDarkTheme.current
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape(12.dp),
-        color = if (selected) MosqueEmeraldSoft else MosqueBgLight,
+        color = if (selected) {
+            if (isDark) MosqueEmeraldPrimary.copy(alpha = 0.3f) else MosqueEmeraldSoft
+        } else {
+            if (isDark) MosqueNightSurfaceVariant else MosqueBgLight
+        },
         border = BorderStroke(
             width = if (selected) 1.5.dp else 1.dp,
-            color = if (selected) MosqueEmeraldPrimary else MosqueCardBorderSubtle
+            color = if (selected) {
+                if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary
+            } else {
+                if (isDark) MosqueNightBorder else MosqueCardBorderSubtle
+            }
         ),
         modifier = modifier.heightIn(min = 56.dp)
     ) {
@@ -2439,7 +2450,11 @@ private fun ChandaMethodOptionCard(
             Icon(
                 imageVector = icon,
                 contentDescription = label,
-                tint = if (selected) MosqueEmeraldPrimary else MosqueTextSecondary,
+                tint = if (selected) {
+                    if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary
+                } else {
+                    if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
+                },
                 modifier = Modifier.size(18.dp)
             )
             Spacer(modifier = Modifier.height(3.dp))
@@ -2447,7 +2462,11 @@ private fun ChandaMethodOptionCard(
                 text = label,
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-                color = if (selected) MosqueEmeraldDark else MosqueTextPrimary,
+                color = if (selected) {
+                    if (isDark) MosqueGreenAccent else MosqueEmeraldDark
+                } else {
+                    if (isDark) MosqueNightTextPrimary else MosqueTextPrimary
+                },
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -2455,7 +2474,7 @@ private fun ChandaMethodOptionCard(
                 text = subLabel,
                 style = MaterialTheme.typography.labelSmall,
                 fontSize = 9.sp,
-                color = MosqueTextMuted,
+                color = if (isDark) MosqueNightTextSecondary.copy(alpha = 0.7f) else MosqueTextMuted,
                 maxLines = 1
             )
         }
@@ -2823,15 +2842,15 @@ fun PublishNoticeDialog(
                     // Section 1: Gemini AI Notice Drafter Card
                     Surface(
                         shape = RoundedCornerShape(16.dp),
-                        color = Color.White,
-                        border = BorderStroke(1.dp, MosqueGold.copy(alpha = 0.75f)),
+                        color = if (isDark) MosqueNightSurface else Color.White,
+                        border = BorderStroke(1.dp, if (isDark) MosqueGold.copy(alpha = 0.45f) else MosqueGold.copy(alpha = 0.75f)),
                         shadowElevation = 1.dp,
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(MosqueEmeraldSoft.copy(alpha = 0.45f))
+                                .background(if (isDark) MosqueEmeraldPrimary.copy(alpha = 0.15f) else MosqueEmeraldSoft.copy(alpha = 0.45f))
                                 .padding(12.dp)
                         ) {
                             Row(
@@ -2854,7 +2873,7 @@ fun PublishNoticeDialog(
                                             Icon(
                                                 imageVector = Icons.Default.AutoAwesome,
                                                 contentDescription = null,
-                                                tint = MosqueEmeraldDark,
+                                                tint = if (isDark) MosqueGoldLight else MosqueEmeraldDark,
                                                 modifier = Modifier.size(17.dp)
                                             )
                                         }
@@ -2865,12 +2884,12 @@ fun PublishNoticeDialog(
                                             text = "জেমিনি এআই নোটিশ ড্রাফটার",
                                             style = MaterialTheme.typography.labelLarge,
                                             fontWeight = FontWeight.ExtraBold,
-                                            color = MosqueEmeraldDark
+                                            color = if (isDark) MosqueGoldLight else MosqueEmeraldDark
                                         )
                                         Text(
                                             text = "এক ক্লিকে মার্জিত ইসলামিক নোটিশ খসড়া লিখুন",
                                             style = MaterialTheme.typography.labelSmall,
-                                            color = MosqueTextSecondary,
+                                            color = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary,
                                             fontSize = 10.5.sp
                                         )
                                     }
@@ -2878,7 +2897,7 @@ fun PublishNoticeDialog(
 
                                 Surface(
                                     shape = RoundedCornerShape(8.dp),
-                                    color = MosqueEmeraldPrimary,
+                                    color = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary,
                                     modifier = Modifier.padding(start = 6.dp)
                                 ) {
                                     Row(
@@ -2889,13 +2908,13 @@ fun PublishNoticeDialog(
                                             text = if (showAiDraftBox) "লুকান" else "তৈরি করুন",
                                             fontSize = 11.sp,
                                             fontWeight = FontWeight.Bold,
-                                            color = Color.White
+                                            color = if (isDark) MosqueEmeraldDark else Color.White
                                         )
                                         Spacer(modifier = Modifier.width(2.dp))
                                         Icon(
                                             imageVector = if (showAiDraftBox) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                                             contentDescription = null,
-                                            tint = Color.White,
+                                            tint = if (isDark) MosqueEmeraldDark else Color.White,
                                             modifier = Modifier.size(15.dp)
                                         )
                                     }
@@ -2907,7 +2926,7 @@ fun PublishNoticeDialog(
                                     Text(
                                         text = "দ্রুত বিষয় বাছাই করুন:",
                                         style = MaterialTheme.typography.labelSmall,
-                                        color = MosqueEmeraldDark,
+                                        color = if (isDark) MosqueNightTextPrimary else MosqueEmeraldDark,
                                         fontWeight = FontWeight.SemiBold
                                     )
                                     Spacer(modifier = Modifier.height(6.dp))
@@ -2922,13 +2941,13 @@ fun PublishNoticeDialog(
                                                     Text(
                                                         text = label,
                                                         fontSize = 11.sp,
-                                                        color = MosqueEmeraldDark
+                                                        color = if (isDark) MosqueNightTextPrimary else MosqueEmeraldDark
                                                     )
                                                 },
                                                 colors = SuggestionChipDefaults.suggestionChipColors(
-                                                    containerColor = Color.White
+                                                    containerColor = if (isDark) MosqueNightSurfaceVariant else Color.White
                                                 ),
-                                                border = BorderStroke(1.dp, MosqueCardBorderGold)
+                                                border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else MosqueCardBorderGold)
                                             )
                                         }
                                     }
@@ -2948,15 +2967,10 @@ fun PublishNoticeDialog(
                                             )
                                         },
                                         enabled = aiNoticeState !is AiNoticeUiState.Loading,
-                                        shape = RoundedCornerShape(12.dp),
-                                        colors = OutlinedTextFieldDefaults.colors(
-                                            focusedContainerColor = Color.White,
-                                            unfocusedContainerColor = Color.White,
-                                            focusedBorderColor = MosqueEmeraldPrimary,
-                                            unfocusedBorderColor = MosqueCardBorderGold
-                                        ),
+                                        shape = RoundedCornerShape(14.dp),
+                                        colors = mosqueStandardFieldColors(isDark),
                                         minLines = 2,
-                                        modifier = Modifier.fillMaxWidth()
+                                        modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp)
                                     )
 
                                     if (aiNoticeState is AiNoticeUiState.Error) {
@@ -3041,10 +3055,12 @@ fun PublishNoticeDialog(
                             supportingText = titleError?.let { err ->
                                 { Text(err, color = MosqueUrgentRed, fontSize = 11.sp) }
                             },
-                            shape = RoundedCornerShape(12.dp),
+                            shape = RoundedCornerShape(14.dp),
+                            colors = mosqueStandardFieldColors(isDark),
                             singleLine = true,
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .heightIn(min = 52.dp)
                                 .testTag("notice_title_input")
                         )
 
@@ -3077,7 +3093,8 @@ fun PublishNoticeDialog(
                                 }
                             },
                             minLines = 4,
-                            shape = RoundedCornerShape(12.dp),
+                            shape = RoundedCornerShape(14.dp),
+                            colors = mosqueStandardFieldColors(isDark),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .testTag("notice_content_input")
@@ -3092,7 +3109,7 @@ fun PublishNoticeDialog(
                         Text(
                             text = "নোটিশের ধরন নির্বাচন করুন:",
                             style = MaterialTheme.typography.labelMedium,
-                            color = MosqueTextSecondary,
+                            color = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary,
                             fontWeight = FontWeight.SemiBold
                         )
                         Spacer(modifier = Modifier.height(8.dp))
@@ -3132,10 +3149,10 @@ fun PublishNoticeDialog(
                         Surface(
                             onClick = { isPinned = !isPinned },
                             shape = RoundedCornerShape(12.dp),
-                            color = if (isPinned) MosqueGoldSoft.copy(alpha = 0.65f) else MosqueBgLight,
+                            color = if (isPinned) (if (isDark) MosqueGoldDark.copy(alpha = 0.35f) else MosqueGoldSoft.copy(alpha = 0.65f)) else (if (isDark) MosqueNightSurfaceVariant else MosqueBgLight),
                             border = BorderStroke(
                                 1.dp,
-                                if (isPinned) MosqueGold else MosqueCardBorderSubtle
+                                if (isPinned) MosqueGold else (if (isDark) MosqueNightBorder else MosqueCardBorderSubtle)
                             ),
                             modifier = Modifier.fillMaxWidth()
                         ) {
@@ -3162,12 +3179,12 @@ fun PublishNoticeDialog(
                                             text = "বোর্ডের শীর্ষে পিন করে রাখুন",
                                             style = MaterialTheme.typography.labelLarge,
                                             fontWeight = FontWeight.Bold,
-                                            color = MosqueEmeraldDark
+                                            color = if (isDark) MosqueNightTextPrimary else MosqueEmeraldDark
                                         )
                                         Text(
                                             text = "সক্রিয় থাকলে নোটিশটি সবার ওপরে দেখাবে",
                                             style = MaterialTheme.typography.labelSmall,
-                                            color = MosqueTextSecondary,
+                                            color = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary,
                                             fontSize = 10.5.sp
                                         )
                                     }
@@ -3252,13 +3269,14 @@ private fun NoticePriorityOptionCard(
     icon: ImageVector,
     onClick: () -> Unit
 ) {
+    val isDark = LocalIsDarkTheme.current
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape(12.dp),
-        color = if (selected) accentColor.copy(alpha = 0.12f) else MosqueBgLight,
+        color = if (selected) accentColor.copy(alpha = if (isDark) 0.25f else 0.12f) else (if (isDark) MosqueNightSurfaceVariant else MosqueBgLight),
         border = BorderStroke(
             width = if (selected) 1.6.dp else 1.dp,
-            color = if (selected) accentColor else MosqueCardBorderSubtle
+            color = if (selected) accentColor else (if (isDark) MosqueNightBorder else MosqueCardBorderSubtle)
         ),
         modifier = modifier.heightIn(min = 52.dp)
     ) {
@@ -3270,7 +3288,7 @@ private fun NoticePriorityOptionCard(
             Icon(
                 imageVector = icon,
                 contentDescription = label,
-                tint = if (selected) accentColor else MosqueTextMuted,
+                tint = if (selected) accentColor else (if (isDark) MosqueNightTextSecondary else MosqueTextMuted),
                 modifier = Modifier.size(18.dp)
             )
             Spacer(modifier = Modifier.height(3.dp))
@@ -3278,7 +3296,7 @@ private fun NoticePriorityOptionCard(
                 text = label,
                 fontSize = 11.5.sp,
                 fontWeight = if (selected) FontWeight.ExtraBold else FontWeight.Medium,
-                color = if (selected) accentColor else MosqueTextSecondary,
+                color = if (selected) accentColor else (if (isDark) MosqueNightTextPrimary else MosqueTextSecondary),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -3436,10 +3454,18 @@ fun ScheduleMeetingDialog(
                                             title = preset
                                             titleError = null
                                         },
-                                        label = { Text(preset, fontSize = 11.5.sp) },
+                                        label = { Text(preset, fontSize = 11.5.sp, fontWeight = if (title == preset) FontWeight.SemiBold else FontWeight.Normal) },
                                         colors = FilterChipDefaults.filterChipColors(
-                                            selectedContainerColor = MosqueEmeraldPrimary,
-                                            selectedLabelColor = Color.White
+                                            selectedContainerColor = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary,
+                                            selectedLabelColor = if (isDark) MosqueEmeraldDark else Color.White,
+                                            containerColor = if (isDark) MosqueNightSurfaceVariant else MosqueBgLight,
+                                            labelColor = if (isDark) MosqueNightTextPrimary else MosqueEmeraldDark
+                                        ),
+                                        border = FilterChipDefaults.filterChipBorder(
+                                            enabled = true,
+                                            selected = title == preset,
+                                            borderColor = if (isDark) MosqueNightBorder else MosqueBorderGold,
+                                            selectedBorderColor = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary
                                         )
                                     )
                                 }
@@ -3462,10 +3488,12 @@ fun ScheduleMeetingDialog(
                             supportingText = titleError?.let { err ->
                                 { Text(err, color = MosqueUrgentRed, fontSize = 11.sp) }
                             },
-                            shape = RoundedCornerShape(12.dp),
+                            shape = RoundedCornerShape(14.dp),
+                            colors = mosqueStandardFieldColors(isDark),
                             singleLine = true,
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .heightIn(min = 52.dp)
                                 .testTag("meeting_title_input")
                         )
 
@@ -3485,10 +3513,12 @@ fun ScheduleMeetingDialog(
                             supportingText = dateError?.let { err ->
                                 { Text(err, color = MosqueUrgentRed, fontSize = 11.sp) }
                             },
-                            shape = RoundedCornerShape(12.dp),
+                            shape = RoundedCornerShape(14.dp),
+                            colors = mosqueStandardFieldColors(isDark),
                             singleLine = true,
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .heightIn(min = 52.dp)
                                 .testTag("meeting_date_input")
                         )
 
@@ -3506,14 +3536,14 @@ fun ScheduleMeetingDialog(
                                         Text(
                                             text = prayerTime,
                                             fontSize = 11.sp,
-                                            color = if (isSelected) Color.White else MosqueEmeraldDark,
+                                            color = if (isSelected) (if (isDark) MosqueEmeraldDark else Color.White) else (if (isDark) MosqueNightTextPrimary else MosqueEmeraldDark),
                                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
                                         )
                                     },
                                     colors = SuggestionChipDefaults.suggestionChipColors(
-                                        containerColor = if (isSelected) MosqueEmeraldPrimary else MosqueEmeraldSoft.copy(alpha = 0.6f)
+                                        containerColor = if (isSelected) (if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary) else (if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft.copy(alpha = 0.6f))
                                     ),
-                                    border = BorderStroke(1.dp, if (isSelected) MosqueEmeraldPrimary else MosqueCardBorderGold)
+                                    border = BorderStroke(1.dp, if (isSelected) (if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary) else (if (isDark) MosqueNightBorder else MosqueCardBorderGold))
                                 )
                             }
                         }
@@ -3534,10 +3564,12 @@ fun ScheduleMeetingDialog(
                             supportingText = locationError?.let { err ->
                                 { Text(err, color = MosqueUrgentRed, fontSize = 11.sp) }
                             },
-                            shape = RoundedCornerShape(12.dp),
+                            shape = RoundedCornerShape(14.dp),
+                            colors = mosqueStandardFieldColors(isDark),
                             singleLine = true,
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .heightIn(min = 52.dp)
                                 .testTag("meeting_location_input")
                         )
 
@@ -3554,13 +3586,14 @@ fun ScheduleMeetingDialog(
                                         Text(
                                             text = loc,
                                             fontSize = 11.sp,
-                                            color = if (isSelected) Color.White else MosqueEmeraldDark
+                                            color = if (isSelected) (if (isDark) MosqueEmeraldDark else Color.White) else (if (isDark) MosqueNightTextPrimary else MosqueEmeraldDark),
+                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
                                         )
                                     },
                                     colors = SuggestionChipDefaults.suggestionChipColors(
-                                        containerColor = if (isSelected) MosqueEmeraldPrimary else Color.White
+                                        containerColor = if (isSelected) (if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary) else (if (isDark) MosqueNightSurfaceVariant else Color.White)
                                     ),
-                                    border = BorderStroke(1.dp, if (isSelected) MosqueEmeraldPrimary else MosqueCardBorderGold)
+                                    border = BorderStroke(1.dp, if (isSelected) (if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary) else (if (isDark) MosqueNightBorder else MosqueCardBorderGold))
                                 )
                             }
                         }
@@ -3577,7 +3610,8 @@ fun ScheduleMeetingDialog(
                             label = { Text("আলোচ্য বিষয়সমূহ (ঐচ্ছিক)") },
                             placeholder = { Text("১. বিগত সভার সিদ্ধান্ত পর্যালোচনা\n২. মাসিক আয়-ব্যয় অনুমোদন\n৩. ...") },
                             minLines = 3,
-                            shape = RoundedCornerShape(12.dp),
+                            shape = RoundedCornerShape(14.dp),
+                            colors = mosqueStandardFieldColors(isDark),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .testTag("meeting_agenda_input")
@@ -3750,8 +3784,8 @@ fun MeetingResolutionDialog(
                     // Meeting Metadata Pill
                     Surface(
                         shape = RoundedCornerShape(12.dp),
-                        color = MosqueEmeraldSoft.copy(alpha = 0.5f),
-                        border = BorderStroke(1.dp, MosqueCardBorderGold),
+                        color = if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft.copy(alpha = 0.5f),
+                        border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else MosqueCardBorderGold),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Column(
@@ -3759,13 +3793,13 @@ fun MeetingResolutionDialog(
                             verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.Event, contentDescription = null, tint = MosqueEmeraldPrimary, modifier = Modifier.size(15.dp))
+                                Icon(Icons.Default.Event, contentDescription = null, tint = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary, modifier = Modifier.size(15.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
                                     text = toBengaliDigits(meeting.meetingDate),
                                     style = MaterialTheme.typography.labelMedium,
                                     fontWeight = FontWeight.Bold,
-                                    color = MosqueEmeraldDark
+                                    color = if (isDark) MosqueNightTextPrimary else MosqueEmeraldDark
                                 )
                             }
                             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -3774,7 +3808,7 @@ fun MeetingResolutionDialog(
                                 Text(
                                     text = meeting.location,
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = MosqueTextSecondary
+                                    color = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
                                 )
                             }
                         }
@@ -3797,7 +3831,8 @@ fun MeetingResolutionDialog(
                                 { Text(err, color = MosqueUrgentRed, fontSize = 11.sp) }
                             },
                             minLines = 4,
-                            shape = RoundedCornerShape(12.dp),
+                            shape = RoundedCornerShape(14.dp),
+                            colors = mosqueStandardFieldColors(isDark),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .testTag("meeting_resolution_input")
@@ -3808,10 +3843,10 @@ fun MeetingResolutionDialog(
                         Surface(
                             onClick = { markCompleted = !markCompleted },
                             shape = RoundedCornerShape(12.dp),
-                            color = if (markCompleted) MosqueSuccessGreen.copy(alpha = 0.1f) else MosqueBgLight,
+                            color = if (markCompleted) MosqueSuccessGreen.copy(alpha = 0.15f) else (if (isDark) MosqueNightSurfaceVariant else MosqueBgLight),
                             border = BorderStroke(
                                 1.dp,
-                                if (markCompleted) MosqueSuccessGreen.copy(alpha = 0.5f) else MosqueCardBorderSubtle
+                                if (markCompleted) MosqueSuccessGreen.copy(alpha = 0.5f) else (if (isDark) MosqueNightBorder else MosqueCardBorderSubtle)
                             ),
                             modifier = Modifier.fillMaxWidth()
                         ) {
@@ -3826,7 +3861,7 @@ fun MeetingResolutionDialog(
                                     text = "সভাটি 'সম্পন্ন' হিসেবে চিহ্নিত করুন",
                                     style = MaterialTheme.typography.labelLarge,
                                     fontWeight = FontWeight.Bold,
-                                    color = MosqueEmeraldDark,
+                                    color = if (isDark) MosqueNightTextPrimary else MosqueEmeraldDark,
                                     modifier = Modifier.weight(1f)
                                 )
                                 Switch(

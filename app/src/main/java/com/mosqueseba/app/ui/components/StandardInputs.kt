@@ -32,7 +32,7 @@ fun MosqueSearchBar(
     leadingIcon: ImageVector = Icons.Default.Search,
     trailingContent: (@Composable () -> Unit)? = null
 ) {
-    val isDark = isSystemInDarkTheme()
+    val isDark = LocalIsDarkTheme.current
 
     OutlinedTextField(
         value = value,
@@ -96,7 +96,7 @@ fun MosqueSearchBar(
  * অ্যাপের সকল ফর্ম এবং ডায়ালগের জন্য স্ট্যান্ডার্ড ইনপুট ফিল্ড কালার প্যালেট।
  */
 @Composable
-fun mosqueStandardFieldColors(isDark: Boolean = isSystemInDarkTheme()): TextFieldColors =
+fun mosqueStandardFieldColors(isDark: Boolean = LocalIsDarkTheme.current): TextFieldColors =
     OutlinedTextFieldDefaults.colors(
         focusedContainerColor = if (isDark) MosqueNightSurfaceVariant else Color.White,
         unfocusedContainerColor = if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft.copy(alpha = 0.35f),
@@ -131,7 +131,7 @@ fun MosqueStandardTextField(
     readOnly: Boolean = false,
     enabled: Boolean = true
 ) {
-    val isDark = isSystemInDarkTheme()
+    val isDark = LocalIsDarkTheme.current
 
     OutlinedTextField(
         value = value,

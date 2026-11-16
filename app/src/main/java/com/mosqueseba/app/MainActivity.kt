@@ -58,6 +58,8 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val darkModeEnabled by viewModel.darkModeEnabled.collectAsState()
+            val systemInDark = androidx.compose.foundation.isSystemInDarkTheme()
+            val effectiveDarkTheme = if (viewModel.sessionManager.hasUserSetDarkMode()) darkModeEnabled else systemInDark
             val requestedModule by deepLinkModule.collectAsState()
             val context = LocalContext.current
 
@@ -82,7 +84,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            MosqueCommitteeTheme(darkTheme = darkModeEnabled) {
+            MosqueCommitteeTheme(darkTheme = effectiveDarkTheme) {
                 Box(modifier = Modifier.fillMaxSize()) {
                     var currentScreen by remember { mutableStateOf(AppScreen.SPLASH) }
 

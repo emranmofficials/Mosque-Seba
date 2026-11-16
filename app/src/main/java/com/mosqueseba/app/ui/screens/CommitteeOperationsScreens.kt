@@ -43,6 +43,7 @@ import com.mosqueseba.app.ui.components.MosqueMemberAvatar
 import com.mosqueseba.app.ui.components.MosqueSearchBar
 import com.mosqueseba.app.ui.components.MosqueToastController
 import com.mosqueseba.app.ui.components.StaggeredItemEntrance
+import com.mosqueseba.app.ui.components.mosqueStandardFieldColors
 import com.mosqueseba.app.ui.components.roleIcon
 import com.mosqueseba.app.ui.components.toBengaliDigits
 import com.mosqueseba.app.ui.theme.*
@@ -102,8 +103,10 @@ fun CommitteeCharterScreen(
                                 label = { Text("সকল স্তর (${toBengaliDigits("13")})", fontSize = 11.sp) },
                                 modifier = Modifier.testTag("charter_filter_all"),
                                 colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = MosqueEmeraldPrimary,
-                                    selectedLabelColor = Color.White
+                                    selectedContainerColor = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary,
+                                    selectedLabelColor = if (isDark) MosqueEmeraldDark else Color.White,
+                                    containerColor = if (isDark) MosqueNightSurfaceVariant else MosqueBgLight,
+                                    labelColor = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
                                 )
                             )
                         }
@@ -119,8 +122,10 @@ fun CommitteeCharterScreen(
                                     label = { Text(label, fontSize = 11.sp) },
                                     modifier = Modifier.testTag("charter_filter_${tier.name}"),
                                     colors = FilterChipDefaults.filterChipColors(
-                                        selectedContainerColor = MosqueEmeraldPrimary,
-                                        selectedLabelColor = Color.White
+                                        selectedContainerColor = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary,
+                                        selectedLabelColor = if (isDark) MosqueEmeraldDark else Color.White,
+                                        containerColor = if (isDark) MosqueNightSurfaceVariant else MosqueBgLight,
+                                        labelColor = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
                                     )
                                 )
                             }
@@ -515,7 +520,13 @@ fun CashboxScreen(
                     FilterChip(
                         selected = statusFilter == filter,
                         onClick = { statusFilter = filter },
-                        label = { Text(filter, fontSize = 11.sp) }
+                        label = { Text(filter, fontSize = 11.sp) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary,
+                            selectedLabelColor = if (isDark) MosqueEmeraldDark else Color.White,
+                            containerColor = if (isDark) MosqueNightSurfaceVariant else MosqueBgLight,
+                            labelColor = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
+                        )
                     )
                 }
             }
@@ -707,6 +718,8 @@ private fun OpenCashboxDialog(
     var amountError by remember { mutableStateOf<String?>(null) }
     var witnessError by remember { mutableStateOf<String?>(null) }
 
+    val isDark = LocalIsDarkTheme.current
+
     ExecutiveFormDialogShell(
         title = "দান বাক্স (ক্যাশবক্স) গণনা এন্ট্রি",
         subtitle = "স্বচ্ছ গণনা, সাক্ষী তালিকা ও ব্যাংক জমা তথ্য",
@@ -736,7 +749,13 @@ private fun OpenCashboxDialog(
                     FilterChip(
                         selected = boxType == opt,
                         onClick = { boxType = opt },
-                        label = { Text(opt, fontSize = 11.sp) }
+                        label = { Text(opt, fontSize = 11.sp) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary,
+                            selectedLabelColor = if (isDark) MosqueEmeraldDark else Color.White,
+                            containerColor = if (isDark) MosqueNightSurfaceVariant else MosqueBgLight,
+                            labelColor = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
+                        )
                     )
                 }
             }
@@ -748,9 +767,12 @@ private fun OpenCashboxDialog(
                 isError = amountError != null,
                 supportingText = amountError?.let { err -> { Text(err, color = MosqueUrgentRed, fontSize = 11.sp) } },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = mosqueStandardFieldColors(isDark),
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 52.dp)
             )
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
@@ -760,7 +782,8 @@ private fun OpenCashboxDialog(
                 placeholder = { Text("যেমন: ডা: তারিকুল ইসলাম, মো: আসাদুজ্জামান") },
                 isError = witnessError != null,
                 supportingText = witnessError?.let { err -> { Text(err, color = MosqueUrgentRed, fontSize = 11.sp) } },
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = mosqueStandardFieldColors(isDark),
                 modifier = Modifier.fillMaxWidth()
             )
         }
@@ -770,25 +793,32 @@ private fun OpenCashboxDialog(
                 value = bankName,
                 onValueChange = { bankName = it },
                 label = { Text("ব্যাংকের নাম (সাথে সাথে জমা হলে)") },
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = mosqueStandardFieldColors(isDark),
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 52.dp)
             )
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
                 value = slipNo,
                 onValueChange = { slipNo = it },
                 label = { Text("জমা স্লিপ নম্বর (ঐচ্ছিক)") },
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = mosqueStandardFieldColors(isDark),
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 52.dp)
             )
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
                 value = notes,
                 onValueChange = { notes = it },
                 label = { Text("মন্তব্য / নোট") },
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = mosqueStandardFieldColors(isDark),
                 modifier = Modifier.fillMaxWidth()
             )
         }
@@ -805,6 +835,7 @@ private fun BankDepositDialog(
     var slipNo by remember { mutableStateOf("") }
     var bankError by remember { mutableStateOf<String?>(null) }
     var slipError by remember { mutableStateOf<String?>(null) }
+    val isDark = LocalIsDarkTheme.current
 
     ExecutiveFormDialogShell(
         title = "ব্যাংকে জমা নিশ্চিতকরণ",
@@ -835,9 +866,12 @@ private fun BankDepositDialog(
                 label = { Text("ব্যাংক ও শাখার নাম *") },
                 isError = bankError != null,
                 supportingText = bankError?.let { err -> { Text(err, color = MosqueUrgentRed, fontSize = 11.sp) } },
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = mosqueStandardFieldColors(isDark),
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 52.dp)
             )
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
@@ -846,9 +880,12 @@ private fun BankDepositDialog(
                 label = { Text("জমা স্লিপ / রেফারেন্স নম্বর *") },
                 isError = slipError != null,
                 supportingText = slipError?.let { err -> { Text(err, color = MosqueUrgentRed, fontSize = 11.sp) } },
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = mosqueStandardFieldColors(isDark),
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 52.dp)
             )
         }
     }
@@ -982,14 +1019,26 @@ fun OfficeDocumentsScreen(
                             )
                         },
                         label = { Text("জবাব বাকি (${toBengaliDigits(pendingCount.toString())})", fontSize = 11.sp) },
-                        modifier = Modifier.testTag("filter_pending_office_docs_chip")
+                        modifier = Modifier.testTag("filter_pending_office_docs_chip"),
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary,
+                            selectedLabelColor = if (isDark) MosqueEmeraldDark else Color.White,
+                            containerColor = if (isDark) MosqueNightSurfaceVariant else MosqueBgLight,
+                            labelColor = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
+                        )
                     )
                 }
                 items(categories) { cat ->
                     FilterChip(
                         selected = selectedCategory == cat,
                         onClick = { selectedCategory = cat },
-                        label = { Text(cat, fontSize = 11.sp) }
+                        label = { Text(cat, fontSize = 11.sp) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary,
+                            selectedLabelColor = if (isDark) MosqueEmeraldDark else Color.White,
+                            containerColor = if (isDark) MosqueNightSurfaceVariant else MosqueBgLight,
+                            labelColor = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
+                        )
                     )
                 }
             }
@@ -1142,6 +1191,7 @@ private fun AddOfficeDocumentDialog(
     var titleError by remember { mutableStateOf<String?>(null) }
     var partyError by remember { mutableStateOf<String?>(null) }
     var summaryError by remember { mutableStateOf<String?>(null) }
+    val isDark = LocalIsDarkTheme.current
 
     ExecutiveFormDialogShell(
         title = "নতুন নথি / চিঠি নিবন্ধন",
@@ -1178,7 +1228,13 @@ private fun AddOfficeDocumentDialog(
                             category = cat
                             status = if (cat == "আগত চিঠি") "জবাব অপেক্ষমান" else "সংরক্ষিত"
                         },
-                        label = { Text(cat, fontSize = 11.sp) }
+                        label = { Text(cat, fontSize = 11.sp) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary,
+                            selectedLabelColor = if (isDark) MosqueEmeraldDark else Color.White,
+                            containerColor = if (isDark) MosqueNightSurfaceVariant else MosqueBgLight,
+                            labelColor = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
+                        )
                     )
                 }
             }
@@ -1189,9 +1245,12 @@ private fun AddOfficeDocumentDialog(
                 label = { Text("নথি বা চিঠির শিরোনাম *") },
                 isError = titleError != null,
                 supportingText = titleError?.let { err -> { Text(err, color = MosqueUrgentRed, fontSize = 11.sp) } },
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = mosqueStandardFieldColors(isDark),
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 52.dp)
             )
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
@@ -1200,9 +1259,12 @@ private fun AddOfficeDocumentDialog(
                 label = { Text("প্রেরক / প্রাপক / সংশ্লিষ্ট পক্ষ *") },
                 isError = partyError != null,
                 supportingText = partyError?.let { err -> { Text(err, color = MosqueUrgentRed, fontSize = 11.sp) } },
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = mosqueStandardFieldColors(isDark),
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 52.dp)
             )
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
@@ -1211,7 +1273,8 @@ private fun AddOfficeDocumentDialog(
                 label = { Text("সংক্ষিপ্ত বিবরণ *") },
                 isError = summaryError != null,
                 supportingText = summaryError?.let { err -> { Text(err, color = MosqueUrgentRed, fontSize = 11.sp) } },
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = mosqueStandardFieldColors(isDark),
                 minLines = 2,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -1228,6 +1291,7 @@ private fun ReplyOfficeDocumentDialog(
     var replyNote by remember { mutableStateOf(doc.replyNote) }
     var status by remember { mutableStateOf(doc.status) }
     var replyError by remember { mutableStateOf<String?>(null) }
+    val isDark = LocalIsDarkTheme.current
 
     ExecutiveFormDialogShell(
         title = "নথি জবাব ও স্ট্যাটাস হালনাগাদ",
@@ -1250,7 +1314,13 @@ private fun ReplyOfficeDocumentDialog(
                     FilterChip(
                         selected = status == st,
                         onClick = { status = st; replyError = null },
-                        label = { Text(st, fontSize = 11.sp) }
+                        label = { Text(st, fontSize = 11.sp) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary,
+                            selectedLabelColor = if (isDark) MosqueEmeraldDark else Color.White,
+                            containerColor = if (isDark) MosqueNightSurfaceVariant else MosqueBgLight,
+                            labelColor = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
+                        )
                     )
                 }
             }
@@ -1261,7 +1331,8 @@ private fun ReplyOfficeDocumentDialog(
                 label = { Text("জবাবের খসড়া / দাপ্তরিক নোট") },
                 isError = replyError != null,
                 supportingText = replyError?.let { err -> { Text(err, color = MosqueUrgentRed, fontSize = 11.sp) } },
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = mosqueStandardFieldColors(isDark),
                 modifier = Modifier.fillMaxWidth(),
                 minLines = 3
             )
@@ -1385,8 +1456,10 @@ fun ShariaAdvisoryScreen(
                         label = { Text(label, fontSize = 11.sp) },
                         modifier = Modifier.testTag(tag),
                         colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = MosqueEmeraldPrimary,
-                            selectedLabelColor = Color.White
+                            selectedContainerColor = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary,
+                            selectedLabelColor = if (isDark) MosqueEmeraldDark else Color.White,
+                            containerColor = if (isDark) MosqueNightSurfaceVariant else MosqueBgLight,
+                            labelColor = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
                         )
                     )
                 }
@@ -1531,6 +1604,7 @@ private fun AddAdvisoryNoteDialog(
     var compliance by remember { mutableStateOf(if (isSharia) "শরিয়াহ সম্মত" else "কৌশলগত পরামর্শ") }
     var topicError by remember { mutableStateOf<String?>(null) }
     var recError by remember { mutableStateOf<String?>(null) }
+    val isDark = LocalIsDarkTheme.current
 
     ExecutiveFormDialogShell(
         title = if (isSharia) "শরিয়াহ সম্মতি পর্যবেক্ষণ ফরম" else "উপদেষ্টা পরিষদের পরামর্শ ফরম",
@@ -1561,7 +1635,13 @@ private fun AddAdvisoryNoteDialog(
                     FilterChip(
                         selected = compliance == opt,
                         onClick = { compliance = opt },
-                        label = { Text(opt, fontSize = 11.sp) }
+                        label = { Text(opt, fontSize = 11.sp) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary,
+                            selectedLabelColor = if (isDark) MosqueEmeraldDark else Color.White,
+                            containerColor = if (isDark) MosqueNightSurfaceVariant else MosqueBgLight,
+                            labelColor = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
+                        )
                     )
                 }
             }
@@ -1572,9 +1652,12 @@ private fun AddAdvisoryNoteDialog(
                 label = { Text("বিষয় / প্রকল্প / সিদ্ধান্তের নাম *") },
                 isError = topicError != null,
                 supportingText = topicError?.let { err -> { Text(err, color = MosqueUrgentRed, fontSize = 11.sp) } },
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = mosqueStandardFieldColors(isDark),
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 52.dp)
             )
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
@@ -1583,7 +1666,8 @@ private fun AddAdvisoryNoteDialog(
                 label = { Text(if (isSharia) "শরিয়াহ দলিল ও সুপারিশ *" else "দিকনির্দেশনা ও পরামর্শ *") },
                 isError = recError != null,
                 supportingText = recError?.let { err -> { Text(err, color = MosqueUrgentRed, fontSize = 11.sp) } },
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = mosqueStandardFieldColors(isDark),
                 modifier = Modifier.fillMaxWidth(),
                 minLines = 3
             )
@@ -1794,6 +1878,7 @@ private fun AddSmartQuoteDialog(
     var isPinned by remember { mutableStateOf(true) }
     var titleError by remember { mutableStateOf<String?>(null) }
     var msgError by remember { mutableStateOf<String?>(null) }
+    val isDark = LocalIsDarkTheme.current
 
     ExecutiveFormDialogShell(
         title = "স্মার্ট বোর্ড ও দেয়াল প্রচারণা যোগ",
@@ -1823,7 +1908,13 @@ private fun AddSmartQuoteDialog(
                     FilterChip(
                         selected = category == cat,
                         onClick = { category = cat },
-                        label = { Text(cat, fontSize = 11.sp) }
+                        label = { Text(cat, fontSize = 11.sp) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary,
+                            selectedLabelColor = if (isDark) MosqueEmeraldDark else Color.White,
+                            containerColor = if (isDark) MosqueNightSurfaceVariant else MosqueBgLight,
+                            labelColor = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
+                        )
                     )
                 }
             }
@@ -1834,9 +1925,12 @@ private fun AddSmartQuoteDialog(
                 label = { Text("শিরোনাম (যেমন: শবে কদর / দেয়াল বাণী) *") },
                 isError = titleError != null,
                 supportingText = titleError?.let { err -> { Text(err, color = MosqueUrgentRed, fontSize = 11.sp) } },
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = mosqueStandardFieldColors(isDark),
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 52.dp)
             )
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
@@ -1845,7 +1939,8 @@ private fun AddSmartQuoteDialog(
                 label = { Text("বিস্তারিত বার্তা / উক্তি *") },
                 isError = msgError != null,
                 supportingText = msgError?.let { err -> { Text(err, color = MosqueUrgentRed, fontSize = 11.sp) } },
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = mosqueStandardFieldColors(isDark),
                 modifier = Modifier.fillMaxWidth(),
                 minLines = 3
             )
@@ -1853,8 +1948,12 @@ private fun AddSmartQuoteDialog(
             Surface(
                 onClick = { isPinned = !isPinned },
                 shape = RoundedCornerShape(10.dp),
-                color = if (isPinned) MosqueGoldSoft else MosqueBgLight,
-                border = BorderStroke(1.dp, if (isPinned) MosqueGold else MosqueCardBorderSubtle),
+                color = if (isPinned) {
+                    if (isDark) MosqueGoldDark.copy(alpha = 0.25f) else MosqueGoldSoft
+                } else {
+                    if (isDark) MosqueNightSurfaceVariant else MosqueBgLight
+                },
+                border = BorderStroke(1.dp, if (isPinned) MosqueGold else (if (isDark) MosqueNightBorder else MosqueCardBorderSubtle)),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Row(
@@ -1866,7 +1965,7 @@ private fun AddSmartQuoteDialog(
                         text = "ড্যাশবোর্ড স্মার্ট বোর্ডে পিন করে দেখান",
                         fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = MosqueEmeraldDark
+                        color = if (isDark) MosqueNightTextPrimary else MosqueEmeraldDark
                     )
                 }
             }

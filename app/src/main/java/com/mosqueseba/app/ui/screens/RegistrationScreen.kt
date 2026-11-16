@@ -1371,7 +1371,7 @@ private fun MosqueOfficialLogoUploadBanner(
                             shape = RoundedCornerShape(22.dp)
                         )
                         .clip(RoundedCornerShape(22.dp))
-                        .background(Color.White)
+                        .background(if (isDark) MosqueNightSurfaceVariant else Color.White)
                         .padding(if (bitmap != null) 3.dp else 12.dp),
                     contentAlignment = Alignment.Center
                 ) {

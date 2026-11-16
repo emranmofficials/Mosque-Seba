@@ -126,6 +126,8 @@ class SessionManager(context: Context) {
 
     fun isDarkModeEnabled(): Boolean = prefs.getBoolean(KEY_DARK_MODE_ENABLED, false)
 
+    fun hasUserSetDarkMode(): Boolean = prefs.contains(KEY_DARK_MODE_ENABLED)
+
     fun setDarkModeEnabled(enabled: Boolean) {
         prefs.edit().putBoolean(KEY_DARK_MODE_ENABLED, enabled).apply()
     }
