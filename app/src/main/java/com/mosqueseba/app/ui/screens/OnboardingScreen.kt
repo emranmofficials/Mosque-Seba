@@ -68,7 +68,7 @@ fun OnboardingScreen(
                 subtitle = "দৈনিক ওয়াক্ত ও ডিজিটাল নোটিশ",
                 description = "৫ ওয়াক্ত আজান ও জামাতের রিয়েলটাইম সময়সূচি, হিজরি ক্যালেন্ডার এবং ডিজিটাল নোটিশ বোর্ডে তাৎক্ষণিক ইসলামিক ঘোষণা।",
                 icon = Icons.Default.Schedule,
-                accentColor = MosqueTeal,
+                accentColor = RoleMusalliAccent,
                 highlights = listOf("আজান ও জামাতের সঠিক ওয়াক্ত", "রিয়েলটাইম নোটিশ প্রচার", "কার্যনির্বাহী সভার আপডেট")
             ),
             OnboardingSlideData(
@@ -241,7 +241,7 @@ fun OnboardingScreen(
                                     )
                                     .border(
                                         1.dp,
-                                        if (isDark) MosqueNightBorder else MosqueBorderLight,
+                                        if (isDark) MosqueNightBorder else MosqueCardBorder,
                                         RoundedCornerShape(12.dp)
                                     )
                                     .padding(horizontal = 14.dp, vertical = 9.dp),

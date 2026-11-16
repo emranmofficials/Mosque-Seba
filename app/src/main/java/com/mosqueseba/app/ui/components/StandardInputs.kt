@@ -81,7 +81,7 @@ fun MosqueSearchBar(
             focusedContainerColor = if (isDark) MosqueNightSurfaceVariant else Color.White,
             unfocusedContainerColor = if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft.copy(alpha = 0.35f),
             focusedBorderColor = MaterialTheme.colorScheme.primary,
-            unfocusedBorderColor = if (isDark) MosqueNightBorder else MosqueBorderLight,
+            unfocusedBorderColor = if (isDark) MosqueNightBorder else MosqueCardBorder,
             focusedTextColor = MaterialTheme.colorScheme.onSurface,
             unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
             cursorColor = MaterialTheme.colorScheme.primary

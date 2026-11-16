@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -40,6 +41,8 @@ import com.mosqueseba.app.data.local.entity.StudentEntity
 import com.mosqueseba.app.data.model.UserRole
 import com.mosqueseba.app.ui.components.ExecutiveFormDialogShell
 import com.mosqueseba.app.ui.components.MoreFormSection
+import com.mosqueseba.app.ui.components.MosqueSearchBar
+import com.mosqueseba.app.ui.components.StaggeredItemEntrance
 import com.mosqueseba.app.ui.components.toBengaliDigits
 import com.mosqueseba.app.ui.theme.*
 import com.mosqueseba.app.ui.viewmodel.MosqueViewModel

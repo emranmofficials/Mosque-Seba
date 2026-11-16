@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -33,9 +34,11 @@ import com.mosqueseba.app.data.local.entity.MeetingEntity
 import com.mosqueseba.app.data.local.entity.NoticeEntity
 import com.mosqueseba.app.ui.components.MeetingResolutionDialog
 import com.mosqueseba.app.ui.components.MosqueConfirmDialog
+import com.mosqueseba.app.ui.components.MosqueSearchBar
 import com.mosqueseba.app.ui.components.MosqueToastController
 import com.mosqueseba.app.ui.components.PublishNoticeDialog
 import com.mosqueseba.app.ui.components.ScheduleMeetingDialog
+import com.mosqueseba.app.ui.components.StaggeredItemEntrance
 import com.mosqueseba.app.ui.components.toBengaliDigits
 import com.mosqueseba.app.ui.theme.*
 import com.mosqueseba.app.ui.viewmodel.MosqueViewModel

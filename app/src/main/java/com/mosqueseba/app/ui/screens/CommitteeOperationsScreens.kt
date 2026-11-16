@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -39,7 +40,9 @@ import com.mosqueseba.app.ui.components.MehrabArchCard
 import com.mosqueseba.app.ui.components.MoreFormSection
 import com.mosqueseba.app.ui.components.MosqueConfirmDialog
 import com.mosqueseba.app.ui.components.MosqueMemberAvatar
+import com.mosqueseba.app.ui.components.MosqueSearchBar
 import com.mosqueseba.app.ui.components.MosqueToastController
+import com.mosqueseba.app.ui.components.StaggeredItemEntrance
 import com.mosqueseba.app.ui.components.roleIcon
 import com.mosqueseba.app.ui.components.toBengaliDigits
 import com.mosqueseba.app.ui.theme.*
