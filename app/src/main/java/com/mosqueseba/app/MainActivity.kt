@@ -696,6 +696,9 @@ fun MosqueAppShell(
                                         val idx = currentNavItems.indexOfFirst { it.destinationKey == "election" }
                                         if (idx != -1) currentTabIndex = idx else overlaySubModule = "election"
                                     }
+                                    "islamic_calendar" -> {
+                                        overlaySubModule = "islamic_calendar"
+                                    }
                                 }
                             }
                         )
@@ -847,7 +850,7 @@ fun MosqueAppShell(
                     onOpenReceiveChanda = { showReceiveChandaDialog = true },
                     onOpenScheduleMeeting = { showScheduleMeetingDialog = true }
                 )
-                "charter", "cashbox", "office_docs", "sharia_advisory", "publicity", "events", "prayer" -> MoreScreen(
+                "charter", "cashbox", "office_docs", "sharia_advisory", "publicity", "events", "prayer", "islamic_calendar" -> MoreScreen(
                     viewModel = viewModel,
                     initialSubModule = destination,
                     onOpenReceiveChanda = { showReceiveChandaDialog = true },

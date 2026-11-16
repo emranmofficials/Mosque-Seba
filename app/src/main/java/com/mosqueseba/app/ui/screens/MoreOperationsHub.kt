@@ -629,7 +629,7 @@ private fun buildRoleOperationModules(
         "তফসিল চলমান"
     } else null
 
-    return when (currentRole) {
+    val baseModules = when (currentRole) {
         UserRole.TREASURER -> listOf(
             OperationModuleEntry("staff", "ইমাম ও কর্মচারী বেতন ব্যবস্থাপনা", "পেশ ইমাম, মুয়াজ্জিন ও খাদেমদের বেতন বিতরণ ও পে-রোল", Icons.Default.Badge, MosqueInfoBlue, OperationCategory.EDUCATION_STAFF, staffBadge),
             OperationModuleEntry("chanda", "চাঁদা আদায় ও রসিদ বহি", "সকল পরিশোধিত চাঁদার তালিকা ও ডিজিটাল কিউআর রসিদ", Icons.Default.ReceiptLong, MosqueEmeraldPrimary, OperationCategory.FINANCE, chandaBadge),
@@ -800,4 +800,15 @@ private fun buildRoleOperationModules(
             OperationModuleEntry("charter", "আদর্শ কমিটি সনদ ও দায়িত্ব", "৩-স্তরীয় কমিটির ১৩টি পদের দায়িত্ব ও পোর্টফোলিও তদারকি", Icons.Default.VerifiedUser, MosqueEmeraldDark, OperationCategory.INFO)
         )
     }
+
+    return baseModules + listOf(
+        OperationModuleEntry(
+            key = "islamic_calendar",
+            title = "ইসলামিক ক্যালেন্ডার ও এআই ইভেন্ট",
+            description = "হিজরি দিনপঞ্জি, রমজান, ঈদ ও এআই খুতবা সহায়িকা",
+            icon = Icons.Default.Event,
+            iconColor = MosqueGoldDark,
+            category = OperationCategory.INFO
+        )
+    )
 }

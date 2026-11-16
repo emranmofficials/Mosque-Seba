@@ -23,6 +23,7 @@ class SessionManager(context: Context) {
         private const val KEY_NOTIFICATIONS_ENABLED = "key_notifications_enabled"
         private const val KEY_SHOW_HIJRI_BANNER = "key_show_hijri_banner"
         private const val KEY_DARK_MODE_ENABLED = "key_dark_mode_enabled"
+        private const val KEY_HIJRI_DAY_OFFSET = "key_hijri_day_offset"
         private const val KEY_READ_NOTIFICATION_IDS = "key_read_notification_ids"
         private const val KEY_ONBOARDING_COMPLETED = "key_onboarding_completed"
         private const val DEFAULT_MOSQUE_ID = "mosque-001"
@@ -130,6 +131,12 @@ class SessionManager(context: Context) {
 
     fun setDarkModeEnabled(enabled: Boolean) {
         prefs.edit().putBoolean(KEY_DARK_MODE_ENABLED, enabled).apply()
+    }
+
+    fun getHijriDayOffset(): Int = prefs.getInt(KEY_HIJRI_DAY_OFFSET, 0)
+
+    fun setHijriDayOffset(offset: Int) {
+        prefs.edit().putInt(KEY_HIJRI_DAY_OFFSET, offset.coerceIn(-2, 2)).apply()
     }
 
     fun isOnboardingCompleted(): Boolean = prefs.getBoolean(KEY_ONBOARDING_COMPLETED, false)

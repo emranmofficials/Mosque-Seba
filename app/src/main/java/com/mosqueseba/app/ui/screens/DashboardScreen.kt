@@ -44,6 +44,7 @@ import android.widget.Toast
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import com.mosqueseba.app.data.model.UserRole
+import com.mosqueseba.app.data.model.IslamicCalendarEngine
 import com.mosqueseba.app.ui.components.*
 import com.mosqueseba.app.ui.theme.*
 import com.mosqueseba.app.ui.viewmodel.MosqueViewModel
@@ -79,6 +80,7 @@ fun DashboardScreen(
     val khademCheckedTasks by viewModel.khademCheckedTasks.collectAsState()
     val currentRole by viewModel.currentUserRole.collectAsState()
     val showHijriBanner by viewModel.showHijriBanner.collectAsState()
+    val hijriDayOffset by viewModel.hijriDayOffset.collectAsState()
     val context = LocalContext.current
 
     var showDutiesDialog by remember { mutableStateOf(false) }
@@ -193,9 +195,22 @@ fun DashboardScreen(
             }
         }
 
+        // 1.5. Top Islamic Calendar & Event Countdown Banner
+        item(key = "global_top_islamic_event_card") {
+            val nextEventCountdown = remember(hijriDayOffset) {
+                IslamicCalendarEngine.getNextUpcomingMajorEvent(hijriDayOffset)
+            }
+            StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
+                IslamicEventDashboardBanner(
+                    countdown = nextEventCountdown,
+                    onOpenCalendar = { onOpenDialog("islamic_calendar") }
+                )
+            }
+        }
+
         // 2. Top Digital Notice Board & Urgent Announcements
         item(key = "global_top_smart_board") {
-            StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
+            StaggeredDashboardItem(index = 3, modifier = Modifier.animateItem()) {
                 SmartBoardCard(quotes = allSmartBoardQuotes, includeDateAndPrayerSlides = false)
             }
         }

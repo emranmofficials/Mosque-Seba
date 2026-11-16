@@ -38,6 +38,7 @@ import androidx.compose.ui.platform.testTag
 import com.mosqueseba.app.ui.components.AddEventDialog
 import com.mosqueseba.app.ui.components.AddFoodScheduleFormDialog
 import com.mosqueseba.app.ui.components.AddMemberDialog
+import com.mosqueseba.app.ui.components.IslamicCalendarHubDialog
 import com.mosqueseba.app.ui.components.AddRosterFormDialog
 import com.mosqueseba.app.ui.components.AddWelfareDialog
 import com.mosqueseba.app.ui.components.AutoFoodScheduleDialog
@@ -147,7 +148,7 @@ fun MoreScreen(
             .background(MaterialTheme.colorScheme.background)
     ) {
         // Modern Clean Sticky Header for Sub-modules (skip for submodules that already provide their own complete header)
-        val subModulesWithOwnHeader = setOf("election", "notices", "members", "about")
+        val subModulesWithOwnHeader = setOf("election", "notices", "members", "about", "islamic_calendar")
         if (selectedSubModule != null && selectedSubModule !in subModulesWithOwnHeader) {
             val isDark = LocalIsDarkTheme.current
             Surface(
@@ -235,6 +236,23 @@ fun MoreScreen(
                     onBack = {
                         if (initialSubModule != null) onBack?.invoke() else selectedSubModule = null
                     }
+                )
+            }
+            "islamic_calendar" -> {
+                IslamicCalendarHubDialog(
+                    viewModel = viewModel,
+                    onDismiss = {
+                        if (initialSubModule != null) onBack?.invoke() else selectedSubModule = null
+                    },
+                    onDraftNotice = { title, content ->
+                        if (initialSubModule != null) onBack?.invoke() else selectedSubModule = null
+                        onOpenPublishNotice()
+                    }
+                )
+                MoreOperationsHub(
+                    currentRole = currentRole,
+                    liveCounts = liveCounts,
+                    onSelectModule = { moduleKey -> selectedSubModule = moduleKey }
                 )
             }
             "charter" -> {

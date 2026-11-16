@@ -23,6 +23,7 @@ import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
+import com.mosqueseba.app.data.model.IslamicEvent
 import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.*
@@ -42,6 +43,16 @@ sealed interface AiSummaryUiState {
     data class Streaming(val text: String) : AiSummaryUiState
     data class Success(val text: String) : AiSummaryUiState
     data class Error(val message: String) : AiSummaryUiState
+}
+
+sealed interface AiEventGuidanceUiState {
+    data object Idle : AiEventGuidanceUiState
+    data object Loading : AiEventGuidanceUiState
+    data class Success(
+        val eventId: String,
+        val fullGuidanceText: String
+    ) : AiEventGuidanceUiState
+    data class Error(val message: String) : AiEventGuidanceUiState
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -100,6 +111,9 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
     private val _showHijriBanner = MutableStateFlow(sessionManager.isHijriBannerVisible())
     val showHijriBanner: StateFlow<Boolean> = _showHijriBanner.asStateFlow()
 
+    private val _hijriDayOffset = MutableStateFlow(sessionManager.getHijriDayOffset())
+    val hijriDayOffset: StateFlow<Int> = _hijriDayOffset.asStateFlow()
+
     private val _rememberMeEnabled = MutableStateFlow(sessionManager.isRememberMeEnabled())
     val rememberMeEnabled: StateFlow<Boolean> = _rememberMeEnabled.asStateFlow()
 
@@ -129,6 +143,11 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
     fun setShowHijriBanner(visible: Boolean) {
         sessionManager.setHijriBannerVisible(visible)
         _showHijriBanner.value = visible
+    }
+
+    fun setHijriDayOffset(offset: Int) {
+        sessionManager.setHijriDayOffset(offset)
+        _hijriDayOffset.value = offset
     }
 
     fun setRememberMeEnabled(enabled: Boolean) {
@@ -603,6 +622,68 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
                 Log.e(TAG, "Firebase AI finance summary failed", e)
                 _aiSummaryState.value = AiSummaryUiState.Error(
                     e.localizedMessage ?: "আর্থিক সারসংক্ষেপ তৈরি ব্যর্থ হয়েছে।"
+                )
+            }
+        }
+    }
+
+    private val _aiEventGuidanceState = MutableStateFlow<AiEventGuidanceUiState>(AiEventGuidanceUiState.Idle)
+    val aiEventGuidanceState: StateFlow<AiEventGuidanceUiState> = _aiEventGuidanceState.asStateFlow()
+
+    fun clearEventAiGuidance() {
+        _aiEventGuidanceState.value = AiEventGuidanceUiState.Idle
+    }
+
+    fun generateEventAiGuidance(event: IslamicEvent) {
+        val activeMosqueName = mosque.value?.nameBn ?: "বায়তুল জান্নাত জামে মসজিদ"
+        val activeMosqueAddress = mosque.value?.address ?: "ঢাকা"
+
+        viewModelScope.launch {
+            _aiEventGuidanceState.value = AiEventGuidanceUiState.Loading
+            try {
+                val prompt = """
+                    আপনি "$activeMosqueName" ($activeMosqueAddress)-এর খতিব ও ইসলামিক গবেষণা সহযোগী।
+                    আসন্ন বা চলমান পবিত্র উপলক্ষ: "${event.titleBn} (${event.titleEn})"
+                    আরবি মাস ও তারিখ: ${event.dateRangeBn}
+                    মূল তাৎপর্য: ${event.defaultSignificanceBn}
+                    
+                    অনুগ্রহ করে খতিব সাহেব ও সাধারণ মুসল্লিদের জন্য অত্যন্ত মার্জিত, প্রামাণ্য (কুরআন ও সুন্নাহ ভিত্তিক) বাংলায় একটি পূর্ণাঙ্গ দিকনির্দেশনা তৈরি করুন। এতে অন্তর্ভুক্ত থাকবে:
+                    ১. কুরআন ও সহিহ হাদিসের আলোকে এই দিবসের ফজিলত ও গুরুত্ব।
+                    ২. সাধারণ মুসল্লিদের জন্য বিশেষ করণীয় নফল আমল, দোয়া ও জিকিরসমূহ (এবং বর্জনীয় বিদআত/কুসংস্কার)।
+                    ৩. ইমাম ও খতিবদের জন্য জুমার বয়ান বা মাহফিলের ৩-৪টি শক্তিশালী পয়েন্ট ও পয়েন্টভিত্তিক মূল বক্তব্য।
+                    ৪. সমাজের অভাবী মানুষ ও পাড়া-প্রতিবেশীর হক আদায়ে বিশেষ দিকনির্দেশনা।
+                    
+                    ভাষা হবে আবেগময়, প্রামাণ্য ও উৎসাহব্যঞ্জক। অপ্রয়োজনীয় ভূমিকা পরিহার করে সরাসরি বিষয়বস্তু তুলে ধরুন।
+                """.trimIndent()
+
+                val response = withTimeout(60_000L) {
+                    summaryModel.generateContent(prompt)
+                }
+                val text = response.text
+                if (text.isNullOrBlank()) {
+                    _aiEventGuidanceState.value = AiEventGuidanceUiState.Success(
+                        eventId = event.id,
+                        fullGuidanceText = event.buildDefaultGuidanceSummary()
+                    )
+                } else {
+                    _aiEventGuidanceState.value = AiEventGuidanceUiState.Success(
+                        eventId = event.id,
+                        fullGuidanceText = text.trim()
+                    )
+                }
+            } catch (e: TimeoutCancellationException) {
+                Log.e(TAG, "AI event guidance timed out, fallback to default", e)
+                _aiEventGuidanceState.value = AiEventGuidanceUiState.Success(
+                    eventId = event.id,
+                    fullGuidanceText = event.buildDefaultGuidanceSummary()
+                )
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.e(TAG, "Firebase AI event guidance failed, fallback to default", e)
+                _aiEventGuidanceState.value = AiEventGuidanceUiState.Success(
+                    eventId = event.id,
+                    fullGuidanceText = event.buildDefaultGuidanceSummary()
                 )
             }
         }
