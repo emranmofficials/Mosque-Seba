@@ -378,16 +378,7 @@ fun RamadanHubDialog(
                         selectedTabIndex = selectedTab.ordinal,
                         edgePadding = 8.dp,
                         containerColor = MaterialTheme.colorScheme.surface,
-                        contentColor = MosqueEmeraldPrimary,
-                        indicator = { tabPositions ->
-                            if (selectedTab.ordinal < tabPositions.size) {
-                                TabRowDefaults.SecondaryIndicator(
-                                    modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTab.ordinal]),
-                                    color = MosqueEmeraldPrimary,
-                                    height = 3.dp
-                                )
-                            }
-                        }
+                        contentColor = MosqueEmeraldPrimary
                     ) {
                         RamadanTab.entries.forEach { tab ->
                             val isSelected = selectedTab == tab
@@ -1439,14 +1430,14 @@ private fun RamadanNoticeGeneratorView(
                         if (canPublish) {
                             Button(
                                 onClick = {
-                                    viewModel.addNotice(
+                                    viewModel.publishNotice(
                                         title = noticeTitle,
                                         content = noticeBody,
-                                        author = mosqueName,
-                                        priority = "HIGH"
+                                        priority = "HIGH",
+                                        isPinned = true
                                     )
                                     isPublished = true
-                                    Toast.makeText(context, "নোটিশ বোর্ডে সফলভাবে প্রকাশিত হয়েছে!", Toast.LENGTH_LONG).show()
+                                    MosqueToastController.success("রমজান নোটিশটি নোটিশ বোর্ডে সফলভাবে প্রকাশিত হয়েছে।", "নোটিশ প্রকাশিত")
                                 },
                                 colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary),
                                 shape = RoundedCornerShape(10.dp),
