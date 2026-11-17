@@ -218,8 +218,11 @@ object RamadanEngine {
         }
     }
 
-    fun getTodayStatus(district: BangladeshDistrictOffset = bangladeshDistricts.first()): TodayRamadanStatus {
-        val (hijriYear, hijriMonth, hijriDay) = IslamicCalendarEngine.getCurrentHijriDate()
+    fun getTodayStatus(
+        district: BangladeshDistrictOffset = bangladeshDistricts.first(),
+        hijriDayOffset: Int = 0
+    ): TodayRamadanStatus {
+        val (hijriYear, hijriMonth, hijriDay) = IslamicCalendarEngine.getCurrentHijriDate(hijriDayOffset)
         val isRamadan = hijriMonth == 9
 
         val scheduleList = get30DaySchedule(district)
@@ -275,7 +278,7 @@ object RamadanEngine {
             progressFraction = 1f
         }
 
-        val countdowns = IslamicCalendarEngine.getEventCountdowns()
+        val countdowns = IslamicCalendarEngine.getEventCountdowns(hijriDayOffset)
         val ramadanCountdown = countdowns.firstOrNull { it.event.id == "ramadan_start" }
         val daysUntil = ramadanCountdown?.daysRemaining ?: 0
 

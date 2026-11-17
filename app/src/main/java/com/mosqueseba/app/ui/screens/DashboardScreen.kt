@@ -195,32 +195,19 @@ fun DashboardScreen(
             }
         }
 
-        // 1.5. Top Islamic Calendar & Event Countdown Banner
-        item(key = "global_top_islamic_event_card") {
-            val nextEventCountdown = remember(hijriDayOffset) {
-                IslamicCalendarEngine.getNextUpcomingMajorEvent(hijriDayOffset)
-            }
-            StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
-                IslamicEventDashboardBanner(
-                    countdown = nextEventCountdown,
-                    onOpenCalendar = { onOpenDialog("islamic_calendar") }
-                )
-            }
-        }
-
-        // 1.6. Top Holy Ramadan Countdown & Schedule Card
-        item(key = "global_top_ramadan_card") {
-            StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
-                RamadanDashboardCard(
-                    onOpenHub = { onOpenDialog("ramadan_hub") }
-                )
-            }
-        }
-
-        // 2. Top Digital Notice Board & Urgent Announcements
+        // 2. Dynamic Smart Digital Board (Unified Hub for Islamic Calendar, Ramadan, Notices & Wall Quotes)
         item(key = "global_top_smart_board") {
-            StaggeredDashboardItem(index = 3, modifier = Modifier.animateItem()) {
-                SmartBoardCard(quotes = allSmartBoardQuotes, includeDateAndPrayerSlides = false)
+            StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
+                SmartBoardCard(
+                    quotes = allSmartBoardQuotes,
+                    notices = allNotices,
+                    hijriDayOffset = hijriDayOffset,
+                    includeDateAndPrayerSlides = true,
+                    onOpenIslamicCalendar = { onOpenDialog("islamic_calendar") },
+                    onOpenRamadanHub = { onOpenDialog("ramadan_hub") },
+                    onOpenPrayerSchedule = { onOpenDialog("view_prayers") },
+                    onOpenNotices = { onOpenDialog("notices") }
+                )
             }
         }
 
