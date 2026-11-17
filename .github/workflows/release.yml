@@ -26,71 +26,40 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: '8.11.1'
 
-      - name: Ensure google-services.json
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew
+
+      - name: Verify required files
         run: |
-          if [ ! -f "app/google-services.json" ]; then
-            echo "Generating fallback google-services.json"
-            cat << 'EOF' > app/google-services.json
-            {
-              "project_info": {
-                "project_number": "847291038472",
-                "project_id": "mosque-seba",
-                "storage_bucket": "mosque-seba.appspot.com"
-              },
-              "client": [
-                {
-                  "client_info": {
-                    "mobilesdk_app_id": "1:847291038472:android:6b5a3e218c9f0d4a7b2e1c",
-                    "android_client_info": {
-                      "package_name": "com.mosqueseba.app"
-                    }
-                  },
-                  "oauth_client": [],
-                  "api_key": [
-                    {
-                      "current_key": "AIzaSyB3-dummyKeyMosqueSebaAppBuild01234"
-                    }
-                  ],
-                  "services": {
-                    "appinvite_service": {
-                      "other_platform_oauth_client": []
-                    }
-                  }
-                }
-              ],
-              "configuration_version": "1"
-            }
-          EOF
-          fi
+          test -f app/google-services.json && echo "google-services.json OK" || { echo "MISSING google-services.json"; exit 1; }
+          test -f keystore/mosque-seba.jks && echo "Release keystore OK" || echo "WARN: release keystore missing, will use debug signing"
 
       - name: Build Official Release APK and AAB
-        run: gradle :app:assembleRelease :app:bundleRelease --stacktrace
+        run: ./gradlew :app:assembleRelease :app:bundleRelease --stacktrace --no-daemon
 
       - name: Prepare Release Artifacts
         run: |
           mkdir -p release-artifacts
-          TAG="${GITHUB_REF_NAME:-v1.0.39}"
+          TAG="${GITHUB_REF_NAME:-v1.1.7}"
           if [ -f "app/build/outputs/apk/release/app-release.apk" ]; then
             cp app/build/outputs/apk/release/app-release.apk "release-artifacts/Mosque-Seba-${TAG}.apk"
+          else
+            echo "ERROR: release APK not found"; exit 1
           fi
           if [ -f "app/build/outputs/bundle/release/app-release.aab" ]; then
             cp app/build/outputs/bundle/release/app-release.aab "release-artifacts/Mosque-Seba-${TAG}.aab"
           fi
-          ls -la release-artifacts/
+          ls -lh release-artifacts/
 
       - name: Upload Artifacts as Workflow Artifact
         uses: actions/upload-artifact@v4
-        continue-on-error: true
         with:
           name: Mosque-Seba-Release-Packages
           path: release-artifacts/*
 
       - name: Publish Official GitHub Release
         uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
         with:
           name: "মসজিদ সেবা (Mosque Seba) — ${{ github.ref_name }} Official Release"
           tag_name: ${{ github.ref_name }}
@@ -102,25 +71,21 @@ jobs:
           body: |
             # 🕌 মসজিদ সেবা (Mosque Seba) — ${{ github.ref_name }}
 
-            > **অফিসিয়াল স্লোগান:** *মসজিদের খেদমতে আধুনিক প্রযুক্তি, পরিচালনায় স্বচ্ছ আস্থা*  
-            > **Application Package:** `com.mosqueseba.app`  
-            > **অফিসিয়াল সাইনিং কি:** স্থায়ী অফিসিয়াল রিলিজ কি-স্টোর দ্বারা স্বাক্ষরিত (পরবর্তী আপডেটে আনইনস্টল করার প্রয়োজন হবে না)
+            > **অফিসিয়াল স্লোগান:** *মসজিদের খেদমতে আধুনিক প্রযুক্তি, পরিচালনায় স্বচ্ছ আস্থা*
+            > **Application Package:** `com.mosqueseba.app`
 
-            ## 📲 সরাসরি ডাউনলোড লিংক:
-            - 📦 **অ্যান্ড্রয়েড APK (সরাসরি মোবাইলে ইনস্টলের জন্য):**  
-              👉 **[Mosque-Seba-${{ github.ref_name }}.apk](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/Mosque-Seba-${{ github.ref_name }}.apk)**
-            - 📱 **অফিসিয়াল AAB (Android App Bundle - গুগল প্লে স্টোর / অফিসিয়াল স্টোরের জন্য):**  
-              👉 **[Mosque-Seba-${{ github.ref_name }}.aab](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/Mosque-Seba-${{ github.ref_name }}.aab)**
+            ## 📲 সরাসরি ডাউনলোড:
+            - 📦 **APK (মোবাইলে ইনস্টলের জন্য):** 👉 **[Mosque-Seba-${{ github.ref_name }}.apk](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/Mosque-Seba-${{ github.ref_name }}.apk)**
+            - 📱 **AAB (Play Store-এর জন্য):** 👉 **[Mosque-Seba-${{ github.ref_name }}.aab](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/Mosque-Seba-${{ github.ref_name }}.aab)**
 
             ---
 
-            ### 🚀 অফিসিয়াল রিলিজ v1.1.6-এর নতুন ফিচার ও আধুনিক আপডেট:
-            - 🛡️ **সম্পূর্ণ ডেটা আইসোলেশন ও কঠোর মাল্টি-টেন্যান্ট লক (Strict Multi-Tenant Mosque Partitioning):** এক মসজিদের তথ্য অন্য মসজিদ দেখার কোনো সুযোগ নেই। প্রতিটি টেবিলের প্রতিটি ডেটা `mosque_id` দ্বারা কঠোরভাবে সুরক্ষিত ও ফিল্টার করা। অ্যাপ শুধুমাত্র সক্রিয় মসজিদের ডেটা সিঙ্ক ও প্রদর্শনের অনুমতি দেয়।
-            - 🔄 **নতুন ডিভাইসে তাৎক্ষণিক পুনরুদ্ধার (Instant Cloud Restore via Committee ID):** অন্য ডিভাইসে অ্যাপ ইনস্টল করে কমিটি আইডি দিয়ে লগইন করলে ক্লাউড থেকে শুধুমাত্র সেই নির্দিষ্ট মসজিদের তথ্য ও সদস্যদের প্রোফাইল স্বয়ংক্রিয়ভাবে উদ্ধার হবে।
-            - 🔑 **নিরাপদ ক্লাউড ক্রেডেনশিয়াল হ্যাশিং (SHA-256 Cloud Password Sync):** সভাপতির পাসওয়ার্ড শক্তিশালী SHA-256 ক্রিপ্টোগ্রাফিক হ্যাশ আকারে সংরক্ষিত থাকে, যা যেকোনো ডিভাইসে নিরাপদ প্রমাণীকরণ নিশ্চিত করে।
-            - ⚡ **রিয়েল-টাইম ক্লাউড ব্যাকএন্ড ও স্বয়ংক্রিয় সিঙ্ক ইঞ্জিন (Continuous Live Sync):** সুপাবেইজ (Supabase Cloud PostgreSQL 17) ব্যাকএন্ডের ২৬টি টেবিলে `supabase_realtime` রেপ্লিকেশন এবং `REPLICA IDENTITY FULL` সক্রিয়। প্রতি ২০ সেকেন্ড অন্তর স্বয়ংক্রিয় রিয়েল-টাইম সিঙ্ক।
-            - 🏛️ **কমিটি আইডি তৈরি ও প্রফেশনাল সাকসেস ডায়ালগ (Committee ID & Success Dialog):** নতুন মসজিদ নিবন্ধনের পর স্বয়ংক্রিয় ইউনিক কমিটি আইডি প্রদর্শন, ১-ক্লিক কপি ও তাৎক্ষণিক ক্লাউড আপসার্ট।
-            - 📱 **এন্টারপ্রাইজ হাই সিকিউরিটি ও ইন-অ্যাপ অটো আপডেটার:** Strict HTTPS-only, Anti-backup, Secure Flag, রুট গার্ড ও সরাসরি অ্যাপের ভেতর থেকে নোটিফিকেশন প্রগ্রেসহ ডাউনলোড ও ইনস্টলেশন।
+            ### 🚀 v1.1.7 — নতুন ফিচার ও গুরুত্বপূর্ণ ফিক্স:
+            - 🔐 **পুরো আসল Supabase Auth:** GoTrue সাইনআপ/লগইন/JWT রিফ্রেশ/পাসওয়ার্ড পরিবর্তন; মোবাইল-নম্বার-only সদস্যদের জন্য deterministic synthetic email; real Auth UID-লিংক করা প্রোফাইল।
+            - 🛡️ **কঠোর RLS ও মাল্টি-টেন্যান্ট আইসোলেশন:** ৪৮টি policy, text tenant helper, anon lookup RPC; এক মসজিদের তথ্য অন্য মসজিদ দেখতে পারবে না।
+            - ☁️ **সব ২৫টি টেবিলের ক্লাউড সিঙ্ক + লাইভ Realtime:** OkHttp Phoenix WebSocket, JWT-জয়েন, `postgres_changes` ইভেন্টে তাৎক্ষণিক সিঙ্ক।
+            - 🐛 **গুরুত্বপূর্ণ বাগ ফিক্স:** মসজিদ বদলালে পুরনো ডেটা নতুন টেন্যান্টে ঢুকে যাওয়া; ভুল কমিটি আইডিতে লোকাল ডেটা নষ্ট হওয়া; পাসওয়ার্ড পরিবর্তনে ভুল ইমেইল/session; logout-এর পর Realtime stale JWT; **অ্যাপ ওপেনে ক্রাশ করা cold-start NPE** (init-block-এর আগে fields সরিয়ে ফিক্স)।
+            - 🚑 **CrashLogger:** MIUI-সহ সব ডিভাইসে ক্রাশ হলে stack trace `Downloads/mosque_seba_crash.txt`-এ সংরক্ষিত হয়।
 
             ---
             *নির্মাণে ও সৌজন্যে: [Emran Mahmud (@emranmofficials)](https://github.com/${{ github.repository_owner }})*

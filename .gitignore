@@ -28,3 +28,5 @@ scratch_downloads/
 
 # Local agent tooling
 .antigem/
+
+.kotlin/
