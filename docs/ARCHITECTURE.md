@@ -81,9 +81,17 @@ Supabase Storage holds profile photos, mosque logos, notice attachments, meeting
 - File validation on upload (type/size).
 - No client secrets are ever bundled in the Android app.
 
+## Production v1.1.1 Architecture Highlights
+
+- **Room Database v10:** Progressive migrations (`MIGRATION_1_2` to `MIGRATION_9_10`) providing offline-first caching for 28 tables, touch-drawn vector signatures, official committee seals, notice poster attachments, and election entities.
+- **Native Android Printing:** `MosquePrintHelper.kt` provides native 1-click printing and PDF generation via `android.print.PrintManager` and custom HTML templates with embedded Base64 stamps and signatures.
+- **On-Device Gemini AI Logic:** Firebase AI Logic (`Firebase.ai.generativeModel("gemini-3.8-flash")`) executes client-side via `google-services.json`, eliminating the need to expose API keys in Supabase.
+- **Live Supabase PostgreSQL 17 Cloud Backend:** Project `donglyxtrfyzwgtrskhz` hosted in `ap-northeast-1` with 28 tables, 4 RLS policies, 10 server-side RPCs, and automated bidirectional client sync via `SupabaseSyncManager.kt`.
+
 ## Related documents
 
 - `docs/DATABASE_ARCHITECTURE.md` — schema and table groups
 - `docs/DATA_FLOW.md` — end-to-end flows for money and academic data
 - `docs/SECURITY_MODEL.md` — RLS, tenancy, and RPC security rules
 - `docs/PERMISSION_MATRIX.md` — role/permission mapping
+

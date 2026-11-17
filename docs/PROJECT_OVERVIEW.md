@@ -20,12 +20,13 @@
 
 | Attribute | Value |
 |---|---|
-| Name | মসজিদ কমিটি ম্যানেজমেন্ট সিস্টেম |
-| Platform | Android |
+| Name | মসজিদ সেবা — Mosque Seba |
+| Platform | Android (minSdk 26, targetSdk 35) |
+| Current Version | v1.1.1 (Production Ready) |
 | Primary language | বাংলা (Bengali-first) |
-| Backend | Supabase / PostgreSQL |
-| Client architecture | Kotlin + Jetpack Compose + MVVM / Clean Architecture |
-| UI system | Custom "Islamic Modern" design system — **Material Design 3 is prohibited** |
+| Backend | Supabase / PostgreSQL 17 (Multi-tenant RLS) + Room DB v10 |
+| Client architecture | Kotlin 2.0 + Jetpack Compose + MVVM / Clean Architecture |
+| UI system | Custom "Islamic Modern" design system (Pan-Islamic Emerald `#0D5C3A`, Royal Gold `#D4AF37`, Mehrab Arches, Rub-El-Hizb dividers, Zero Emojis) |
 | Brand tone | Islamic, trustworthy, professional, clean, calm, modern |
 
 ## Source of truth hierarchy
@@ -38,11 +39,19 @@
 
 Any conflict is resolved by this order. Code never overrides the PRD; a PRD change requires a Change Request (see `docs/DEVELOPMENT_RULES.md`).
 
-## Roadmap snapshot (PRD §43)
+## Roadmap & Milestone Status (v1.1.1 Production Release)
 
-- **P0 — Production foundation:** Authentication, tenant isolation, roles/permissions, Member, Chanda, Finance, Staff/payroll, core Dashboard, Notices, critical Notifications, backup/recovery, security testing.
-- **P1 — Core expansion:** Madrasa, Guardian, Attendance, Hifz, Exam/Result, Fees, Timetable, Homework, Reports, Duty, Meetings, Prayer.
-- **P2 — Advanced:** AI assistant, advanced analytics, procurement, inventory, assets, projects, advanced welfare, subscription automation.
+- **P0 — Production Foundation (Complete):** Multi-role authentication, tenant isolation, dynamic role catalogue, Member management, Chanda subscription cycle, 2-tier financial approval, staff & payroll, dashboard Smart Board, notices, critical notifications, Room v10 offline-first cache.
+- **P1 — Core Expansion (Complete):** Madrasa/Maktab core, attendance tracking, Hifz progress scoring, exams & 360 evaluation, student fees, duty rosters, food schedules, committee meetings & resolutions archive, prayer times calculation.
+- **P2 — Executive Operations & Modern AI (Complete):** 
+  - Google Gemini AI notice drafter & Dawatnama Mahfil poster creator.
+  - Interactive touch-screen digital signature pad & official seal manager.
+  - 3-witness Jummah cashbox counter & voucher posting.
+  - Emergency Janaza alert broadcast via WhatsApp/SMS.
+  - Native 1-click printing & PDF generation with embedded Base64 signatures/seals.
+  - Election schedule, nomination management & official gazette publisher.
+  - Ramadan Special Hub with Sahri/Iftar countdown, Taraweeh & Itikaf tracking.
+  - Supabase live cloud backend (`donglyxtrfyzwgtrskhz`) with 28 PostgreSQL tables and automated synchronization.
 
 ## Final product definition (PRD §44)
 

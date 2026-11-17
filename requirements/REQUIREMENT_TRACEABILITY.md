@@ -67,3 +67,49 @@
 - **PRD requirement summary:** Full Islamic emerald-dark theme, Tablet/Foldable adaptive `NavigationRail`, and Firebase App Check reCAPTCHA Enterprise.
 - **Android Components:** `Theme.kt`, `Color.kt`, `MainActivity.kt` (`MosqueNavigationRail`), `AppCheckHelper.kt`
 - **Status:** Done
+
+### 12. Islamic Dawatnama Poster AI (PRD §14, §28)
+- **PRD requirement summary:** Waz mahfil invitation generation, AI visual prompt crafting, event details formatting, and notice image attachment.
+- **Android Screens / Components:** `app/src/main/java/com/mosqueseba/app/ui/dialogs/IslamicDawatnamaDialog.kt`, `NoticesScreen.kt`
+- **Database / DAOs:** Room `NoticeEntity` (`imageUrl` via `MIGRATION_8_9`), Supabase `notices` table.
+- **Status:** Done
+
+### 13. Jummah Cashbox 3-Witness Counter (PRD §9)
+- **PRD requirement summary:** Real-time physical banknote counting (৳১০০০ down to ৳৫), three independent witness sign-offs, and automatic voucher posting to Finance.
+- **Android Screens / Components:** `app/src/main/java/com/mosqueseba/app/ui/dialogs/CashboxCounterDialog.kt`, `FinanceScreen.kt`
+- **Database / DAOs:** `TransactionEntity` + `TransactionDao`, `AuditLogEntity` + `AuditLogDao`.
+- **Status:** Done
+
+### 14. Emergency Janaza Alert Broadcaster (PRD §14, §27)
+- **PRD requirement summary:** Immediate broadcast of deceased member details, namaz-e-janaza time, location, and grave site via SMS, WhatsApp, and in-app notice.
+- **Android Screens / Components:** `app/src/main/java/com/mosqueseba/app/ui/dialogs/JanazaAlertDialog.kt`
+- **Status:** Done
+
+### 15. Official Seals & Digital Canvas Signatures (PRD §7, §9, §10)
+- **PRD requirement summary:** Touch-screen interactive signature drawing pad, official stamp image upload, designation assignment, and document embedding.
+- **Android Screens / Components:** `app/src/main/java/com/mosqueseba/app/ui/dialogs/OfficialSealSignatureDialog.kt`
+- **Database / DAOs:** Room `MIGRATION_9_10` (`sealUrl` on `mosques`, `signatureUrl`, `stampUrl`, `designationBn` on `members`, `signatureUrl`, `stampUrl` on `staff`).
+- **Status:** Done
+
+### 16. Native 1-Click Print & PDF Document Engine (PRD §8, §9, §10)
+- **PRD requirement summary:** Printing formal chanda receipts, expense payment vouchers, staff monthly salary slips, and circular notices with embedded seals & signatures.
+- **Android Screens / Components:** `app/src/main/java/com/mosqueseba/app/ui/components/MosquePrintHelper.kt` using Android `PrintManager` and clean responsive printable HTML layouts.
+- **Status:** Done
+
+### 17. Election Schedule, Nomination & Gazette Publisher (PRD §29)
+- **PRD requirement summary:** Comprehensive committee election management: nomination phases, scrutiny, symbol allotment, voting schedule, and formal election gazette publishing.
+- **Android Screens / Components:** `app/src/main/java/com/mosqueseba/app/ui/screens/MoreOperationsHub.kt`, `MoreDialogs.kt`
+- **Database / DAOs:** `ElectionScheduleEntity`, `ElectionCandidateEntity`, `ElectionDao` in Room DB.
+- **Status:** Done
+
+### 18. Ramadan Special Hub & Quran Tracker (PRD §13)
+- **PRD requirement summary:** Live Sahri and Iftar countdown timer, daily Taraweeh prayer rak'ah tracking, Itikaf participant registration, and Quran Khatam progress logging.
+- **Android Screens / Components:** `app/src/main/java/com/mosqueseba/app/ui/dialogs/RamadanHubDialog.kt`, `DashboardScreen.kt`
+- **Status:** Done
+
+### 19. Supabase Cloud Backend, Multi-tenant RLS & Sync (PRD §32, §34, §35)
+- **PRD requirement summary:** Multi-tenant PostgreSQL 17 cloud database (`donglyxtrfyzwgtrskhz`), 28 normalized tables, 4 RLS policies isolating data by `mosque_id`, 10 server-side stored procedures (RPCs), and bidirectional client-side sync.
+- **Backend Artifacts:** `supabase/migrations/` (0001–0006), `supabase/policies/` (0001–0004), `supabase/functions/` (0001–0010), `supabase/full_schema_setup.sql`.
+- **Client Synchronization:** `SupabaseConfig.kt`, `SupabaseHttpClient.kt`, `SupabaseSyncManager.kt`.
+- **Status:** Done
+

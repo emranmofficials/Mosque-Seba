@@ -30,6 +30,15 @@ Status legend: `Not started` · `In progress` · `Needs verification` · `Done`
 | 22 | Dark Mode | Full Islamic emerald-dark color palette, high contrast, runtime toggle | N/A | P0 | Done — `Theme.kt`, `Color.kt`, `AccountHubScreen.kt` |
 | 23 | Tablet & Responsive | Adaptive NavigationRail for tablets/foldables, NavigationBottomBar for mobile | N/A | P0 | Done — `MosqueNavigationRail` (>= 600dp) in `MainActivity.kt` |
 | 24 | Firebase App Check | API abuse prevention, reCAPTCHA Enterprise, debug provider fallback | N/A | P0 | Done — `AppCheckHelper.kt` in `app/src/main/` |
+| 25 | Islamic Dawatnama Poster AI | Gemini 3.8 Flash poster prompt generator, visual design layout, image attachments | 14, 28 | P2 | Done — `IslamicDawatnamaDialog.kt`, Room `imageUrl` column (`MIGRATION_8_9`) |
+| 26 | Jummah Cashbox 3-Witness Counter | Real-time denomination counting, 3-witness signature verification, auto-voucher posting | 9 | P0 | Done — `CashboxCounterDialog.kt`, auto cross-post to Finance with audit log |
+| 27 | Emergency Janaza Alert | Community SMS/WhatsApp deep link, janaza prayer time & location broadcast | 14, 27 | P1 | Done — `JanazaAlertDialog.kt`, direct Android intent broadcaster |
+| 28 | Official Seals & Signatures | Touch-screen signature canvas pad, official stamp image upload, designation storage | 7, 9 | P0 | Done — `OfficialSealSignatureDialog.kt`, Room DB v10 (`MIGRATION_9_10`) |
+| 29 | Native 1-Click Print & PDF | Professional receipts, expense vouchers, salary slips, notices with embedded seals | 8, 9, 10 | P0 | Done — `MosquePrintHelper.kt` utilizing Android `PrintManager` and HTML layout |
+| 30 | Election & Nomination Gazette | Election schedule, candidate nomination, symbol allocation, gazette publishing | 29 | P2 | Done — `ElectionScheduleEntity`, `ElectionCandidateEntity` + DAOs, `MoreOperationsHub.kt` |
+| 31 | Ramadan Special Hub | Live Sehri/Iftar countdown timer, Taraweeh & Itikaf tracking, Khatam-ul-Quran logs | 13 | P1 | Done — `RamadanHubDialog.kt`, Islamic prayer calculator sync |
+| 32 | Supabase Cloud Backend & Sync | Multi-tenant PostgreSQL 17, 28 tables, RLS isolation, 10 RPCs, bidirectional client sync | 32, 34 | P0 | Done — `SupabaseConfig.kt`, `SupabaseHttpClient.kt`, `SupabaseSyncManager.kt` |
+| 33 | Header Cleanliness & Hardening | Official logo, user name and designation in header, institution name on Hero card | 3 | P0 | Done — `GlobalHeader.kt`, `ChandaMonthUtils.kt`, zero-emoji design compliance |
 
 ## How to use this table
 

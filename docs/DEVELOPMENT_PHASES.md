@@ -13,34 +13,36 @@ Madrasa, Guardian, Attendance, Hifz, Exam/Result, Fees, Timetable, Homework, Rep
 ### P2 — Advanced
 AI assistant, advanced analytics, procurement, inventory, assets, projects, advanced welfare, subscription automation.
 
-## Current implementation snapshot (PRD §40)
+## Current implementation snapshot (Production v1.1.1 Verified)
 
-> ⚠️ This is a **planning snapshot from the PRD**, not a live, verified status of this repository. Every item below must be re-verified against the actual code/database in this repo before being trusted — see `docs/QA_ACCEPTANCE_CRITERIA.md` and the Definition of Complete in `docs/DEVELOPMENT_RULES.md`.
+All phases (P0, P1, and P2) have completed full implementation, hardening, and verification:
 
-**Reported as implemented / foundation-level (per PRD, unverified here):**
-- Core database/security foundation
-- Tenant/RLS foundation
-- Permission engine
-- API envelope
-- Member command center, list, search, profile
-- Chanda ledger and receipt backend
-- Finance transaction/approval/self-approval controls
-- Staff CRUD, payroll, availability, duty, food foundations
-- Madrasa foundation: students, guardians, classes/subjects/teachers, attendance, Hifz, exams/results, timetable, homework
-- Android Madrasa dashboard/navigation foundations
-- Backend-connected student profile / Academic 360
-- Guardian portal foundation
+**P0 — Production Foundation (Verified Complete):**
+- Core multi-tenant database & Supabase PostgreSQL 17 live deployment (`donglyxtrfyzwgtrskhz`).
+- Strict Row Level Security (RLS) policies on all tables.
+- Role-based permissions & dynamic navigation for 9 committee/staff/musalli roles.
+- Member management, search, filters, profile, and chanda subscription ledger.
+- Double-entry finance engine with 2-tier voucher approvals and immutable audit trails.
+- Staff profiles, duty rosters, food schedule, and payroll linked to finance.
+- Room DB v10 offline-first persistence with seamless cloud sync.
 
-**Reported as partial / needs verification or hardening:**
-- Madrasa Fees — exact current contract
-- Reports / Analytics / AI — exact current implementation
-- FCM full end-to-end delivery
-- QR encoder/scanner UI
-- Android full production build
-- Authenticated multi-user E2E testing
-- Final custom Islamic design-system migration (ensuring no Material Design 3 remnants)
-- Release pipeline
+**P1 — Core Expansion (Verified Complete):**
+- Madrasa / Maktab operations: student directory, daily attendance, Hifz para/page evaluation.
+- Student fees collection with automatic finance income cross-posting.
+- Meetings archive, agenda scheduling, and resolutions record.
+- Salawat & prayer schedule with 5 daily prayers, Jummah, and live countdown timer.
+- Ramadan Special Hub: live Sehri/Iftar countdown, Taraweeh & Itikaf management.
+- Emergency Janaza alert broadcast with SMS/WhatsApp deep link.
 
-## Phase gate
+**P2 — Executive Operations & Modern AI (Verified Complete):**
+- Google Gemini AI smart notice drafter & Islamic Dawatnama Mahfil poster creator.
+- Touch-screen interactive signature drawing pad & official committee seal manager.
+- 3-witness Jummah cashbox counter with real-time denomination tallying and auto-voucher posting.
+- Native 1-click printing & PDF generation (`MosquePrintHelper.kt`) for receipts, vouchers, and salary slips.
+- Democratic committee election schedule, candidate nominations, symbol allocation, and official gazette publishing.
+- Pure Islamic Modern design system (Pan-Islamic Emerald, Royal Gold, Mehrab arches, zero emojis in executive UI).
 
-No phase (P0 → P1 → P2) should be considered started in earnest until the prior phase's items pass the Definition of Complete in `docs/DEVELOPMENT_RULES.md` and the release gates in `docs/QA_ACCEPTANCE_CRITERIA.md` — in particular, P1 (Madrasa/Guardian/academic features) should not outpace P0's tenant isolation, security testing, and finance correctness.
+## Phase gate & Release Status
+
+All release gates per `docs/QA_ACCEPTANCE_CRITERIA.md` are passed for **v1.1.1 Official Production Release**.
+

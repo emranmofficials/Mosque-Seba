@@ -91,3 +91,16 @@ Client performs a safe (idempotent) write while offline
 ```
 
 Sensitive operations (payments, approvals, salary actions, tenant-changing actions) are **not** queued offline — they require an online round-trip.
+
+## 9. Jummah cashbox 3-witness counting & auto-posting
+
+```
+Jummah prayer completes
+  → Cashbox opened in presence of 3 executive witnesses (e.g. President, Treasurer, Imam)
+  → Real-time physical banknote counting (৳১০০০ down to ৳৫)
+  → Total calculated with 0 floating point errors
+  → All 3 witnesses verify and sign off
+  → Income voucher posted automatically to Finance with category "জুমার দানবাক্স"
+  → Immutable audit log recorded with witness names and denominations
+```
+

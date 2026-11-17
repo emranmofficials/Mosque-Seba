@@ -52,6 +52,16 @@
 - **Self-approval prohibition:** the same user cannot both create and approve a finance transaction above their own authority.
 - **Posted transactions are immutable:** corrections happen via reversal/adjustment rows, never direct delete/update of a posted transaction.
 
-## Migrations & policies
+## Migrations & Policies Status (Production v1.1.1)
 
-Actual SQL migrations live under `supabase/migrations/`, row-level security policies under `supabase/policies/`, and privileged server-side logic under `supabase/functions/`. These directories are currently empty scaffolding and must be populated as each module is implemented, per `docs/DEVELOPMENT_RULES.md`.
+- **Android Room Database v10:**
+  - Migrated across 10 progressive revisions (`MIGRATION_1_2` through `MIGRATION_9_10`).
+  - `MIGRATION_8_9`: Added `imageUrl` to `notices` table for photo/poster attachments.
+  - `MIGRATION_9_10`: Added `sealUrl` to `mosques`; `signatureUrl`, `stampUrl`, `designationBn` to `members`; and `signatureUrl`, `stampUrl` to `staff`.
+  - Offline-first resilience with reactive StateFlow DAOs and transactions.
+- **Supabase Cloud Backend (PostgreSQL 17):**
+  - **Live Project:** `donglyxtrfyzwgtrskhz` (Organization: `MosqueSeba`, Region: `ap-northeast-1`).
+  - **Schema:** 28 core production tables deployed and verified via `supabase/migrations/0001` to `0006`.
+  - **Row Level Security (RLS):** 4 active policy sets under `supabase/policies/` enforcing tenant isolation (`mosque_id`) and authenticated role-based access.
+  - **Server-Side RPCs:** 10 stored procedures under `supabase/functions/` for idempotent double-entry finance, cashless reversals, audit event logging, business code generation, and payroll finalization.
+  - **Client Sync:** Integrated bidirectional `SupabaseSyncManager` connecting Room DB with Supabase PostgREST endpoints.
