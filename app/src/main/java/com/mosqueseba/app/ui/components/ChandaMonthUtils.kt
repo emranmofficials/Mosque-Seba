@@ -114,13 +114,18 @@ object ChandaMonthUtils {
         }?.value
     }
 
+    fun getCurrentMonthYear(): String {
+        val cal = java.util.Calendar.getInstance()
+        return formatMonthYear(cal.get(java.util.Calendar.MONTH), cal.get(java.util.Calendar.YEAR))
+    }
+
     /**
-     * Extracts a clean single anchor month (e.g. "সেপ্টেম্বর ২০২৪") even if the latest payment
+     * Extracts a clean single anchor month (e.g. current month) even if the latest payment
      * spans a multi-month range like "এপ্রিল – সেপ্টেম্বর ২০২৪ (৬ মাস)".
      */
     fun resolveLatestSingleMonth(
         paymentMonths: List<String>,
-        fallback: String = "সেপ্টেম্বর ২০২৪"
+        fallback: String = getCurrentMonthYear()
     ): String {
         for (raw in paymentMonths) {
             val cleaned = raw.replace(Regex("\\s*\\([^)]*\\)\\s*$"), "").trim()
@@ -139,7 +144,7 @@ object ChandaMonthUtils {
         return if (fallbackParsed != null) {
             formatMonthYear(fallbackParsed.first, fallbackParsed.second)
         } else {
-            "সেপ্টেম্বর ২০২৪"
+            getCurrentMonthYear()
         }
     }
 
@@ -149,7 +154,7 @@ object ChandaMonthUtils {
      * Default (11 past + 1 current + 3 advance = 15 months) fits cleanly in a 3x5 grid.
      */
     fun getBillingMonthsWindow(
-        anchorLabel: String = "সেপ্টেম্বর ২০২৪",
+        anchorLabel: String = getCurrentMonthYear(),
         pastMonthsCount: Int = 11,
         advanceMonthsCount: Int = 3
     ): List<BillingMonthItem> {

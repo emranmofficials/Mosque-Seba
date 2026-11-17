@@ -1452,7 +1452,7 @@ fun ReceiveChandaDialog(
     members: List<MemberEntity>,
     allPayments: List<ChandaPaymentEntity> = emptyList(),
     preselectedMember: MemberEntity? = null,
-    defaultMonth: String = "সেপ্টেম্বর ২০২৪",
+    defaultMonth: String = ChandaMonthUtils.getCurrentMonthYear(),
     suggestedAmount: Double? = null,
     onDismiss: () -> Unit,
     onConfirm: (member: MemberEntity, month: String, amount: Double, method: String, selectedMonthCount: Int) -> Unit
@@ -1466,7 +1466,7 @@ fun ReceiveChandaDialog(
     }
 
     val anchorMonth = remember(defaultMonth) {
-        ChandaMonthUtils.resolveLatestSingleMonth(listOf(defaultMonth), "সেপ্টেম্বর ২০২৪")
+        ChandaMonthUtils.resolveLatestSingleMonth(listOf(defaultMonth), ChandaMonthUtils.getCurrentMonthYear())
     }
     val billingMonths = remember(anchorMonth) {
         ChandaMonthUtils.getBillingMonthsWindow(
@@ -3478,9 +3478,13 @@ fun ScheduleMeetingDialog(
     onConfirm: (title: String, dateStr: String, location: String, agenda: String) -> Unit
 ) {
     val isEditMode = editingMeeting != null
+    val defaultMeetingDate = remember {
+        val sdf = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+        "${sdf.format(java.util.Date())}, বাদ আসর"
+    }
     var title by remember(editingMeeting?.id) { mutableStateOf(editingMeeting?.title ?: "") }
     var dateStr by remember(editingMeeting?.id) {
-        mutableStateOf(editingMeeting?.meetingDate ?: "১৫ সেপ্টেম্বর ২০২৪, বাদ আসর")
+        mutableStateOf(editingMeeting?.meetingDate ?: defaultMeetingDate)
     }
     var location by remember(editingMeeting?.id) {
         mutableStateOf(editingMeeting?.location ?: "মসজিদ অফিস কক্ষ")

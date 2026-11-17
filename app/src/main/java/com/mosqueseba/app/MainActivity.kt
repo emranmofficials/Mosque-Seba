@@ -233,7 +233,7 @@ fun MosqueAppShell(
     val activeCycleMonth = remember(allChandaPayments) {
         ChandaMonthUtils.resolveLatestSingleMonth(
             allChandaPayments.map { it.month },
-            "সেপ্টেম্বর ২০২৪"
+            ChandaMonthUtils.getCurrentMonthYear()
         )
     }
 

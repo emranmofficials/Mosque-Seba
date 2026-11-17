@@ -66,25 +66,8 @@ fun GlobalHeader(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                // Left: Clickable Mosque Logo + User Name/Role + Mosque Profile Chip
-                val resolvedName = memberName?.takeIf { it.isNotBlank() } ?: when (currentRole) {
-                    UserRole.PRESIDENT -> "মো: রফিকুল ইসলাম"
-                    UserRole.VICE_PRESIDENT -> "আলহাজ্ব আব্দুল বারী"
-                    UserRole.GENERAL_SECRETARY -> "ইঞ্জি: আব্দুল্লাহ আল মামুন"
-                    UserRole.ASSISTANT_SECRETARY -> "মো: জাকির হোসেন"
-                    UserRole.TREASURER -> "হাজী মো: আবুল কাসেম"
-                    UserRole.ASSISTANT_TREASURER -> "মো: নজরুল ইসলাম"
-                    UserRole.ORGANIZING_SECRETARY -> "মো: আসাদুজ্জামান"
-                    UserRole.PUBLICITY_SECRETARY -> "হাফেজ মাওলানা সাইফুল ইসলাম"
-                    UserRole.OFFICE_SECRETARY -> "মো: তানভীর আহমেদ"
-                    UserRole.WELFARE_EDUCATION_SECRETARY -> "মাওলানা আব্দুর রাজ্জাক"
-                    UserRole.EXECUTIVE_MEMBER -> "ডা: তারিকুল ইসলাম"
-                    UserRole.IMAM -> "মাওলানা মুফতি মিজানুর রহমান"
-                    UserRole.ADVISORY_BOARD -> "আলহাজ্ব শামসুল হক চৌধুরী"
-                    UserRole.MUAZZIN -> "কারী মো: ইসমাইল হোসেন"
-                    UserRole.KHADEM -> "মো: মোস্তফা মিয়া"
-                    UserRole.GENERAL_MEMBER -> "মো: শাহজাহান আলী"
-                }
+                // Left: Clickable Mosque Logo + User Name/Role Badge (clean, professional, no institution name above user name)
+                val resolvedName = memberName?.takeIf { it.isNotBlank() } ?: currentRole.titleBn
 
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -116,21 +99,6 @@ fun GlobalHeader(
                     Spacer(modifier = Modifier.width(10.dp))
 
                     Column(modifier = Modifier.weight(1f)) {
-                        if (!mosqueName.isNullOrBlank()) {
-                            Text(
-                                text = mosqueName,
-                                fontSize = 11.5.sp,
-                                color = MosqueGoldLight,
-                                fontWeight = FontWeight.Bold,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(4.dp))
-                                    .clickable(onClick = onMosqueProfileClick)
-                            )
-                            Spacer(modifier = Modifier.height(1.dp))
-                        }
-
                         Text(
                             text = resolvedName,
                             style = MaterialTheme.typography.titleMedium,
@@ -155,7 +123,7 @@ fun GlobalHeader(
                                 .padding(horizontal = 7.dp, vertical = 2.dp)
                         ) {
                             Text(
-                                text = currentRole.titleBn,
+                                text = if (memberName.isNullOrBlank()) "সক্রিয় দায়িত্বশীল" else currentRole.titleBn,
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MosqueEmeraldDark,
                                 fontWeight = FontWeight.ExtraBold,

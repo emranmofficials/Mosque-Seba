@@ -264,7 +264,7 @@ fun MoreFormSection(
 @Composable
 fun PaySalaryFormDialog(
     staff: StaffEntity,
-    defaultMonth: String = "সেপ্টেম্বর ২০২৪",
+    defaultMonth: String = ChandaMonthUtils.getCurrentMonthYear(),
     onDismiss: () -> Unit,
     onConfirm: (month: String, bonus: Double, paymentMethod: String) -> Unit
 ) {
@@ -282,8 +282,13 @@ fun PaySalaryFormDialog(
     }
     val bonusAmt = bonus.toDoubleOrNull() ?: 0.0
     val netTotal = baseSalary + bonusAmt
+    val currentCal = Calendar.getInstance()
+    val curM = currentCal.get(Calendar.MONTH)
+    val curY = currentCal.get(Calendar.YEAR)
+    val prevMonth = ChandaMonthUtils.formatMonthYear((curM - 1 + 12) % 12, if (curM == 0) curY - 1 else curY)
+    val nextMonth = ChandaMonthUtils.formatMonthYear((curM + 1) % 12, if (curM == 11) curY + 1 else curY)
     val monthPresets = remember(defaultMonth) {
-        listOf(defaultMonth, "সেপ্টেম্বর ২০২৪", "অক্টোবর ২০২৪", "নভেম্বর ২০২৪", "ঈদ বোনাসসহ").distinct()
+        listOf(defaultMonth, prevMonth, nextMonth, "ঈদ বোনাসসহ").distinct()
     }
     val methodOptions = listOf(
         "cash" to "নগদ",
@@ -1239,13 +1244,14 @@ fun AddEventDialog(
     onDismiss: () -> Unit,
     onConfirm: (title: String, dateStr: String, timeStr: String, speaker: String, venue: String, budget: Double, lead: String) -> Unit
 ) {
+    val todayDate = remember { SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date()) }
     var title by remember { mutableStateOf("") }
-    var dateStr by remember { mutableStateOf("২০২৪-১১-১৫") }
+    var dateStr by remember { mutableStateOf(todayDate) }
     var timeStr by remember { mutableStateOf("বাদ মাগরিব") }
     var speaker by remember { mutableStateOf("") }
     var venue by remember { mutableStateOf("মসজিদ প্রাঙ্গণ") }
-    var budget by remember { mutableStateOf("50000") }
-    var lead by remember { mutableStateOf("ইঞ্জি: আব্দুল্লাহ আল মামুন") }
+    var budget by remember { mutableStateOf("") }
+    var lead by remember { mutableStateOf("") }
     var titleError by remember { mutableStateOf<String?>(null) }
     var dateError by remember { mutableStateOf<String?>(null) }
     var speakerError by remember { mutableStateOf<String?>(null) }
@@ -1280,7 +1286,7 @@ fun AddEventDialog(
                 valid = false
             }
             if (valid) {
-                val b = budget.toDoubleOrNull() ?: 20000.0
+                val b = budget.toDoubleOrNull() ?: 0.0
                 onConfirm(title.trim(), dateStr.trim(), timeStr.trim(), speaker.trim(), venue.trim(), b, lead.trim())
             }
         }

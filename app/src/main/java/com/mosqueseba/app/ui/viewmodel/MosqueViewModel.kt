@@ -837,7 +837,8 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
     ) {
         viewModelScope.launch {
             val nextNum = allTransactions.value.size + 1
-            val code = "TXN-2024-${String.format(Locale.US, "%03d", nextNum)}"
+            val currentYear = Calendar.getInstance().get(Calendar.YEAR)
+            val code = "TXN-$currentYear-${String.format(Locale.US, "%03d", nextNum)}"
             val dateStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
             val role = _currentUserRole.value
 
@@ -865,7 +866,8 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
 
     fun updateTransactionStatus(transaction: TransactionEntity, approved: Boolean) {
         viewModelScope.launch {
-            val approver = "${_currentUserRole.value.titleBn} (মো: রফিকুল ইসলাম)"
+            val currentName = sessionManager.getSavedMemberName().trim().takeIf { it.isNotBlank() && it != "সদস্য" }
+            val approver = if (currentName != null) "${_currentUserRole.value.titleBn} ($currentName)" else _currentUserRole.value.titleBn
             val newStatus = if (approved) "approved" else "rejected"
             repository.updateTransactionStatus(transaction, newStatus, approver)
         }
@@ -1115,7 +1117,8 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
     ) {
         viewModelScope.launch {
             val codeNum = allStudents.value.size + 1
-            val code = "STU-2024-${String.format(Locale.US, "%03d", codeNum)}"
+            val currentYear = Calendar.getInstance().get(Calendar.YEAR)
+            val code = "STU-$currentYear-${String.format(Locale.US, "%03d", codeNum)}"
             val dateStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
             val student = StudentEntity(
                 id = UUID.randomUUID().toString(),
@@ -1179,7 +1182,8 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
         method: String = "cash"
     ) {
         viewModelScope.launch {
-            val rcpCode = "FEE-2024-${UUID.randomUUID().toString().take(6).uppercase()}"
+            val currentYear = Calendar.getInstance().get(Calendar.YEAR)
+            val rcpCode = "FEE-$currentYear-${UUID.randomUUID().toString().take(6).uppercase()}"
             val cal = Calendar.getInstance()
             val amPm = if (cal.get(Calendar.AM_PM) == Calendar.AM) "পূর্বাহ্ণ" else "অপরাহ্ণ"
             val paidAtStr = toBengaliDigits("${SimpleDateFormat("yyyy-MM-dd hh:mm", Locale.getDefault()).format(cal.time)} $amPm")

@@ -92,9 +92,10 @@ fun RegistrationScreen(
     var waqfRegNo by remember { mutableStateOf("") }
     var capacity by remember { mutableStateOf("") }
     var bankAccountInfo by remember { mutableStateOf("") }
+    val curYear = remember { java.util.Calendar.getInstance().get(java.util.Calendar.YEAR) }
     var establishedYear by remember { mutableStateOf("2000") }
-    var startYear by remember { mutableStateOf("2024") }
-    var endYear by remember { mutableStateOf("2026") }
+    var startYear by remember { mutableStateOf(curYear.toString()) }
+    var endYear by remember { mutableStateOf((curYear + 2).toString()) }
     var mosqueLogoPath by remember { mutableStateOf<String?>(null) }
     var mosqueLogoBitmap by remember { mutableStateOf<ImageBitmap?>(null) }
 
@@ -1127,8 +1128,8 @@ fun RegistrationScreen(
                                                     mosqueNameEn = mosqueNameEn,
                                                     address = address,
                                                     establishedYear = establishedYear.toIntOrNull() ?: 2000,
-                                                    startYear = startYear.toIntOrNull() ?: 2024,
-                                                    endYear = endYear.toIntOrNull() ?: 2026,
+                                                    startYear = startYear.toIntOrNull() ?: curYear,
+                                                    endYear = endYear.toIntOrNull() ?: (curYear + 2),
                                                     district = district,
                                                     upazila = upazila,
                                                     waqfRegNo = waqfRegNo,
