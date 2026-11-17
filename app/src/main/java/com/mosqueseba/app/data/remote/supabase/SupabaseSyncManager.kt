@@ -159,8 +159,7 @@ object SupabaseSyncManager {
                         put("location", mt.location)
                         put("agenda", mt.agenda)
                         put("status", mt.status)
-                        put("quorum_met", mt.quorumMet)
-                        put("minutes_summary", mt.minutesSummary)
+                        put("resolution", mt.resolution)
                     })
                 }
                 val mtRes = client.upsert("meetings", meetingsArray.toString())
