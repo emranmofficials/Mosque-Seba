@@ -305,7 +305,7 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
             role = role,
             memberId = member.id,
             memberName = member.nameBn,
-            committeeId = matchedMosque?.committeeId ?: trimmedCommitteeId.ifBlank { "MC-DHK-2024" },
+            committeeId = matchedMosque?.committeeId ?: trimmedCommitteeId.ifBlank { "MC-REG" },
             mobile = member.mobile,
             rememberMe = rememberMe,
             mosqueId = resolvedMosqueId
@@ -358,7 +358,7 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
             role = role,
             memberId = member.id,
             memberName = member.nameBn,
-            committeeId = matchedMosque?.committeeId ?: trimmedCommitteeId.ifBlank { "MC-DHK-2024" },
+            committeeId = matchedMosque?.committeeId ?: trimmedCommitteeId.ifBlank { "MC-REG" },
             mobile = member.mobile,
             rememberMe = rememberMe,
             mosqueId = resolvedMosqueId
@@ -377,33 +377,15 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
         _currentUserRole.value = role
         _isLoggedIn.value = true
         val matchedMember = allMembers.value.firstOrNull { it.roleCode.equals(role.code, ignoreCase = true) }
-        val (fallbackName, fallbackMobile) = when (role) {
-            UserRole.PRESIDENT -> "মো: রফিকুল ইসলাম" to "01711-223344"
-            UserRole.VICE_PRESIDENT -> "আলহাজ্ব আব্দুল বারী" to "01819-334455"
-            UserRole.GENERAL_SECRETARY -> "ইঞ্জি: আব্দুল্লাহ আল মামুন" to "01912-445566"
-            UserRole.ASSISTANT_SECRETARY -> "মো: জাকির হোসেন" to "01716-334411"
-            UserRole.TREASURER -> "হাজী মো: আবুল কাসেম" to "01715-556677"
-            UserRole.ASSISTANT_TREASURER -> "মো: নজরুল ইসলাম" to "01817-445522"
-            UserRole.ORGANIZING_SECRETARY -> "মো: আসাদুজ্জামান" to "01611-778899"
-            UserRole.PUBLICITY_SECRETARY -> "হাফেজ মাওলানা সাইফুল ইসলাম" to "01918-556633"
-            UserRole.OFFICE_SECRETARY -> "মো: তানভীর আহমেদ" to "01619-667744"
-            UserRole.WELFARE_EDUCATION_SECRETARY -> "মাওলানা আব্দুর রাজ্জাক" to "01720-778855"
-            UserRole.EXECUTIVE_MEMBER -> "ডা: তারিকুল ইসলাম" to "01552-889900"
-            UserRole.IMAM -> "মাওলানা মুফতি মিজানুর রহমান" to "01712-998877"
-            UserRole.ADVISORY_BOARD -> "আলহাজ্ব শামসুল হক চৌধুরী" to "01711-009988"
-            UserRole.MUAZZIN -> "কারী মো: ইসমাইল হোসেন" to "01823-887766"
-            UserRole.KHADEM -> "মো: মোস্তফা মিয়া" to "01934-776655"
-            UserRole.GENERAL_MEMBER -> "মো: শাহজাহান আলী" to "01723-001122"
-        }
-        val name = matchedMember?.nameBn ?: fallbackName
-        val mobile = matchedMember?.mobile ?: fallbackMobile
+        val name = matchedMember?.nameBn ?: role.titleBn
+        val mobile = matchedMember?.mobile ?: ""
         val memberId = matchedMember?.id ?: "mem-${role.code}"
         val activeMosque = mosque.value
         sessionManager.saveSession(
             role = role,
             memberId = memberId,
             memberName = name,
-            committeeId = activeMosque?.committeeId ?: "MC-DHK-2024",
+            committeeId = activeMosque?.committeeId ?: "",
             mobile = mobile,
             rememberMe = rememberMe,
             mosqueId = activeMosque?.id ?: _activeMosqueId.value
@@ -514,8 +496,20 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
     fun logout() {
         sessionManager.clearSession()
         _readNotificationIds.value = emptySet()
+        _activeMosqueId.value = ""
         _isLoggedIn.value = false
         _currentUserRole.value = UserRole.GENERAL_MEMBER
+    }
+
+    fun purgeDemoData(onComplete: () -> Unit = {}) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val db = MosqueDatabase.getDatabase(getApplication(), viewModelScope)
+            DatabaseInitializer.purgeDemoDataIfPresent(db, getApplication())
+            withContext(Dispatchers.Main) {
+                logout()
+                onComplete()
+            }
+        }
     }
 
 
@@ -570,7 +564,7 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
             _aiNoticeState.value = AiNoticeUiState.Error("অনুগ্রহ করে নোটিশের সংক্ষিপ্ত নির্দেশনা লিখুন।")
             return
         }
-        val activeMosqueName = mosque.value?.nameBn ?: "বায়তুল জান্নাত জামে মসজিদ"
+        val activeMosqueName = mosque.value?.nameBn ?: "মসজিদ সেবা"
         val activeMosqueAddress = mosque.value?.address ?: "ঢাকা"
 
         viewModelScope.launch {
@@ -613,7 +607,7 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun generateFinanceSummaryWithAi() {
-        val activeMosqueName = mosque.value?.nameBn ?: "বায়তুল জান্নাত জামে মসজিদ"
+        val activeMosqueName = mosque.value?.nameBn ?: "মসজিদ সেবা"
         val inc = totalIncome.value
         val exp = totalExpense.value
         val bal = netBalance.value
@@ -669,7 +663,7 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun generateEventAiGuidance(event: IslamicEvent) {
-        val activeMosqueName = mosque.value?.nameBn ?: "বায়তুল জান্নাত জামে মসজিদ"
+        val activeMosqueName = mosque.value?.nameBn ?: "মসজিদ সেবা"
         val activeMosqueAddress = mosque.value?.address ?: "ঢাকা"
 
         viewModelScope.launch {
@@ -896,9 +890,11 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
         onRecorded: ((ChandaPaymentEntity) -> Unit)? = null
     ) {
         viewModelScope.launch {
+            val currentYear = Calendar.getInstance().get(Calendar.YEAR)
+            val commId = mosque.value?.committeeId ?: "MS"
             val rcpNum = allChandaPayments.value.size + 101
-            val rcpCode = "RCP-2024-$rcpNum"
-            val qrCode = "VER-MC-DHK-2024-$rcpNum-${UUID.randomUUID().toString().take(6).uppercase()}"
+            val rcpCode = "RCP-$currentYear-$rcpNum"
+            val qrCode = "VER-$commId-$rcpNum-${UUID.randomUUID().toString().take(6).uppercase()}"
             val cal = Calendar.getInstance()
             val amPm = if (cal.get(Calendar.AM_PM) == Calendar.AM) "পূর্বাহ্ণ" else "অপরাহ্ণ"
             val paidAtStr = toBengaliDigits("${SimpleDateFormat("yyyy-MM-dd hh:mm", Locale.getDefault()).format(cal.time)} $amPm")

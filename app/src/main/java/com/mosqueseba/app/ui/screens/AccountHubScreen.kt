@@ -75,6 +75,7 @@ fun AccountHubScreen(
     var showAboutAppDialog by remember { mutableStateOf(false) }
     var showLogoutConfirmDialog by remember { mutableStateOf(false) }
     var showCloudSyncDialog by remember { mutableStateOf(false) }
+    var showPurgeDemoConfirmDialog by remember { mutableStateOf(false) }
 
     val currentMember = remember(currentRole, allMembers) {
         val savedId = viewModel.sessionManager.getSavedMemberId()
@@ -89,19 +90,19 @@ fun AccountHubScreen(
         loadLocalThumbnail(currentMember?.photoUrl, 256)
     }
 
-    val mosqueNameBn = mosque?.nameBn ?: "বায়তুল জান্নাত জামে মসজিদ"
-    val mosqueCommitteeId = mosque?.committeeId ?: "MC-DHK-2024"
-    val mosqueAddress = mosque?.address ?: "মিরপুর-১০, ঢাকা-১২১৬"
+    val mosqueNameBn = mosque?.nameBn ?: "মসজিদ সেবা"
+    val mosqueCommitteeId = mosque?.committeeId ?: "কমিটি আইডি সংযুক্ত নেই"
+    val mosqueAddress = mosque?.address ?: "ঠিকানা যুক্ত করা হয়নি"
     val mosqueLogoBitmap = remember(mosque?.logoUrl) {
         loadLocalThumbnail(mosque?.logoUrl, 256)
     }
-    val mosqueEstBn = toBengaliDigits((mosque?.establishedYear ?: 1998).toString())
+    val mosqueEstBn = mosque?.establishedYear?.let { toBengaliDigits(it.toString()) } ?: "—"
 
     val helplineContact = remember(allMembers) {
         allMembers.firstOrNull { it.roleCode.equals("general_secretary", ignoreCase = true) && it.mobile.isNotBlank() }
             ?: allMembers.firstOrNull { it.roleCode.equals("president", ignoreCase = true) && it.mobile.isNotBlank() }
     }
-    val helplineNumber = helplineContact?.mobile?.takeIf { it.isNotBlank() } ?: "01711-223344"
+    val helplineNumber = helplineContact?.mobile?.takeIf { it.isNotBlank() } ?: "কমিটির সাথে যোগাযোগ করুন"
 
     Box(
         modifier = Modifier
@@ -682,6 +683,34 @@ fun AccountHubScreen(
             item(key = "logout_action") {
                 Spacer(modifier = Modifier.height(4.dp))
                 OutlinedButton(
+                    onClick = { showPurgeDemoConfirmDialog = true },
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.2.dp, MosqueUrgentRed.copy(alpha = 0.5f)),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = MosqueUrgentRed.copy(alpha = 0.04f),
+                        contentColor = MosqueUrgentRed
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 48.dp)
+                        .testTag("account_hub_purge_demo_button")
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.DeleteSweep,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "সকল ডেমো ডেটা মুছে ফ্রেশ শুরু করুন",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                OutlinedButton(
                     onClick = { showLogoutConfirmDialog = true },
                     shape = RoundedCornerShape(12.dp),
                     border = BorderStroke(1.2.dp, MosqueUrgentRed.copy(alpha = 0.7f)),
@@ -761,6 +790,25 @@ fun AccountHubScreen(
                 onLogout()
             },
             onDismiss = { showLogoutConfirmDialog = false }
+        )
+    }
+
+    if (showPurgeDemoConfirmDialog) {
+        MosqueConfirmDialog(
+            title = "ডেমো ডেটা রিসেট নিশ্চিতকরণ",
+            message = "আপনি কি নিশ্চিতভাবে অ্যাপের সমস্ত ডেমো/স্যাম্পল ডেটা মুছে ফেলে সম্পূর্ণ ফ্রেশ শুরু করতে চান? এর ফলে সমস্ত ডেমো সদস্য, হিসাব ও ডেমো মসজিদ মুছে যাবে এবং আপনি লগইন/নিবন্ধন স্ক্রিনে ফিরে যাবেন।",
+            confirmText = "হ্যাঁ, সমস্ত ডেমো মুছুন",
+            isDestructive = true,
+            icon = Icons.Default.DeleteSweep,
+            confirmTag = "confirm_purge_demo_button",
+            onConfirm = {
+                showPurgeDemoConfirmDialog = false
+                viewModel.purgeDemoData {
+                    Toast.makeText(context, "সকল ডেমো ডেটা সফলভাবে মুছে ফেলা হয়েছে।", Toast.LENGTH_SHORT).show()
+                    onLogout()
+                }
+            },
+            onDismiss = { showPurgeDemoConfirmDialog = false }
         )
     }
 }

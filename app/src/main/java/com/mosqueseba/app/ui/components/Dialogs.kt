@@ -2486,9 +2486,9 @@ private fun ChandaMethodOptionCard(
 @Composable
 fun OfficialReceiptDialog(
     payment: ChandaPaymentEntity,
-    mosqueName: String = "বায়তুল জান্নাত জামে মসজিদ",
-    mosqueAddress: String = "মিরপুর-১০, ঢাকা",
-    committeeId: String = "MC-DHK-2024",
+    mosqueName: String = "মসজিদ সেবা",
+    mosqueAddress: String = "",
+    committeeId: String = "",
     mosqueLogoUrl: String? = null,
     onDismiss: () -> Unit
 ) {

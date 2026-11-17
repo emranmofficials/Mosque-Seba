@@ -149,7 +149,7 @@ abstract class MosqueDatabase : RoomDatabase() {
                     MosqueDatabase::class.java,
                     "mosque_management_db"
                 )
-                .addCallback(MosqueDatabaseCallback(scope))
+                .addCallback(MosqueDatabaseCallback(context.applicationContext, scope))
                 .addMigrations(MIGRATION_6_7, MIGRATION_7_8)
                 .fallbackToDestructiveMigration()
                 .build()
@@ -160,6 +160,7 @@ abstract class MosqueDatabase : RoomDatabase() {
     }
 
     private class MosqueDatabaseCallback(
+        private val context: Context,
         private val scope: CoroutineScope
     ) : RoomDatabase.Callback() {
         override fun onCreate(db: SupportSQLiteDatabase) {
@@ -167,6 +168,15 @@ abstract class MosqueDatabase : RoomDatabase() {
             INSTANCE?.let { database ->
                 scope.launch(Dispatchers.IO) {
                     DatabaseInitializer.populateInitialData(database)
+                }
+            }
+        }
+
+        override fun onOpen(db: SupportSQLiteDatabase) {
+            super.onOpen(db)
+            INSTANCE?.let { database ->
+                scope.launch(Dispatchers.IO) {
+                    DatabaseInitializer.purgeDemoDataIfPresent(database, context)
                 }
             }
         }

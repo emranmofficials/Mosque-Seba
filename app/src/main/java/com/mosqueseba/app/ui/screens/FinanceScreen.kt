@@ -1543,7 +1543,7 @@ fun FinanceScreen(
     // Financial Report & AI Summary Dialog
     if (showReportDialog) {
         FinancialReportDialog(
-            mosqueName = mosque?.nameBn ?: "বায়তুল জান্নাত জামে মসজিদ",
+            mosqueName = mosque?.nameBn ?: "মসজিদ সেবা",
             totalIncome = totalIncome,
             totalExpense = totalExpense,
             netBalance = netBalance,
@@ -1564,9 +1564,9 @@ fun FinanceScreen(
         TransactionVoucherDialog(
             transaction = latestTxn,
             channelLabel = channelLabelBn(channel),
-            mosqueName = mosque?.nameBn ?: "বায়তুল জান্নাত জামে মসজিদ",
-            mosqueAddress = mosque?.address ?: "মিরপুর-১০, ঢাকা",
-            committeeId = mosque?.committeeId ?: "MC-DHK-2024",
+            mosqueName = mosque?.nameBn ?: "মসজিদ সেবা",
+            mosqueAddress = mosque?.address ?: "",
+            committeeId = mosque?.committeeId ?: "",
             canApprove = currentRole.canApproveFinance(),
             onApprove = {
                 viewModel.updateTransactionStatus(latestTxn, true)
@@ -2175,7 +2175,7 @@ private fun VoucherRow(label: String, value: String) {
 
 @Composable
 fun FinancialReportDialog(
-    mosqueName: String = "বায়তুল জান্নাত জামে মসজিদ",
+    mosqueName: String = "মসজিদ সেবা",
     totalIncome: Double,
     totalExpense: Double,
     netBalance: Double,

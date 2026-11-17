@@ -1693,7 +1693,7 @@ fun MoreScreen(
             }
             "meetings" -> {
                 val canScheduleMeeting = currentRole.canScheduleMeetings()
-                val mosqueName = mosque?.nameBn ?: "বায়তুল জান্নাত জামে মসজিদ"
+                val mosqueName = mosque?.nameBn ?: "মসজিদ সেবা"
                 // Meetings & Agenda
                 LazyColumn(
                     contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 100.dp),
@@ -2344,9 +2344,9 @@ fun MoreScreen(
     selectedPaymentForReceipt?.let { payment ->
         OfficialReceiptDialog(
             payment = payment,
-            mosqueName = mosque?.nameBn ?: "বায়তুল জান্নাত জামে মসজিদ",
-            mosqueAddress = mosque?.address ?: "মিরপুর-১০, ঢাকা",
-            committeeId = mosque?.committeeId ?: "MC-DHK-2024",
+            mosqueName = mosque?.nameBn ?: "মসজিদ সেবা",
+            mosqueAddress = mosque?.address ?: "",
+            committeeId = mosque?.committeeId ?: "",
             mosqueLogoUrl = mosque?.logoUrl,
             onDismiss = { selectedPaymentForReceipt = null }
         )

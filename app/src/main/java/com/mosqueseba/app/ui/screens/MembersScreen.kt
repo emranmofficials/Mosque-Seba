@@ -748,9 +748,9 @@ fun MembersScreen(
     receiptPreviewPayment?.let { payment ->
         OfficialReceiptDialog(
             payment = payment,
-            mosqueName = mosque?.nameBn ?: "বায়তুল জান্নাত জামে মসজিদ",
-            mosqueAddress = mosque?.address ?: "মিরপুর-১০, ঢাকা",
-            committeeId = mosque?.committeeId ?: "MC-DHK-2024",
+            mosqueName = mosque?.nameBn ?: "মসজিদ সেবা",
+            mosqueAddress = mosque?.address ?: "",
+            committeeId = mosque?.committeeId ?: "",
             mosqueLogoUrl = mosque?.logoUrl,
             onDismiss = { receiptPreviewPayment = null }
         )

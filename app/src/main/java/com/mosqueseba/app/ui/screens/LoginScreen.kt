@@ -51,11 +51,11 @@ fun LoginScreen(
     var selectedTab by remember { mutableIntStateOf(0) } // 0: President Email Login, 1: Member/Staff Mobile Login
     val scrollState = rememberScrollState()
 
-    var committeeId by remember { mutableStateOf("MC-DHK-2024") }
-    var presidentEmail by remember { mutableStateOf("rafiqul.islam@example.com") }
-    var presidentPassword by remember { mutableStateOf("123456") }
-    var memberMobile by remember { mutableStateOf("01715-556677") }
-    var memberPassword by remember { mutableStateOf("556677") }
+    var committeeId by remember { mutableStateOf("") }
+    var presidentEmail by remember { mutableStateOf("") }
+    var presidentPassword by remember { mutableStateOf("") }
+    var memberMobile by remember { mutableStateOf("") }
+    var memberPassword by remember { mutableStateOf("") }
     var rememberMe by remember { mutableStateOf(true) }
     var passwordVisible by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(false) }
@@ -311,7 +311,7 @@ fun LoginScreen(
                             value = memberMobile,
                             onValueChange = { memberMobile = it; errorMessage = null },
                             label = { Text("নিবন্ধিত মোবাইল নম্বর *") },
-                            placeholder = { Text("01715-556677") },
+                            placeholder = { Text("017XXXXXXXX") },
                             leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null, tint = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary) },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                             singleLine = true,
@@ -327,8 +327,8 @@ fun LoginScreen(
                         OutlinedTextField(
                             value = memberPassword,
                             onValueChange = { memberPassword = it; errorMessage = null },
-                            label = { Text("পাসওয়ার্ড (মোবাইলের শেষ ৬ সংখ্যা) *") },
-                            placeholder = { Text("যেমন: 556677") },
+                            label = { Text("পাসওয়ার্ড *") },
+                            placeholder = { Text("পাসওয়ার্ড দিন") },
                             leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, tint = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary) },
                             trailingIcon = {
                                 IconButton(onClick = { passwordVisible = !passwordVisible }) {
@@ -478,138 +478,6 @@ fun LoginScreen(
                             Text("প্রবেশ করুন (লগইন)", fontWeight = FontWeight.Bold, fontSize = 15.sp)
                         }
                     }
-
-                    Spacer(modifier = Modifier.height(6.dp))
-                    RubElHizbDivider(title = "কমিটি পরিষদ (সরাসরি প্রবেশ)")
-
-                    // Official role access chips (Option B)
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        QuickRoleChip(
-                            label = "সভাপতি",
-                            icon = UserRole.PRESIDENT.roleIcon(),
-                            onClick = {
-                                viewModel.quickLoginAsRole(UserRole.PRESIDENT, rememberMe)
-                                onLoginSuccess()
-                            },
-                            modifier = Modifier.weight(1f)
-                        )
-                        QuickRoleChip(
-                            label = "সাধারণ সম্পাদক",
-                            icon = UserRole.GENERAL_SECRETARY.roleIcon(),
-                            onClick = {
-                                viewModel.quickLoginAsRole(UserRole.GENERAL_SECRETARY, rememberMe)
-                                onLoginSuccess()
-                            },
-                            modifier = Modifier.weight(1f)
-                        )
-                        QuickRoleChip(
-                            label = "কোষাধ্যক্ষ",
-                            icon = UserRole.TREASURER.roleIcon(),
-                            onClick = {
-                                viewModel.quickLoginAsRole(UserRole.TREASURER, rememberMe)
-                                onLoginSuccess()
-                            },
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        QuickRoleChip(
-                            label = "পেশ ইমাম",
-                            icon = UserRole.IMAM.roleIcon(),
-                            onClick = {
-                                viewModel.quickLoginAsRole(UserRole.IMAM, rememberMe)
-                                onLoginSuccess()
-                            },
-                            modifier = Modifier.weight(1f)
-                        )
-                        QuickRoleChip(
-                            label = "সাধারণ মুসল্লি",
-                            icon = UserRole.GENERAL_MEMBER.roleIcon(),
-                            onClick = {
-                                viewModel.quickLoginAsRole(UserRole.GENERAL_MEMBER, rememberMe)
-                                onLoginSuccess()
-                            },
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-
-                    var showAllCommitteeRoles by remember { mutableStateOf(false) }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(min = 48.dp)
-                            .clip(RoundedCornerShape(10.dp))
-                            .clickable { showAllCommitteeRoles = !showAllCommitteeRoles }
-                            .padding(vertical = 8.dp, horizontal = 6.dp),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = if (showAllCommitteeRoles) "অন্যান্য কমিটি পদবি লুকান" else "সব কমিটি পদবি (সহ-পদ, সম্পাদকীয়, উপদেষ্টা) দেখুন",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Icon(
-                            imageVector = if (showAllCommitteeRoles) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                            contentDescription = null,
-                            tint = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary,
-                            modifier = Modifier.size(16.dp)
-                        )
-                    }
-
-                    AnimatedVisibility(visible = showAllCommitteeRoles) {
-                        val extendedRoles = remember {
-                            listOf(
-                                UserRole.VICE_PRESIDENT,
-                                UserRole.ASSISTANT_SECRETARY,
-                                UserRole.ASSISTANT_TREASURER,
-                                UserRole.ORGANIZING_SECRETARY,
-                                UserRole.PUBLICITY_SECRETARY,
-                                UserRole.OFFICE_SECRETARY,
-                                UserRole.WELFARE_EDUCATION_SECRETARY,
-                                UserRole.EXECUTIVE_MEMBER,
-                                UserRole.ADVISORY_BOARD,
-                                UserRole.MUAZZIN,
-                                UserRole.KHADEM
-                            )
-                        }
-                        Column(
-                            modifier = Modifier.padding(top = 4.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            extendedRoles.chunked(2).forEach { pair ->
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    pair.forEach { role ->
-                                        QuickRoleChip(
-                                            label = role.titleBn.substringBefore(" ("),
-                                            icon = role.roleIcon(),
-                                            onClick = {
-                                                viewModel.quickLoginAsRole(role, rememberMe)
-                                                onLoginSuccess()
-                                            },
-                                            modifier = Modifier.weight(1f)
-                                        )
-                                    }
-                                    if (pair.size == 1) {
-                                        Spacer(modifier = Modifier.weight(1f))
-                                    }
-                                }
-                            }
-                        }
-                    }
                 }
             }
 
@@ -718,7 +586,7 @@ fun LoginScreen(
                     HorizontalDivider(color = if (isDark) MosqueNightBorder else MosqueCardBorder)
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        text = "• সভাপতি লগইন: শুধুমাত্র কমিটি আইডি, ইমেইল ও পাসওয়ার্ড দিয়ে প্রবেশ করবেন (ডিফল্ট: rafiqul.islam@example.com / 123456)।\n• অন্যান্য ইউজার লগইন: কমিটি আইডি, নিবন্ধিত মোবাইল নম্বর এবং মোবাইল নম্বরের শেষ ৬টি সংখ্যা পাসওয়ার্ড হিসেবে ব্যবহার করবেন।\n• উদাহরণ (কোষাধ্যক্ষ): 01715-556677 (পাসওয়ার্ড: 556677)\n• উদাহরণ (সাধারণ সম্পাদক): 01912-445566 (পাসওয়ার্ড: 445566)\n• সভাপতি বা দায়িত্বপ্রাপ্ত ইউজার সদস্য যুক্ত করলেই সেই সদস্য ইউজার হিসেবে যুক্ত হবেন।",
+                        text = "• নতুন মসজিদ: আপনার মসজিদ এখনও নিবন্ধিত না থাকলে নিচে 'নতুন মসজিদ নিবন্ধন করুন' বাটনে ট্যাপ করে সম্পূর্ণ বিনামূল্যে নতুন মসজিদ ও সভাপতির অ্যাকাউন্ট নিবন্ধন করুন।\n• সভাপতি লগইন: মসজিদ নিবন্ধনের সময় পাওয়া কমিটি আইডি, সভাপতির ইমেইল ও নির্ধারিত পাসওয়ার্ড দিয়ে প্রবেশ করুন।\n• সাধারণ সদস্য ও দায়িত্বশীল লগইন: কমিটি আইডি, সদস্য হিসেবে যুক্ত থাকার সময় ব্যবহৃত মোবাইল নম্বর এবং আপনার পাসওয়ার্ড দিয়ে প্রবেশ করুন।\n• পাসওয়ার্ড ভুলে গেলে কমিটির সভাপতি বা অ্যাডমিনের সহায়তায় পাসওয়ার্ড রিসেট করা যাবে।",
                         style = MaterialTheme.typography.bodySmall,
                         lineHeight = 20.sp,
                         color = if (isDark) MosqueNightTextPrimary else MosqueTextPrimary

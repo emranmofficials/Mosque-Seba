@@ -46,12 +46,12 @@ fun HeroCard(
     mosque: MosqueEntity?,
     onMosqueProfileClick: (() -> Unit)? = null
 ) {
-    val nameBn = mosque?.nameBn ?: "বায়তুল জান্নাত জামে মসজিদ"
-    val address = mosque?.address ?: "মিরপুর-১০, ঢাকা-১২১৬"
-    val committeeId = mosque?.committeeId ?: "MC-DHK-2024"
-    val establishedBn = toBengaliDigits((mosque?.establishedYear ?: 1998).toString())
-    val startYearBn = toBengaliDigits((mosque?.committeeStartYear ?: 2024).toString())
-    val endYearBn = toBengaliDigits((mosque?.committeeEndYear ?: 2026).toString())
+    val nameBn = mosque?.nameBn ?: "মসজিদ সেবা"
+    val address = mosque?.address ?: "ঠিকানা যুক্ত করা হয়নি"
+    val committeeId = mosque?.committeeId ?: "কমিটি আইডি"
+    val establishedBn = mosque?.establishedYear?.let { toBengaliDigits(it.toString()) } ?: "—"
+    val startYearBn = mosque?.committeeStartYear?.let { toBengaliDigits(it.toString()) } ?: "—"
+    val endYearBn = mosque?.committeeEndYear?.let { toBengaliDigits(it.toString()) } ?: "—"
     val mosqueLogoBitmap = remember(mosque?.logoUrl) { loadLocalThumbnail(mosque?.logoUrl, 256) }
 
     MehrabArchCard(
@@ -220,17 +220,17 @@ fun ExecutiveMosqueHeroCard(
     @Suppress("DEPRECATION")
     val clipboardManager = LocalClipboardManager.current
 
-    val nameBn = mosque?.nameBn ?: "বায়তুল জান্নাত জামে মসজিদ"
-    val baseAddress = mosque?.address ?: "মিরপুর-১০, ঢাকা-১২১৬"
+    val nameBn = mosque?.nameBn ?: "মসজিদ সেবা"
+    val baseAddress = mosque?.address ?: "ঠিকানা যুক্ত করা হয়নি"
     val fullAddress = remember(baseAddress, mosque?.upazila, mosque?.district) {
         val extra = listOf(mosque?.upazila.orEmpty(), mosque?.district.orEmpty())
             .filter { it.isNotBlank() && !baseAddress.contains(it, ignoreCase = true) }
         if (extra.isNotEmpty()) "$baseAddress (${extra.joinToString(", ")})" else baseAddress
     }
-    val committeeId = mosque?.committeeId ?: "MC-DHK-2024"
-    val establishedBn = toBengaliDigits((mosque?.establishedYear ?: 1998).toString())
-    val startYearBn = toBengaliDigits((mosque?.committeeStartYear ?: 2024).toString())
-    val endYearBn = toBengaliDigits((mosque?.committeeEndYear ?: 2026).toString())
+    val committeeId = mosque?.committeeId ?: "কমিটি আইডি"
+    val establishedBn = mosque?.establishedYear?.let { toBengaliDigits(it.toString()) } ?: "—"
+    val startYearBn = mosque?.committeeStartYear?.let { toBengaliDigits(it.toString()) } ?: "—"
+    val endYearBn = mosque?.committeeEndYear?.let { toBengaliDigits(it.toString()) } ?: "—"
     val hijriDate = remember { formatCurrentHijriDateBn() }
     val mosqueLogoBitmap = remember(mosque?.logoUrl) { loadLocalThumbnail(mosque?.logoUrl, 256) }
 

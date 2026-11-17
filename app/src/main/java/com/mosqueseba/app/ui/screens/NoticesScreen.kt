@@ -74,7 +74,7 @@ fun NoticesScreen(
 
     val canPublish = currentRole.canPublishNotices()
     val canSchedule = currentRole.canScheduleMeetings()
-    val mosqueName = mosque?.nameBn ?: "বায়তুল জান্নাত জামে মসজিদ"
+    val mosqueName = mosque?.nameBn ?: "মসজিদ সেবা"
 
     var selectedTabIndex by rememberSaveable { mutableIntStateOf(initialTabIndex.coerceIn(0, 1)) }
     var searchQuery by rememberSaveable { mutableStateOf("") }

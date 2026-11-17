@@ -96,15 +96,15 @@ fun MosqueProfileScreen(
         }
     }
 
-    val nameBn = mosque?.nameBn ?: "বায়তুল জান্নাত জামে মসজিদ"
-    val nameEn = mosque?.nameEn ?: "Baitul Jannat Jame Masjid"
-    val committeeId = mosque?.committeeId ?: "MC-DHK-2024"
-    val address = mosque?.address ?: "রোড-৭, ব্লক-বি, মিরপুর-১০, ঢাকা-১২১৬"
-    val district = mosque?.district?.takeIf { it.isNotBlank() } ?: "ঢাকা"
-    val upazila = mosque?.upazila?.takeIf { it.isNotBlank() } ?: "মিরপুর"
-    val establishedYear = mosque?.establishedYear ?: 1998
-    val startYear = mosque?.committeeStartYear ?: 2024
-    val endYear = mosque?.committeeEndYear ?: 2026
+    val nameBn = mosque?.nameBn ?: "মসজিদ সেবা"
+    val nameEn = mosque?.nameEn ?: "Mosque Seba"
+    val committeeId = mosque?.committeeId ?: "সংযুক্ত নয়"
+    val address = mosque?.address ?: "ঠিকানা যুক্ত করা হয়নি"
+    val district = mosque?.district?.takeIf { it.isNotBlank() } ?: "—"
+    val upazila = mosque?.upazila?.takeIf { it.isNotBlank() } ?: "—"
+    val establishedYear = mosque?.establishedYear ?: 0
+    val startYear = mosque?.committeeStartYear ?: 0
+    val endYear = mosque?.committeeEndYear ?: 0
     val waqfRegNo = mosque?.waqfRegNo?.takeIf { it.isNotBlank() } ?: "সংযুক্ত নয়"
     val capacityText = mosque?.capacity?.takeIf { it > 0 }?.let { "${toBengaliDigits(it.toString())} জন মুসল্লি" } ?: "নির্ধারিত নয়"
     val bankInfo = mosque?.bankAccountInfo?.takeIf { it.isNotBlank() } ?: "নির্ধারিত নয়"

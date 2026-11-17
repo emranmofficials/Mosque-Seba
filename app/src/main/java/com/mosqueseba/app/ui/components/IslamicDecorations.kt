@@ -177,7 +177,7 @@ fun RubElHizbDivider(
  */
 @Composable
 fun HijriDateBanner(
-    mosqueName: String = "বায়তুল জান্নাত জামে মসজিদ",
+    mosqueName: String = "মসজিদ সেবা",
     hijriDate: String = formatCurrentHijriDateBn(),
     gregorianDate: String = formatCurrentGregorianDateBn()
 ) {

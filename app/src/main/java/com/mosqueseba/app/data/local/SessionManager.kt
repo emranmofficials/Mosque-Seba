@@ -26,7 +26,7 @@ class SessionManager(context: Context) {
         private const val KEY_HIJRI_DAY_OFFSET = "key_hijri_day_offset"
         private const val KEY_READ_NOTIFICATION_IDS = "key_read_notification_ids"
         private const val KEY_ONBOARDING_COMPLETED = "key_onboarding_completed"
-        private const val DEFAULT_MOSQUE_ID = "mosque-001"
+        private const val DEFAULT_MOSQUE_ID = ""
     }
 
     fun saveSession(
@@ -176,14 +176,14 @@ class SessionManager(context: Context) {
 
     fun getSavedMemberId(): String? = prefs.getString(KEY_MEMBER_ID, null)
 
-    fun getSavedMemberName(): String = prefs.getString(KEY_MEMBER_NAME, "মো: রফিকুল ইসলাম") ?: "মো: রফিকুল ইসলাম"
+    fun getSavedMemberName(): String = prefs.getString(KEY_MEMBER_NAME, "") ?: ""
 
-    fun getSavedCommitteeId(): String = prefs.getString(KEY_COMMITTEE_ID, "MC-DHK-2024") ?: "MC-DHK-2024"
+    fun getSavedCommitteeId(): String = prefs.getString(KEY_COMMITTEE_ID, "") ?: ""
 
-    fun getSavedMobile(): String = prefs.getString(KEY_MOBILE, "01711-223344") ?: "01711-223344"
+    fun getSavedMobile(): String = prefs.getString(KEY_MOBILE, "") ?: ""
 
     fun clearSession() {
-        val currentMosque = getActiveMosqueId()
+        val currentMosque = getActiveMosqueId().takeIf { it != "mosque-001" } ?: ""
         val notif = isNotificationsEnabled()
         val hijri = isHijriBannerVisible()
         val darkMode = isDarkModeEnabled()

@@ -444,7 +444,7 @@ fun RamadanHubDialog(
 
                         RamadanTab.NOTICE -> RamadanNoticeGeneratorView(
                             viewModel = viewModel,
-                            mosqueName = mosque?.nameBn ?: "বায়তুল জান্নাত জামে মসজিদ",
+                            mosqueName = mosque?.nameBn ?: "মসজিদ সেবা",
                             district = selectedDistrict,
                             canPublish = currentRole.canPublishNotices()
                         )
