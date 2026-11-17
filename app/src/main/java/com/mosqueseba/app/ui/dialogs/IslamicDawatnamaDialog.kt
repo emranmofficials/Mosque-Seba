@@ -40,6 +40,9 @@ import java.util.Locale
 fun IslamicDawatnamaDialog(
     defaultMosqueName: String,
     defaultMosqueAddress: String,
+    presidentSignatureUrl: String? = null,
+    presidentStampUrl: String? = null,
+    mosqueSealUrl: String? = null,
     onPublishAsNotice: (title: String, content: String) -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -520,7 +523,10 @@ fun IslamicDawatnamaDialog(
                                 venue = venue,
                                 description = description,
                                 organizer = organizer,
-                                contact = contact
+                                contact = contact,
+                                presidentSignatureUrl = presidentSignatureUrl,
+                                presidentStampUrl = presidentStampUrl,
+                                mosqueSealUrl = mosqueSealUrl
                             )
                         },
                         modifier = Modifier

@@ -38,6 +38,7 @@ import com.mosqueseba.app.data.local.entity.StaffEntity
 import com.mosqueseba.app.data.local.entity.StaffPayrollEntity
 import com.mosqueseba.app.data.model.UserRole
 import com.mosqueseba.app.ui.components.*
+import com.mosqueseba.app.ui.dialogs.*
 import com.mosqueseba.app.ui.theme.*
 import com.mosqueseba.app.ui.viewmodel.MosqueViewModel
 
@@ -233,6 +234,7 @@ fun MemberProfileScreen(
 
     var selectedReceiptForDialog by remember { mutableStateOf<ChandaPaymentEntity?>(null) }
     var showEditMemberDialog by remember { mutableStateOf(false) }
+    var showOfficialSealsDialog by remember { mutableStateOf(false) }
 
     val isDark = LocalIsDarkTheme.current
     val cardBorderSubtle = if (isDark) MosqueNightBorder else MosqueCardBorderSubtle
@@ -578,6 +580,32 @@ fun MemberProfileScreen(
                                     Text(
                                         text = "তথ্য সম্পাদনা ও প্রশাসনিক নিয়ন্ত্রণ",
                                         fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+
+                            if (canManageMembers || isOwnProfile) {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                OutlinedButton(
+                                    onClick = { showOfficialSealsDialog = true },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .heightIn(min = 46.dp),
+                                    shape = RoundedCornerShape(12.dp),
+                                    border = BorderStroke(1.dp, MosqueEmeraldPrimary.copy(alpha = 0.7f)),
+                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MosqueEmeraldPrimary)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Draw,
+                                        contentDescription = null,
+                                        tint = MosqueEmeraldPrimary,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = "অফিসিয়াল সিলমোহর ও ডিজিটাল স্বাক্ষর",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 13.sp
                                     )
                                 }
                             }
@@ -1204,12 +1232,16 @@ fun MemberProfileScreen(
 
     // Official Receipt Dialog
     selectedReceiptForDialog?.let { payment ->
+        val treasurer = viewModel.getTreasurerMember()
         OfficialReceiptDialog(
             payment = payment,
             mosqueName = mosque?.nameBn ?: "মসজিদ সেবা",
             mosqueAddress = mosque?.address ?: "",
             committeeId = mosque?.committeeId ?: "",
             mosqueLogoUrl = mosque?.logoUrl,
+            treasurerSignatureUrl = treasurer?.signatureUrl,
+            treasurerStampUrl = treasurer?.stampUrl,
+            mosqueSealUrl = mosque?.sealUrl,
             onDismiss = { selectedReceiptForDialog = null }
         )
     }
@@ -1288,6 +1320,13 @@ fun MemberProfileScreen(
                     MosqueToastController.success("$nameBn-এর প্রোফাইল সফলভাবে হালনাগাদ হয়েছে।", "প্রোফাইল হালনাগাদ")
                 }
             }
+        )
+    }
+
+    if (showOfficialSealsDialog) {
+        OfficialSealSignatureDialog(
+            viewModel = viewModel,
+            onDismiss = { showOfficialSealsDialog = false }
         )
     }
 }

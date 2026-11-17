@@ -356,6 +356,7 @@ fun MosqueAppShell(
     var showInvitationPosterDialog by remember { mutableStateOf(false) }
     var showCashboxCounterDialog by remember { mutableStateOf(false) }
     var showJanazaAlertDialog by remember { mutableStateOf(false) }
+    var showOfficialSealsDialog by remember { mutableStateOf(false) }
     var openFinanceReportRequest by remember { mutableIntStateOf(0) }
     var openFinancePendingRequest by remember { mutableIntStateOf(0) }
 
@@ -720,6 +721,9 @@ fun MosqueAppShell(
                                     "janaza", "janaza_alert" -> {
                                         showJanazaAlertDialog = true
                                     }
+                                    "official_seals", "seals", "signatures" -> {
+                                        showOfficialSealsDialog = true
+                                    }
                                 }
                             }
                         )
@@ -1005,12 +1009,16 @@ fun MosqueAppShell(
     }
 
     chandaReceiptPreview?.let { payment ->
+        val treasurer = viewModel.getTreasurerMember()
         OfficialReceiptDialog(
             payment = payment,
             mosqueName = mosque?.nameBn ?: "মসজিদ সেবা",
             mosqueAddress = mosque?.address ?: "",
             committeeId = mosque?.committeeId ?: "",
             mosqueLogoUrl = mosque?.logoUrl,
+            treasurerSignatureUrl = treasurer?.signatureUrl,
+            treasurerStampUrl = treasurer?.stampUrl,
+            mosqueSealUrl = mosque?.sealUrl,
             onDismiss = { chandaReceiptPreview = null }
         )
     }
@@ -1075,9 +1083,13 @@ fun MosqueAppShell(
 
     // Islamic Dawatnama & Event Poster AI Dialog
     if (showInvitationPosterDialog) {
+        val president = viewModel.getPresidentMember()
         IslamicDawatnamaDialog(
             defaultMosqueName = mosque?.nameBn ?: "মসজিদ সেবা",
             defaultMosqueAddress = mosque?.address ?: "বাংলাদেশ",
+            presidentSignatureUrl = president?.signatureUrl,
+            presidentStampUrl = president?.stampUrl,
+            mosqueSealUrl = mosque?.sealUrl,
             onPublishAsNotice = { title, content ->
                 viewModel.publishNotice(
                     title = title,
@@ -1094,8 +1106,13 @@ fun MosqueAppShell(
 
     // Jummah Cashbox Dual-Witness Counter Dialog
     if (showCashboxCounterDialog) {
+        val imam = viewModel.getImamStaff()
+        val treasurer = viewModel.getTreasurerMember()
         JummahCashboxDialog(
             mosqueName = mosque?.nameBn ?: "মসজিদ সেবা",
+            imamSignatureUrl = imam?.signatureUrl,
+            treasurerSignatureUrl = treasurer?.signatureUrl,
+            mosqueSealUrl = mosque?.sealUrl,
             onConfirm = { totalAmount, breakdownText, witness1, witness2, witness3, notes ->
                 viewModel.recordJummahCashboxCount(
                     countedAmount = totalAmount,
@@ -1113,8 +1130,12 @@ fun MosqueAppShell(
 
     // Emergency Janaza Alert Broadcast Dialog
     if (showJanazaAlertDialog) {
+        val president = viewModel.getPresidentMember()
         JanazaAlertDialog(
             mosqueName = mosque?.nameBn ?: "মসজিদ সেবা",
+            presidentSignatureUrl = president?.signatureUrl,
+            presidentStampUrl = president?.stampUrl,
+            mosqueSealUrl = mosque?.sealUrl,
             onBroadcastConfirm = { deceasedName, relativeRelation, guardianName, age, villageArea, timeOfDeath, janazaVenue, janazaTime, graveyardVenue, contactPhone, extraNotes ->
                 viewModel.broadcastJanazaAlert(
                     deceasedName = deceasedName,
@@ -1131,6 +1152,14 @@ fun MosqueAppShell(
                 )
             },
             onDismiss = { showJanazaAlertDialog = false }
+        )
+    }
+
+    // Official Seals & Digital Signatures Management Dialog
+    if (showOfficialSealsDialog) {
+        OfficialSealSignatureDialog(
+            viewModel = viewModel,
+            onDismiss = { showOfficialSealsDialog = false }
         )
     }
 

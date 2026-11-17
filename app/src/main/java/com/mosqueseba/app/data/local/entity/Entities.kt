@@ -19,7 +19,8 @@ data class MosqueEntity(
     val waqfRegNo: String = "",
     val capacity: Int? = null,
     val bankAccountInfo: String = "",
-    val logoUrl: String? = null
+    val logoUrl: String? = null,
+    val sealUrl: String? = null
 )
 
 @Entity(tableName = "members")
@@ -37,6 +38,9 @@ data class MemberEntity(
     val monthlyChanda: Double,
     val joinDate: String,
     val photoUrl: String? = null,
+    val signatureUrl: String? = null,
+    val stampUrl: String? = null,
+    val designationBn: String? = null,
     val status: String = "active", // active, inactive, archived
     val willingToProvideStaffMeals: Boolean = false
 )
@@ -88,7 +92,9 @@ data class StaffEntity(
     val salaryFrequency: String = "monthly",
     val mealRequired: Boolean = true,
     val mobile: String,
-    val isActive: Boolean = true
+    val isActive: Boolean = true,
+    val signatureUrl: String? = null,
+    val stampUrl: String? = null
 )
 
 @Entity(tableName = "notices")

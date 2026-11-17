@@ -484,7 +484,17 @@ fun NoticesScreen(
                                 },
                                 onEdit = { editingNotice = notice },
                                 onShare = { shareNoticeText(context, mosqueName, notice) },
-                                onPrint = { MosquePrintHelper.printNotice(context, mosqueName, notice) },
+                                onPrint = {
+                                    val president = viewModel.getPresidentMember()
+                                    MosquePrintHelper.printNotice(
+                                        context = context,
+                                        mosqueName = mosqueName,
+                                        notice = notice,
+                                        presidentSignatureUrl = president?.signatureUrl,
+                                        presidentStampUrl = president?.stampUrl,
+                                        mosqueSealUrl = mosque?.sealUrl
+                                    )
+                                },
                                 onImageClick = { fullScreenImageUrl = it },
                                 onDeleteRequest = { pendingDeleteNotice = notice }
                             )

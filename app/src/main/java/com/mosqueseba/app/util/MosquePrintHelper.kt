@@ -3,11 +3,13 @@ package com.mosqueseba.app.util
 import android.content.Context
 import android.print.PrintAttributes
 import android.print.PrintManager
+import android.util.Base64
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import com.mosqueseba.app.data.local.entity.ChandaPaymentEntity
 import com.mosqueseba.app.data.local.entity.NoticeEntity
 import com.mosqueseba.app.ui.components.toBengaliDigits
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -17,6 +19,21 @@ import java.util.Locale
  * for receipts, notices, vouchers, and monthly financial statements.
  */
 object MosquePrintHelper {
+
+    fun fileToBase64DataUri(path: String?): String? {
+        if (path.isNullOrBlank()) return null
+        return try {
+            val cleanPath = path.removePrefix("file://")
+            val file = File(cleanPath)
+            if (!file.exists()) return null
+            val bytes = file.readBytes()
+            val mime = if (cleanPath.endsWith(".png", true)) "image/png" else "image/jpeg"
+            val base64 = Base64.encodeToString(bytes, Base64.NO_WRAP)
+            "data:$mime;base64,$base64"
+        } catch (_: Exception) {
+            null
+        }
+    }
 
     fun printHtml(context: Context, jobName: String, htmlContent: String) {
         val webView = WebView(context).apply {
@@ -38,13 +55,43 @@ object MosquePrintHelper {
         }
     }
 
-    fun printReceipt(context: Context, mosqueName: String, payment: ChandaPaymentEntity, methodLabel: String) {
-        val html = buildReceiptHtml(mosqueName, payment, methodLabel)
+    fun printReceipt(
+        context: Context,
+        mosqueName: String,
+        payment: ChandaPaymentEntity,
+        methodLabel: String,
+        treasurerSignatureUrl: String? = null,
+        treasurerStampUrl: String? = null,
+        collectorSignatureUrl: String? = null,
+        mosqueSealUrl: String? = null
+    ) {
+        val html = buildReceiptHtml(
+            mosqueName = mosqueName,
+            payment = payment,
+            methodLabel = methodLabel,
+            treasurerSignatureUrl = treasurerSignatureUrl,
+            treasurerStampUrl = treasurerStampUrl,
+            collectorSignatureUrl = collectorSignatureUrl,
+            mosqueSealUrl = mosqueSealUrl
+        )
         printHtml(context, "Receipt-${payment.receiptCode}", html)
     }
 
-    fun printNotice(context: Context, mosqueName: String, notice: NoticeEntity) {
-        val html = buildNoticeHtml(mosqueName, notice)
+    fun printNotice(
+        context: Context,
+        mosqueName: String,
+        notice: NoticeEntity,
+        presidentSignatureUrl: String? = null,
+        presidentStampUrl: String? = null,
+        mosqueSealUrl: String? = null
+    ) {
+        val html = buildNoticeHtml(
+            mosqueName = mosqueName,
+            notice = notice,
+            presidentSignatureUrl = presidentSignatureUrl,
+            presidentStampUrl = presidentStampUrl,
+            mosqueSealUrl = mosqueSealUrl
+        )
         printHtml(context, "Notice-${notice.id.take(8)}", html)
     }
 
@@ -61,7 +108,13 @@ object MosquePrintHelper {
         jummahCount: Int,
         approvedCount: Int,
         pendingCount: Int,
-        aiSummary: String
+        aiSummary: String,
+        presidentSignatureUrl: String? = null,
+        presidentStampUrl: String? = null,
+        treasurerSignatureUrl: String? = null,
+        treasurerStampUrl: String? = null,
+        secretarySignatureUrl: String? = null,
+        mosqueSealUrl: String? = null
     ) {
         val html = buildFinanceHtml(
             mosqueName = mosqueName,
@@ -75,7 +128,13 @@ object MosquePrintHelper {
             jummahCount = jummahCount,
             approvedCount = approvedCount,
             pendingCount = pendingCount,
-            aiSummary = aiSummary
+            aiSummary = aiSummary,
+            presidentSignatureUrl = presidentSignatureUrl,
+            presidentStampUrl = presidentStampUrl,
+            treasurerSignatureUrl = treasurerSignatureUrl,
+            treasurerStampUrl = treasurerStampUrl,
+            secretarySignatureUrl = secretarySignatureUrl,
+            mosqueSealUrl = mosqueSealUrl
         )
         printHtml(context, "Finance-Report-${System.currentTimeMillis()}", html)
     }
@@ -89,7 +148,11 @@ object MosquePrintHelper {
         witness1: String,
         witness2: String,
         witness3: String,
-        notes: String
+        notes: String,
+        imamSignatureUrl: String? = null,
+        treasurerSignatureUrl: String? = null,
+        witnessSignatureUrl: String? = null,
+        mosqueSealUrl: String? = null
     ) {
         val html = buildCashboxVoucherHtml(
             mosqueName = mosqueName,
@@ -99,7 +162,11 @@ object MosquePrintHelper {
             witness1 = witness1,
             witness2 = witness2,
             witness3 = witness3,
-            notes = notes
+            notes = notes,
+            imamSignatureUrl = imamSignatureUrl,
+            treasurerSignatureUrl = treasurerSignatureUrl,
+            witnessSignatureUrl = witnessSignatureUrl,
+            mosqueSealUrl = mosqueSealUrl
         )
         printHtml(context, "Cashbox-Voucher-${System.currentTimeMillis()}", html)
     }
@@ -119,7 +186,10 @@ object MosquePrintHelper {
         venue: String,
         description: String,
         organizer: String,
-        contact: String
+        contact: String,
+        presidentSignatureUrl: String? = null,
+        presidentStampUrl: String? = null,
+        mosqueSealUrl: String? = null
     ) {
         val html = buildInvitationPosterHtml(
             mosqueName = mosqueName,
@@ -135,16 +205,32 @@ object MosquePrintHelper {
             venue = venue,
             description = description,
             organizer = organizer,
-            contact = contact
+            contact = contact,
+            presidentSignatureUrl = presidentSignatureUrl,
+            presidentStampUrl = presidentStampUrl,
+            mosqueSealUrl = mosqueSealUrl
         )
         printHtml(context, "Invitation-${System.currentTimeMillis()}", html)
     }
 
-    private fun buildReceiptHtml(mosqueName: String, payment: ChandaPaymentEntity, methodLabel: String): String {
+    private fun buildReceiptHtml(
+        mosqueName: String,
+        payment: ChandaPaymentEntity,
+        methodLabel: String,
+        treasurerSignatureUrl: String? = null,
+        treasurerStampUrl: String? = null,
+        collectorSignatureUrl: String? = null,
+        mosqueSealUrl: String? = null
+    ): String {
         val amountBn = toBengaliDigits(String.format(Locale.US, "%,.0f", payment.amountPaid))
         val receiptCodeBn = toBengaliDigits(payment.receiptCode)
         val monthBn = toBengaliDigits(payment.month)
         val dateBn = toBengaliDigits(payment.paidAt)
+
+        val sealDataUri = fileToBase64DataUri(mosqueSealUrl)
+        val treasurerSigUri = fileToBase64DataUri(treasurerSignatureUrl)
+        val treasurerStampUri = fileToBase64DataUri(treasurerStampUrl)
+        val collectorSigUri = fileToBase64DataUri(collectorSignatureUrl)
 
         return """
         <!DOCTYPE html>
@@ -179,10 +265,20 @@ object MosquePrintHelper {
                     text-align: center;
                     border-bottom: 2px solid #D4AF37;
                     padding-bottom: 12px;
-                    margin-bottom: 18px;
+                    margin-bottom: 14px;
+                }
+                .seal-header-img {
+                    width: 65px;
+                    height: 65px;
+                    object-fit: contain;
+                    border-radius: 50%;
+                    margin-bottom: 6px;
+                    display: block;
+                    margin-left: auto;
+                    margin-right: auto;
                 }
                 .mosque-title {
-                    font-size: 24px;
+                    font-size: 22px;
                     font-weight: bold;
                     color: #0D5C3A;
                     margin: 0;
@@ -241,6 +337,35 @@ object MosquePrintHelper {
                     font-weight: 900;
                     color: #0D5C3A;
                 }
+                .signatures {
+                    margin-top: 36px;
+                    display: flex;
+                    justify-content: space-between;
+                }
+                .sig-box {
+                    text-align: center;
+                    border-top: 1px solid #777;
+                    padding-top: 6px;
+                    font-size: 13px;
+                    width: 170px;
+                    font-weight: bold;
+                    color: #333;
+                }
+                .sig-img {
+                    max-height: 44px;
+                    max-width: 130px;
+                    object-fit: contain;
+                    display: block;
+                    margin: 0 auto 4px auto;
+                }
+                .stamp-img {
+                    max-height: 50px;
+                    max-width: 100px;
+                    object-fit: contain;
+                    display: block;
+                    margin: 4px auto 0 auto;
+                    opacity: 0.92;
+                }
                 .qr-section {
                     margin-top: 20px;
                     padding-top: 14px;
@@ -254,20 +379,6 @@ object MosquePrintHelper {
                     color: #666;
                     line-height: 1.5;
                 }
-                .signatures {
-                    margin-top: 50px;
-                    display: flex;
-                    justify-content: space-between;
-                }
-                .sig-box {
-                    text-align: center;
-                    border-top: 1px solid #777;
-                    padding-top: 6px;
-                    font-size: 13px;
-                    width: 160px;
-                    font-weight: bold;
-                    color: #333;
-                }
                 .footer {
                     text-align: center;
                     font-size: 11px;
@@ -280,6 +391,7 @@ object MosquePrintHelper {
             <div class="receipt-container">
                 <div class="bismillah">بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</div>
                 <div class="header">
+                    ${if (sealDataUri != null) """<img src="$sealDataUri" class="seal-header-img" />""" else ""}
                     <h1 class="mosque-title">$mosqueName</h1>
                     <div class="sub-title">অফিসিয়াল চাঁদা ও অনুদান আদায় রসিদ</div>
                     <div class="badge-receipt">অনলাইন ভেরিফায়েড রসিদ</div>
@@ -318,8 +430,15 @@ object MosquePrintHelper {
                 </div>
 
                 <div class="signatures">
-                    <div class="sig-box">সদস্যের স্বাক্ষর</div>
-                    <div class="sig-box">কোষাধ্যক্ষ / আদায়কারী</div>
+                    <div class="sig-box">
+                        ${if (collectorSigUri != null) """<img src="$collectorSigUri" class="sig-img" />""" else """<div style="height: 38px;"></div>"""}
+                        <div>সদস্যের স্বাক্ষর</div>
+                    </div>
+                    <div class="sig-box">
+                        ${if (treasurerSigUri != null) """<img src="$treasurerSigUri" class="sig-img" />""" else """<div style="height: 38px;"></div>"""}
+                        <div>কোষাধ্যক্ষ / আদায়কারী</div>
+                        ${if (treasurerStampUri != null) """<img src="$treasurerStampUri" class="stamp-img" />""" else ""}
+                    </div>
                 </div>
 
                 <div class="qr-section">
@@ -338,7 +457,13 @@ object MosquePrintHelper {
         """.trimIndent()
     }
 
-    private fun buildNoticeHtml(mosqueName: String, notice: NoticeEntity): String {
+    private fun buildNoticeHtml(
+        mosqueName: String,
+        notice: NoticeEntity,
+        presidentSignatureUrl: String? = null,
+        presidentStampUrl: String? = null,
+        mosqueSealUrl: String? = null
+    ): String {
         val dateBn = toBengaliDigits(notice.publishDate)
         val priorityBn = when (notice.priority) {
             "urgent" -> "জরুরি ঘোষণা"
@@ -350,6 +475,10 @@ object MosquePrintHelper {
             "important" -> "#D97706"
             else -> "#0D5C3A"
         }
+
+        val sealDataUri = fileToBase64DataUri(mosqueSealUrl)
+        val presidentSigUri = fileToBase64DataUri(presidentSignatureUrl)
+        val presidentStampUri = fileToBase64DataUri(presidentStampUrl)
 
         val imageTag = if (!notice.imageUrl.isNullOrBlank()) {
             """<div style="text-align:center; margin: 18px 0;"><img src="${notice.imageUrl}" style="max-width: 90%; max-height: 380px; border-radius: 8px; border: 1.5px solid #D4AF37; box-shadow: 0 4px 10px rgba(0,0,0,0.1);" /></div>"""
@@ -389,6 +518,16 @@ object MosquePrintHelper {
                     border-bottom: 2px solid #D4AF37;
                     padding-bottom: 14px;
                     margin-bottom: 20px;
+                }
+                .seal-header-img {
+                    width: 70px;
+                    height: 70px;
+                    object-fit: contain;
+                    border-radius: 50%;
+                    margin-bottom: 8px;
+                    display: block;
+                    margin-left: auto;
+                    margin-right: auto;
                 }
                 .mosque-title {
                     font-size: 26px;
@@ -435,7 +574,7 @@ object MosquePrintHelper {
                     margin-bottom: 25px;
                 }
                 .signature-section {
-                    margin-top: 50px;
+                    margin-top: 40px;
                     display: flex;
                     justify-content: flex-end;
                 }
@@ -447,6 +586,21 @@ object MosquePrintHelper {
                     font-weight: bold;
                     width: 220px;
                     color: #0D5C3A;
+                }
+                .sig-img {
+                    max-height: 48px;
+                    max-width: 140px;
+                    object-fit: contain;
+                    display: block;
+                    margin: 0 auto 4px auto;
+                }
+                .stamp-img {
+                    max-height: 52px;
+                    max-width: 110px;
+                    object-fit: contain;
+                    display: block;
+                    margin: 4px auto 0 auto;
+                    opacity: 0.92;
                 }
                 .footer {
                     text-align: center;
@@ -462,6 +616,7 @@ object MosquePrintHelper {
             <div class="notice-container">
                 <div class="bismillah">بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</div>
                 <div class="header">
+                    ${if (sealDataUri != null) """<img src="$sealDataUri" class="seal-header-img" />""" else ""}
                     <h1 class="mosque-title">$mosqueName</h1>
                     <div class="sub-title">অফিসিয়াল ডিজিটাল নোটিশ বোর্ড</div>
                     <div class="badge-priority">$priorityBn</div>
@@ -479,8 +634,10 @@ object MosquePrintHelper {
 
                 <div class="signature-section">
                     <div class="sig-box">
-                        মসজিদ পরিচালনা কমিটি<br>
-                        <span style="font-size: 12px; font-weight: normal; color: #555;">$mosqueName</span>
+                        ${if (presidentSigUri != null) """<img src="$presidentSigUri" class="sig-img" />""" else """<div style="height: 40px;"></div>"""}
+                        <div>সভাপতি / সাধারণ সম্পাদক</div>
+                        <div style="font-size: 12px; font-weight: normal; color: #555;">মসজিদ পরিচালনা কমিটি, $mosqueName</div>
+                        ${if (presidentStampUri != null) """<img src="$presidentStampUri" class="stamp-img" />""" else ""}
                     </div>
                 </div>
 
@@ -505,7 +662,13 @@ object MosquePrintHelper {
         jummahCount: Int,
         approvedCount: Int,
         pendingCount: Int,
-        aiSummary: String
+        aiSummary: String,
+        presidentSignatureUrl: String? = null,
+        presidentStampUrl: String? = null,
+        treasurerSignatureUrl: String? = null,
+        treasurerStampUrl: String? = null,
+        secretarySignatureUrl: String? = null,
+        mosqueSealUrl: String? = null
     ): String {
         val incBn = toBengaliDigits(String.format(Locale.US, "%,.0f", totalIncome))
         val expBn = toBengaliDigits(String.format(Locale.US, "%,.0f", totalExpense))
@@ -515,6 +678,13 @@ object MosquePrintHelper {
         val bankBn = toBengaliDigits(String.format(Locale.US, "%,.0f", bankFund))
         val jummahBn = toBengaliDigits(String.format(Locale.US, "%,.0f", jummahTotal))
         val printDateBn = toBengaliDigits(SimpleDateFormat("dd MMMM yyyy, hh:mm a", Locale.forLanguageTag("bn-BD")).format(Date()))
+
+        val sealDataUri = fileToBase64DataUri(mosqueSealUrl)
+        val presidentSigUri = fileToBase64DataUri(presidentSignatureUrl)
+        val presidentStampUri = fileToBase64DataUri(presidentStampUrl)
+        val treasurerSigUri = fileToBase64DataUri(treasurerSignatureUrl)
+        val treasurerStampUri = fileToBase64DataUri(treasurerStampUrl)
+        val secretarySigUri = fileToBase64DataUri(secretarySignatureUrl)
 
         return """
         <!DOCTYPE html>
@@ -550,6 +720,16 @@ object MosquePrintHelper {
                     border-bottom: 2px solid #D4AF37;
                     padding-bottom: 12px;
                     margin-bottom: 16px;
+                }
+                .seal-header-img {
+                    width: 70px;
+                    height: 70px;
+                    object-fit: contain;
+                    border-radius: 50%;
+                    margin-bottom: 6px;
+                    display: block;
+                    margin-left: auto;
+                    margin-right: auto;
                 }
                 .mosque-title {
                     font-size: 24px;
@@ -627,13 +807,28 @@ object MosquePrintHelper {
                     justify-content: space-between;
                 }
                 .sig-box {
+                    flex: 1;
                     text-align: center;
                     border-top: 1px solid #475569;
                     padding-top: 6px;
                     font-size: 13px;
-                    width: 140px;
                     font-weight: bold;
                     color: #1e293b;
+                }
+                .sig-img {
+                    max-height: 44px;
+                    max-width: 130px;
+                    object-fit: contain;
+                    display: block;
+                    margin: 0 auto 4px auto;
+                }
+                .stamp-img {
+                    max-height: 48px;
+                    max-width: 100px;
+                    object-fit: contain;
+                    display: block;
+                    margin: 4px auto 0 auto;
+                    opacity: 0.92;
                 }
                 .footer {
                     text-align: center;
@@ -649,6 +844,7 @@ object MosquePrintHelper {
             <div class="report-container">
                 <div class="bismillah">بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</div>
                 <div class="header">
+                    ${if (sealDataUri != null) """<img src="$sealDataUri" class="seal-header-img" />""" else ""}
                     <h1 class="mosque-title">$mosqueName</h1>
                     <div class="sub-title">বায়তুল মাল ও সার্বজনীন আর্থিক অডিট বিবরণী</div>
                 </div>
@@ -703,9 +899,20 @@ object MosquePrintHelper {
                 """ else ""}
 
                 <div class="signatures">
-                    <div class="sig-box">কোষাধ্যক্ষ</div>
-                    <div class="sig-box">সাধারণ সম্পাদক</div>
-                    <div class="sig-box">সভাপতি</div>
+                    <div class="sig-box">
+                        ${if (treasurerSigUri != null) """<img src="$treasurerSigUri" class="sig-img" />""" else """<div style="height: 38px;"></div>"""}
+                        <div>কোষাধ্যক্ষ</div>
+                        ${if (treasurerStampUri != null) """<img src="$treasurerStampUri" class="stamp-img" />""" else ""}
+                    </div>
+                    <div class="sig-box">
+                        ${if (secretarySigUri != null) """<img src="$secretarySigUri" class="sig-img" />""" else """<div style="height: 38px;"></div>"""}
+                        <div>সাধারণ সম্পাদক</div>
+                    </div>
+                    <div class="sig-box">
+                        ${if (presidentSigUri != null) """<img src="$presidentSigUri" class="sig-img" />""" else """<div style="height: 38px;"></div>"""}
+                        <div>সভাপতি</div>
+                        ${if (presidentStampUri != null) """<img src="$presidentStampUri" class="stamp-img" />""" else ""}
+                    </div>
                 </div>
 
                 <div class="footer">
@@ -725,11 +932,20 @@ object MosquePrintHelper {
         witness1: String,
         witness2: String,
         witness3: String,
-        notes: String
+        notes: String,
+        imamSignatureUrl: String? = null,
+        treasurerSignatureUrl: String? = null,
+        witnessSignatureUrl: String? = null,
+        mosqueSealUrl: String? = null
     ): String {
         val totalBn = toBengaliDigits(String.format(Locale.US, "%,.0f", totalAmount))
         val dateBn = toBengaliDigits(dateStr)
         val nowBn = toBengaliDigits(SimpleDateFormat("dd MMMM yyyy, hh:mm a", Locale.forLanguageTag("bn-BD")).format(Date()))
+
+        val sealDataUri = fileToBase64DataUri(mosqueSealUrl)
+        val imamSigUri = fileToBase64DataUri(imamSignatureUrl)
+        val treasurerSigUri = fileToBase64DataUri(treasurerSignatureUrl)
+        val witnessSigUri = fileToBase64DataUri(witnessSignatureUrl)
 
         val rowsHtml = breakdownList.filter { it.second > 0 }.joinToString("\n") { (denom, count) ->
             val denomVal = denom.filter { it.isDigit() }.toIntOrNull() ?: 0
@@ -859,6 +1075,31 @@ object MosquePrintHelper {
                     font-weight: bold;
                     color: #333;
                 }
+                .sig-img {
+                    max-height: 42px;
+                    max-width: 120px;
+                    object-fit: contain;
+                    display: block;
+                    margin: 0 auto 4px auto;
+                }
+                .stamp-img {
+                    max-height: 46px;
+                    max-width: 90px;
+                    object-fit: contain;
+                    display: block;
+                    margin: 4px auto 0 auto;
+                    opacity: 0.92;
+                }
+                .seal-header-img {
+                    width: 65px;
+                    height: 65px;
+                    object-fit: contain;
+                    border-radius: 50%;
+                    margin-bottom: 6px;
+                    display: block;
+                    margin-left: auto;
+                    margin-right: auto;
+                }
                 .sig-name {
                     font-size: 12px;
                     font-weight: normal;
@@ -885,8 +1126,9 @@ object MosquePrintHelper {
         </head>
         <body>
             <div class="voucher-container">
-                <div class="bismillah">بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ</div>
+                <div class="bismillah">بِسْمِ ٱللَّهِ ٱلرَّحْمَٰনِ ٱلرَّحِيمِ</div>
                 <div class="header">
+                    ${if (sealDataUri != null) """<img src="$sealDataUri" class="seal-header-img" />""" else ""}
                     <h1 class="mosque-title">$mosqueName</h1>
                     <div class="sub-title">স্বচ্ছ বায়তুলমাল ব্যবস্থাপনা ও নিরীক্ষা নথি</div>
                     <div class="badge-voucher">সাপ্তাহিক জুমার দানবাক্স গণনা প্রত্যয়ন ভাউচার</div>
@@ -927,15 +1169,19 @@ object MosquePrintHelper {
                     </div>
                     <div class="witness-grid">
                         <div class="sig-box">
-                            ১ম সাক্ষী (ইমাম / খতিব)
+                            ${if (imamSigUri != null) """<img src="$imamSigUri" class="sig-img" />""" else """<div style="height: 36px;"></div>"""}
+                            <div>১ম সাক্ষী (ইমাম / খতিব)</div>
                             <div class="sig-name">$witness1</div>
                         </div>
                         <div class="sig-box">
-                            ২য় সাক্ষী (কোষাধ্যক্ষ / সভাপতি)
+                            ${if (treasurerSigUri != null) """<img src="$treasurerSigUri" class="sig-img" />""" else """<div style="height: 36px;"></div>"""}
+                            <div>২য় সাক্ষী (কোষাধ্যক্ষ / সভাপতি)</div>
                             <div class="sig-name">$witness2</div>
+                            ${if (treasurerStampUri != null) """<img src="$treasurerStampUri" class="stamp-img" />""" else ""}
                         </div>
                         <div class="sig-box">
-                            ৩য় সাক্ষী (নিরপেক্ষ মুসল্লি)
+                            ${if (witnessSigUri != null) """<img src="$witnessSigUri" class="sig-img" />""" else """<div style="height: 36px;"></div>"""}
+                            <div>৩য় সাক্ষী (সাধারণ মুসল্লি)</div>
                             <div class="sig-name">$witness3</div>
                         </div>
                     </div>
@@ -968,8 +1214,15 @@ object MosquePrintHelper {
         venue: String,
         description: String,
         organizer: String,
-        contact: String
+        contact: String,
+        presidentSignatureUrl: String? = null,
+        presidentStampUrl: String? = null,
+        mosqueSealUrl: String? = null
     ): String {
+        val sealDataUri = fileToBase64DataUri(mosqueSealUrl)
+        val presidentSigUri = fileToBase64DataUri(presidentSignatureUrl)
+        val presidentStampUri = fileToBase64DataUri(presidentStampUrl)
+
         return """
         <!DOCTYPE html>
         <html>
@@ -1200,6 +1453,20 @@ object MosquePrintHelper {
                         <strong>জরুরি যোগাযোগ:</strong><br>
                         ${contact.ifBlank { "মসজিদ দপ্তর" }}
                     </div>
+                </div>
+
+                <div style="margin-top: 20px; display: flex; justify-content: space-between; align-items: flex-end; padding: 0 10px;">
+                    <div>
+                        ${if (sealDataUri != null) """<img src="$sealDataUri" style="width: 60px; height: 60px; object-fit: contain; border-radius: 50%; opacity: 0.85;" />""" else ""}
+                    </div>
+                    ${if (president.isNotBlank() || presidentSigUri != null) """
+                    <div style="text-align: center; border-top: 1px solid #D4AF37; padding-top: 4px; min-width: 160px;">
+                        ${if (presidentSigUri != null) """<img src="$presidentSigUri" style="max-height: 42px; max-width: 130px; display: block; margin: 0 auto 2px auto;" />""" else """<div style="height: 32px;"></div>"""}
+                        <div style="font-weight: bold; font-size: 12px; color: #0D5C3A;">সভাপতি / আহ্বায়ক</div>
+                        <div style="font-size: 11px; color: #555;">${president.ifBlank { "মসজিদ পরিচালনা কমিটি" }}</div>
+                        ${if (presidentStampUri != null) """<img src="$presidentStampUri" style="max-height: 46px; max-width: 90px; display: block; margin: 2px auto 0 auto; opacity: 0.9;" />""" else ""}
+                    </div>
+                    """ else ""}
                 </div>
 
                 <div class="footer">

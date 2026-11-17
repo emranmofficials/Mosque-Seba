@@ -746,12 +746,16 @@ fun MembersScreen(
 
     // 4. Official Receipt Dialog
     receiptPreviewPayment?.let { payment ->
+        val treasurer = viewModel.getTreasurerMember()
         OfficialReceiptDialog(
             payment = payment,
             mosqueName = mosque?.nameBn ?: "মসজিদ সেবা",
             mosqueAddress = mosque?.address ?: "",
             committeeId = mosque?.committeeId ?: "",
             mosqueLogoUrl = mosque?.logoUrl,
+            treasurerSignatureUrl = treasurer?.signatureUrl,
+            treasurerStampUrl = treasurer?.stampUrl,
+            mosqueSealUrl = mosque?.sealUrl,
             onDismiss = { receiptPreviewPayment = null }
         )
     }

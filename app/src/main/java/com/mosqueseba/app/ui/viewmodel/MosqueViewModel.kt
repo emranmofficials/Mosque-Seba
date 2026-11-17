@@ -1734,6 +1734,62 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
+    fun updateMemberSignatureAndStamp(
+        memberId: String,
+        signatureUrl: String?,
+        stampUrl: String?,
+        designationBn: String? = null
+    ) {
+        viewModelScope.launch {
+            val existing = allMembers.value.firstOrNull { it.id == memberId } ?: return@launch
+            val updated = existing.copy(
+                signatureUrl = signatureUrl,
+                stampUrl = stampUrl,
+                designationBn = designationBn ?: existing.designationBn
+            )
+            repository.updateMember(updated)
+            val normMobile = updated.mobile.filter { it.isDigit() }
+            activeStaff.value.find { st ->
+                st.id == "staff-${updated.id}" ||
+                    (normMobile.length >= 6 && st.mobile.filter { it.isDigit() } == normMobile) ||
+                    st.nameBn.trim() == updated.nameBn.trim()
+            }?.let { st ->
+                repository.updateStaff(st.copy(signatureUrl = signatureUrl, stampUrl = stampUrl))
+            }
+        }
+    }
+
+    fun updateStaffSignatureAndStamp(
+        staffId: String,
+        signatureUrl: String?,
+        stampUrl: String?
+    ) {
+        viewModelScope.launch {
+            val existing = activeStaff.value.firstOrNull { it.id == staffId } ?: return@launch
+            repository.updateStaff(existing.copy(signatureUrl = signatureUrl, stampUrl = stampUrl))
+            val normMobile = existing.mobile.filter { it.isDigit() }
+            allMembers.value.firstOrNull { m ->
+                m.id == existing.id.removePrefix("staff-") ||
+                    (normMobile.length >= 6 && m.mobile.filter { it.isDigit() } == normMobile) ||
+                    m.nameBn.trim() == existing.nameBn.trim()
+            }?.let { m ->
+                repository.updateMember(m.copy(signatureUrl = signatureUrl, stampUrl = stampUrl))
+            }
+        }
+    }
+
+    fun updateMosqueSeal(sealUrl: String?) {
+        viewModelScope.launch {
+            val mosque = currentMosque.value ?: return@launch
+            repository.updateMosqueProfile(mosque.copy(sealUrl = sealUrl), _currentUserRole.value.titleBn)
+        }
+    }
+
+    fun getPresidentMember(): MemberEntity? = allMembers.value.firstOrNull { it.roleCode == UserRole.PRESIDENT.code }
+    fun getTreasurerMember(): MemberEntity? = allMembers.value.firstOrNull { it.roleCode == UserRole.TREASURER.code }
+    fun getSecretaryMember(): MemberEntity? = allMembers.value.firstOrNull { it.roleCode == UserRole.GENERAL_SECRETARY.code }
+    fun getImamStaff(): StaffEntity? = activeStaff.value.firstOrNull { it.roleCode == "imam" }
+
     fun promoteStaffAndUpdateDetails(
         staff: StaffEntity,
         nameBn: String,

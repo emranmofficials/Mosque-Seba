@@ -43,3 +43,20 @@ suspend fun savePickedImageToAppStorage(
         null to null
     }
 }
+
+suspend fun saveBitmapToAppStorage(
+    context: Context,
+    bitmap: Bitmap,
+    prefix: String
+): String? = withContext(Dispatchers.IO) {
+    try {
+        val uploadDir = File(context.filesDir, "uploads").apply { mkdirs() }
+        val targetFile = File(uploadDir, "${prefix}_${System.currentTimeMillis()}.png")
+        FileOutputStream(targetFile).use { output ->
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, output)
+        }
+        targetFile.absolutePath
+    } catch (_: Exception) {
+        null
+    }
+}

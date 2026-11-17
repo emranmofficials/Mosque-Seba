@@ -37,6 +37,9 @@ import java.util.UUID
 @Composable
 fun JanazaAlertDialog(
     mosqueName: String,
+    presidentSignatureUrl: String? = null,
+    presidentStampUrl: String? = null,
+    mosqueSealUrl: String? = null,
     onBroadcastConfirm: (
         deceasedName: String,
         relativeRelation: String,
@@ -336,7 +339,14 @@ fun JanazaAlertDialog(
                                 createdAt = SimpleDateFormat("dd MMMM yyyy", Locale.forLanguageTag("bn-BD")).format(Date()),
                                 imageUrl = null
                             )
-                            MosquePrintHelper.printNotice(context, mosqueName, fakeNotice)
+                            MosquePrintHelper.printNotice(
+                                context = context,
+                                mosqueName = mosqueName,
+                                notice = fakeNotice,
+                                presidentSignatureUrl = presidentSignatureUrl,
+                                presidentStampUrl = presidentStampUrl,
+                                mosqueSealUrl = mosqueSealUrl
+                            )
                         },
                         modifier = Modifier
                             .weight(1.1f)

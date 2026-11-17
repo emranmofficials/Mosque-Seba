@@ -841,6 +841,14 @@ private fun buildRoleOperationModules(
             icon = Icons.Default.Campaign,
             iconColor = MosqueUrgentRed,
             category = OperationCategory.ADMIN
+        ),
+        OperationModuleEntry(
+            key = "official_seals",
+            title = "কর্মকর্তাদের সিলমোহর ও ডিজিটাল স্বাক্ষর",
+            description = "পদধারী সদস্য, ইমাম ও মসজিদের অফিসিয়াল সিল এবং স্বাক্ষর ব্যবস্থাপনা",
+            icon = Icons.Default.Draw,
+            iconColor = MosqueEmeraldPrimary,
+            category = OperationCategory.ADMIN
         )
     )
 }

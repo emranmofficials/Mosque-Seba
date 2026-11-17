@@ -38,6 +38,9 @@ fun JummahCashboxDialog(
     mosqueName: String,
     defaultWitness1: String = "পেশ ইমাম",
     defaultWitness2: String = "কোষাধ্যক্ষ",
+    imamSignatureUrl: String? = null,
+    treasurerSignatureUrl: String? = null,
+    mosqueSealUrl: String? = null,
     onConfirm: (
         totalAmount: Double,
         breakdownText: String,
@@ -402,7 +405,10 @@ fun JummahCashboxDialog(
                                 witness1 = witness1,
                                 witness2 = witness2,
                                 witness3 = witness3,
-                                notes = notes
+                                notes = notes,
+                                imamSignatureUrl = imamSignatureUrl,
+                                treasurerSignatureUrl = treasurerSignatureUrl,
+                                mosqueSealUrl = mosqueSealUrl
                             )
                         },
                         modifier = Modifier

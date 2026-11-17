@@ -1543,6 +1543,9 @@ fun FinanceScreen(
 
     // Financial Report & AI Summary Dialog
     if (showReportDialog) {
+        val president = viewModel.getPresidentMember()
+        val secretary = viewModel.getSecretaryMember()
+        val treasurer = viewModel.getTreasurerMember()
         FinancialReportDialog(
             mosqueName = mosque?.nameBn ?: "মসজিদ সেবা",
             totalIncome = totalIncome,
@@ -1552,6 +1555,13 @@ fun FinanceScreen(
             jummahSummary = Triple(jummahTotalAmount, jummahDistinctDaysCount, jummahAverageIncome),
             transactions = allTransactions,
             aiSummaryState = aiSummaryState,
+            presidentSignatureUrl = president?.signatureUrl,
+            presidentStampUrl = president?.stampUrl,
+            secretarySignatureUrl = secretary?.signatureUrl,
+            secretaryStampUrl = secretary?.stampUrl,
+            treasurerSignatureUrl = treasurer?.signatureUrl,
+            treasurerStampUrl = treasurer?.stampUrl,
+            mosqueSealUrl = mosque?.sealUrl,
             onGenerateAiSummary = { viewModel.generateFinanceSummaryWithAi() },
             onClearAiSummary = { viewModel.clearAiSummaryState() },
             onDismiss = { showReportDialog = false }
@@ -2184,6 +2194,13 @@ fun FinancialReportDialog(
     jummahSummary: Triple<Double, Int, Double> = Triple(0.0, 0, 0.0),
     transactions: List<TransactionEntity>,
     aiSummaryState: AiSummaryUiState = AiSummaryUiState.Idle,
+    presidentSignatureUrl: String? = null,
+    presidentStampUrl: String? = null,
+    secretarySignatureUrl: String? = null,
+    secretaryStampUrl: String? = null,
+    treasurerSignatureUrl: String? = null,
+    treasurerStampUrl: String? = null,
+    mosqueSealUrl: String? = null,
     onGenerateAiSummary: () -> Unit = {},
     onClearAiSummary: () -> Unit = {},
     onDismiss: () -> Unit
@@ -2377,7 +2394,14 @@ fun FinancialReportDialog(
                                 jummahCount = jummahSummary.second,
                                 approvedCount = approvedCount,
                                 pendingCount = pendingCount,
-                                aiSummary = aiRaw
+                                aiSummary = aiRaw,
+                                presidentSignatureUrl = presidentSignatureUrl,
+                                presidentStampUrl = presidentStampUrl,
+                                secretarySignatureUrl = secretarySignatureUrl,
+                                secretaryStampUrl = secretaryStampUrl,
+                                treasurerSignatureUrl = treasurerSignatureUrl,
+                                treasurerStampUrl = treasurerStampUrl,
+                                mosqueSealUrl = mosqueSealUrl
                             )
                         },
                         modifier = Modifier

@@ -152,7 +152,7 @@ fun MoreScreen(
     ) {
         val subModulesWithOwnHeader = setOf(
             "election", "notices", "members", "about", "islamic_calendar", "ramadan_hub",
-            "invitation", "cashbox_counter", "janaza_alert"
+            "invitation", "cashbox_counter", "janaza_alert", "official_seals"
         )
         if (selectedSubModule != null && selectedSubModule !in subModulesWithOwnHeader) {
             val isDark = LocalIsDarkTheme.current
@@ -338,6 +338,19 @@ fun MoreScreen(
                             extraNotes = extraNotes
                         )
                     },
+                    onDismiss = {
+                        if (initialSubModule != null) onBack?.invoke() else selectedSubModule = null
+                    }
+                )
+                MoreOperationsHub(
+                    currentRole = currentRole,
+                    liveCounts = liveCounts,
+                    onSelectModule = { moduleKey -> selectedSubModule = moduleKey }
+                )
+            }
+            "official_seals" -> {
+                OfficialSealSignatureDialog(
+                    viewModel = viewModel,
                     onDismiss = {
                         if (initialSubModule != null) onBack?.invoke() else selectedSubModule = null
                     }
@@ -2420,12 +2433,16 @@ fun MoreScreen(
 
     // Receipt Dialog
     selectedPaymentForReceipt?.let { payment ->
+        val treasurer = viewModel.getTreasurerMember()
         OfficialReceiptDialog(
             payment = payment,
             mosqueName = mosque?.nameBn ?: "মসজিদ সেবা",
             mosqueAddress = mosque?.address ?: "",
             committeeId = mosque?.committeeId ?: "",
             mosqueLogoUrl = mosque?.logoUrl,
+            treasurerSignatureUrl = treasurer?.signatureUrl,
+            treasurerStampUrl = treasurer?.stampUrl,
+            mosqueSealUrl = mosque?.sealUrl,
             onDismiss = { selectedPaymentForReceipt = null }
         )
     }

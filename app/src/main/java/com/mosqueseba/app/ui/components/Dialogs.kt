@@ -2490,6 +2490,10 @@ fun OfficialReceiptDialog(
     mosqueAddress: String = "",
     committeeId: String = "",
     mosqueLogoUrl: String? = null,
+    treasurerSignatureUrl: String? = null,
+    treasurerStampUrl: String? = null,
+    collectorSignatureUrl: String? = null,
+    mosqueSealUrl: String? = null,
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
@@ -2651,7 +2655,11 @@ fun OfficialReceiptDialog(
                                 context = context,
                                 mosqueName = mosqueName,
                                 payment = payment,
-                                methodLabel = methodLabel
+                                methodLabel = methodLabel,
+                                treasurerSignatureUrl = treasurerSignatureUrl,
+                                treasurerStampUrl = treasurerStampUrl,
+                                collectorSignatureUrl = collectorSignatureUrl,
+                                mosqueSealUrl = mosqueSealUrl
                             )
                         },
                         modifier = Modifier
