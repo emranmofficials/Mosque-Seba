@@ -525,6 +525,8 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
+    val currentMosque: StateFlow<MosqueEntity?> = mosque
+
     // --- Firebase AI Logic (Gemini 3.8 Flash) ---
     private val noticeSchema = Schema.obj(
         properties = mapOf(

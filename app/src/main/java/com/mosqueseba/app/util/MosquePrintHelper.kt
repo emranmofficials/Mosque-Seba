@@ -111,9 +111,10 @@ object MosquePrintHelper {
         aiSummary: String,
         presidentSignatureUrl: String? = null,
         presidentStampUrl: String? = null,
+        secretarySignatureUrl: String? = null,
+        secretaryStampUrl: String? = null,
         treasurerSignatureUrl: String? = null,
         treasurerStampUrl: String? = null,
-        secretarySignatureUrl: String? = null,
         mosqueSealUrl: String? = null
     ) {
         val html = buildFinanceHtml(
@@ -131,9 +132,10 @@ object MosquePrintHelper {
             aiSummary = aiSummary,
             presidentSignatureUrl = presidentSignatureUrl,
             presidentStampUrl = presidentStampUrl,
+            secretarySignatureUrl = secretarySignatureUrl,
+            secretaryStampUrl = secretaryStampUrl,
             treasurerSignatureUrl = treasurerSignatureUrl,
             treasurerStampUrl = treasurerStampUrl,
-            secretarySignatureUrl = secretarySignatureUrl,
             mosqueSealUrl = mosqueSealUrl
         )
         printHtml(context, "Finance-Report-${System.currentTimeMillis()}", html)
@@ -151,6 +153,7 @@ object MosquePrintHelper {
         notes: String,
         imamSignatureUrl: String? = null,
         treasurerSignatureUrl: String? = null,
+        treasurerStampUrl: String? = null,
         witnessSignatureUrl: String? = null,
         mosqueSealUrl: String? = null
     ) {
@@ -165,6 +168,7 @@ object MosquePrintHelper {
             notes = notes,
             imamSignatureUrl = imamSignatureUrl,
             treasurerSignatureUrl = treasurerSignatureUrl,
+            treasurerStampUrl = treasurerStampUrl,
             witnessSignatureUrl = witnessSignatureUrl,
             mosqueSealUrl = mosqueSealUrl
         )
@@ -665,9 +669,10 @@ object MosquePrintHelper {
         aiSummary: String,
         presidentSignatureUrl: String? = null,
         presidentStampUrl: String? = null,
+        secretarySignatureUrl: String? = null,
+        secretaryStampUrl: String? = null,
         treasurerSignatureUrl: String? = null,
         treasurerStampUrl: String? = null,
-        secretarySignatureUrl: String? = null,
         mosqueSealUrl: String? = null
     ): String {
         val incBn = toBengaliDigits(String.format(Locale.US, "%,.0f", totalIncome))
@@ -682,9 +687,10 @@ object MosquePrintHelper {
         val sealDataUri = fileToBase64DataUri(mosqueSealUrl)
         val presidentSigUri = fileToBase64DataUri(presidentSignatureUrl)
         val presidentStampUri = fileToBase64DataUri(presidentStampUrl)
+        val secretarySigUri = fileToBase64DataUri(secretarySignatureUrl)
+        val secretaryStampUri = fileToBase64DataUri(secretaryStampUrl)
         val treasurerSigUri = fileToBase64DataUri(treasurerSignatureUrl)
         val treasurerStampUri = fileToBase64DataUri(treasurerStampUrl)
-        val secretarySigUri = fileToBase64DataUri(secretarySignatureUrl)
 
         return """
         <!DOCTYPE html>
@@ -907,6 +913,7 @@ object MosquePrintHelper {
                     <div class="sig-box">
                         ${if (secretarySigUri != null) """<img src="$secretarySigUri" class="sig-img" />""" else """<div style="height: 38px;"></div>"""}
                         <div>সাধারণ সম্পাদক</div>
+                        ${if (secretaryStampUri != null) """<img src="$secretaryStampUri" class="stamp-img" />""" else ""}
                     </div>
                     <div class="sig-box">
                         ${if (presidentSigUri != null) """<img src="$presidentSigUri" class="sig-img" />""" else """<div style="height: 38px;"></div>"""}
@@ -935,6 +942,7 @@ object MosquePrintHelper {
         notes: String,
         imamSignatureUrl: String? = null,
         treasurerSignatureUrl: String? = null,
+        treasurerStampUrl: String? = null,
         witnessSignatureUrl: String? = null,
         mosqueSealUrl: String? = null
     ): String {
@@ -945,6 +953,7 @@ object MosquePrintHelper {
         val sealDataUri = fileToBase64DataUri(mosqueSealUrl)
         val imamSigUri = fileToBase64DataUri(imamSignatureUrl)
         val treasurerSigUri = fileToBase64DataUri(treasurerSignatureUrl)
+        val treasurerStampUri = fileToBase64DataUri(treasurerStampUrl)
         val witnessSigUri = fileToBase64DataUri(witnessSignatureUrl)
 
         val rowsHtml = breakdownList.filter { it.second > 0 }.joinToString("\n") { (denom, count) ->

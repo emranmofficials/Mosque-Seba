@@ -2379,7 +2379,7 @@ fun FinancialReportDialog(
                                 else -> ""
                             }
                             val chandaCalc = transactions
-                                .filter { it.type == "income" && (it.category.contains("চাঁদা") || it.category == "মাসিক চাঁদা") }
+                                .filter { it.type.equals("income", ignoreCase = true) && (it.categoryNameBn.contains("চাঁদা") || it.categoryNameBn == "মাসিক চাঁদা") }
                                 .sumOf { it.amount }
                             MosquePrintHelper.printFinanceSummary(
                                 context = context,

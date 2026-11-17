@@ -73,7 +73,7 @@ fun OfficialSealSignatureDialog(
     val scope = rememberCoroutineScope()
     val isDark = LocalIsDarkTheme.current
 
-    val mosque by viewModel.currentMosque.collectAsState()
+    val mosque by viewModel.mosque.collectAsState()
     val allMembers by viewModel.allMembers.collectAsState()
     val activeStaff by viewModel.activeStaff.collectAsState()
 

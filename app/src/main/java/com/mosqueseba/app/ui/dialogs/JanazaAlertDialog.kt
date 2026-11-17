@@ -333,10 +333,11 @@ fun JanazaAlertDialog(
                                 id = "janaza-${UUID.randomUUID().toString().take(6)}",
                                 title = "জরুরি জানাজার নোটিশ: মরহুম $deceasedName-এর ইন্তেকাল",
                                 content = formattedBroadcastMessage,
-                                priority = "URGENT",
+                                priority = "urgent",
                                 isPinned = true,
+                                publishDate = SimpleDateFormat("dd MMMM yyyy", Locale.forLanguageTag("bn-BD")).format(Date()),
                                 createdBy = mosqueName,
-                                createdAt = SimpleDateFormat("dd MMMM yyyy", Locale.forLanguageTag("bn-BD")).format(Date()),
+                                createdAt = System.currentTimeMillis(),
                                 imageUrl = null
                             )
                             MosquePrintHelper.printNotice(
