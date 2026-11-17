@@ -102,7 +102,8 @@ data class NoticeEntity(
     val expiryDate: String? = null,
     val status: String = "published", // published, draft, archived
     val createdBy: String,
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
+    val imageUrl: String? = null
 )
 
 @Entity(tableName = "meetings")

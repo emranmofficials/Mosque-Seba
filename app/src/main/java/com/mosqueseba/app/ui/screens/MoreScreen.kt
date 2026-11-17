@@ -43,6 +43,7 @@ import com.mosqueseba.app.ui.components.AddRosterFormDialog
 import com.mosqueseba.app.ui.components.AddWelfareDialog
 import com.mosqueseba.app.ui.components.AutoFoodScheduleDialog
 import com.mosqueseba.app.ui.components.MeetingResolutionDialog
+import com.mosqueseba.app.ui.dialogs.*
 import com.mosqueseba.app.ui.components.MosqueConfirmDialog
 import com.mosqueseba.app.ui.components.MosqueMemberAvatar
 import com.mosqueseba.app.ui.components.OfficialReceiptDialog
@@ -149,8 +150,10 @@ fun MoreScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // Modern Clean Sticky Header for Sub-modules (skip for submodules that already provide their own complete header)
-        val subModulesWithOwnHeader = setOf("election", "notices", "members", "about", "islamic_calendar", "ramadan_hub")
+        val subModulesWithOwnHeader = setOf(
+            "election", "notices", "members", "about", "islamic_calendar", "ramadan_hub",
+            "invitation", "cashbox_counter", "janaza_alert"
+        )
         if (selectedSubModule != null && selectedSubModule !in subModulesWithOwnHeader) {
             val isDark = LocalIsDarkTheme.current
             Surface(
@@ -260,6 +263,81 @@ fun MoreScreen(
             "ramadan_hub" -> {
                 RamadanHubDialog(
                     viewModel = viewModel,
+                    onDismiss = {
+                        if (initialSubModule != null) onBack?.invoke() else selectedSubModule = null
+                    }
+                )
+                MoreOperationsHub(
+                    currentRole = currentRole,
+                    liveCounts = liveCounts,
+                    onSelectModule = { moduleKey -> selectedSubModule = moduleKey }
+                )
+            }
+            "invitation" -> {
+                IslamicDawatnamaDialog(
+                    defaultMosqueName = mosque?.nameBn ?: "মসজিদ সেবা",
+                    defaultMosqueAddress = mosque?.address ?: "বাংলাদেশ",
+                    onPublishAsNotice = { title, content ->
+                        viewModel.publishNotice(
+                            title = title,
+                            content = content,
+                            priority = "IMPORTANT",
+                            isPinned = true,
+                            imageUrl = null
+                        )
+                    },
+                    onDismiss = {
+                        if (initialSubModule != null) onBack?.invoke() else selectedSubModule = null
+                    }
+                )
+                MoreOperationsHub(
+                    currentRole = currentRole,
+                    liveCounts = liveCounts,
+                    onSelectModule = { moduleKey -> selectedSubModule = moduleKey }
+                )
+            }
+            "cashbox_counter" -> {
+                JummahCashboxDialog(
+                    mosqueName = mosque?.nameBn ?: "মসজিদ সেবা",
+                    onConfirm = { totalAmount, breakdownText, witness1, witness2, witness3, notes ->
+                        viewModel.recordJummahCashboxCount(
+                            countedAmount = totalAmount,
+                            denominationBreakdown = breakdownText,
+                            witness1 = witness1,
+                            witness2 = witness2,
+                            witness3 = witness3,
+                            notes = notes,
+                            autoAddIncome = true
+                        )
+                    },
+                    onDismiss = {
+                        if (initialSubModule != null) onBack?.invoke() else selectedSubModule = null
+                    }
+                )
+                MoreOperationsHub(
+                    currentRole = currentRole,
+                    liveCounts = liveCounts,
+                    onSelectModule = { moduleKey -> selectedSubModule = moduleKey }
+                )
+            }
+            "janaza_alert" -> {
+                JanazaAlertDialog(
+                    mosqueName = mosque?.nameBn ?: "মসজিদ সেবা",
+                    onBroadcastConfirm = { deceasedName, relativeRelation, guardianName, age, villageArea, timeOfDeath, janazaVenue, janazaTime, graveyardVenue, contactPhone, extraNotes ->
+                        viewModel.broadcastJanazaAlert(
+                            deceasedName = deceasedName,
+                            relativeRelation = relativeRelation,
+                            guardianName = guardianName,
+                            age = age,
+                            villageArea = villageArea,
+                            timeOfDeath = timeOfDeath,
+                            janazaVenue = janazaVenue,
+                            janazaTime = janazaTime,
+                            graveyardVenue = graveyardVenue,
+                            contactPhone = contactPhone,
+                            extraNotes = extraNotes
+                        )
+                    },
                     onDismiss = {
                         if (initialSubModule != null) onBack?.invoke() else selectedSubModule = null
                     }

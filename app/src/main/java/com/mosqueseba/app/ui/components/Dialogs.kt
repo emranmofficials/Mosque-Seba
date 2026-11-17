@@ -2637,12 +2637,33 @@ fun OfficialReceiptDialog(
                     OutlinedButton(
                         onClick = onDismiss,
                         modifier = Modifier
-                            .weight(1f)
+                            .weight(0.9f)
                             .heightIn(min = 48.dp)
                             .testTag("receipt_dismiss_button"),
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)
                     ) {
-                        Text("বন্ধ করুন", fontWeight = FontWeight.Bold)
+                        Text("বন্ধ করুন", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    }
+
+                    OutlinedButton(
+                        onClick = {
+                            com.mosqueseba.app.util.MosquePrintHelper.printReceipt(
+                                context = context,
+                                mosqueName = mosqueName,
+                                payment = payment,
+                                methodLabel = methodLabel
+                            )
+                        },
+                        modifier = Modifier
+                            .weight(1.1f)
+                            .heightIn(min = 48.dp)
+                            .testTag("receipt_print_button"),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = MosqueEmeraldPrimary),
+                        border = BorderStroke(1.dp, MosqueEmeraldPrimary)
+                    ) {
+                        Icon(Icons.Default.Print, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("প্রিন্ট / PDF", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     }
 
                     Button(
@@ -2668,14 +2689,14 @@ fun OfficialReceiptDialog(
                             context.startActivity(Intent.createChooser(shareIntent, "রসিদ শেয়ার করুন"))
                         },
                         modifier = Modifier
-                            .weight(1.4f)
+                            .weight(1.1f)
                             .heightIn(min = 48.dp)
                             .testTag("receipt_share_button"),
                         colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary)
                     ) {
                         Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("রসিদ শেয়ার", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                        Text("শেয়ার", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     }
                 }
 
@@ -2718,13 +2739,34 @@ fun PublishNoticeDialog(
     onGenerateAiDraft: (String) -> Unit = {},
     onClearAiDraft: () -> Unit = {},
     onDismiss: () -> Unit,
-    onConfirm: (title: String, content: String, priority: String, isPinned: Boolean) -> Unit
+    onConfirm: (title: String, content: String, priority: String, isPinned: Boolean, imageUrl: String?) -> Unit
 ) {
     val isEditMode = editingNotice != null
     var title by remember(editingNotice?.id) { mutableStateOf(editingNotice?.title ?: "") }
     var content by remember(editingNotice?.id) { mutableStateOf(editingNotice?.content ?: "") }
     var priority by remember(editingNotice?.id) { mutableStateOf(editingNotice?.priority ?: "normal") }
     var isPinned by remember(editingNotice?.id) { mutableStateOf(editingNotice?.isPinned ?: false) }
+    var photoPath by remember(editingNotice?.id) { mutableStateOf(editingNotice?.imageUrl) }
+    var photoPreview by remember(editingNotice?.id) {
+        mutableStateOf<ImageBitmap?>(loadLocalThumbnail(editingNotice?.imageUrl, 512))
+    }
+
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        if (uri != null) {
+            scope.launch {
+                val (savedPath, bitmap) = savePickedImageToAppStorage(context, uri, "notice", 1024)
+                if (savedPath != null) {
+                    photoPath = savedPath
+                    photoPreview = bitmap
+                }
+            }
+        }
+    }
 
     var showAiDraftBox by remember { mutableStateOf(false) }
     var aiPrompt by remember { mutableStateOf("") }
@@ -3201,6 +3243,121 @@ fun PublishNoticeDialog(
                             }
                         }
                     }
+
+                    // Section 4: Notice Poster / Photo Attachment
+                    MemberFormSectionCard(
+                        title = "ছবি বা পোস্টার সংযুক্তি (ঐচ্ছিক)",
+                        icon = Icons.Default.AddPhotoAlternate
+                    ) {
+                        if (photoPreview != null) {
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(180.dp)
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .border(1.dp, if (isDark) MosqueNightBorder else MosqueGold.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
+                                ) {
+                                    Image(
+                                        bitmap = photoPreview!!,
+                                        contentDescription = "নোটিশ পোস্টার",
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                    IconButton(
+                                        onClick = {
+                                            photoPath = null
+                                            photoPreview = null
+                                        },
+                                        modifier = Modifier
+                                            .align(Alignment.TopEnd)
+                                            .padding(6.dp)
+                                            .size(30.dp)
+                                            .background(Color.Black.copy(alpha = 0.65f), CircleShape)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Close,
+                                            contentDescription = "ছবি মুছুন",
+                                            tint = Color.White,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
+                                }
+                                Spacer(modifier = Modifier.height(8.dp))
+                                OutlinedButton(
+                                    onClick = {
+                                        photoPickerLauncher.launch(
+                                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                        )
+                                    },
+                                    shape = RoundedCornerShape(8.dp),
+                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MosqueEmeraldPrimary)
+                                ) {
+                                    Icon(Icons.Default.PhotoLibrary, contentDescription = null, modifier = Modifier.size(15.dp))
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text("ছবি পরিবর্তন করুন", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        } else {
+                            Surface(
+                                onClick = {
+                                    photoPickerLauncher.launch(
+                                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                    )
+                                },
+                                shape = RoundedCornerShape(12.dp),
+                                color = if (isDark) MosqueNightSurfaceVariant else MosqueBgLight,
+                                border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else MosqueCardBorderGold),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 14.dp, vertical = 12.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(40.dp)
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(MosqueEmeraldPrimary.copy(alpha = 0.12f)),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.AddPhotoAlternate,
+                                            contentDescription = null,
+                                            tint = MosqueEmeraldPrimary,
+                                            modifier = Modifier.size(22.dp)
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = "পোস্টার বা ছবি যুক্ত করুন",
+                                            style = MaterialTheme.typography.titleSmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = if (isDark) MosqueNightTextPrimary else MosqueEmeraldDark
+                                        )
+                                        Text(
+                                            text = "ওয়াজ মাহফিল, দোয়া বা নথির ছবি গ্যালারি থেকে সিলেক্ট করুন",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary,
+                                            fontSize = 11.sp
+                                        )
+                                    }
+                                    Icon(
+                                        imageVector = Icons.Default.ChevronRight,
+                                        contentDescription = null,
+                                        tint = MosqueTextMuted,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
 
                 // Sticky Footer Action Bar
@@ -3233,7 +3390,7 @@ fun PublishNoticeDialog(
                                 valid = false
                             }
                             if (valid) {
-                                onConfirm(title.trim(), content.trim(), priority, isPinned)
+                                onConfirm(title.trim(), content.trim(), priority, isPinned, photoPath)
                                 onDismiss()
                             }
                         },

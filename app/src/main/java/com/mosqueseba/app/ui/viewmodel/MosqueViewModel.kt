@@ -954,7 +954,7 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
     val allNotices: StateFlow<List<NoticeEntity>> = repository.allNotices
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    fun publishNotice(title: String, content: String, priority: String, isPinned: Boolean) {
+    fun publishNotice(title: String, content: String, priority: String, isPinned: Boolean, imageUrl: String? = null) {
         viewModelScope.launch {
             val dateStr = SimpleDateFormat("dd MMMM yyyy", Locale.forLanguageTag("bn-BD")).format(Date())
             val notice = NoticeEntity(
@@ -964,7 +964,8 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
                 priority = priority,
                 isPinned = isPinned,
                 publishDate = dateStr,
-                createdBy = "${_currentUserRole.value.titleBn}"
+                createdBy = "${_currentUserRole.value.titleBn}",
+                imageUrl = imageUrl
             )
             repository.addNotice(notice)
             if (sessionManager.isNotificationsEnabled()) {
@@ -978,14 +979,16 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
         title: String,
         content: String,
         priority: String,
-        isPinned: Boolean
+        isPinned: Boolean,
+        imageUrl: String? = notice.imageUrl
     ) {
         viewModelScope.launch {
             val updated = notice.copy(
                 title = title,
                 content = content,
                 priority = priority,
-                isPinned = isPinned
+                isPinned = isPinned,
+                imageUrl = imageUrl
             )
             repository.updateNotice(updated)
         }
@@ -1890,6 +1893,100 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
                 actor = _currentUserRole.value.titleBn
             )
         }
+    }
+
+    fun recordJummahCashboxCount(
+        countedAmount: Double,
+        denominationBreakdown: String,
+        witness1: String,
+        witness2: String,
+        witness3: String,
+        notes: String,
+        autoAddIncome: Boolean = true
+    ) {
+        viewModelScope.launch {
+            val role = _currentUserRole.value
+            val dateStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+            val witnesses = listOf(witness1, witness2, witness3).filter { it.isNotBlank() }.joinToString(", ")
+            val fullNotes = buildString {
+                appendLine("নোট বিভাজন:")
+                appendLine(denominationBreakdown)
+                if (notes.isNotBlank()) {
+                    appendLine("মন্তব্য: $notes")
+                }
+            }.trim()
+
+            val record = CashboxRecordEntity(
+                id = "cb-jummah-${UUID.randomUUID().toString().take(8)}",
+                collectionDate = dateStr,
+                boxType = "সাপ্তাহিক জুমার দান বাক্স",
+                countedAmount = countedAmount,
+                countedBy = role.titleBn,
+                witnessNames = witnesses.ifBlank { "ইমাম, কোষাধ্যক্ষ ও নিরপেক্ষ সাক্ষী" },
+                witnessVerified = true,
+                verifiedBy = witnesses,
+                depositStatus = "counted",
+                notes = fullNotes
+            )
+            repository.recordCashboxOpening(record, role.titleBn)
+
+            if (autoAddIncome) {
+                addTransaction(
+                    categoryNameBn = "জুমার দানবাক্স",
+                    type = "INCOME",
+                    amount = countedAmount,
+                    description = "পবিত্র জুমার দান বাক্স গণনা। ৩ জন সাক্ষীর উপস্থিতিতে গণনাকৃত: $witnesses",
+                    sourceType = "jummah_cashbox"
+                )
+            }
+        }
+    }
+
+    fun broadcastJanazaAlert(
+        deceasedName: String,
+        relativeRelation: String,
+        guardianName: String,
+        age: String,
+        villageArea: String,
+        timeOfDeath: String,
+        janazaVenue: String,
+        janazaTime: String,
+        graveyardVenue: String,
+        contactPhone: String,
+        extraNotes: String
+    ) {
+        val title = "জরুরি জানাজার নোটিশ: মরহুম $deceasedName-এর ইন্তেকাল"
+        val content = buildString {
+            appendLine("إِنَّا لِلَّهِ وَإِنَّا إِلَيْهِ رَاجِعُونَ")
+            appendLine("(নিশ্চয়ই আমরা আল্লাহর এবং আমরা তাঁরই দিকে প্রত্যাবর্তনকারী)")
+            appendLine()
+            appendLine("অত্যন্ত ভারাক্রান্ত হৃদয়ে জানানো যাচ্ছে যে, আমাদের এলাকার শ্রদ্ধেয় $deceasedName ($relativeRelation: $guardianName, বয়স: ${toBengaliDigits(age)} বছর, গ্রাম/মহল্লা: $villageArea) আজ $timeOfDeath ইন্তেকাল করেছেন।")
+            appendLine()
+            appendLine("🕌 নামাজে জানাজা:")
+            appendLine("• স্থান: $janazaVenue")
+            appendLine("• সময়: $janazaTime")
+            if (graveyardVenue.isNotBlank()) {
+                appendLine("• দাফন: $graveyardVenue")
+            }
+            if (contactPhone.isNotBlank()) {
+                appendLine()
+                appendLine("📞 প্রয়োজনে যোগাযোগ: $contactPhone")
+            }
+            if (extraNotes.isNotBlank()) {
+                appendLine()
+                appendLine("বিশেষ দ্রষ্টব্য: $extraNotes")
+            }
+            appendLine()
+            appendLine("সকল ধর্মপ্রাণ মুসল্লি ভাইদের মরহুমের জানাজায় শরিক হয়ে মাগফিরাত কামনায় দোয়ার উদাত্ত আহ্বান জানানো যাচ্ছে।")
+        }.trim()
+
+        publishNotice(
+            title = title,
+            content = content,
+            priority = "URGENT",
+            isPinned = true,
+            imageUrl = null
+        )
     }
 
     // --- দপ্তর, দলিল-চুক্তি ও চিঠিপত্র ---

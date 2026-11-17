@@ -38,7 +38,7 @@ import kotlinx.coroutines.launch
         ElectionCandidateEntity::class,
         MosquePropertyEntity::class
     ],
-    version = 8,
+    version = 9,
     exportSchema = false
 )
 abstract class MosqueDatabase : RoomDatabase() {
@@ -142,6 +142,12 @@ abstract class MosqueDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_8_9 = object : androidx.room.migration.Migration(8, 9) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE notices ADD COLUMN imageUrl TEXT")
+            }
+        }
+
         fun getDatabase(context: Context, scope: CoroutineScope): MosqueDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -150,7 +156,7 @@ abstract class MosqueDatabase : RoomDatabase() {
                     "mosque_management_db"
                 )
                 .addCallback(MosqueDatabaseCallback(context.applicationContext, scope))
-                .addMigrations(MIGRATION_6_7, MIGRATION_7_8)
+                .addMigrations(MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9)
                 .fallbackToDestructiveMigration()
                 .build()
                 INSTANCE = instance

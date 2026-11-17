@@ -27,6 +27,7 @@ import com.mosqueseba.app.data.local.entity.MemberEntity
 import com.mosqueseba.app.data.local.entity.StaffEntity
 import com.mosqueseba.app.data.model.UserRole
 import com.mosqueseba.app.ui.components.*
+import com.mosqueseba.app.ui.dialogs.*
 import com.mosqueseba.app.ui.screens.*
 import com.mosqueseba.app.ui.theme.MosqueCommitteeTheme
 import com.mosqueseba.app.ui.viewmodel.MosqueViewModel
@@ -352,6 +353,9 @@ fun MosqueAppShell(
     var showScheduleMeetingDialog by remember { mutableStateOf(false) }
     var showRamadanHubDialog by remember { mutableStateOf(false) }
     var showCloudSyncDialog by remember { mutableStateOf(false) }
+    var showInvitationPosterDialog by remember { mutableStateOf(false) }
+    var showCashboxCounterDialog by remember { mutableStateOf(false) }
+    var showJanazaAlertDialog by remember { mutableStateOf(false) }
     var openFinanceReportRequest by remember { mutableIntStateOf(0) }
     var openFinancePendingRequest by remember { mutableIntStateOf(0) }
 
@@ -707,6 +711,15 @@ fun MosqueAppShell(
                                     "cloud_sync", "supabase_sync", "sync" -> {
                                         showCloudSyncDialog = true
                                     }
+                                    "invitation", "invitation_poster", "dawatnama" -> {
+                                        showInvitationPosterDialog = true
+                                    }
+                                    "cashbox_counter", "jummah_cashbox" -> {
+                                        showCashboxCounterDialog = true
+                                    }
+                                    "janaza", "janaza_alert" -> {
+                                        showJanazaAlertDialog = true
+                                    }
                                 }
                             }
                         )
@@ -787,7 +800,9 @@ fun MosqueAppShell(
                     onPublishNoticeClick = { showPublishNoticeDialog = true },
                     onScheduleMeetingClick = if (currentRole.canScheduleMeetings()) {
                         { showScheduleMeetingDialog = true }
-                    } else null
+                    } else null,
+                    onOpenInvitationPosterClick = { showInvitationPosterDialog = true },
+                    onOpenJanazaAlertClick = { showJanazaAlertDialog = true }
                 )
                 "more" -> MoreScreen(
                     viewModel = viewModel,
@@ -1007,12 +1022,13 @@ fun MosqueAppShell(
             onGenerateAiDraft = { instruction -> viewModel.draftNoticeWithAi(instruction) },
             onClearAiDraft = { viewModel.clearAiNoticeState() },
             onDismiss = { showPublishNoticeDialog = false },
-            onConfirm = { title, content, priority, isPinned ->
+            onConfirm = { title, content, priority, isPinned, imageUrl ->
                 viewModel.publishNotice(
                     title = title,
                     content = content,
                     priority = priority,
-                    isPinned = isPinned
+                    isPinned = isPinned,
+                    imageUrl = imageUrl
                 )
                 MosqueToastController.success(
                     "নোটিশটি সফলভাবে প্রকাশিত হয়েছে।",
@@ -1054,6 +1070,67 @@ fun MosqueAppShell(
         CloudSyncDialog(
             viewModel = viewModel,
             onDismiss = { showCloudSyncDialog = false }
+        )
+    }
+
+    // Islamic Dawatnama & Event Poster AI Dialog
+    if (showInvitationPosterDialog) {
+        IslamicDawatnamaDialog(
+            defaultMosqueName = mosque?.nameBn ?: "মসজিদ সেবা",
+            defaultMosqueAddress = mosque?.address ?: "বাংলাদেশ",
+            onPublishAsNotice = { title, content ->
+                viewModel.publishNotice(
+                    title = title,
+                    content = content,
+                    priority = "IMPORTANT",
+                    isPinned = true,
+                    imageUrl = null
+                )
+                MosqueToastController.success("দাওয়াতনামাটি নোটিশ বোর্ডে প্রকাশিত হয়েছে।", "নোটিশ প্রকাশিত")
+            },
+            onDismiss = { showInvitationPosterDialog = false }
+        )
+    }
+
+    // Jummah Cashbox Dual-Witness Counter Dialog
+    if (showCashboxCounterDialog) {
+        JummahCashboxDialog(
+            mosqueName = mosque?.nameBn ?: "মসজিদ সেবা",
+            onConfirm = { totalAmount, breakdownText, witness1, witness2, witness3, notes ->
+                viewModel.recordJummahCashboxCount(
+                    countedAmount = totalAmount,
+                    denominationBreakdown = breakdownText,
+                    witness1 = witness1,
+                    witness2 = witness2,
+                    witness3 = witness3,
+                    notes = notes,
+                    autoAddIncome = true
+                )
+            },
+            onDismiss = { showCashboxCounterDialog = false }
+        )
+    }
+
+    // Emergency Janaza Alert Broadcast Dialog
+    if (showJanazaAlertDialog) {
+        JanazaAlertDialog(
+            mosqueName = mosque?.nameBn ?: "মসজিদ সেবা",
+            onBroadcastConfirm = { deceasedName, relativeRelation, guardianName, age, villageArea, timeOfDeath, janazaVenue, janazaTime, graveyardVenue, contactPhone, extraNotes ->
+                viewModel.broadcastJanazaAlert(
+                    deceasedName = deceasedName,
+                    relativeRelation = relativeRelation,
+                    guardianName = guardianName,
+                    age = age,
+                    villageArea = villageArea,
+                    timeOfDeath = timeOfDeath,
+                    janazaVenue = janazaVenue,
+                    janazaTime = janazaTime,
+                    graveyardVenue = graveyardVenue,
+                    contactPhone = contactPhone,
+                    extraNotes = extraNotes
+                )
+            },
+            onDismiss = { showJanazaAlertDialog = false }
         )
     }
 

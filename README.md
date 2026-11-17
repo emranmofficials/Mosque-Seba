@@ -10,14 +10,14 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/emranmofficials/Mosque-Seba/releases/latest"><img src="https://img.shields.io/badge/Release-v1.0.45%20(Production%20Ready)-0D5C3A?style=for-the-badge&logo=android" alt="Production Ready v1.0.45" /></a>
+  <a href="https://github.com/emranmofficials/Mosque-Seba/releases/latest"><img src="https://img.shields.io/badge/Release-v1.0.46%20(Production%20Ready)-0D5C3A?style=for-the-badge&logo=android" alt="Production Ready v1.0.46" /></a>
   <img src="https://img.shields.io/badge/Platform-Android_8.0+_(API_26--35)-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Platform" />
   <img src="https://img.shields.io/badge/Kotlin-2.0-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white" alt="Kotlin" />
   <img src="https://img.shields.io/badge/UI-Jetpack%20Compose%20%26%20Material%203-4285F4?style=for-the-badge&logo=jetpackcompose&logoColor=white" alt="Compose" />
   <img src="https://img.shields.io/badge/Architecture-Clean%20%2B%20MVI-FF6F00?style=for-the-badge" alt="Architecture" />
-  <img src="https://img.shields.io/badge/Database-Room%20v3%20(Offline--First)-0D5C3A?style=for-the-badge&logo=sqlite&logoColor=white" alt="Room" />
-  <img src="https://img.shields.io/badge/Cloud-Supabase%20(RLS)-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white" alt="Supabase" />
-  <img src="https://img.shields.io/badge/AI-Google%20Gemini%20AI-8E75FF?style=for-the-badge&logo=googlegemini&logoColor=white" alt="Gemini AI" />
+  <img src="https://img.shields.io/badge/Database-Room%20v9%20(Offline--First)-0D5C3A?style=for-the-badge&logo=sqlite&logoColor=white" alt="Room" />
+  <img src="https://img.shields.io/badge/Cloud-Supabase%20(Edge%20Functions)-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white" alt="Supabase" />
+  <img src="https://img.shields.io/badge/AI-Google%20Gemini%202.5%20Flash-8E75FF?style=for-the-badge&logo=googlegemini&logoColor=white" alt="Gemini AI" />
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-D4AF37?style=for-the-badge" alt="License MIT" /></a>
   <a href="https://github.com/emranmofficials/Mosque-Seba/actions"><img src="https://img.shields.io/github/actions/workflow/status/emranmofficials/Mosque-Seba/release.yml?style=for-the-badge&label=Build%20Status" alt="Build Status" /></a>
 </p>
@@ -26,12 +26,12 @@
 
 ## 📥 অফিসিয়াল রিলিজ ও সরাসরি ডাউনলোড (Official Production Release)
 
-মসজিদ সেবার সর্বশেষ প্রোডাকশন-রেডি সংস্করণ **v1.0.45** সরাসরি ডাউনলোড করার জন্য প্রস্তুত:
+মসজিদ সেবার সর্বশেষ প্রোডাকশন-রেডি সংস্করণ **v1.0.46** সরাসরি ডাউনলোড করার জন্য প্রস্তুত:
 
 | ফরম্যাট | ফাইলনেম | সাইজ | ডাউনলোড লিংক | বিবরণ |
 | :--- | :--- | :---: | :---: | :--- |
-| 📦 **Android APK** | `Mosque-Seba-v1.0.45.apk` | `16.10 MiB` | [**📥 সরাসরি APK ডাউনলোড করুন**](https://github.com/emranmofficials/Mosque-Seba/releases/download/v1.0.45/Mosque-Seba-v1.0.45.apk) | সরাসরি যেকোনো অ্যান্ড্রয়েড ডিভাইসে ইনস্টল করার জন্য প্রস্তুত। |
-| 📱 **App Bundle (AAB)** | `Mosque-Seba-v1.0.45.aab` | `15.65 MiB` | [**📥 অফিসিয়াল AAB ডাউনলোড করুন**](https://github.com/emranmofficials/Mosque-Seba/releases/download/v1.0.45/Mosque-Seba-v1.0.45.aab) | গুগল প্লে স্টোর ও অফিশিয়াল স্টোর রিলিজের জন্য অপ্টিমাইজড বান্ডেল। |
+| 📦 **Android APK** | `Mosque-Seba-v1.0.46.apk` | `~16 MiB` | [**📥 সরাসরি APK ডাউনলোড করুন**](https://github.com/emranmofficials/Mosque-Seba/releases/download/v1.0.46/Mosque-Seba-v1.0.46.apk) | সরাসরি যেকোনো অ্যান্ড্রয়েড ডিভাইসে ইনস্টল করার জন্য প্রস্তুত। |
+| 📱 **App Bundle (AAB)** | `Mosque-Seba-v1.0.46.aab` | `~15.7 MiB` | [**📥 অফিসিয়াল AAB ডাউনলোড করুন**](https://github.com/emranmofficials/Mosque-Seba/releases/download/v1.0.46/Mosque-Seba-v1.0.46.aab) | গুগল প্লে স্টোর ও অফিশিয়াল স্টোর রিলিজের জন্য অপ্টিমাইজড বান্ডেল। |
 
 > 🔑 **অফিসিয়াল সিকিউর সাইনিং কি:** এই রিলিজটি স্থায়ী অফিসিয়াল রিলিজ কি-স্টোর (`keystore/mosque-seba.jks`) দ্বারা স্বাক্ষরিত। পরবর্তী যেকোনো আপডেটে অ্যাপ আনইনস্টল না করেই সরাসরি নির্বিঘ্নে আপডেট করা যাবে।
 

@@ -2,6 +2,7 @@ package com.mosqueseba.app.ui.screens
 
 import android.content.Intent
 import android.widget.Toast
+import com.mosqueseba.app.util.MosquePrintHelper
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Spring
@@ -2343,15 +2344,52 @@ fun FinancialReportDialog(
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     OutlinedButton(
                         onClick = onDismiss,
                         modifier = Modifier
-                            .weight(1f)
+                            .weight(0.8f)
                             .heightIn(min = 48.dp)
                     ) {
-                        Text("বন্ধ করুন", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("বন্ধ", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    OutlinedButton(
+                        onClick = {
+                            val aiRaw = when (aiSummaryState) {
+                                is AiSummaryUiState.Success -> aiSummaryState.text
+                                is AiSummaryUiState.Streaming -> aiSummaryState.text
+                                else -> ""
+                            }
+                            val chandaCalc = transactions
+                                .filter { it.type == "income" && (it.category.contains("চাঁদা") || it.category == "মাসিক চাঁদা") }
+                                .sumOf { it.amount }
+                            MosquePrintHelper.printFinanceSummary(
+                                context = context,
+                                mosqueName = mosqueName,
+                                totalIncome = totalIncome,
+                                totalExpense = totalExpense,
+                                balance = netBalance,
+                                chanda = chandaCalc,
+                                cashFund = channelBalances.first,
+                                bankFund = channelBalances.second + channelBalances.third,
+                                jummahTotal = jummahSummary.first,
+                                jummahCount = jummahSummary.second,
+                                approvedCount = approvedCount,
+                                pendingCount = pendingCount,
+                                aiSummary = aiRaw
+                            )
+                        },
+                        modifier = Modifier
+                            .weight(1.2f)
+                            .heightIn(min = 48.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = MosqueEmeraldPrimary),
+                        border = BorderStroke(1.dp, MosqueEmeraldPrimary),
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Icon(Icons.Default.Print, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("প্রিন্ট / PDF", fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
                     }
                     Button(
                         onClick = {
@@ -2383,14 +2421,14 @@ fun FinancialReportDialog(
                             context.startActivity(Intent.createChooser(shareIntent, "আর্থিক রিপোর্ট শেয়ার করুন"))
                         },
                         modifier = Modifier
-                            .weight(1.3f)
+                            .weight(1.1f)
                             .heightIn(min = 48.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary),
                         shape = RoundedCornerShape(10.dp)
                     ) {
                         Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("রিপোর্ট শেয়ার", fontWeight = FontWeight.Bold)
+                        Text("শেয়ার", fontWeight = FontWeight.Bold, fontSize = 13.sp)
                     }
                 }
             }

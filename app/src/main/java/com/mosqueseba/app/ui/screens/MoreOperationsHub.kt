@@ -817,6 +817,30 @@ private fun buildRoleOperationModules(
             icon = Icons.Default.DarkMode,
             iconColor = MosqueGoldDeep,
             category = OperationCategory.INFO
+        ),
+        OperationModuleEntry(
+            key = "invitation",
+            title = "দাওয়াতনামা ও পোস্টার তৈরি",
+            description = "ওয়াজ মাহফিল, ইফতার ও সভার আকর্ষণীয় ব্যানার ও প্রিন্ট",
+            icon = Icons.Default.AutoAwesome,
+            iconColor = MosqueGoldDark,
+            category = OperationCategory.WELFARE_EVENTS
+        ),
+        OperationModuleEntry(
+            key = "cashbox_counter",
+            title = "জুমার দানবাক্স ৩-সাক্ষী কাউন্টার",
+            description = "নোট বিভাজন গণনা, তাৎক্ষণিক হিসাব ও প্রত্যয়ন ভাউচার",
+            icon = Icons.Default.Inventory2,
+            iconColor = MosqueEmeraldPrimary,
+            category = OperationCategory.FINANCE
+        ),
+        OperationModuleEntry(
+            key = "janaza_alert",
+            title = "জরুরি জানাজা ও মৃত্যু সংবাদ",
+            description = "মহল্লাবাসীর জন্য তাৎক্ষণিক নোটিশ ও ব্রডকাস্ট",
+            icon = Icons.Default.Campaign,
+            iconColor = MosqueUrgentRed,
+            category = OperationCategory.ADMIN
         )
     )
 }

@@ -4,7 +4,10 @@ import android.content.Context
 import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -23,6 +26,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import com.mosqueseba.app.ui.components.loadLocalThumbnail
+import com.mosqueseba.app.util.MosquePrintHelper
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -62,6 +70,8 @@ fun NoticesScreen(
     viewModel: MosqueViewModel,
     onPublishNoticeClick: () -> Unit,
     onScheduleMeetingClick: (() -> Unit)? = null,
+    onOpenInvitationPosterClick: (() -> Unit)? = null,
+    onOpenJanazaAlertClick: (() -> Unit)? = null,
     initialTabIndex: Int = 0,
     onBack: (() -> Unit)? = null
 ) {
@@ -83,6 +93,7 @@ fun NoticesScreen(
 
     var editingNotice by remember { mutableStateOf<NoticeEntity?>(null) }
     var pendingDeleteNotice by remember { mutableStateOf<NoticeEntity?>(null) }
+    var fullScreenImageUrl by remember { mutableStateOf<String?>(null) }
 
     var editingMeeting by remember { mutableStateOf<MeetingEntity?>(null) }
     var resolutionTargetMeeting by remember { mutableStateOf<MeetingEntity?>(null) }
@@ -198,29 +209,63 @@ fun NoticesScreen(
                     }
 
                     if (selectedTabIndex == 0 && canPublish) {
-                        Button(
-                            onClick = onPublishNoticeClick,
-                            shape = RoundedCornerShape(10.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MosqueEmeraldPrimary,
-                                contentColor = Color.White
-                            ),
-                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
-                            modifier = Modifier
-                                .heightIn(min = 40.dp)
-                                .testTag("publish_notice_button")
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Campaign,
-                                contentDescription = "নতুন নোটিশ",
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.width(5.dp))
-                            Text(
-                                text = "+ নোটিশ",
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.Bold
-                            )
+                            onOpenJanazaAlertClick?.let { onJanaza ->
+                                OutlinedButton(
+                                    onClick = onJanaza,
+                                    shape = RoundedCornerShape(10.dp),
+                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MosqueUrgentRed),
+                                    border = BorderStroke(1.dp, MosqueUrgentRed.copy(alpha = 0.6f)),
+                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
+                                    modifier = Modifier.heightIn(min = 38.dp)
+                                ) {
+                                    Icon(Icons.Default.Campaign, contentDescription = null, modifier = Modifier.size(14.dp), tint = MosqueUrgentRed)
+                                    Spacer(modifier = Modifier.width(3.dp))
+                                    Text("জানাজা সংবাদ", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                            onOpenInvitationPosterClick?.let { onInvite ->
+                                OutlinedButton(
+                                    onClick = onInvite,
+                                    shape = RoundedCornerShape(10.dp),
+                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MosqueGoldDeep),
+                                    border = BorderStroke(1.dp, MosqueGold),
+                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
+                                    modifier = Modifier.heightIn(min = 38.dp)
+                                ) {
+                                    Icon(Icons.Default.AutoAwesome, contentDescription = null, modifier = Modifier.size(14.dp), tint = MosqueGoldDeep)
+                                    Spacer(modifier = Modifier.width(3.dp))
+                                    Text("দাওয়াতনামা", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                            Button(
+                                onClick = onPublishNoticeClick,
+                                shape = RoundedCornerShape(10.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MosqueEmeraldPrimary,
+                                    contentColor = Color.White
+                                ),
+                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+                                modifier = Modifier
+                                    .heightIn(min = 38.dp)
+                                    .testTag("publish_notice_button")
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Add,
+                                    contentDescription = "নতুন নোটিশ",
+                                    modifier = Modifier.size(15.dp)
+                                )
+                                Spacer(modifier = Modifier.width(3.dp))
+                                Text(
+                                    text = "নোটিশ",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 11.sp
+                                )
+                            }
                         }
                     } else if (selectedTabIndex == 1 && canSchedule && onScheduleMeetingClick != null) {
                         Button(
@@ -439,6 +484,8 @@ fun NoticesScreen(
                                 },
                                 onEdit = { editingNotice = notice },
                                 onShare = { shareNoticeText(context, mosqueName, notice) },
+                                onPrint = { MosquePrintHelper.printNotice(context, mosqueName, notice) },
+                                onImageClick = { fullScreenImageUrl = it },
                                 onDeleteRequest = { pendingDeleteNotice = notice }
                             )
                         }
@@ -490,17 +537,57 @@ fun NoticesScreen(
             onGenerateAiDraft = { instruction -> viewModel.draftNoticeWithAi(instruction) },
             onClearAiDraft = { viewModel.clearAiNoticeState() },
             onDismiss = { editingNotice = null },
-            onConfirm = { title, content, priority, isPinned ->
+            onConfirm = { title, content, priority, isPinned, imageUrl ->
                 viewModel.updateNotice(
                     notice = target,
                     title = title,
                     content = content,
                     priority = priority,
-                    isPinned = isPinned
+                    isPinned = isPinned,
+                    imageUrl = imageUrl
                 )
                 MosqueToastController.success("নোটিশ সফলভাবে হালনাগাদ হয়েছে।", "নোটিশ হালনাগাদ")
             }
         )
+    }
+
+    // Full Screen Image Viewer Dialog
+    fullScreenImageUrl?.let { imgPath ->
+        val fullBitmap = remember(imgPath) { loadLocalThumbnail(imgPath, 1200) }
+        Dialog(
+            onDismissRequest = { fullScreenImageUrl = null },
+            properties = DialogProperties(usePlatformDefaultWidth = false)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.92f)),
+                contentAlignment = Alignment.Center
+            ) {
+                if (fullBitmap != null) {
+                    Image(
+                        bitmap = fullBitmap,
+                        contentDescription = "ফুল স্ক্রিন পোস্টার",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        contentScale = ContentScale.Fit
+                    )
+                } else {
+                    Text("ছবি লোড করা সম্ভব হয়নি", color = Color.White)
+                }
+                IconButton(
+                    onClick = { fullScreenImageUrl = null },
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(24.dp)
+                        .size(44.dp)
+                        .background(Color.White.copy(alpha = 0.2f), CircleShape)
+                ) {
+                    Icon(Icons.Default.Close, contentDescription = "বন্ধ করুন", tint = Color.White)
+                }
+            }
+        }
     }
 
     // Delete Notice Confirmation Dialog
@@ -671,6 +758,8 @@ fun NoticeCardItem(
     onTogglePin: () -> Unit,
     onEdit: () -> Unit,
     onShare: () -> Unit,
+    onPrint: () -> Unit,
+    onImageClick: ((String) -> Unit)? = null,
     onDeleteRequest: () -> Unit
 ) {
     val priorityColor = when (notice.priority) {
@@ -783,6 +872,18 @@ fun NoticeCardItem(
                             )
                         }
 
+                        IconButton(
+                            onClick = onPrint,
+                            modifier = Modifier.testTag("print_notice_button_${notice.id}")
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Print,
+                                contentDescription = "নোটিশ প্রিন্ট / PDF",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(19.dp)
+                            )
+                        }
+
                         if (canManage) {
                             IconButton(
                                 onClick = onTogglePin,
@@ -829,6 +930,42 @@ fun NoticeCardItem(
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
+
+                val noticeBitmap = remember(notice.imageUrl) { loadLocalThumbnail(notice.imageUrl, 512) }
+                if (noticeBitmap != null && !notice.imageUrl.isNullOrBlank()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 200.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .border(1.dp, if (isDark) MosqueNightBorder else MosqueCardBorderSubtle, RoundedCornerShape(10.dp))
+                            .clickable { onImageClick?.invoke(notice.imageUrl) }
+                    ) {
+                        Image(
+                            bitmap = noticeBitmap,
+                            contentDescription = notice.title,
+                            modifier = Modifier.fillMaxWidth(),
+                            contentScale = ContentScale.Crop
+                        )
+                        Surface(
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                                .padding(6.dp),
+                            color = Color.Black.copy(alpha = 0.6f),
+                            shape = RoundedCornerShape(6.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(Icons.Default.ZoomIn, contentDescription = null, tint = Color.White, modifier = Modifier.size(13.dp))
+                                Spacer(modifier = Modifier.width(3.dp))
+                                Text("বড় করে দেখুন", color = Color.White, fontSize = 9.5.sp, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    }
+                }
 
                 Spacer(modifier = Modifier.height(6.dp))
 
