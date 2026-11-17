@@ -275,6 +275,17 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
                     mosqueId = mosqueId,
                     password = trimmedNew
                 )
+                viewModelScope.launch(Dispatchers.IO) {
+                    SupabaseSyncManager.syncPresidentCredential(
+                        context = getApplication(),
+                        mosqueId = mosqueId,
+                        memberId = _activeMemberId.value,
+                        email = email,
+                        mobile = mobile,
+                        nameBn = _activeMemberName.value,
+                        plainPass = trimmedNew
+                    )
+                }
                 Pair(true, "পাসওয়ার্ড সফলভাবে পরিবর্তন করা হয়েছে।")
             }
         } else {
@@ -316,8 +327,8 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
 
         if (trimmedCommitteeId.isNotBlank() && matchedMosque == null) {
             val db = MosqueDatabase.getDatabase(getApplication(), viewModelScope)
-            SupabaseSyncManager.performSync(getApplication(), db)
-            matchedMosque = repository.getMosqueByCommitteeId(trimmedCommitteeId)
+            matchedMosque = SupabaseSyncManager.fetchAndRestoreMosqueByCommitteeId(getApplication(), db, trimmedCommitteeId)
+                ?: repository.getMosqueByCommitteeId(trimmedCommitteeId)
         }
 
         if (trimmedCommitteeId.isNotBlank() && matchedMosque == null) {
@@ -325,7 +336,7 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
         }
 
         var member = repository.getMemberByEmail(cleanEmail)
-        if (member == null) {
+        if (member == null && matchedMosque != null) {
             val db = MosqueDatabase.getDatabase(getApplication(), viewModelScope)
             SupabaseSyncManager.performSync(getApplication(), db)
             member = repository.getMemberByEmail(cleanEmail)
@@ -340,7 +351,14 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
         }
 
         val registeredPasswordCheck = sessionManager.verifyRegisteredPresidentPassword(cleanEmail, pass)
-        val isPasswordValid = registeredPasswordCheck ?: (pass == "123456")
+        var isPasswordValid = registeredPasswordCheck ?: (pass == "123456")
+        if (!isPasswordValid && matchedMosque != null) {
+            val remoteValid = SupabaseSyncManager.verifyRemotePresidentPassword(getApplication(), matchedMosque.id, cleanEmail, pass)
+            if (remoteValid) {
+                isPasswordValid = true
+                sessionManager.saveRegisteredPresidentEmailCredential(cleanEmail, matchedMosque.committeeId, matchedMosque.id, pass)
+            }
+        }
         if (!isPasswordValid) {
             return Pair(false, "গোপন পাসওয়ার্ড সঠিক নয়।")
         }
@@ -380,8 +398,8 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
 
         if (trimmedCommitteeId.isNotBlank() && matchedMosque == null) {
             val db = MosqueDatabase.getDatabase(getApplication(), viewModelScope)
-            SupabaseSyncManager.performSync(getApplication(), db)
-            matchedMosque = repository.getMosqueByCommitteeId(trimmedCommitteeId)
+            matchedMosque = SupabaseSyncManager.fetchAndRestoreMosqueByCommitteeId(getApplication(), db, trimmedCommitteeId)
+                ?: repository.getMosqueByCommitteeId(trimmedCommitteeId)
         }
 
         if (trimmedCommitteeId.isNotBlank() && matchedMosque == null) {
@@ -389,7 +407,7 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
         }
 
         var member = repository.getMemberByMobile(cleanMobile)
-        if (member == null) {
+        if (member == null && matchedMosque != null) {
             val db = MosqueDatabase.getDatabase(getApplication(), viewModelScope)
             SupabaseSyncManager.performSync(getApplication(), db)
             member = repository.getMemberByMobile(cleanMobile)
@@ -532,6 +550,17 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
                 mosqueId = mosqueId,
                 password = password
             )
+            viewModelScope.launch(Dispatchers.IO) {
+                SupabaseSyncManager.syncPresidentCredential(
+                    context = getApplication(),
+                    mosqueId = mosqueId,
+                    memberId = presidentId,
+                    email = presidentEmail,
+                    mobile = presidentMobile,
+                    nameBn = presidentNameBn,
+                    plainPass = password
+                )
+            }
             sessionManager.saveActiveMosqueId(mosqueId)
             _activeMosqueId.value = mosqueId
             _currentUserRole.value = UserRole.PRESIDENT
