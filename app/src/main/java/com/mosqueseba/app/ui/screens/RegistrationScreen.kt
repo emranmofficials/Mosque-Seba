@@ -1500,6 +1500,7 @@ fun SummaryRow(label: String, value: String) {
 
 @Composable
 fun RegistrationStepper(currentStep: Int) {
+    val isDark = LocalIsDarkTheme.current
     Surface(
         color = MaterialTheme.colorScheme.surface,
         shadowElevation = 2.dp
