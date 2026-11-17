@@ -10,43 +10,61 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/emranmofficials/Mosque-Seba/releases"><img src="https://img.shields.io/badge/Version-1.0.22-0D5C3A?style=for-the-badge&logo=android" alt="Version 1.0.22" /></a>
-  <img src="https://img.shields.io/badge/Platform-Android_8.0+-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Platform" />
+  <a href="https://github.com/emranmofficials/Mosque-Seba/releases/latest"><img src="https://img.shields.io/badge/Release-v1.0.45%20(Production%20Ready)-0D5C3A?style=for-the-badge&logo=android" alt="Production Ready v1.0.45" /></a>
+  <img src="https://img.shields.io/badge/Platform-Android_8.0+_(API_26--35)-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Platform" />
   <img src="https://img.shields.io/badge/Kotlin-2.0-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white" alt="Kotlin" />
-  <img src="https://img.shields.io/badge/UI-Jetpack%20Compose-4285F4?style=for-the-badge&logo=jetpackcompose&logoColor=white" alt="Compose" />
-  <img src="https://img.shields.io/badge/Database-Room%20v3-0D5C3A?style=for-the-badge&logo=sqlite&logoColor=white" alt="Room" />
-  <img src="https://img.shields.io/badge/Cloud-Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white" alt="Supabase" />
+  <img src="https://img.shields.io/badge/UI-Jetpack%20Compose%20%26%20Material%203-4285F4?style=for-the-badge&logo=jetpackcompose&logoColor=white" alt="Compose" />
+  <img src="https://img.shields.io/badge/Architecture-Clean%20%2B%20MVI-FF6F00?style=for-the-badge" alt="Architecture" />
+  <img src="https://img.shields.io/badge/Database-Room%20v3%20(Offline--First)-0D5C3A?style=for-the-badge&logo=sqlite&logoColor=white" alt="Room" />
+  <img src="https://img.shields.io/badge/Cloud-Supabase%20(RLS)-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white" alt="Supabase" />
+  <img src="https://img.shields.io/badge/AI-Google%20Gemini%20AI-8E75FF?style=for-the-badge&logo=googlegemini&logoColor=white" alt="Gemini AI" />
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-D4AF37?style=for-the-badge" alt="License MIT" /></a>
-  <a href="https://github.com/emranmofficials/Mosque-Seba/pulls"><img src="https://img.shields.io/badge/PRs-Welcome-brightgreen?style=for-the-badge" alt="PRs Welcome" /></a>
+  <a href="https://github.com/emranmofficials/Mosque-Seba/actions"><img src="https://img.shields.io/github/actions/workflow/status/emranmofficials/Mosque-Seba/release.yml?style=for-the-badge&label=Build%20Status" alt="Build Status" /></a>
 </p>
 
 ---
 
+## 📥 অফিসিয়াল রিলিজ ও সরাসরি ডাউনলোড (Official Production Release)
+
+মসজিদ সেবার সর্বশেষ প্রোডাকশন-রেডি সংস্করণ **v1.0.45** সরাসরি ডাউনলোড করার জন্য প্রস্তুত:
+
+| ফরম্যাট | ফাইলনেম | সাইজ | ডাউনলোড লিংক | বিবরণ |
+| :--- | :--- | :---: | :---: | :--- |
+| 📦 **Android APK** | `Mosque-Seba-v1.0.45.apk` | `16.10 MiB` | [**📥 সরাসরি APK ডাউনলোড করুন**](https://github.com/emranmofficials/Mosque-Seba/releases/download/v1.0.45/Mosque-Seba-v1.0.45.apk) | সরাসরি যেকোনো অ্যান্ড্রয়েড ডিভাইসে ইনস্টল করার জন্য প্রস্তুত। |
+| 📱 **App Bundle (AAB)** | `Mosque-Seba-v1.0.45.aab` | `15.65 MiB` | [**📥 অফিসিয়াল AAB ডাউনলোড করুন**](https://github.com/emranmofficials/Mosque-Seba/releases/download/v1.0.45/Mosque-Seba-v1.0.45.aab) | গুগল প্লে স্টোর ও অফিশিয়াল স্টোর রিলিজের জন্য অপ্টিমাইজড বান্ডেল। |
+
+> 🔑 **অফিসিয়াল সিকিউর সাইনিং কি:** এই রিলিজটি স্থায়ী অফিসিয়াল রিলিজ কি-স্টোর (`keystore/mosque-seba.jks`) দ্বারা স্বাক্ষরিত। পরবর্তী যেকোনো আপডেটে অ্যাপ আনইনস্টল না করেই সরাসরি নির্বিঘ্নে আপডেট করা যাবে।
+
+---
+
 ## 📖 সূচিপত্র (Table of Contents)
-- [📌 পরিচিতি ও উদ্দেশ্য (Overview & Vision)](#-পরিচিতি-ও-উদ্দেশ্য-overview--vision)
+- [📌 পরিচিতি ও মূল দর্শন (Overview & Philosophy)](#-পরিচিতি-ও-মূল-দর্শন-overview--philosophy)
 - [🎨 ব্র্যান্ড আইডেন্টিটি (Brand Identity)](#-ব্র্যান্ড-আইডেন্টিটি-brand-identity)
-- [🌟 মূল মডিউল ও ফিচারসমূহ (Core Features)](#-মূল-মডিউল-ও-ফিচারসমূহ-core-features)
-- [👥 পদভিত্তিক স্বতন্ত্র ইন্টারফেস (Role-Based Interface Matrix)](#-পদভিত্তিক-স্বতন্ত্র-ইন্টারফেস-role-based-interface-matrix)
+- [🌟 পূর্ণাঙ্গ মডিউল ও ফিচারসমূহ (Core Modules & Features)](#-পূর্ণাঙ্গ-মডিউল-ও-ফিচারসমূহ-core-modules--features)
+- [👥 পদভিত্তিক স্বতন্ত্র ইন্টারফেস ম্যাট্রিক্স (Role-Based Interface Matrix)](#-পদভিত্তিক-স্বতন্ত্র-ইন্টারফেস-ম্যাট্রিক্স-role-based-interface-matrix)
 - [🏛️ সিস্টেম আর্কিটেকচার (System Architecture)](#️-সিস্টেম-আর্কিটেকচার-system-architecture)
 - [🎨 ইসলামিক মডার্ন ডিজাইন সিস্টেম (Design System)](#-ইসলামিক-মডার্ন-ডিজাইন-সিস্টেম-design-system)
-- [🛡️ নিরাপত্তা ও ডেটা নীতি (Security & Privacy)](#️-নিরাপত্তা-ও-ডেটা-নীতি-security--privacy)
-- [🚀 ইনস্টলেশন ও রান করার নিয়ম (Getting Started)](#-ইনস্টলেশন-ও-রান-করার-নিয়ম-getting-started)
+- [🛡️ নিরাপত্তা, ডাটাবেজ ও ডেটা নীতি (Security & Privacy)](#️-নিরাপত্তা-ডাটাবেজ-ও-ডেটা-নীতি-security--privacy)
+- [🚀 লোকাল সেটআপ ও রান করার নিয়ম (Getting Started)](#-লোকাল-সেটআপ-ও-রান-করার-নিয়ম-getting-started)
+- [⚙️ Supabase ক্লাউড ব্যাকএন্ড কনফিগারেশন (Backend Setup)](#️-supabase-ক্লাউড-ব্যাকএন্ড-কনফিগারেশন-backend-setup)
 - [🤝 অবদান রাখুন (Contributing)](#-অবদান-রাখুন-contributing)
 - [📄 লাইসেন্স ও সৌজন্য (License & Authors)](#-লাইসেন্স-ও-সৌজন্য-license--authors)
 
 ---
 
-## 📌 পরিচিতি ও উদ্দেশ্য (Overview & Vision)
+## 📌 পরিচিতি ও মূল দর্শন (Overview & Philosophy)
 
 **মসজিদ সেবা (Mosque Seba)** হলো একটি পূর্ণাঙ্গ, আধুনিক এবং ইসলামিক ভাবগাম্ভীর্যপূর্ণ ওপেন-সোর্স মসজিদ ও মাদরাসা পরিচালনা ইকোসিস্টেম। 
 
 ঐতিহ্যগতভাবে মসজিদ পরিচালনার ক্ষেত্রে হিসাব-নিকাশের অস্বচ্ছতা, ম্যানুয়াল রসিদ বই হারিয়ে যাওয়া, মাসিক চাঁদা আদায়ে দীর্ঘসূত্রিতা, মাদরাসা শিক্ষার্থীদের তালিম ট্র্যাকিংয়ের অভাব এবং কার্যকরী যোগাযোগের সীমাবদ্ধতা দেখা যায়। **মসজিদ সেবা** এই সকল সমস্যার সমাধান এনেছে একটি একক আধুনিক ডিজিটাল প্ল্যাটফর্মে।
 
 ### আমাদের মূল দর্শন:
-- 🤲 **স্বচ্ছ আমানত:** বায়তুল মালের প্রতিটি টাকার পুঙ্খানুপুঙ্খ অডিট ট্রেইল ও দ্বৈত-অনুমোদন ব্যবস্থা।
-- 🕌 **মেহরাবের খেদমত:** ইমাম, মুয়াজ্জিন ও খাদেমদের সঠিক দায়িত্ব বণ্টন ও সম্মানজনক সময়ে বেতন-ভাতা নিশ্চিতকরণ।
-- 📖 **তালিম ও তারবিয়াত:** মাদরাসা ও মক্তবের হিফজ শিক্ষার্থীদের পারা ও পৃষ্ঠাভিত্তিক দৈনিক মূল্যায়ন।
-- 🤝 **সমাজকল্যাণ ও যাকাত:** সমাজের বিধবা, এতিম ও অসুস্থদের কাছে দ্রুত ত্রাণ ও সাহায্য পৌঁছে দেওয়া।
+- 🤲 **স্বচ্ছ বায়তুল মাল:** প্রতিটি টাকার পুঙ্খানুপুঙ্খ অডিট ট্রেইল, দ্বি-স্তর অনুমোদন (Two-tier approvals) ও জিরো ফ্লোটিং পয়েন্ট হিসাব।
+- 🕌 **মেহরাবের খেদমত:** ইমাম, মুয়াজ্জিন ও খাদেমদের সঠিক দায়িত্ব বণ্টন, ওয়াক্ত ডিউটি রোস্টার, খাবার শিডিউল ও সম্মানজনক সময়ে বেতন নিশ্চিতকরণ।
+- 📖 **তালিম ও তারবিয়াত:** মাদরাসা ও মক্তবের হিফজ শিক্ষার্থীদের পারা ও পৃষ্ঠাভিত্তিক দৈনিক মূল্যায়ন ও অভিভাবক পোর্টাল।
+- 🗳️ **গণতান্ত্রিক নেতৃত্ব:** স্বচ্ছ ও উৎসবমুখর মসজিদ কমিটি গঠন প্রক্রিয়ার জন্য ডিজিটাল নির্বাচন ও ব্যালট ভোটিং ব্যবস্থা।
+- 🤝 **সমাজকল্যাণ ও যাকাত:** সমাজের বিধবা, এতিম ও অসুস্থদের কাছে দ্রুত ত্রাণ ও চিকিৎসা অনুদান পৌঁছে দেওয়া।
+- 📴 **শতভাগ অফলাইন-ফার্স্ট:** ইন্টারনেট সংযোগ না থাকলেও স্থানীয় মেমোরিতে অ্যাপের প্রতিটি ফিচার নিখুঁতভাবে সচল থাকে।
 
 ---
 
@@ -61,44 +79,46 @@
   <em>বামে: মসজিদ সেবার অফিশিয়াল ভেক্টর লোগো &nbsp;&nbsp;|&nbsp;&nbsp; ডানে: ৩ডি লঞ্চার আইকন (৫১২×৫১২)</em>
 </p>
 
-- **অ্যাপের নাম:** মসজিদ সেবা (Mosque Seba)
-- **প্যাকেজ আইডি:** `com.mosqueseba.app`
-- **অফিসিয়াল স্লোগান:** *মসজিদের খেদমতে আধুনিক প্রযুক্তি, পরিচালনায় স্বচ্ছ আস্থা*
-- **প্রধান রং:** এমারেল্ড গ্রিন (`#0D5C3A`), রয়্যাল ইসলামিক গোল্ড (`#D4AF37`), এবং লাইট/ডার্ক ব্যাকগ্রাউন্ড।
+* **অ্যাপের নাম:** মসজিদ সেবা (Mosque Seba)
+* **অ্যাপ্লিকেশন প্যাকেজ:** `com.mosqueseba.app`
+* **অফিসিয়াল স্লোগান:** *মসজিদের খেদমতে আধুনিক প্রযুক্তি, পরিচালনায় স্বচ্ছ আস্থা*
+* **প্রধান রং:** এমারেল্ড গ্রিন (`#0D5C3A`), রয়্যাল ইসলামিক গোল্ড (`#D4AF37`), এবং লাইট/ডার্ক ব্যাকগ্রাউন্ড।
 
 ---
 
-## 🌟 মূল মডিউল ও ফিচারসমূহ (Core Features)
+## 🌟 পূর্ণাঙ্গ মডিউল ও ফিচারসমূহ (Core Modules & Features)
 
 | আইকন | মডিউল | মূল কার্যকারিতা ও বিবরণ |
 | :---: | :--- | :--- |
-| 🏠 | **স্মার্ট ড্যাশবোর্ড** | ৫ ওয়াক্তের নামাজের আজান ও জামাত সময়সূচি, পরবর্তী ওয়াক্তের কাউন্টডাউন, হিজরি ও বাংলা ক্যালেন্ডার ব্যানার এবং আর্থিক স্থিতি। |
-| 👥 | **সদস্য ডিরেক্টরি** | সাধারণ ও আজীবন সদস্যদের প্রোফাইল, রক্তের গ্রুপ, মোবাইল ও NID যাচাই এবং বাৎসরিক/মাসিক চাঁদা ট্র্যাকিং। |
-| 💰 | **স্বচ্ছ ফিন্যান্স ও অডিট** | নগদ ও ব্যাংক লেজার, আয়ের শ্রেণিবিভাগ, ব্যয়ের দুই-স্তরের অনুমোদন (Two-tier approvals) ও বিস্তারিত মাসিক অডিট রিপোর্ট। |
-| 🧾 | **ডিজিটাল কিউআর রসিদ** | চাঁদা ও অনুদান আদায়ের পর তাৎক্ষণিক ডিজিটাল ভেরিফায়েড রসিদ তৈরি (অনলাইন ভেরিফিকেশন QR কোড সহ)। |
-| 📚 | **মাদরাসা ও মক্তব** | শিক্ষার্থী ভর্তি, দৈনিক হাজিরা, পারা/পৃষ্ঠাভিত্তিক হিফজ ও নাজেরা মূল্যায়ন (স্টার রেটিং), বেতন ফি ও অভিভাবক পোর্টাল। |
+| 🏠 | **স্মার্ট ড্যাশবোর্ড ও সালাত হাব** | ৫ ওয়াক্তের নামাজের আজান ও জামাত সময়সূচি, পরবর্তী ওয়াক্তের লাইভ কাউন্টডাউন, হিজরি ও বাংলা ক্যালেন্ডার ব্যানার এবং আর্থিক স্থিতি। |
+| 📜 | **সহিহ হাদিস ডিজিটাল বোর্ড** | বুখারি ও মুসলিম শরিফের প্রামাণ্য সহিহ হাদিস প্রতিদিন স্বয়ংক্রিয়ভাবে পরিবর্তিত হয়ে মুসল্লিদের অন্তরে দ্বীনি আলো ছড়ায় (১০০% অফলাইন)। |
+| 🌙 | **ইসলামিক ক্যালেন্ডার ও ইভেন্ট হাব** | পবিত্র আশুরা, সীরাতুন্নবী (সা:), শবে মেরাজ, শবে বরাত, পবিত্র রমজান, লাইলাতুল কদর, ঈদুল ফিতর, আরাফাহ, ঈদুল আজহা সহ ১৩টি বাৎসরিক দিবসের রিয়েল-টাইম ট্র্যাকিং ও কাউন্টডাউন। |
+| 🌖 | **চাঁদ দেখার অফসেট সমন্বয়** | স্থানীয় চাঁদ দেখার ওপর ভিত্তি করে ১ ক্লিকেই -১ দিন, স্বাভাবিক বা +১ দিন স্থায়ী মেমোরি অ্যাডজাস্ট করার সুবিধা। |
+| 🤖 | **জেমিনি এআই বয়ান ও খুতবা সহায়িকা** | গুগল জেমিনি এআই ইন্টিগ্রেশনের মাধ্যমে প্রতিটি ইসলামিক দিবসে খতিব ও ইমামদের জন্য জুমার বয়ানের পয়েন্ট ও মুসল্লিদের নফল আমলের পূর্ণাঙ্গ গাইডলাইন তৈরি। |
+| 💰 | **স্বচ্ছ ফিন্যান্স ও বায়তুল মাল অডিট** | নগদ ও ব্যাংক লেজার, আয়ের শ্রেণিবিভাগ, ব্যয়ের দুই-স্তরের অনুমোদন (Two-tier approvals), সেন্ট-ভিত্তিক নিখুঁত হিসাব ও বিস্তারিত মাসিক অডিট রিপোর্ট। |
+| 🧾 | **ডিজিটাল কিউআর রসিদ ও চাঁদা** | চাঁদা ও অনুদান আদায়ের পর তাৎক্ষণিক ডিজিটাল ভেরিফায়েড রসিদ তৈরি (অনলাইন ভেরিফিকেশন QR কোড ও সোশ্যাল শেয়ারিং সহ)। |
+| 🗳️ | **কমিটি নির্বাচন ও ভোটিং সিস্টেম** | সভাপতি, সাধারণ সম্পাদক সহ বিভিন্ন পদের জন্য স্বচ্ছ প্রার্থী তালিকা, ভোটার ব্যালট ভোট গ্রহণ ও রিয়েল-টাইম ফলাফল ট্র্যাকিং। |
+| 👥 | **সদস্য ও ওয়াকফ সম্পদ ডিরেক্টরি** | সাধারণ ও আজীবন সদস্যদের প্রোফাইল, রক্তের গ্রুপ, মোবাইল ও NID এবং মসজিদের স্থাবর-অস্থাবর ওয়াকফ সম্পত্তির ডিজিটাল রেজিস্টার। |
+| 📚 | **মাদরাসা ও মক্তব হিফজ তালিম** | শিক্ষার্থী ভর্তি, দৈনিক হাজিরা, পারা/পৃষ্ঠাভিত্তিক হিফজ ও নাজেরা মূল্যায়ন (স্টার রেটিং), বেতন ফি ও অভিভাবক পোর্টাল। |
 | 👔 | **ইমাম ও স্টাফ পে-রোল** | ইমাম, মুয়াজ্জিন ও খাদেমদের মাসিক বেতন ও ঈদ বোনাস বিতরণ (স্বয়ংক্রিয়ভাবে ফিন্যান্সে ব্যয় পোস্টিং সহ)। |
-| 🕌 | **ওয়াক্ত ডিউটি রোস্টার** | ৫ ওয়াক্ত নামাজের ইমামতি, আজান ও জুমার খুতবার দায়িত্ব বণ্টন ও তদারকি ক্যালেন্ডার। |
-| 🍲 | **খাবার শিডিউল ট্র্যাকার** | ইমাম ও খাদেমদের দৈনিক দুপুর ও রাতের খাবার সরবরাহকারী পরিবারের তালিকা ও বণ্টন ট্র্যাকার। |
-| 🤝 | **সমাজকল্যাণ ও যাকাত** | চিকিৎসা অনুদান, বিধবা ও এতিম ভাতা, শিক্ষা সাহায্য এবং জরুরি আপৎকালীন আবেদন নিষ্পত্তি। |
-| 📅 | **মাহফিল ও ইভেন্ট** | বার্ষিক ওয়াজ মাহফিল, শবে কদর, ইফতার আয়োজন, বক্তা তালিকা, বাজেট ও স্বেচ্ছাসেবক ট্র্যাকিং। |
-| 📝 | **কমিটি সভা ও রেজুলেশন** | আসন্ন কার্যনির্বাহী সভার নোটিশ, এজেন্ডা ও সভায় গৃহীত সিদ্ধান্তের স্থায়ী ডিজিটাল রেজুলেশন আর্কাইভ। |
-| ✨ | **জেমিনি এআই ড্রাফটার** | Google Gemini AI ইন্টিগ্রেশনের মাধ্যমে জরুরি নোটিশ ও রেজুলেশনের স্বয়ংক্রিয় ড্রাফট তৈরি। |
-| 🌙 | **সম্পূর্ণ ডার্ক মোড** | রাতে চোখের প্রশান্তির জন্য বিশেষভাবে ডিজাইনকৃত ইসলামিক এমারেল্ড-ডার্ক থিম। |
-| 📱 | **ট্যাবলেট ও ফোল্ডেবল** | বড় স্ক্রিনের ডিভাইসের জন্য স্বয়ংক্রিয় অ্যাডাপটিভ নেভিগেশন রেল (`MosqueNavigationRail`)। |
+| 🕌 | **ওয়াক্ত ডিউটি রোস্টার** | ৫ ওয়াক্ত নামাজের ইমামতি, আজান ও জুমার খুতবার দায়িত্ব বণ্টন ও সাপ্তাহিক তদারকি ক্যালেন্ডার। |
+| 🍲 | **খাবার শিডিউল ট্র্যাকার** | ইমাম ও খাদেমদের দৈনিক দুপুর ও রাতের খাবার সরবরাহকারী পরিবারের তালিকা ও সুষম বণ্টন ট্র্যাকার। |
+| 🤝 | **সমাজকল্যাণ ও যাকাত তহবিল** | চিকিৎসা অনুদান, বিধবা ও এতিম ভাতা, শিক্ষা সাহায্য এবং জরুরি আপৎকালীন সাহায্য আবেদন নিষ্পত্তি। |
+| 📢 | **ডিজিটাল নোটিশ ও নোটিফিকেশন** | জরুরি নোটিশ ও রেজুলেশন প্রকাশ, ১-ক্লিকে নোটিশ খসড়া তৈরি ও পুশ নোটিফিকেশন ব্রডকাস্ট। |
+| 📴 | **অফলাইন-ফার্স্ট ও মাল্টি-টেন্যান্ট ক্লাউড** | ইন্টারনেট ছাড়াও সমস্ত ফিচার সচল থাকে, এবং ব্যাকএন্ডে সুনির্দিষ্ট `mosque_id` দিয়ে Supabase RLS ক্লাউড ব্যাকআপ। |
 
 ---
 
-## 👥 পদভিত্তিক স্বতন্ত্র ইন্টারফেস (Role-Based Interface Matrix)
+## 👥 পদভিত্তিক স্বতন্ত্র ইন্টারফেস ম্যাট্রিক্স (Role-Based Interface Matrix)
 
-অ্যাপটিতে কমিটির প্রতিটি পদের দায়িত্ব ও গোপনীয়তা রক্ষার জন্য কঠোরভাবে ফিচার পৃথকীকরণ (Role-Responsibility Isolation) করা হয়েছে:
+অ্যাপটিতে কমিটির প্রতিটি পদের মর্যাদা ও গোপনীয়তা রক্ষার জন্য কঠোরভাবে রোল-বেসড ফিচার বিভাজন (Role-Responsibility Isolation) বাস্তবায়ন করা হয়েছে:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │               কমিটি পদবি অনুযায়ী ইন্টারফেস কাঠামো                │
 ├─────────────────┬───────────────────────────────────────────────┤
 │ 👑 সভাপতি        │ কেন্দ্রীয় কমান্ড রুম, ব্যয় ভাউচার চূড়ান্ত   │
-│                 │ অনুমোদন ও বাতিল, অডিট ও রেজুলেশন তদারকি।     │
+│                 │ অনুমোদন ও বাতিল, অডিট, নির্বাচন ও রেজুলেশন। │
 ├─────────────────┼───────────────────────────────────────────────┤
 │ 💰 কোষাধ্যক্ষ    │ আয়-ব্যয়ের লেজার, চাঁদা কালেকশন, ডিজিটাল রসিদ, │
 │                 │ স্টাফ বেতন ও ফি কালেকশন (মিটিং/রোল মুক্ত)।     │
@@ -110,7 +130,7 @@
 │                 │ শিডিউল, মাদরাসা হিফজ তালিম ও বেতন স্লিপ।       │
 ├─────────────────┼───────────────────────────────────────────────┤
 │ 👥 সাধারণ মুসুল্লি│ নামাজ কাউন্টডাউন, নিজস্ব চাঁদার ডিজিটাল রসিদ, │
-│                 │ উন্মুক্ত আয়-ব্যয় স্থিতি ও কল্যাণ আবেদন।        │
+│                 │ উন্মুক্ত আয়-ব্যয় স্থিতি, ভোট প্রদান ও কল্যাণ।  │
 └─────────────────┴───────────────────────────────────────────────┘
 ```
 
@@ -118,30 +138,30 @@
 
 ## 🏛️ সিস্টেম আর্কিটেকচার (System Architecture)
 
-প্রজেক্টটি আধুনিক **Clean Architecture** এবং **MVI (Model-View-Intent)** প্যাটার্ন অনুসরণ করে তৈরি:
+প্রজেক্টটি আধুনিক **Clean Architecture** এবং **MVI (Model-View-Intent)** আর্কিটেকচারাল প্যাটার্ন অনুসরণ করে তৈরি:
 
 ```mermaid
 flowchart TD
-    subgraph UI_Layer ["📱 UI লেয়ার (Jetpack Compose)"]
-        Screens["Screens\n(Dashboard, Finance, Madrasa, etc.)"]
-        Components["Islamic Modern Components\n(MehrabArchCard, PrayerCard, etc.)"]
-        Theme["Theme & Color Tokens\n(Emerald, Gold, Dark Mode)"]
+    subgraph UI_Layer ["📱 UI লেয়ার (Jetpack Compose & Material 3)"]
+        Screens["Screens\n(Dashboard, Islamic Hub, Finance, Madrasa, Election, etc.)"]
+        Components["Islamic Modern Components\n(MehrabArchCard, PrayerCard, RubElHizbDivider)"]
+        Theme["Islamic Emerald & Gold Tokens\n(Light & Dark Sanctuary)"]
     end
 
-    subgraph Domain_Layer ["🧠 স্টেট ও ডোমেন লেয়ার"]
-        ViewModel["MosqueViewModel\n(StateFlow, Coroutines, MVI)"]
-        Session["SessionManager\n(Role & Auth Persistence)"]
+    subgraph Domain_Layer ["🧠 স্টেট ও ডোমেন লেয়ার (MVI)"]
+        ViewModel["MosqueViewModel\n(StateFlow, Coroutines, MVI Reducers)"]
+        Session["SessionManager\n(Role & Auth Persistence, Encrypted SharedPreferences)"]
     end
 
-    subgraph Data_Layer ["💾 ডেটা লেয়ার"]
-        Repository["MosqueRepository\n(Single Source of Truth)"]
-        RoomDB[("Android Room Database v3\n(Offline SQLite Cache)")]
-        Supabase[("Supabase PostgreSQL\n(Row Level Security & Multi-Tenant)")]
+    subgraph Data_Layer ["💾 ডেটা লেয়ার (Offline-First Single Source of Truth)"]
+        Repository["MosqueRepository\n(Room SQLite + Supabase Sync Orchestrator)"]
+        RoomDB[("Android Room Database v3\n(Offline Local SQLite Cache)")]
+        Supabase[("Supabase PostgreSQL\n(Row Level Security & Multi-Tenant Isolated)")]
     end
 
-    subgraph Security_AI ["🛡️ সিকিউরিটি ও এআই"]
-        AppCheck["Firebase App Check\n(reCAPTCHA Enterprise)"]
-        Gemini["Google Gemini AI\n(Smart Notice Generator)"]
+    subgraph Security_AI ["🛡️ সিকিউরিটি ও এআই ইঞ্জিন"]
+        Gemini["Google Gemini AI\n(Smart Notice & Khutbah Points Generator)"]
+        WorkManager["Android WorkManager\n(Background Sync & Prayer Alarms)"]
     end
 
     Screens --> ViewModel
@@ -151,15 +171,15 @@ flowchart TD
     ViewModel --> Session
     Repository --> RoomDB
     Repository --> Supabase
-    Supabase --> AppCheck
     ViewModel --> Gemini
+    Repository --> WorkManager
 ```
 
 ---
 
 ## 🎨 ইসলামিক মডার্ন ডিজাইন সিস্টেম (Design System)
 
-অ্যাপটিতে কোনো জেনেরিক ম্যাটেরিয়াল ডিজাইন ব্যবহার না করে সম্পূর্ণ খাঁটি ইসলামিক মেহরাব ও নকশার রূপ দেওয়া হয়েছে:
+অ্যাপটিতে কোনো জেনেরিক ডিজাইন ব্যবহার না করে সম্পূর্ণ খাঁটি ইসলামিক মেহরাব ও নকশার রূপ দেওয়া হয়েছে:
 
 | কালার টোকেন | হেক্স কোড | প্রিভিউ | ব্যবহারক্ষেত্র |
 | :--- | :--- | :---: | :--- |
@@ -174,26 +194,28 @@ flowchart TD
 - **`MehrabArchCard`**: ঐতিহ্যবাহী মেহরাবের আদলে ২৪ডিপি আর্চ কার্ভ এবং সোনালী ডিভাইডার সহ প্রিমিয়াম কার্ড।
 - **`RubElHizbDivider`**: সোনালী জ্যামিতিক ইসলামিক স্টার মোটিফ (۞) সমৃদ্ধ ডিভাইডার।
 - **`HijriDateBanner`**: বিসমিল্লাহ ক্যালিগ্রাফি এবং লাইভ হিজরি ও বাংলা তারিখ প্রদর্শক ব্যানার।
+- **`IslamicCard`**: সূক্ষ্ম গোল্ডেন বর্ডার ও কার্ভড শ্যাডোর প্রিমিয়াম কার্ড ভিউ।
 
 ---
 
-## 🛡️ নিরাপত্তা ও ডেটা নীতি (Security & Privacy)
+## 🛡️ নিরাপত্তা, ডাটাবেজ ও ডেটা নীতি (Security & Privacy)
 
-- **কঠোর মাল্টি-টেন্যান্ট আইসোলেশন:** প্রতিটি মসজিদের ডেটা সুনির্দিষ্ট `mosque_id` দ্বারা পৃথক এবং Supabase PostgreSQL Row Level Security (RLS) দ্বারা লক করা।
-- **ফায়ারবেস অ্যাপ চেক (Firebase App Check):** অননুমোদিত বট বা ক্লায়েন্ট রিকোয়েস্ট থেকে ব্যাকএন্ড রক্ষায় reCAPTCHA Enterprise সক্রিয়।
+- **১০০% ডেমো ডেটামুক্ত প্রোডাকশন ডাটাবেজ:** অ্যাপটিতে কোনো কাল্পনিক ফেক ডেটা নেই। প্রথমবার ইনস্টল করলেই এটি সম্পূর্ণ ক্লিন ও ফ্রেশ স্টেট দিয়ে শুরু হয়।
+- **কঠোর মাল্টি-টেন্যান্ট আইসোলেশন:** প্রতিটি মসজিদের ডেটা সুনির্দিষ্ট `mosque_id` দ্বারা সম্পূর্ণ পৃথক এবং Supabase PostgreSQL Row Level Security (RLS) দ্বারা লক করা।
 - **জিরো ফ্লোটিং পয়েন্ট হিসাব:** সকল আর্থিক হিসাব সেন্ট ও পূর্ণাঙ্গ সংখ্যায় পরিচালিত—কোনো প্রকার রাউন্ডিং এরর ছাড়া।
-- **অডিট ট্রেইল:** প্রতিটি ভাউচার, অনুমোদন এবং আর্থিক রদবদলের স্থায়ী অডিট রেকর্ড সংরক্ষিত থাকে।
+- **অপরিবর্তনীয় অডিট ট্রেইল:** প্রতিটি ভাউচার এন্ট্রি, অনুমোদন এবং ব্যয়ের স্থায়ী ক্রিপ্টোগ্রাফিক টাইমস্ট্যাম্পড অডিট রেকর্ড সংরক্ষিত থাকে।
+- **ডিজিটাল রসিদ যাচাইকরণ:** প্রতিটি ভাউচার ও রসিদে ডায়নামিক কিউআর কোড থাকে, যা স্ক্যান করলেই মসজিদ ও রসিদের সত্যতা প্রমাণিত হয়।
 
 ---
 
-## 🚀 ইনস্টলেশন ও রান করার নিয়ম (Getting Started)
+## 🚀 লোকাল সেটআপ ও রান করার নিয়ম (Getting Started)
 
 ### প্রয়োজনীয় টুলস:
 - **Android Studio:** Ladybug (2024.2+) বা Koala
 - **JDK:** OpenJDK 17 বা 21
 - **Android SDK:** Compile SDK 35, Min SDK 26, Target SDK 35
 
-### লোকাল মেশিনে রান করা:
+### রিপোজিটরি ক্লোন ও বিল্ড:
 ```bash
 # ১. রিপোজিটরি ক্লোন করুন
 git clone https://github.com/emranmofficials/Mosque-Seba.git
@@ -201,30 +223,39 @@ git clone https://github.com/emranmofficials/Mosque-Seba.git
 # ২. প্রজেক্ট ফোল্ডারে প্রবেশ করুন
 cd Mosque-Seba
 
-# ৩. বিল্ড ও টেস্ট নিশ্চিত করুন
+# ৩. ইউনিট টেস্টগুলো চালান
 ./gradlew testDebugUnitTest
 
-# ৪. অ্যাপ রান করুন বা ডিবাগ APK তৈরি করুন
-./gradlew assembleDebug
+# ৪. রিলিজ APK তৈরি করুন
+./gradlew assembleRelease
 ```
-*তৈরিকৃত APK পাওয়া যাবে:* `app/build/outputs/apk/debug/app-debug.apk`
+*তৈরিকৃত APK পাওয়া যাবে:* `app/build/outputs/apk/release/app-release.apk`
+
+---
+
+## ⚙️ Supabase ক্লাউড ব্যাকএন্ড কনফিগারেশন (Backend Setup)
+
+প্রজেক্টের রুট ডিরেক্টরিতে `supabase/` ফোল্ডারে ক্লাউড ডেটাবেজের সকল স্কিমা ও মাইগ্রেশন স্ক্রিপ্ট অন্তর্ভুক্ত রয়েছে:
+* `supabase/schema.sql`: মাল্টি-টেন্যান্ট টেবিল স্কিমা, ফরেন কি এবং ইনডেক্স।
+* `supabase/rls_policies.sql`: প্রতিটি মসজিদের ডেটার জন্য সুদৃঢ় Row Level Security (RLS) নীতিমালা।
+* `supabase/functions/`: সার্ভারলেস নোটিফিকেশন ও এসএমএস গেটওয়ে ট্রিগার ফাংশন।
 
 ---
 
 ## 🤝 অবদান রাখুন (Contributing)
 
-আমরা যে কোনো ধরণের অবদান—বাগ ফিক্স, নতুন আইডিয়া, ডিজাইন উন্নয়ন বা ডকুমেন্টেশনকে স্বাগত জানাই!
+আমরা যে কোনো ধরণের অবদান—বাগ ফিক্স, নতুন আইডিয়া, ডিজাইন উন্নয়ন বা ডকুমেন্টেশনকে সানন্দে স্বাগত জানাই!
 বিস্তারিত জানার জন্য অনুগ্রহ করে আমাদের **[CONTRIBUTING.md](CONTRIBUTING.md)** নির্দেশিকা এবং **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** দেখুন।
 
 ---
 
 ## 📄 লাইসেন্স ও সৌজন্য (License & Authors)
 
-- **মেইন্টেইনার ও প্রজেক্ট লিড:** [Emran Mahmud (@emranmofficials)](https://github.com/emranmofficials)
-- **লাইসেন্স:** এই প্রজেক্টটি **[MIT License](LICENSE)**-এর অধীনে উন্মুক্ত ও লাইসেন্সকৃত।
-- **কপিরাইট:** © ২০২৪–২০২৬ Emran Mahmud & Mosque Seba Contributors.
+* **প্রজেক্ট মেইন্টেইনার ও আর্কিটেক্ট:** [Emran Mahmud (@emranmofficials)](https://github.com/emranmofficials)
+* **লাইসেন্স:** এই প্রজেক্টটি **[MIT License](LICENSE)**-এর অধীনে উন্মুক্ত ও লাইসেন্সকৃত।
+* **কপিরাইট:** © ২০২৪–২০২৬ Emran Mahmud & Mosque Seba Contributors.
 
 <p align="center">
-  <sub>اللهم اجعل هذا العمل خالصاً لوجهك الكريم</sub><br>
-  <em>হে আল্লাহ, এই খেদমতকে তোমার সন্তুষ্টির উদ্দেশ্যে কবুল করে নাও।</em>
+  <sub>اللهم اجعل هذا العمل خالصاً لوجهك الكريم وتقبله منا إنك أنت السميع العليم</sub><br>
+  <em>হে আল্লাহ! এই দ্বীনি খেদমতকে একান্তভাবে তোমার সন্তুষ্টির উদ্দেশ্যে কবুল করে নাও। নিশ্চয়ই তুমি সর্বশ্রোতা, সর্বজ্ঞ।</em>
 </p>
