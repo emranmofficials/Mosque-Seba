@@ -27,6 +27,13 @@ class SessionManager(context: Context) {
         private const val KEY_READ_NOTIFICATION_IDS = "key_read_notification_ids"
         private const val KEY_ONBOARDING_COMPLETED = "key_onboarding_completed"
         private const val DEFAULT_MOSQUE_ID = ""
+
+        // Real Supabase Auth session. Every REST + Realtime call uses this JWT.
+        private const val KEY_AUTH_ACCESS_TOKEN = "key_auth_access_token"
+        private const val KEY_AUTH_REFRESH_TOKEN = "key_auth_refresh_token"
+        private const val KEY_AUTH_EXPIRES_AT = "key_auth_expires_at"
+        private const val KEY_AUTH_UID = "key_auth_uid"
+        private const val KEY_AUTH_EMAIL = "key_auth_email"
     }
 
     fun saveSession(
@@ -102,9 +109,54 @@ class SessionManager(context: Context) {
         return credentialPrefs.getString("mid_email_$cleanEmail", null)
     }
 
+    // ── Supabase Auth session ────────────────────────────────────────────────
+
+    fun saveAuthSession(
+        accessToken: String,
+        refreshToken: String,
+        expiresIn: Long,
+        uid: String,
+        email: String
+    ) {
+        prefs.edit().apply {
+            putString(KEY_AUTH_ACCESS_TOKEN, accessToken)
+            putString(KEY_AUTH_REFRESH_TOKEN, refreshToken)
+            // Refresh one minute early to avoid mid-request expiry.
+            putLong(KEY_AUTH_EXPIRES_AT, System.currentTimeMillis() + expiresIn * 1000L - 60_000L)
+            putString(KEY_AUTH_UID, uid)
+            putString(KEY_AUTH_EMAIL, email)
+            apply()
+        }
+    }
+
+    fun getAccessToken(): String? = prefs.getString(KEY_AUTH_ACCESS_TOKEN, null)?.takeIf { it.isNotBlank() }
+
+    fun getRefreshToken(): String? = prefs.getString(KEY_AUTH_REFRESH_TOKEN, null)?.takeIf { it.isNotBlank() }
+
+    fun getAuthUserId(): String? = prefs.getString(KEY_AUTH_UID, null)?.takeIf { it.isNotBlank() }
+
+    fun getAuthEmail(): String? = prefs.getString(KEY_AUTH_EMAIL, null)?.takeIf { it.isNotBlank() }
+
+    fun isAuthTokenExpired(): Boolean =
+        System.currentTimeMillis() >= prefs.getLong(KEY_AUTH_EXPIRES_AT, 0L)
+
+    fun hasAuthSession(): Boolean = getAccessToken() != null && getAuthUserId() != null
+
+    fun clearAuthSession() {
+        prefs.edit()
+            .remove(KEY_AUTH_ACCESS_TOKEN)
+            .remove(KEY_AUTH_REFRESH_TOKEN)
+            .remove(KEY_AUTH_EXPIRES_AT)
+            .remove(KEY_AUTH_UID)
+            .remove(KEY_AUTH_EMAIL)
+            .apply()
+    }
+
     fun isLoggedIn(): Boolean {
         val rememberMe = prefs.getBoolean(KEY_REMEMBER_ME, true)
-        return rememberMe && prefs.getBoolean(KEY_IS_LOGGED_IN, false)
+        // A demo-era session has no Auth JWT: force a real sign-in instead of
+        // letting it silently fail every RLS-protected request.
+        return rememberMe && prefs.getBoolean(KEY_IS_LOGGED_IN, false) && hasAuthSession()
     }
 
     fun isRememberMeEnabled(): Boolean = prefs.getBoolean(KEY_REMEMBER_ME, true)

@@ -31,6 +31,58 @@ data class SyncResult(
 
 object SupabaseSyncManager {
 
+    // The live backend has strict CHECK constraints: transactions.type must be
+    // income|expense, notices.priority normal|important|urgent and amount > 0.
+    // Local Room rows may still hold legacy uppercase values, so normalize on push.
+    private fun cloudTxnType(value: String): String =
+        if (value.trim().equals("expense", ignoreCase = true)) "expense" else "income"
+
+    private fun cloudNoticePriority(value: String): String = when (value.trim().lowercase()) {
+        "urgent" -> "urgent"
+        "important", "high", "immediate" -> "important"
+        else -> "normal"
+    }
+
+    private fun cloudNoticeStatus(value: String): String = when (value.trim().lowercase()) {
+        "draft" -> "draft"
+        "archived" -> "archived"
+        else -> "published"
+    }
+
+    // Date-like strings are stored locally in a Bengali-localized "dd MMMM yyyy"
+    // form (e.g. ১৭ নভেম্বর ২০২৬), but several backend columns are SQL dates.
+    // Convert to ISO yyyy-MM-dd on push so Postgres accepts them. ISO passes through.
+    private fun cloudIsoDate(value: String): String {
+        val trimmed = value.trim()
+        if (trimmed.matches(Regex("\\d{4}-\\d{2}-\\d{2}"))) return trimmed
+        return try {
+            val parsed = SimpleDateFormat("dd MMMM yyyy", Locale.forLanguageTag("bn-BD"))
+                .parse(trimmed) ?: return trimmed
+            SimpleDateFormat("yyyy-MM-dd", Locale.US).format(parsed)
+        } catch (e: Exception) {
+            trimmed
+        }
+    }
+
+    // staff CHECK constraints: role_code, employment_type and salary_frequency
+    // only accept these exact lowercase values; map anything else to a safe default.
+    private fun cloudStaffRole(value: String): String = when (value.trim().lowercase()) {
+        "imam", "muazzin", "khadem", "other_staff" -> value.trim().lowercase()
+        else -> "other_staff"
+    }
+
+    private fun cloudStaffEmployment(value: String): String = when (value.trim().lowercase()) {
+        "part_time", "contract" -> value.trim().lowercase()
+        else -> "full_time"
+    }
+
+    private fun cloudStaffSalaryFreq(value: String): String = when (value.trim().lowercase()) {
+        "weekly", "one_time" -> value.trim().lowercase()
+        else -> "monthly"
+    }
+
+    private fun cloudNonNegative(value: Double): Double = if (value >= 0 && value.isFinite()) value else 0.0
+
     /**
      * Executes bidirectional synchronization between local Room DB and Supabase Cloud.
      * Enforces STRICT MULTI-TENANCY: All pulls and pushes are partition-locked by mosque_id.
@@ -86,11 +138,22 @@ object SupabaseSyncManager {
                 val cloudJson = cloudMosqueRes.getOrNull()!!.getJSONObject(0)
                 val cloudLogo = if (cloudJson.has("logo_url") && !cloudJson.isNull("logo_url")) cloudJson.optString("logo_url") else null
                 val mergedLogo = cloudLogo ?: localMosque.logoUrl
+                val cloudSeal = if (cloudJson.has("seal_url") && !cloudJson.isNull("seal_url")) cloudJson.optString("seal_url") else null
                 val mergedMosque = localMosque.copy(
                     nameBn = cloudJson.optString("name_bn", localMosque.nameBn),
                     nameEn = cloudJson.optString("name_en", localMosque.nameEn),
                     address = cloudJson.optString("address", localMosque.address),
-                    logoUrl = mergedLogo
+                    establishedYear = cloudJson.optInt("established_year", localMosque.establishedYear),
+                    committeeStartYear = cloudJson.optInt("committee_start_year", localMosque.committeeStartYear),
+                    committeeEndYear = cloudJson.optInt("committee_end_year", localMosque.committeeEndYear),
+                    status = cloudJson.optString("status", localMosque.status),
+                    district = cloudJson.optString("district", localMosque.district),
+                    upazila = cloudJson.optString("upazila", localMosque.upazila),
+                    waqfRegNo = cloudJson.optString("waqf_reg_no", localMosque.waqfRegNo),
+                    capacity = if (cloudJson.has("capacity") && !cloudJson.isNull("capacity")) cloudJson.optInt("capacity") else localMosque.capacity,
+                    bankAccountInfo = cloudJson.optString("bank_account_info", localMosque.bankAccountInfo),
+                    logoUrl = mergedLogo,
+                    sealUrl = cloudSeal ?: localMosque.sealUrl
                 )
                 database.mosqueDao().insertOrUpdate(mergedMosque)
                 syncedMosque = 1
@@ -106,6 +169,12 @@ object SupabaseSyncManager {
                     put("committee_end_year", mergedMosque.committeeEndYear)
                     put("status", mergedMosque.status)
                     put("logo_url", mergedMosque.logoUrl ?: JSONObject.NULL)
+                    put("seal_url", mergedMosque.sealUrl ?: JSONObject.NULL)
+                    put("district", mergedMosque.district)
+                    put("upazila", mergedMosque.upazila)
+                    put("waqf_reg_no", mergedMosque.waqfRegNo)
+                    put("capacity", mergedMosque.capacity ?: JSONObject.NULL)
+                    put("bank_account_info", mergedMosque.bankAccountInfo)
                 }
                 client.upsert("mosques", JSONArray().apply { put(mosqueJson) }.toString())
             } else {
@@ -120,6 +189,12 @@ object SupabaseSyncManager {
                     put("committee_end_year", localMosque.committeeEndYear)
                     put("status", localMosque.status)
                     put("logo_url", localMosque.logoUrl ?: JSONObject.NULL)
+                    put("seal_url", localMosque.sealUrl ?: JSONObject.NULL)
+                    put("district", localMosque.district)
+                    put("upazila", localMosque.upazila)
+                    put("waqf_reg_no", localMosque.waqfRegNo)
+                    put("capacity", localMosque.capacity ?: JSONObject.NULL)
+                    put("bank_account_info", localMosque.bankAccountInfo)
                 }
                 val upsertRes = client.upsert("mosques", JSONArray().apply { put(mosqueJson) }.toString())
                 if (upsertRes.isSuccess) syncedMosque = 1
@@ -147,6 +222,9 @@ object SupabaseSyncManager {
                             monthlyChanda = mJson.optDouble("monthly_chanda", 0.0),
                             joinDate = mJson.optString("join_date", ""),
                             photoUrl = if (mJson.has("photo_url") && !mJson.isNull("photo_url")) mJson.optString("photo_url") else null,
+                            signatureUrl = if (mJson.has("signature_url") && !mJson.isNull("signature_url")) mJson.optString("signature_url") else null,
+                            stampUrl = if (mJson.has("stamp_url") && !mJson.isNull("stamp_url")) mJson.optString("stamp_url") else null,
+                            designationBn = if (mJson.has("designation_bn") && !mJson.isNull("designation_bn")) mJson.optString("designation_bn") else null,
                             status = mJson.optString("status", "active"),
                             willingToProvideStaffMeals = mJson.optBoolean("willing_to_provide_staff_meals", false)
                         )
@@ -171,8 +249,12 @@ object SupabaseSyncManager {
                         put("address", m.address)
                         put("village_area", m.villageArea)
                         put("role_code", m.roleCode)
-                        put("monthly_chanda", m.monthlyChanda)
+                        put("monthly_chanda", cloudNonNegative(m.monthlyChanda))
                         put("join_date", m.joinDate)
+                        put("photo_url", m.photoUrl ?: JSONObject.NULL)
+                        put("signature_url", m.signatureUrl ?: JSONObject.NULL)
+                        put("stamp_url", m.stampUrl ?: JSONObject.NULL)
+                        put("designation_bn", m.designationBn ?: JSONObject.NULL)
                         put("status", m.status)
                         put("willing_to_provide_staff_meals", m.willingToProvideStaffMeals)
                     })
@@ -192,13 +274,15 @@ object SupabaseSyncManager {
                         val txn = TransactionEntity(
                             id = tId,
                             transactionCode = tJson.optString("transaction_code", "TX-001"),
-                            categoryNameBn = tJson.optString("category_name_bn", "সাধারণ দান"),
+                            categoryNameBn = tJson.optString("category_id", "সাধারণ দান"),
                             type = tJson.optString("type", "INCOME"),
                             amount = tJson.optDouble("amount", 0.0),
                             txnDate = tJson.optString("txn_date", ""),
                             description = tJson.optString("description", ""),
                             sourceType = tJson.optString("source_type", "manual"),
+                            sourceId = if (tJson.has("source_id") && !tJson.isNull("source_id")) tJson.optString("source_id") else null,
                             createdBy = tJson.optString("created_by", "ক্যাশিয়ার"),
+                            approvedBy = if (tJson.has("approved_by") && !tJson.isNull("approved_by")) tJson.optString("approved_by") else null,
                             approvalStatus = tJson.optString("approval_status", "approved"),
                             isReversal = tJson.optBoolean("is_reversal", false)
                         )
@@ -208,6 +292,7 @@ object SupabaseSyncManager {
             }
 
             val localTxns = database.transactionDao().getAllTransactions().first()
+                .filter { it.amount > 0 } // backend CHECK (amount > 0)
             if (localTxns.isNotEmpty()) {
                 val txnsArray = JSONArray()
                 localTxns.forEach { t ->
@@ -215,13 +300,15 @@ object SupabaseSyncManager {
                         put("id", t.id)
                         put("mosque_id", currentMosqueId)
                         put("transaction_code", t.transactionCode)
-                        put("category_name_bn", t.categoryNameBn)
-                        put("type", t.type)
+                        put("category_id", t.categoryNameBn)
+                        put("type", cloudTxnType(t.type))
                         put("amount", t.amount)
-                        put("txn_date", t.txnDate)
+                        put("txn_date", cloudIsoDate(t.txnDate))
                         put("description", t.description)
                         put("source_type", t.sourceType)
+                        put("source_id", t.sourceId ?: JSONObject.NULL)
                         put("created_by", t.createdBy)
+                        put("approved_by", t.approvedBy ?: JSONObject.NULL)
                         put("approval_status", t.approvalStatus)
                         put("is_reversal", t.isReversal)
                     })
@@ -244,9 +331,11 @@ object SupabaseSyncManager {
                             content = nJson.optString("content", ""),
                             priority = nJson.optString("priority", "normal"),
                             isPinned = nJson.optBoolean("is_pinned", false),
-                            publishDate = nJson.optString("publish_date", ""),
+                            publishDate = nJson.optString("publish_at", ""),
+                            expiryDate = if (nJson.has("expiry_at") && !nJson.isNull("expiry_at")) nJson.optString("expiry_at") else null,
                             status = nJson.optString("status", "published"),
-                            createdBy = nJson.optString("created_by", "Admin")
+                            createdBy = nJson.optString("created_by", "Admin"),
+                            imageUrl = if (nJson.has("image_url") && !nJson.isNull("image_url")) nJson.optString("image_url") else null
                         )
                         database.noticeDao().insertNotice(notice)
                     }
@@ -257,16 +346,22 @@ object SupabaseSyncManager {
             if (localNotices.isNotEmpty()) {
                 val noticesArray = JSONArray()
                 localNotices.forEach { n ->
+                    val publishIso = cloudIsoDate(n.publishDate)
+                    val expiryIso = n.expiryDate?.let { cloudIsoDate(it) }
+                    // Backend CHECK: expiry_at IS NULL OR expiry_at >= publish_at.
+                    val validExpiry = expiryIso?.takeIf { it >= publishIso }
                     noticesArray.put(JSONObject().apply {
                         put("id", n.id)
                         put("mosque_id", currentMosqueId)
                         put("title", n.title)
                         put("content", n.content)
-                        put("priority", n.priority)
+                        put("priority", cloudNoticePriority(n.priority))
                         put("is_pinned", n.isPinned)
-                        put("publish_date", n.publishDate)
-                        put("status", n.status)
+                        put("publish_at", publishIso)
+                        put("expiry_at", validExpiry ?: JSONObject.NULL)
+                        put("status", cloudNoticeStatus(n.status))
                         put("created_by", n.createdBy)
+                        put("image_url", n.imageUrl ?: JSONObject.NULL)
                     })
                 }
                 val nRes = client.upsert("notices", noticesArray.toString())
@@ -683,6 +778,527 @@ object SupabaseSyncManager {
                 Log.w(TAG, "Properties sync skipped", e)
             }
 
+            // ── Remaining feature modules (all scoped to currentMosqueId) ──────────
+            // 12. Staff (imam / muazzin / khadem + payroll roster master data)
+            try {
+                val cloudStaffRes = client.get("staff", "mosque_id=eq.$currentMosqueId")
+                if (cloudStaffRes.isSuccess) {
+                    val arr = cloudStaffRes.getOrNull() ?: JSONArray()
+                    for (i in 0 until arr.length()) {
+                        val j = arr.getJSONObject(i)
+                        val id = j.optString("id")
+                        if (id.isBlank()) continue
+                        database.staffDao().insertStaff(StaffEntity(
+                            id = id,
+                            nameBn = j.optString("name_bn", ""),
+                            roleCode = j.optString("role_code", "other_staff"),
+                            designationBn = j.optString("designation_bn", ""),
+                            employmentType = j.optString("employment_type", "full_time"),
+                            joinDate = j.optString("join_date", ""),
+                            salaryAmount = j.optDouble("salary_amount", 0.0),
+                            salaryFrequency = j.optString("salary_frequency", "monthly"),
+                            mealRequired = j.optBoolean("meal_required", true),
+                            mobile = j.optString("mobile", ""),
+                            isActive = j.optBoolean("is_active", true),
+                            signatureUrl = if (j.has("signature_url") && !j.isNull("signature_url")) j.optString("signature_url") else null,
+                            stampUrl = if (j.has("stamp_url") && !j.isNull("stamp_url")) j.optString("stamp_url") else null
+                        ))
+                    }
+                }
+                val localStaff = database.staffDao().getAllStaff().first()
+                if (localStaff.isNotEmpty()) {
+                    val ja = JSONArray()
+                    localStaff.forEach { s ->
+                        ja.put(JSONObject().apply {
+                            put("id", s.id)
+                            put("mosque_id", currentMosqueId)
+                            put("name_bn", s.nameBn)
+                            put("mobile", s.mobile)
+                            put("role_code", cloudStaffRole(s.roleCode))
+                            put("designation_bn", s.designationBn)
+                            put("employment_type", cloudStaffEmployment(s.employmentType))
+                            put("join_date", cloudIsoDate(s.joinDate))
+                            put("salary_amount", cloudNonNegative(s.salaryAmount))
+                            put("salary_frequency", cloudStaffSalaryFreq(s.salaryFrequency))
+                            put("meal_required", s.mealRequired)
+                            put("is_active", s.isActive)
+                            put("signature_url", s.signatureUrl ?: JSONObject.NULL)
+                            put("stamp_url", s.stampUrl ?: JSONObject.NULL)
+                        })
+                    }
+                    client.upsert("staff", ja.toString())
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "Staff sync skipped", e)
+            }
+
+            // 13. Audit logs (local numeric id stored as "audit-<id>" in cloud)
+            try {
+                val cloudAuditRes = client.get("audit_logs", "mosque_id=eq.$currentMosqueId")
+                if (cloudAuditRes.isSuccess) {
+                    val arr = cloudAuditRes.getOrNull() ?: JSONArray()
+                    for (i in 0 until arr.length()) {
+                        val j = arr.getJSONObject(i)
+                        val numericId = j.optString("id").removePrefix("audit-").toLongOrNull() ?: continue
+                        database.auditDao().insertLog(AuditLogEntity(
+                            id = numericId,
+                            action = j.optString("action", ""),
+                            actor = j.optString("actor_id", ""),
+                            details = j.optString("details", ""),
+                            timestamp = j.optString("timestamp", "")
+                        ))
+                    }
+                }
+                val localAudit = database.auditDao().getRecentLogs().first()
+                if (localAudit.isNotEmpty()) {
+                    val ja = JSONArray()
+                    localAudit.forEach { a ->
+                        ja.put(JSONObject().apply {
+                            put("id", "audit-${a.id}")
+                            put("mosque_id", currentMosqueId)
+                            put("action", a.action)
+                            put("actor_id", a.actor)
+                            put("entity_type", "general")
+                            put("details", a.details)
+                            put("timestamp", a.timestamp)
+                        })
+                    }
+                    client.upsert("audit_logs", ja.toString())
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "Audit sync skipped", e)
+            }
+
+            // 14. Madrasa attendance
+            try {
+                val cloudAttRes = client.get("madrasa_attendance", "mosque_id=eq.$currentMosqueId")
+                if (cloudAttRes.isSuccess) {
+                    val arr = cloudAttRes.getOrNull() ?: JSONArray()
+                    for (i in 0 until arr.length()) {
+                        val j = arr.getJSONObject(i)
+                        val id = j.optString("id")
+                        if (id.isBlank()) continue
+                        database.madrasaAttendanceDao().recordAttendance(MadrasaAttendanceEntity(
+                            id = id,
+                            studentId = j.optString("student_id", ""),
+                            studentNameBn = j.optString("student_name_bn", ""),
+                            date = j.optString("date", ""),
+                            status = j.optString("status", "present")
+                        ))
+                    }
+                }
+                val localAtt = database.madrasaAttendanceDao().getAllAttendance().first()
+                if (localAtt.isNotEmpty()) {
+                    val ja = JSONArray()
+                    localAtt.forEach { a ->
+                        ja.put(JSONObject().apply {
+                            put("id", a.id)
+                            put("mosque_id", currentMosqueId)
+                            put("student_id", a.studentId)
+                            put("student_name_bn", a.studentNameBn)
+                            put("date", a.date)
+                            put("status", a.status)
+                        })
+                    }
+                    client.upsert("madrasa_attendance", ja.toString())
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "Madrasa attendance sync skipped", e)
+            }
+
+            // 15. Hifz progress
+            try {
+                val cloudHifzRes = client.get("hifz_progress", "mosque_id=eq.$currentMosqueId")
+                if (cloudHifzRes.isSuccess) {
+                    val arr = cloudHifzRes.getOrNull() ?: JSONArray()
+                    for (i in 0 until arr.length()) {
+                        val j = arr.getJSONObject(i)
+                        val id = j.optString("id")
+                        if (id.isBlank()) continue
+                        database.hifzDao().insertProgress(HifzProgressEntity(
+                            id = id,
+                            studentId = j.optString("student_id", ""),
+                            studentNameBn = j.optString("student_name_bn", ""),
+                            date = j.optString("date", ""),
+                            paraNumber = j.optInt("para_number", 1),
+                            pageOrAyah = j.optString("page_or_ayah", ""),
+                            qualityScore = j.optInt("quality_score", 5),
+                            mistakeCount = j.optInt("mistake_count", 0),
+                            teacherFeedback = j.optString("teacher_feedback", "")
+                        ))
+                    }
+                }
+                val localHifz = database.hifzDao().getAllProgress().first()
+                if (localHifz.isNotEmpty()) {
+                    val ja = JSONArray()
+                    localHifz.forEach { h ->
+                        ja.put(JSONObject().apply {
+                            put("id", h.id)
+                            put("mosque_id", currentMosqueId)
+                            put("student_id", h.studentId)
+                            put("student_name_bn", h.studentNameBn)
+                            put("date", h.date)
+                            put("para_number", h.paraNumber)
+                            put("page_or_ayah", h.pageOrAyah)
+                            put("quality_score", h.qualityScore)
+                            put("mistake_count", h.mistakeCount)
+                            put("teacher_feedback", h.teacherFeedback)
+                        })
+                    }
+                    client.upsert("hifz_progress", ja.toString())
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "Hifz sync skipped", e)
+            }
+
+            // 16. Madrasa fee payments
+            try {
+                val cloudFeeRes = client.get("madrasa_fee_payments", "mosque_id=eq.$currentMosqueId")
+                if (cloudFeeRes.isSuccess) {
+                    val arr = cloudFeeRes.getOrNull() ?: JSONArray()
+                    for (i in 0 until arr.length()) {
+                        val j = arr.getJSONObject(i)
+                        val id = j.optString("id")
+                        if (id.isBlank()) continue
+                        database.madrasaFeeDao().insertFeePayment(MadrasaFeePaymentEntity(
+                            id = id,
+                            studentId = j.optString("student_id", ""),
+                            studentNameBn = j.optString("student_name_bn", ""),
+                            month = j.optString("month", ""),
+                            amountPaid = j.optDouble("amount_paid", 0.0),
+                            receiptCode = j.optString("receipt_code", ""),
+                            paymentMethod = j.optString("payment_method", "cash"),
+                            status = j.optString("status", "verified"),
+                            paidAt = j.optString("paid_at", "")
+                        ))
+                    }
+                }
+                val localFee = database.madrasaFeeDao().getAllFeePayments().first()
+                if (localFee.isNotEmpty()) {
+                    val ja = JSONArray()
+                    localFee.forEach { f ->
+                        ja.put(JSONObject().apply {
+                            put("id", f.id)
+                            put("mosque_id", currentMosqueId)
+                            put("student_id", f.studentId)
+                            put("student_name_bn", f.studentNameBn)
+                            put("month", f.month)
+                            put("amount_paid", f.amountPaid)
+                            put("receipt_code", f.receiptCode)
+                            put("payment_method", f.paymentMethod)
+                            put("status", f.status)
+                            put("paid_at", f.paidAt)
+                        })
+                    }
+                    client.upsert("madrasa_fee_payments", ja.toString())
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "Madrasa fee sync skipped", e)
+            }
+
+            // 17. Staff payroll
+            try {
+                val cloudPayrollRes = client.get("staff_payroll", "mosque_id=eq.$currentMosqueId")
+                if (cloudPayrollRes.isSuccess) {
+                    val arr = cloudPayrollRes.getOrNull() ?: JSONArray()
+                    for (i in 0 until arr.length()) {
+                        val j = arr.getJSONObject(i)
+                        val id = j.optString("id")
+                        if (id.isBlank()) continue
+                        database.staffPayrollDao().insertPayroll(StaffPayrollEntity(
+                            id = id,
+                            staffId = j.optString("staff_id", ""),
+                            staffNameBn = j.optString("staff_name_bn", ""),
+                            month = j.optString("month", ""),
+                            salaryAmount = j.optDouble("salary_amount", 0.0),
+                            bonusAmount = j.optDouble("bonus_amount", 0.0),
+                            netSalary = j.optDouble("net_salary", 0.0),
+                            paymentStatus = j.optString("payment_status", "pending"),
+                            paidDate = if (j.has("paid_date") && !j.isNull("paid_date")) j.optString("paid_date") else null
+                        ))
+                    }
+                }
+                val localPayroll = database.staffPayrollDao().getAllPayrolls().first()
+                if (localPayroll.isNotEmpty()) {
+                    val ja = JSONArray()
+                    localPayroll.forEach { p ->
+                        ja.put(JSONObject().apply {
+                            put("id", p.id)
+                            put("mosque_id", currentMosqueId)
+                            put("staff_id", p.staffId)
+                            put("staff_name_bn", p.staffNameBn)
+                            put("month", p.month)
+                            put("salary_amount", p.salaryAmount)
+                            put("bonus_amount", p.bonusAmount)
+                            put("net_salary", p.netSalary)
+                            put("payment_status", p.paymentStatus)
+                            put("paid_date", p.paidDate ?: JSONObject.NULL)
+                        })
+                    }
+                    client.upsert("staff_payroll", ja.toString())
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "Payroll sync skipped", e)
+            }
+
+            // 18. Duty roster
+            try {
+                val cloudRosterRes = client.get("duty_roster", "mosque_id=eq.$currentMosqueId")
+                if (cloudRosterRes.isSuccess) {
+                    val arr = cloudRosterRes.getOrNull() ?: JSONArray()
+                    for (i in 0 until arr.length()) {
+                        val j = arr.getJSONObject(i)
+                        val id = j.optString("id")
+                        if (id.isBlank()) continue
+                        database.dutyRosterDao().insertRoster(DutyRosterEntity(
+                            id = id,
+                            staffId = j.optString("staff_id", ""),
+                            staffNameBn = j.optString("staff_name_bn", ""),
+                            dayOfWeek = j.optString("day_of_week", ""),
+                            prayerName = j.optString("prayer_name", ""),
+                            roleTitle = j.optString("role_title", ""),
+                            notes = j.optString("notes", "")
+                        ))
+                    }
+                }
+                val localRoster = database.dutyRosterDao().getAllRosters().first()
+                if (localRoster.isNotEmpty()) {
+                    val ja = JSONArray()
+                    localRoster.forEach { r ->
+                        ja.put(JSONObject().apply {
+                            put("id", r.id)
+                            put("mosque_id", currentMosqueId)
+                            put("staff_id", r.staffId)
+                            put("staff_name_bn", r.staffNameBn)
+                            put("day_of_week", r.dayOfWeek)
+                            put("prayer_name", r.prayerName)
+                            put("role_title", r.roleTitle)
+                            put("notes", r.notes)
+                        })
+                    }
+                    client.upsert("duty_roster", ja.toString())
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "Duty roster sync skipped", e)
+            }
+
+            // 19. Food schedules
+            try {
+                val cloudFoodRes = client.get("food_schedules", "mosque_id=eq.$currentMosqueId")
+                if (cloudFoodRes.isSuccess) {
+                    val arr = cloudFoodRes.getOrNull() ?: JSONArray()
+                    for (i in 0 until arr.length()) {
+                        val j = arr.getJSONObject(i)
+                        val id = j.optString("id")
+                        if (id.isBlank()) continue
+                        database.foodScheduleDao().insertSchedule(FoodScheduleEntity(
+                            id = id,
+                            dateStr = j.optString("date_str", ""),
+                            mealType = j.optString("meal_type", ""),
+                            providerName = j.optString("provider_name", ""),
+                            providerMobile = j.optString("provider_mobile", ""),
+                            receiverStaffName = j.optString("receiver_staff_name", ""),
+                            status = j.optString("status", "scheduled")
+                        ))
+                    }
+                }
+                val localFood = database.foodScheduleDao().getAllSchedules().first()
+                if (localFood.isNotEmpty()) {
+                    val ja = JSONArray()
+                    localFood.forEach { f ->
+                        ja.put(JSONObject().apply {
+                            put("id", f.id)
+                            put("mosque_id", currentMosqueId)
+                            put("date_str", f.dateStr)
+                            put("meal_type", f.mealType)
+                            put("provider_name", f.providerName)
+                            put("provider_mobile", f.providerMobile)
+                            put("receiver_staff_name", f.receiverStaffName)
+                            put("status", f.status)
+                        })
+                    }
+                    client.upsert("food_schedules", ja.toString())
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "Food schedule sync skipped", e)
+            }
+
+            // 20. Mosque events (mahfil)
+            try {
+                val cloudEventRes = client.get("mosque_events", "mosque_id=eq.$currentMosqueId")
+                if (cloudEventRes.isSuccess) {
+                    val arr = cloudEventRes.getOrNull() ?: JSONArray()
+                    for (i in 0 until arr.length()) {
+                        val j = arr.getJSONObject(i)
+                        val id = j.optString("id")
+                        if (id.isBlank()) continue
+                        database.eventDao().insertEvent(MosqueEventEntity(
+                            id = id,
+                            title = j.optString("title", ""),
+                            dateStr = j.optString("date_str", ""),
+                            timeStr = j.optString("time_str", ""),
+                            speakerOrGuest = j.optString("speaker_or_guest", ""),
+                            venue = j.optString("venue", ""),
+                            budget = j.optDouble("budget", 0.0),
+                            volunteerLead = j.optString("volunteer_lead", ""),
+                            status = j.optString("status", "upcoming")
+                        ))
+                    }
+                }
+                val localEvents = database.eventDao().getAllEvents().first()
+                if (localEvents.isNotEmpty()) {
+                    val ja = JSONArray()
+                    localEvents.forEach { e ->
+                        ja.put(JSONObject().apply {
+                            put("id", e.id)
+                            put("mosque_id", currentMosqueId)
+                            put("title", e.title)
+                            put("date_str", e.dateStr)
+                            put("time_str", e.timeStr)
+                            put("speaker_or_guest", e.speakerOrGuest)
+                            put("venue", e.venue)
+                            put("budget", e.budget)
+                            put("volunteer_lead", e.volunteerLead)
+                            put("status", e.status)
+                        })
+                    }
+                    client.upsert("mosque_events", ja.toString())
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "Events sync skipped", e)
+            }
+
+            // 21. Office documents
+            try {
+                val cloudDocRes = client.get("office_documents", "mosque_id=eq.$currentMosqueId")
+                if (cloudDocRes.isSuccess) {
+                    val arr = cloudDocRes.getOrNull() ?: JSONArray()
+                    for (i in 0 until arr.length()) {
+                        val j = arr.getJSONObject(i)
+                        val id = j.optString("id")
+                        if (id.isBlank()) continue
+                        database.officeDocumentDao().insertDocument(OfficeDocumentEntity(
+                            id = id,
+                            docCode = j.optString("doc_code", ""),
+                            title = j.optString("title", ""),
+                            category = j.optString("category", ""),
+                            counterparty = j.optString("counterparty", ""),
+                            docDate = j.optString("doc_date", ""),
+                            summary = j.optString("summary", ""),
+                            replyNote = j.optString("reply_note", ""),
+                            status = j.optString("status", "সংরক্ষিত"),
+                            recordedBy = j.optString("recorded_by", "")
+                        ))
+                    }
+                }
+                val localDocs = database.officeDocumentDao().getAllDocuments().first()
+                if (localDocs.isNotEmpty()) {
+                    val ja = JSONArray()
+                    localDocs.forEach { d ->
+                        ja.put(JSONObject().apply {
+                            put("id", d.id)
+                            put("mosque_id", currentMosqueId)
+                            put("doc_code", d.docCode)
+                            put("title", d.title)
+                            put("category", d.category)
+                            put("counterparty", d.counterparty)
+                            put("doc_date", d.docDate)
+                            put("summary", d.summary)
+                            put("reply_note", d.replyNote)
+                            put("status", d.status)
+                            put("recorded_by", d.recordedBy)
+                        })
+                    }
+                    client.upsert("office_documents", ja.toString())
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "Office documents sync skipped", e)
+            }
+
+            // 22. Advisory / sharia notes
+            try {
+                val cloudNoteRes = client.get("advisory_notes", "mosque_id=eq.$currentMosqueId")
+                if (cloudNoteRes.isSuccess) {
+                    val arr = cloudNoteRes.getOrNull() ?: JSONArray()
+                    for (i in 0 until arr.length()) {
+                        val j = arr.getJSONObject(i)
+                        val id = j.optString("id")
+                        if (id.isBlank()) continue
+                        database.advisoryNoteDao().insertNote(AdvisoryNoteEntity(
+                            id = id,
+                            noteType = j.optString("note_type", ""),
+                            topic = j.optString("topic", ""),
+                            recommendation = j.optString("recommendation", ""),
+                            authorName = j.optString("author_name", ""),
+                            authorRoleTitle = j.optString("author_role_title", ""),
+                            shariaCompliance = j.optString("sharia_compliance", "শরিয়াহ সম্মত"),
+                            status = j.optString("status", "পর্যালোচনাধীন"),
+                            createdDate = j.optString("created_date", "")
+                        ))
+                    }
+                }
+                val localNotes = database.advisoryNoteDao().getAllNotes().first()
+                if (localNotes.isNotEmpty()) {
+                    val ja = JSONArray()
+                    localNotes.forEach { n ->
+                        ja.put(JSONObject().apply {
+                            put("id", n.id)
+                            put("mosque_id", currentMosqueId)
+                            put("note_type", n.noteType)
+                            put("topic", n.topic)
+                            put("recommendation", n.recommendation)
+                            put("author_name", n.authorName)
+                            put("author_role_title", n.authorRoleTitle)
+                            put("sharia_compliance", n.shariaCompliance)
+                            put("status", n.status)
+                            put("created_date", n.createdDate)
+                        })
+                    }
+                    client.upsert("advisory_notes", ja.toString())
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "Advisory notes sync skipped", e)
+            }
+
+            // 23. Smart board quotes
+            try {
+                val cloudQuoteRes = client.get("smart_board_quotes", "mosque_id=eq.$currentMosqueId")
+                if (cloudQuoteRes.isSuccess) {
+                    val arr = cloudQuoteRes.getOrNull() ?: JSONArray()
+                    for (i in 0 until arr.length()) {
+                        val j = arr.getJSONObject(i)
+                        val id = j.optString("id")
+                        if (id.isBlank()) continue
+                        database.smartBoardQuoteDao().insertQuote(SmartBoardQuoteEntity(
+                            id = id,
+                            category = j.optString("category", ""),
+                            title = j.optString("title", ""),
+                            message = j.optString("message", ""),
+                            isPinned = j.optBoolean("is_pinned", true),
+                            createdBy = j.optString("created_by", "")
+                        ))
+                    }
+                }
+                val localQuotes = database.smartBoardQuoteDao().getAllQuotes().first()
+                if (localQuotes.isNotEmpty()) {
+                    val ja = JSONArray()
+                    localQuotes.forEach { q ->
+                        ja.put(JSONObject().apply {
+                            put("id", q.id)
+                            put("mosque_id", currentMosqueId)
+                            put("category", q.category)
+                            put("title", q.title)
+                            put("message", q.message)
+                            put("is_pinned", q.isPinned)
+                            put("created_by", q.createdBy)
+                        })
+                    }
+                    client.upsert("smart_board_quotes", ja.toString())
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "Smart board quotes sync skipped", e)
+            }
+
             val nowFormatted = SimpleDateFormat("dd MMMM, hh:mm a", Locale("bn", "BD")).format(Date())
             SupabaseConfig.saveLastSyncTime(context, nowFormatted)
 
@@ -720,12 +1336,40 @@ object SupabaseSyncManager {
         if (!SupabaseConfig.isConfigured(context) || committeeId.isBlank()) return@withContext null
         val client = SupabaseHttpClient(context)
         val trimmedId = committeeId.trim()
-        val res = client.get("mosques", "committee_id=eq.$trimmedId&limit=1")
-        if (res.isSuccess && (res.getOrNull()?.length() ?: 0) > 0) {
-            val cloudJson = res.getOrNull()!!.getJSONObject(0)
+        // A brand-new device has no JWT yet, so resolve the committee through
+        // the narrow anonymous RPC. Once sign-in has stored the Auth token,
+        // the member restore below is automatically sent with that JWT.
+        val res = client.callRpc(
+            "seba_lookup_committee",
+            JSONObject().put("p_committee_id", trimmedId),
+            useAnon = true
+        )
+        val cloudJson = if (res.isSuccess) {
+            try {
+                val parsed = JSONObject(res.getOrNull() ?: "null")
+                if (parsed.has("id")) parsed else null
+            } catch (e: Exception) {
+                Log.w(TAG, "Invalid committee lookup response", e)
+                null
+            }
+        } else {
+            null
+        }
+        if (cloudJson != null) {
+            val incomingId = cloudJson.optString("id", "")
+            val sessionManager = SessionManager(context)
+            val previousMosqueId = sessionManager.getActiveMosqueId()
+            // If this device is switching to a DIFFERENT mosque, drop every
+            // tenant-scoped Room row first. Room entities have no mosque_id
+            // column, so otherwise the previous mosque's members/transactions
+            // etc. would be pushed into the new mosque with its id by performSync.
+            if (previousMosqueId.isNotBlank() && incomingId.isNotBlank() && previousMosqueId != incomingId) {
+                Log.d(TAG, "Switching mosque $previousMosqueId -> $incomingId; clearing local tenant data")
+                database.clearAllTenantData()
+            }
             val cloudLogo = if (cloudJson.has("logo_url") && !cloudJson.isNull("logo_url")) cloudJson.optString("logo_url") else null
             val restoredMosque = MosqueEntity(
-                id = cloudJson.optString("id", UUID.randomUUID().toString()),
+                id = incomingId.ifBlank { UUID.randomUUID().toString() },
                 committeeId = cloudJson.optString("committee_id", trimmedId),
                 nameBn = cloudJson.optString("name_bn", "মসজিদ"),
                 nameEn = cloudJson.optString("name_en", "Mosque"),
@@ -739,10 +1383,10 @@ object SupabaseSyncManager {
                 waqfRegNo = cloudJson.optString("waqf_reg_no", ""),
                 capacity = if (cloudJson.has("capacity") && !cloudJson.isNull("capacity")) cloudJson.optInt("capacity") else null,
                 bankAccountInfo = cloudJson.optString("bank_account_info", ""),
-                logoUrl = cloudLogo
+                logoUrl = cloudLogo,
+                sealUrl = if (cloudJson.has("seal_url") && !cloudJson.isNull("seal_url")) cloudJson.optString("seal_url") else null
             )
             database.mosqueDao().insertOrUpdate(restoredMosque)
-            val sessionManager = SessionManager(context)
             sessionManager.saveActiveMosqueId(restoredMosque.id)
 
             // Immediately pull ONLY members belonging to this specific mosque
@@ -767,6 +1411,9 @@ object SupabaseSyncManager {
                             monthlyChanda = mJson.optDouble("monthly_chanda", 0.0),
                             joinDate = mJson.optString("join_date", ""),
                             photoUrl = if (mJson.has("photo_url") && !mJson.isNull("photo_url")) mJson.optString("photo_url") else null,
+                            signatureUrl = if (mJson.has("signature_url") && !mJson.isNull("signature_url")) mJson.optString("signature_url") else null,
+                            stampUrl = if (mJson.has("stamp_url") && !mJson.isNull("stamp_url")) mJson.optString("stamp_url") else null,
+                            designationBn = if (mJson.has("designation_bn") && !mJson.isNull("designation_bn")) mJson.optString("designation_bn") else null,
                             status = mJson.optString("status", "active"),
                             willingToProvideStaffMeals = mJson.optBoolean("willing_to_provide_staff_meals", false)
                         )
@@ -795,13 +1442,18 @@ object SupabaseSyncManager {
         email: String,
         mobile: String,
         nameBn: String,
-        plainPass: String
-    ) = withContext(Dispatchers.IO) {
-        if (!SupabaseConfig.isConfigured(context) || email.isBlank() || plainPass.isBlank()) return@withContext
+        plainPass: String,
+        authUserId: String
+    ): Result<Boolean> = withContext(Dispatchers.IO) {
+        if (!SupabaseConfig.isConfigured(context) || email.isBlank() || plainPass.isBlank()) {
+            return@withContext Result.failure(Exception("প্রোফাইল সিঙ্কের জন্য তথ্য অসম্পূর্ণ।"))
+        }
         try {
             val client = SupabaseHttpClient(context)
             val profileJson = JSONObject().apply {
                 put("id", "prof-$memberId")
+                // Real Supabase Auth UID: RLS uses auth.uid() = auth_user_id.
+                put("auth_user_id", authUserId)
                 put("mosque_id", mosqueId)
                 put("member_id", memberId)
                 put("name_bn", nameBn)
@@ -810,9 +1462,57 @@ object SupabaseSyncManager {
                 put("password_hash", hashPassword(plainPass.trim()))
                 put("status", "active")
             }
-            client.upsert("profiles", JSONArray().apply { put(profileJson) }.toString())
+            val res = client.upsert("profiles", JSONArray().apply { put(profileJson) }.toString())
+            if (res.isSuccess) {
+                Result.success(true)
+            } else {
+                Result.failure(Exception(res.exceptionOrNull()?.message ?: "প্রোফাইল সিঙ্ক ব্যর্থ।"))
+            }
         } catch (e: Exception) {
             Log.w(TAG, "Failed to sync credential to profiles", e)
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Creates the Auth-linked profile for a member added by the president.
+     * The caller's JWT belongs to the president while the new profile belongs
+     * to the freshly signed-up member, so this goes through a SECURITY DEFINER
+     * RPC that validates the mosque scope server-side.
+     */
+    suspend fun syncMemberCredential(
+        context: Context,
+        mosqueId: String,
+        memberId: String,
+        authUserId: String,
+        email: String,
+        mobile: String,
+        nameBn: String,
+        plainPass: String
+    ): Result<Boolean> = withContext(Dispatchers.IO) {
+        if (!SupabaseConfig.isConfigured(context)) {
+            Result.failure(Exception("Supabase কনফিগার করা নেই।"))
+        } else {
+            try {
+                val client = SupabaseHttpClient(context)
+                val res = client.callRpc("seba_create_member_profile", JSONObject().apply {
+                    put("p_mosque_id", mosqueId)
+                    put("p_member_id", memberId)
+                    put("p_auth_uid", authUserId)
+                    put("p_name_bn", nameBn)
+                    put("p_email", email.trim().lowercase())
+                    put("p_mobile", mobile.trim())
+                    put("p_password_hash", hashPassword(plainPass.trim()))
+                })
+                if (res.isSuccess) {
+                    Result.success(true)
+                } else {
+                    Result.failure(Exception(res.exceptionOrNull()?.message ?: "প্রোফাইল তৈরি ব্যর্থ।"))
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to create member profile", e)
+                Result.failure(e)
+            }
         }
     }
 

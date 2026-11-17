@@ -96,6 +96,9 @@ interface ChandaDao {
 
 @Dao
 interface StaffDao {
+    @Query("SELECT * FROM staff ORDER BY roleCode ASC")
+    fun getAllStaff(): Flow<List<StaffEntity>>
+
     @Query("SELECT * FROM staff WHERE isActive = 1")
     fun getAllActiveStaff(): Flow<List<StaffEntity>>
 
@@ -166,6 +169,9 @@ interface StudentDao {
 
 @Dao
 interface MadrasaAttendanceDao {
+    @Query("SELECT * FROM madrasa_attendance ORDER BY date DESC")
+    fun getAllAttendance(): Flow<List<MadrasaAttendanceEntity>>
+
     @Query("SELECT * FROM madrasa_attendance WHERE date = :date ORDER BY studentNameBn ASC")
     fun getAttendanceByDate(date: String): Flow<List<MadrasaAttendanceEntity>>
 

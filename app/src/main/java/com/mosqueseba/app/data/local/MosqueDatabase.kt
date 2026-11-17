@@ -10,6 +10,7 @@ import com.mosqueseba.app.data.local.entity.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Database(
     entities = [
@@ -74,6 +75,16 @@ abstract class MosqueDatabase : RoomDatabase() {
     abstract fun smartBoardQuoteDao(): SmartBoardQuoteDao
     abstract fun electionDao(): ElectionDao
     abstract fun mosquePropertyDao(): MosquePropertyDao
+
+    /**
+     * Wipes every tenant table before switching to a different mosque account.
+     * Room rows carry no mosque_id, so stale rows from a previous mosque would
+     * otherwise be pushed into the new tenant with its id by performSync().
+     */
+    suspend fun clearAllTenantData() = withContext(Dispatchers.IO) {
+        clearAllTables()
+        DatabaseInitializer.populateInitialData(this@MosqueDatabase)
+    }
 
 
     companion object {

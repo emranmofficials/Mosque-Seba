@@ -25,3 +25,6 @@ captures/
 .externalNativeBuild/
 .cxx/
 scratch_downloads/
+
+# Local agent tooling
+.antigem/

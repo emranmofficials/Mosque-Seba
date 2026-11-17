@@ -17,8 +17,10 @@ import com.mosqueseba.app.data.repository.MosqueRepository
 import com.mosqueseba.app.data.updater.AppUpdateInfo
 import com.mosqueseba.app.data.updater.AppUpdateManager
 import com.mosqueseba.app.ui.components.toBengaliDigits
+import com.mosqueseba.app.data.remote.supabase.SupabaseAuthClient
 import com.mosqueseba.app.data.remote.supabase.SupabaseConfig
 import com.mosqueseba.app.data.remote.supabase.SupabaseHttpClient
+import com.mosqueseba.app.data.remote.supabase.SupabaseRealtimeClient
 import com.mosqueseba.app.data.remote.supabase.SupabaseSyncManager
 import com.mosqueseba.app.data.remote.supabase.SyncResult
 import com.mosqueseba.app.util.MosquePushNotificationHelper
@@ -67,6 +69,14 @@ sealed interface AiEventGuidanceUiState {
 @OptIn(ExperimentalCoroutinesApi::class)
 class MosqueViewModel(application: Application) : AndroidViewModel(application) {
 
+    // These MUST be initialized before the init block: startRealtimeSyncLoop()
+    // launches a coroutine that reads them immediately (property initializers
+    // run in declaration order, so declaring them after init caused an NPE on
+    // every cold start).
+    val sessionManager = SessionManager(application)
+    private val syncInFlight = java.util.concurrent.atomic.AtomicBoolean(false)
+    @Volatile private var lastRealtimeSyncMs = 0L
+
     private val repository: MosqueRepository
 
     private val _availableUpdate = MutableStateFlow<AppUpdateInfo?>(null)
@@ -99,8 +109,6 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
         AppUpdateManager.dismissVersion(getApplication(), versionName)
         _availableUpdate.value = null
     }
-
-    val sessionManager = SessionManager(application)
 
     // Role & Persistent Authentication
     private val _currentUserRole = MutableStateFlow(
@@ -150,20 +158,55 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
         _notificationsEnabled.value = enabled
     }
 
-    // Supabase Cloud Backend & Realtime Sync Engine
-    fun triggerImmediateCloudSync() {
+    // Supabase Cloud Backend & Realtime Sync Engine (fields declared above init)
+
+    /** Keeps the Auth JWT fresh so REST/Realtime RLS never sees an expired token. */
+    private suspend fun ensureFreshAuthToken() {
+        val refreshToken = sessionManager.getRefreshToken() ?: return
+        if (!sessionManager.isAuthTokenExpired()) return
+        val refreshed = SupabaseAuthClient(getApplication()).refresh(refreshToken)
+        if (refreshed.isSuccess) {
+            val session = refreshed.getOrNull() ?: return
+            sessionManager.saveAuthSession(
+                session.accessToken, session.refreshToken, session.expiresIn,
+                session.uid, session.email
+            )
+        } else {
+            sessionManager.clearAuthSession()
+            SupabaseRealtimeClient.stop()
+        }
+    }
+
+    /** Runs a sync immediately, but ignores bursts of realtime events / self-echoes. */
+    fun triggerImmediateCloudSync(force: Boolean = false) {
         viewModelScope.launch(Dispatchers.IO) {
+            ensureFreshAuthToken()
+            if (!force && System.currentTimeMillis() - lastRealtimeSyncMs < 5_000) return@launch
+            if (!syncInFlight.compareAndSet(false, true)) return@launch
             try {
                 val db = MosqueDatabase.getDatabase(getApplication(), viewModelScope)
                 SupabaseSyncManager.performSync(getApplication(), db)
             } catch (e: Exception) {
                 Log.w(TAG, "Immediate cloud sync skipped", e)
+            } finally {
+                // Cooldown starts when the sync finishes, so our own upserts
+                // echoing back from Realtime cannot start a second sync.
+                lastRealtimeSyncMs = System.currentTimeMillis()
+                syncInFlight.set(false)
             }
+        }
+    }
+
+    /** (Re)opens the Realtime channel with the current Auth JWT. Safe to call repeatedly. */
+    private fun restartRealtime() {
+        SupabaseRealtimeClient.start(getApplication()) { _table ->
+            triggerImmediateCloudSync()
         }
     }
 
     private fun startRealtimeSyncLoop() {
         viewModelScope.launch(Dispatchers.IO) {
+            ensureFreshAuthToken()
             val db = MosqueDatabase.getDatabase(getApplication(), viewModelScope)
             // 1. Initial sync immediately on launch
             try {
@@ -171,19 +214,38 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
             } catch (e: Exception) {
                 Log.w(TAG, "Initial Supabase sync skipped", e)
             }
-            // 2. Realtime Heartbeat every 20 seconds for continuous live syncing
+            lastRealtimeSyncMs = System.currentTimeMillis()
+
+            // 2. True realtime: a WSS channel listens for postgres_changes and
+            //    triggers an immediate sync whenever any synced table changes.
+            restartRealtime()
+
+            // 3. Safety net: poll only while disconnected, plus a periodic
+            //    refresh to recover events missed during a network gap.
+            var lastFallbackSyncMs = System.currentTimeMillis()
             while (isActive) {
-                delay(20_000)
-                try {
-                    SupabaseSyncManager.performSync(getApplication(), db)
-                } catch (_: Exception) {
+                delay(15_000)
+                SupabaseRealtimeClient.refreshFilter(getApplication())
+                val now = System.currentTimeMillis()
+                if (!SupabaseRealtimeClient.isConnected() || now - lastFallbackSyncMs >= 300_000) {
+                    try {
+                        SupabaseSyncManager.performSync(getApplication(), db)
+                        lastFallbackSyncMs = System.currentTimeMillis()
+                    } catch (_: Exception) {
+                    }
                 }
             }
         }
     }
 
+    override fun onCleared() {
+        SupabaseRealtimeClient.stop()
+        super.onCleared()
+    }
+
     fun performCloudSync(onResult: (SyncResult) -> Unit) {
         viewModelScope.launch {
+            ensureFreshAuthToken()
             val db = MosqueDatabase.getDatabase(getApplication(), viewModelScope)
             val result = SupabaseSyncManager.performSync(getApplication(), db)
             onResult(result)
@@ -241,7 +303,7 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
         _readNotificationIds.value = sessionManager.getReadNotificationIds()
     }
 
-    fun changeCurrentUserPassword(
+    suspend fun changeCurrentUserPassword(
         currentPassword: String,
         newPassword: String
     ): Pair<Boolean, String> {
@@ -255,57 +317,63 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
         val activeMosque = mosque.value
         val committeeId = activeMosque?.committeeId ?: sessionManager.getSavedCommitteeId()
         val mosqueId = activeMosque?.id ?: _activeMosqueId.value
-
-        val member = allMembers.value.firstOrNull {
-            it.id == sessionManager.getSavedMemberId() && role == sessionManager.getSavedRole()
-        } ?: allMembers.value.firstOrNull { it.roleCode.equals(role.code, ignoreCase = true) }
-
+        val savedMemberId = sessionManager.getSavedMemberId().orEmpty()
+        val member = allMembers.value.firstOrNull { it.id == savedMemberId }
+            ?: allMembers.value.firstOrNull { it.roleCode.equals(role.code, ignoreCase = true) }
+        val resolvedMemberId = member?.id ?: savedMemberId
         val email = member?.email?.trim()?.lowercase().orEmpty()
         val mobile = member?.mobile?.ifBlank { sessionManager.getSavedMobile() } ?: sessionManager.getSavedMobile()
+        val isPresident = role == UserRole.PRESIDENT
+        // The exact email this Auth account was created with is stored at login.
+        // Fall back to the synthetic/member email only when that is unavailable.
+        val authEmail = sessionManager.getAuthEmail()?.takeIf { it.isNotBlank() }
+            ?: (if (isPresident) email else SupabaseAuthClient.syntheticEmail(resolvedMemberId))
 
-        return if (role == UserRole.PRESIDENT && email.isNotBlank()) {
-            val savedCheck = sessionManager.verifyRegisteredPresidentPassword(email, trimmedCurrent)
-            val isValid = savedCheck ?: (trimmedCurrent == "123456")
-            if (!isValid) {
-                Pair(false, "বর্তমান পাসওয়ার্ড সঠিক নয়।")
-            } else {
-                sessionManager.saveRegisteredPresidentEmailCredential(
-                    email = email,
-                    committeeId = committeeId,
-                    mosqueId = mosqueId,
-                    password = trimmedNew
-                )
-                viewModelScope.launch(Dispatchers.IO) {
-                    SupabaseSyncManager.syncPresidentCredential(
-                        context = getApplication(),
-                        mosqueId = mosqueId,
-                        memberId = _activeMemberId.value,
-                        email = email,
-                        mobile = mobile,
-                        nameBn = _activeMemberName.value,
-                        plainPass = trimmedNew
-                    )
-                }
-                Pair(true, "পাসওয়ার্ড সফলভাবে পরিবর্তন করা হয়েছে।")
-            }
+        // Verify the OLD password against Supabase Auth itself — no local
+        // SHA-256 / demo fallback is trusted any more.
+        val auth = SupabaseAuthClient(getApplication())
+        val session = auth.signIn(authEmail, trimmedCurrent).getOrElse {
+            return Pair(false, "বর্তমান পাসওয়ার্ড সঠিক নয়।")
+        }
+        val updated = auth.updatePassword(session.accessToken, trimmedNew)
+        if (updated.isFailure) {
+            return Pair(false, updated.exceptionOrNull()?.message ?: "পাসওয়ার্ড পরিবর্তন ব্যর্থ।")
+        }
+        // Persist the freshly issued session (new access + rotated refresh token)
+        // so REST/Realtime keep working and a later refresh never fails.
+        sessionManager.saveAuthSession(
+            session.accessToken, session.refreshToken, session.expiresIn,
+            session.uid, session.email.ifBlank { authEmail }
+        )
+
+        // Keep local UX credentials and the cloud profile hash in step.
+        if (isPresident) {
+            sessionManager.saveRegisteredPresidentEmailCredential(email, committeeId, mosqueId, trimmedNew)
+            SupabaseSyncManager.syncPresidentCredential(
+                context = getApplication(),
+                mosqueId = mosqueId,
+                memberId = resolvedMemberId,
+                email = email,
+                mobile = mobile,
+                nameBn = member?.nameBn ?: sessionManager.getSavedMemberName(),
+                plainPass = trimmedNew,
+                authUserId = sessionManager.getAuthUserId() ?: session.uid
+            )
         } else {
             val cleanMobile = mobile.replace("-", "").replace(" ", "").trim()
-            val digitsOnly = cleanMobile.filter { it.isDigit() }
-            val defaultPass = digitsOnly.takeLast(6)
-            val savedCheck = sessionManager.verifyRegisteredPassword(cleanMobile, trimmedCurrent)
-            val isValid = savedCheck ?: (digitsOnly.length >= 6 && trimmedCurrent == defaultPass)
-            if (!isValid) {
-                Pair(false, "বর্তমান পাসওয়ার্ড সঠিক নয়।")
-            } else {
-                sessionManager.saveRegisteredCredential(
-                    mobile = cleanMobile,
-                    committeeId = committeeId,
-                    mosqueId = mosqueId,
-                    password = trimmedNew
-                )
-                Pair(true, "পাসওয়ার্ড সফলভাবে পরিবর্তন করা হয়েছে।")
-            }
+            sessionManager.saveRegisteredCredential(cleanMobile, committeeId, mosqueId, trimmedNew)
+            SupabaseSyncManager.syncMemberCredential(
+                context = getApplication(),
+                mosqueId = mosqueId,
+                memberId = resolvedMemberId,
+                authUserId = sessionManager.getAuthUserId() ?: session.uid,
+                email = authEmail,
+                mobile = mobile,
+                nameBn = member?.nameBn ?: sessionManager.getSavedMemberName(),
+                plainPass = trimmedNew
+            )
         }
+        return Pair(true, "পাসওয়ার্ড সফলভাবে পরিবর্তন করা হয়েছে।")
     }
 
     private val _activeMosqueId = MutableStateFlow(sessionManager.getActiveMosqueId())
@@ -318,66 +386,78 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
     ): Pair<Boolean, String?> {
         val cleanEmail = email.trim().lowercase()
         val trimmedCommitteeId = committeeId.trim()
+        if (cleanEmail.isBlank()) return Pair(false, "ইমেইল লিখুন।")
+        if (trimmedCommitteeId.isBlank()) return Pair(false, "কমিটি আইডি লিখুন।")
 
-        var matchedMosque = if (trimmedCommitteeId.isNotBlank()) {
-            repository.getMosqueByCommitteeId(trimmedCommitteeId)
-        } else {
-            repository.getMosqueById(_activeMosqueId.value).firstOrNull() ?: repository.mosque.firstOrNull()
+        // 1) Supabase Auth is the only password authority now.
+        val auth = SupabaseAuthClient(getApplication())
+        val session = auth.signIn(cleanEmail, pass).getOrElse { e ->
+            return Pair(false, e.message ?: "লগইন ব্যর্থ।")
+        }
+        sessionManager.saveAuthSession(
+            session.accessToken, session.refreshToken, session.expiresIn,
+            session.uid, session.email.ifBlank { cleanEmail }
+        )
+
+        // 2) Verify FIRST (before any local DB write) that this Auth account's
+        //    profile belongs to the mosque matching the entered committee ID.
+        //    RLS on profiles already limits rows to auth.uid(), so this only
+        //    returns the signed-in user's own profile.
+        val client = SupabaseHttpClient(getApplication())
+        val profileRes = client.get("profiles", "auth_user_id=eq.${session.uid}&limit=1")
+        if (profileRes.isFailure || (profileRes.getOrNull()?.length() ?: 0) == 0) {
+            sessionManager.clearAuthSession()
+            return Pair(false, "এই অ্যাকাউন্টটি কোনো মসজিদের সাথে যুক্ত নয়।")
+        }
+        val ownProfile = profileRes.getOrNull()!!.getJSONObject(0)
+        val profileMosqueId = ownProfile.optString("mosque_id")
+        val memberId = ownProfile.optString("member_id")
+        if (profileMosqueId.isBlank() || memberId.isBlank()) {
+            sessionManager.clearAuthSession()
+            return Pair(false, "সভাপতি প্রোফাইল পাওয়া যায়নি।")
+        }
+        val mosqueRes = client.get("mosques", "id=eq.$profileMosqueId&select=committee_id&limit=1")
+        val actualCommitteeId = if (mosqueRes.isSuccess && (mosqueRes.getOrNull()?.length() ?: 0) > 0)
+            mosqueRes.getOrNull()!!.getJSONObject(0).optString("committee_id") else ""
+        if (actualCommitteeId != trimmedCommitteeId) {
+            sessionManager.clearAuthSession()
+            return Pair(false, "এই অ্যাকাউন্টটি ওই মসজিদের সাথে যুক্ত নয়।")
         }
 
-        if (trimmedCommitteeId.isNotBlank() && matchedMosque == null) {
-            val db = MosqueDatabase.getDatabase(getApplication(), viewModelScope)
-            matchedMosque = SupabaseSyncManager.fetchAndRestoreMosqueByCommitteeId(getApplication(), db, trimmedCommitteeId)
-                ?: repository.getMosqueByCommitteeId(trimmedCommitteeId)
-        }
-
-        if (trimmedCommitteeId.isNotBlank() && matchedMosque == null) {
+        // 3) Verification passed — now safe to restore the mosque and its members.
+        //    (If this device is switching mosques, local tenant data is cleared.)
+        val db = MosqueDatabase.getDatabase(getApplication(), viewModelScope)
+        val matchedMosque = SupabaseSyncManager.fetchAndRestoreMosqueByCommitteeId(
+            getApplication(), db, trimmedCommitteeId
+        ) ?: repository.getMosqueByCommitteeId(trimmedCommitteeId)
+        if (matchedMosque == null) {
+            sessionManager.clearAuthSession()
             return Pair(false, "প্রদত্ত কমিটি আইডি খুঁজে পাওয়া যায়নি।")
         }
-
-        var member = repository.getMemberByEmail(cleanEmail)
-        if (member == null && matchedMosque != null) {
-            val db = MosqueDatabase.getDatabase(getApplication(), viewModelScope)
-            SupabaseSyncManager.performSync(getApplication(), db)
-            member = repository.getMemberByEmail(cleanEmail)
-        }
+        val member = db.memberDao().getMemberById(memberId) ?: repository.getMemberByEmail(cleanEmail)
         if (member == null) {
-            return Pair(false, "এই ইমেইল ঠিকানায় কোনো সভাপতি অ্যাকাউন্ট পাওয়া যায়নি।")
+            sessionManager.clearAuthSession()
+            return Pair(false, "সভাপতি প্রোফাইল পাওয়া যায়নি।")
         }
-
         val role = UserRole.fromCode(member.roleCode)
         if (role != UserRole.PRESIDENT) {
+            sessionManager.clearAuthSession()
             return Pair(false, "শুধুমাত্র সভাপতি ইমেইল ও পাসওয়ার্ড দিয়ে লগইন করতে পারবেন।")
         }
 
-        val registeredPasswordCheck = sessionManager.verifyRegisteredPresidentPassword(cleanEmail, pass)
-        var isPasswordValid = registeredPasswordCheck ?: (pass == "123456")
-        if (!isPasswordValid && matchedMosque != null) {
-            val remoteValid = SupabaseSyncManager.verifyRemotePresidentPassword(getApplication(), matchedMosque.id, cleanEmail, pass)
-            if (remoteValid) {
-                isPasswordValid = true
-                sessionManager.saveRegisteredPresidentEmailCredential(cleanEmail, matchedMosque.committeeId, matchedMosque.id, pass)
-            }
-        }
-        if (!isPasswordValid) {
-            return Pair(false, "গোপন পাসওয়ার্ড সঠিক নয়।")
-        }
-
-        val resolvedMosqueId = matchedMosque?.id
-            ?: sessionManager.getRegisteredMosqueIdForEmail(cleanEmail)
-            ?: _activeMosqueId.value
-        _activeMosqueId.value = resolvedMosqueId
+        _activeMosqueId.value = matchedMosque.id
         _currentUserRole.value = role
         _isLoggedIn.value = true
         sessionManager.saveSession(
             role = role,
             memberId = member.id,
             memberName = member.nameBn,
-            committeeId = matchedMosque?.committeeId ?: trimmedCommitteeId.ifBlank { "MC-REG" },
+            committeeId = matchedMosque.committeeId,
             mobile = member.mobile,
             rememberMe = rememberMe,
-            mosqueId = resolvedMosqueId
+            mosqueId = matchedMosque.id
         )
+        restartRealtime()
         return Pair(true, null)
     }
 
@@ -389,61 +469,89 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
     ): Pair<Boolean, String?> {
         val cleanMobile = mobile.replace("-", "").replace(" ", "").trim()
         val trimmedCommitteeId = committeeId.trim()
+        if (cleanMobile.isBlank()) return Pair(false, "মোবাইল নম্বর লিখুন।")
+        if (trimmedCommitteeId.isBlank()) return Pair(false, "কমিটি আইডি লিখুন।")
 
-        var matchedMosque = if (trimmedCommitteeId.isNotBlank()) {
-            repository.getMosqueByCommitteeId(trimmedCommitteeId)
-        } else {
-            repository.getMosqueById(_activeMosqueId.value).firstOrNull() ?: repository.mosque.firstOrNull()
-        }
+        val client = SupabaseHttpClient(getApplication())
 
-        if (trimmedCommitteeId.isNotBlank() && matchedMosque == null) {
-            val db = MosqueDatabase.getDatabase(getApplication(), viewModelScope)
-            matchedMosque = SupabaseSyncManager.fetchAndRestoreMosqueByCommitteeId(getApplication(), db, trimmedCommitteeId)
-                ?: repository.getMosqueByCommitteeId(trimmedCommitteeId)
-        }
+        // 1) Narrow anonymous RPCs resolve mosque + member before we have a JWT.
+        val mosqueRes = client.callRpc(
+            "seba_lookup_committee",
+            JSONObject().put("p_committee_id", trimmedCommitteeId),
+            useAnon = true
+        )
+        val mosqueJson = if (mosqueRes.isSuccess) {
+            try {
+                JSONObject(mosqueRes.getOrNull() ?: "null").takeIf { it.has("id") }
+            } catch (_: Exception) { null }
+        } else null
+        val mosqueId = mosqueJson?.optString("id").orEmpty()
+        if (mosqueId.isBlank()) return Pair(false, "প্রদত্ত কমিটি আইডি খুঁজে পাওয়া যায়নি।")
 
-        if (trimmedCommitteeId.isNotBlank() && matchedMosque == null) {
-            return Pair(false, "প্রদত্ত কমিটি আইডি খুঁজে পাওয়া যায়নি।")
-        }
-
-        var member = repository.getMemberByMobile(cleanMobile)
-        if (member == null && matchedMosque != null) {
-            val db = MosqueDatabase.getDatabase(getApplication(), viewModelScope)
-            SupabaseSyncManager.performSync(getApplication(), db)
-            member = repository.getMemberByMobile(cleanMobile)
-        }
-        if (member == null) {
+        val memberRes = client.callRpc(
+            "seba_lookup_member_by_mobile",
+            JSONObject().apply {
+                put("p_mosque_id", mosqueId)
+                put("p_mobile", cleanMobile)
+            },
+            useAnon = true
+        )
+        val memberJson = if (memberRes.isSuccess) {
+            try {
+                JSONObject(memberRes.getOrNull() ?: "null").takeIf { it.has("id") }
+            } catch (_: Exception) { null }
+        } else null
+        val memberId = memberJson?.optString("id").orEmpty()
+        if (memberId.isBlank()) {
             return Pair(false, "এই মোবাইল নম্বরে কোনো নিবন্ধিত সদস্য পাওয়া যায়নি।")
         }
-
-        val role = UserRole.fromCode(member.roleCode)
-        if (role == UserRole.PRESIDENT) {
+        if (UserRole.fromCode(memberJson!!.optString("role_code")) == UserRole.PRESIDENT) {
             return Pair(false, "সভাপতি মোবাইল দিয়ে নয়, 'সভাপতি লগইন' ট্যাব থেকে ইমেইল ও পাসওয়ার্ড দিয়ে লগইন করুন।")
         }
 
-        val digitsOnly = member.mobile.filter { it.isDigit() }
-        val expectedLast6 = digitsOnly.takeLast(6)
-        val savedPasswordCheck = sessionManager.verifyRegisteredPassword(cleanMobile, pass.trim())
-        val isPasswordValid = savedPasswordCheck ?: (digitsOnly.length >= 6 && pass.trim() == expectedLast6)
-        if (!isPasswordValid) {
-            return Pair(false, "পাসওয়ার্ড সঠিক নয়। আপনার নির্ধারিত পাসওয়ার্ড বা মোবাইল নম্বরের শেষ ৬টি সংখ্যা দিন।")
+        // 2) Real Auth login with the deterministic synthetic email.
+        val authEmail = SupabaseAuthClient.syntheticEmail(memberId)
+        val auth = SupabaseAuthClient(getApplication())
+        val session = auth.signIn(authEmail, pass.trim()).getOrElse {
+            return Pair(false, "পাসওয়ার্ড সঠিক নয়। আপনার নির্ধারিত পাসওয়ার্ড বা মোবাইল নম্বরের শেষ ৬টি সংখ্যা দিন।")
+        }
+        sessionManager.saveAuthSession(
+            session.accessToken, session.refreshToken, session.expiresIn,
+            session.uid, session.email.ifBlank { authEmail }
+        )
+
+        // 3) Profile tenant check, then restore this mosque's data.
+        val profileRes = client.get("profiles", "auth_user_id=eq.${session.uid}&mosque_id=eq.$mosqueId&limit=1")
+        if (profileRes.isFailure || (profileRes.getOrNull()?.length() ?: 0) == 0) {
+            sessionManager.clearAuthSession()
+            return Pair(false, "এই অ্যাকাউন্টটি ওই মসজিদের সাথে যুক্ত নয়।")
         }
 
-        val resolvedMosqueId = matchedMosque?.id
-            ?: sessionManager.getRegisteredMosqueIdForMobile(cleanMobile)
-            ?: _activeMosqueId.value
-        _activeMosqueId.value = resolvedMosqueId
+        val db = MosqueDatabase.getDatabase(getApplication(), viewModelScope)
+        val restored = SupabaseSyncManager.fetchAndRestoreMosqueByCommitteeId(
+            getApplication(), db, trimmedCommitteeId
+        )
+        if (restored == null) {
+            sessionManager.clearAuthSession()
+            return Pair(false, "মসজিদের তথ্য ক্লাউড থেকে আনা যায়নি।")
+        }
+        val member = db.memberDao().getMemberById(memberId)
+        val role = if (member != null) UserRole.fromCode(member.roleCode)
+                   else UserRole.fromCode(memberJson.optString("role_code"))
+
+        _activeMosqueId.value = mosqueId
         _currentUserRole.value = role
         _isLoggedIn.value = true
         sessionManager.saveSession(
             role = role,
-            memberId = member.id,
-            memberName = member.nameBn,
-            committeeId = matchedMosque?.committeeId ?: trimmedCommitteeId.ifBlank { "MC-REG" },
-            mobile = member.mobile,
+            memberId = memberId,
+            memberName = member?.nameBn ?: memberJson.optString("name_bn"),
+            committeeId = trimmedCommitteeId,
+            mobile = member?.mobile ?: cleanMobile,
             rememberMe = rememberMe,
-            mosqueId = resolvedMosqueId
+            mosqueId = mosqueId
         )
+        restartRealtime()
         return Pair(true, null)
     }
 
@@ -500,6 +608,18 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
         val mosqueId = "mosque-${UUID.randomUUID().toString().take(8)}"
         val presidentId = "mem-${UUID.randomUUID().toString().take(8)}"
 
+        // A real Supabase Auth user is created first. Without it registration
+        // fails — no more local-only demo credentials.
+        val auth = SupabaseAuthClient(getApplication())
+        val cleanAuthEmail = presidentEmail.trim().lowercase()
+        val authSession = auth.signUp(cleanAuthEmail, password).getOrElse { e ->
+            return Result.failure(Exception(e.message ?: "অ্যাকাউন্ট তৈরি করা যায়নি।"))
+        }
+        sessionManager.saveAuthSession(
+            authSession.accessToken, authSession.refreshToken, authSession.expiresIn,
+            authSession.uid, authSession.email.ifBlank { cleanAuthEmail }
+        )
+
         val mosqueEntity = MosqueEntity(
             id = mosqueId,
             committeeId = committeeId,
@@ -550,16 +670,23 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
                 mosqueId = mosqueId,
                 password = password
             )
-            viewModelScope.launch(Dispatchers.IO) {
-                SupabaseSyncManager.syncPresidentCredential(
-                    context = getApplication(),
-                    mosqueId = mosqueId,
-                    memberId = presidentId,
-                    email = presidentEmail,
-                    mobile = presidentMobile,
-                    nameBn = presidentNameBn,
-                    plainPass = password
-                )
+            // Create the JWT-linked profile BEFORE pushing the mosque: every
+            // other RLS policy resolves the tenant through this profile.
+            val credentialSync = SupabaseSyncManager.syncPresidentCredential(
+                context = getApplication(),
+                mosqueId = mosqueId,
+                memberId = presidentId,
+                email = cleanAuthEmail,
+                mobile = presidentMobile,
+                nameBn = presidentNameBn,
+                plainPass = password,
+                authUserId = authSession.uid
+            )
+            if (credentialSync.isFailure) {
+                sessionManager.clearAuthSession()
+                return Result.failure(Exception(
+                    "ক্লাউড প্রোফাইল তৈরি ব্যর্থ: ${credentialSync.exceptionOrNull()?.message ?: "অজানা ত্রুটি"}"
+                ))
             }
             sessionManager.saveActiveMosqueId(mosqueId)
             _activeMosqueId.value = mosqueId
@@ -574,7 +701,10 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
                 rememberMe = true,
                 mosqueId = mosqueId
             )
-            triggerImmediateCloudSync()
+            // Registration must reach the cloud even if it happens right after
+            // launch (inside the realtime sync cooldown).
+            restartRealtime()
+            triggerImmediateCloudSync(force = true)
             Result.success(committeeId)
         } else {
             Result.failure(Exception("রেজিস্ট্রেশন সংরক্ষণ করা সম্ভব হয়নি"))
@@ -588,6 +718,7 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
 
     fun logout() {
         sessionManager.clearSession()
+        SupabaseRealtimeClient.stop()
         _readNotificationIds.value = emptySet()
         _activeMosqueId.value = ""
         _isLoggedIn.value = false
@@ -852,6 +983,43 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
         _selectedRoleFilter.value = role
     }
 
+    /**
+     * Every member gets a real Supabase Auth account. The UI still uses mobile
+     * + password (default = last six mobile digits); we map the immutable
+     * member ID to a synthetic email that Auth understands.
+     */
+    private suspend fun createAuthAccountForMember(member: MemberEntity) {
+        val digits = member.mobile.filter { it.isDigit() }
+        val initialPassword = if (digits.length >= 6) digits.takeLast(6) else "123456"
+        val authEmail = SupabaseAuthClient.syntheticEmail(member.id)
+        val result = SupabaseAuthClient(getApplication()).signUp(authEmail, initialPassword)
+        if (result.isFailure) {
+            Log.w(TAG, "Member Auth signup failed: ${result.exceptionOrNull()?.message}")
+            return
+        }
+        val session = result.getOrNull() ?: return
+        val mosqueId = _activeMosqueId.value.ifBlank { sessionManager.getActiveMosqueId() }
+        val linked = SupabaseSyncManager.syncMemberCredential(
+            context = getApplication(),
+            mosqueId = mosqueId,
+            memberId = member.id,
+            authUserId = session.uid,
+            email = authEmail,
+            mobile = member.mobile,
+            nameBn = member.nameBn,
+            plainPass = initialPassword
+        )
+        if (linked.isFailure) {
+            Log.w(TAG, "Member profile link failed: ${linked.exceptionOrNull()?.message}")
+        }
+        sessionManager.saveRegisteredCredential(
+            mobile = member.mobile.replace("-", "").replace(" ", "").trim(),
+            committeeId = mosque.value?.committeeId ?: sessionManager.getSavedCommitteeId(),
+            mosqueId = mosqueId,
+            password = initialPassword
+        )
+    }
+
     fun addMember(
         nameBn: String,
         nameEn: String,
@@ -892,6 +1060,7 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
                 willingToProvideStaffMeals = willingToProvideStaffMeals
             )
             repository.addMember(member)
+            withContext(Dispatchers.IO) { createAuthAccountForMember(member) }
             syncStaffForMember(
                 member = member,
                 salaryAmount = salaryAmount,
@@ -1950,6 +2119,7 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
                 repository.updateMember(member)
             } else {
                 repository.addMember(member)
+                withContext(Dispatchers.IO) { createAuthAccountForMember(member) }
             }
 
             val isStaffRole = roleCode.equals("imam", ignoreCase = true) ||

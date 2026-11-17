@@ -94,6 +94,7 @@ dependencies {
     ksp(libs.androidx.room.compiler)
 
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.okhttp)
 
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.ai)

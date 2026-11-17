@@ -28,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import kotlinx.coroutines.launch
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -974,9 +975,10 @@ private fun AccountActionRow(
 private fun ChangePasswordDialog(
     currentRole: UserRole,
     onDismiss: () -> Unit,
-    onSubmit: (String, String) -> Pair<Boolean, String>,
+    onSubmit: suspend (String, String) -> Pair<Boolean, String>,
     onSuccess: (String) -> Unit
 ) {
+    val scope = rememberCoroutineScope()
     var currentPassword by remember { mutableStateOf("") }
     var newPassword by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
@@ -999,11 +1001,13 @@ private fun ChangePasswordDialog(
                 newPassword.trim().length < 6 -> errorText = "নতুন পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।"
                 newPassword != confirmPassword -> errorText = "নতুন পাসওয়ার্ড দুটি মিলছে না।"
                 else -> {
-                    val (ok, msg) = onSubmit(currentPassword, newPassword)
-                    if (ok) {
-                        onSuccess(msg)
-                    } else {
-                        errorText = msg
+                    scope.launch {
+                        val (ok, msg) = onSubmit(currentPassword, newPassword)
+                        if (ok) {
+                            onSuccess(msg)
+                        } else {
+                            errorText = msg
+                        }
                     }
                 }
             }

@@ -108,3 +108,82 @@ psql "$DATABASE_URL" -f supabase/policies/0004_notices_notifications_audit_rls.s
 ```
 
 Before applying to any real project, review every policy against `docs/PERMISSION_MATRIX.md` and run the security test suite described in `docs/QA_ACCEPTANCE_CRITERIA.md`.
+
+## Live backend ↔ Android sync mapping
+
+The currently configured production backend (`https://donglyxtrfyzwgtrskhz.supabase.co`)
+uses a **flattened, text-ID schema** that is optimised for the offline-first Room
+client, not the UUID/RLS schema described above. `SupabaseSyncManager` maps the
+local Room field names to the live column names. Two mappings are easy to miss:
+
+| Room entity field | Live column | Table |
+| --- | --- | --- |
+| `TransactionEntity.categoryNameBn` | `category_id` (text) | `transactions` |
+| `NoticeEntity.publishDate` | `publish_at` (date) | `notices` |
+| `StaffEntity.nameBn` / `.mobile` | `name_bn` / `mobile` (added to live schema) | `staff` |
+| `AuditLogEntity.details` / `.timestamp` | `details` / `timestamp` (added to live schema) | `audit_logs` |
+| `AuditLogEntity.id` (`Long`) | `id` text as `audit-<n>` | `audit_logs` |
+
+The sync engine now covers **all 24 Room entities plus `profiles`** (25 tables).
+It normalizes values to satisfy live `CHECK` constraints on push:
+`transactions.type` → `income|expense`, `amount > 0` (zero rows skipped);
+`notices.priority` → `normal|important|urgent`, `status` → `draft|published|archived`,
+date strings (Bengali `dd MMMM yyyy`) → ISO `yyyy-MM-dd`, `expiry_at >= publish_at`;
+`staff.role_code` → `imam|muazzin|khadem|other_staff`, `employment_type` →
+`full_time|part_time|contract`, `salary_frequency` → `monthly|weekly|one_time`,
+negative money clamped to `0`. Every write is locked to the active `mosque_id`.
+When pointing the app at a different Supabase project, run the in-app **Test
+connection** first: it validates all 25 tables used by the sync engine instead
+of reporting success on a bare `200`/`404`.
+
+## Supabase Auth (live project)
+
+The live project uses **real Supabase Auth** (`migrations/0007_auth_rls.sql`),
+not the old local SHA-256 demo credentials:
+
+- `SupabaseAuthClient` calls `/auth/v1/signup`, `/auth/v1/token?grant_type=password`,
+  the refresh-token endpoint and `PUT /auth/v1/user` for password changes.
+  `mailer_autoconfirm` is enabled so signup returns a usable JWT immediately.
+- `SessionManager` stores `access_token` / `refresh_token` / `expires_at` /
+  `auth_user_id` and refreshes the token before every sync. `isLoggedIn()`
+  requires a valid Auth session, so stale demo sessions are forced to re-sign in.
+- `SupabaseHttpClient` sends `Authorization: Bearer <JWT>` on all REST calls;
+  `SupabaseRealtimeClient` joins the channel with the same JWT (fresh on every
+  reconnect). The anon key is used only for `apikey`, the connection test, and
+  the two bootstrap RPCs.
+- `profiles.auth_user_id` now holds the **real Auth UID**. RLS replaces the old
+  `public / using true / check true` rules with: own profile by
+  `auth.uid() = auth_user_id`, `mosques` by `id = seba_current_mosque_id()`,
+  and every tenant table by `mosque_id = seba_current_mosque_id()`.
+  `mosques` INSERT stays open to authenticated users so registration works.
+- UI is unchanged. The president signs in with the email used at signup;
+  mobile-only members are mapped to a deterministic synthetic email
+  (`m-<memberId>@mosqueseba.app`) with the last six mobile digits as the initial
+  password. `seba_lookup_committee` / `seba_lookup_member_by_mobile` are
+  narrow `SECURITY DEFINER` RPCs that let a new device resolve those IDs before
+  it has a JWT; `seba_create_member_profile` links a new member's Auth UID to
+  the caller's own mosque only.
+
+End-to-end verification against the live project covered registration, new-device
+president login, adding a member, member login with the last six digits, Auth
+password change, REST tenant isolation (cross-tenant INSERT returns `403`, anon
+reads zero rows), and a JWT Realtime join with all 25/25 subscriptions `ok`.
+
+## Realtime
+
+The app uses `SupabaseRealtimeClient` (OkHttp WebSocket, Phoenix v1 JSON
+protocol) for true live updates instead of relying on polling. It opens
+`wss://<project>/realtime/v1/websocket?apikey=<anon>&vsn=1.0.0`, joins one
+channel with `postgres_changes` subscriptions (`event: "*"`) for the same 25
+tables, filtered by `mosque_id=eq.<activeMosqueId>` (`id=eq.<activeMosqueId>`
+for `mosques`). Every committed INSERT/UPDATE/DELETE triggers an immediate
+`SupabaseSyncManager.performSync()`; heartbeats (20 s) and reconnects with
+exponential backoff keep the channel alive. A 15 s fallback poll runs only while
+disconnected (plus a 5 min refresh), and a 5 s cooldown prevents the app's own
+upserts from echoing into a sync loop.
+
+All 25 synced tables are members of the `supabase_realtime` publication with
+`REPLICA IDENTITY FULL` (`staff` was added during this setup). Realtime delivery
+was verified live against the configured project (join reply `ok` and a test
+INSERT produced a `postgres_changes` event with `payload.data.table`).
+
