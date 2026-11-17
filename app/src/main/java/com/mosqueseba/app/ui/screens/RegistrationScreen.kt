@@ -303,14 +303,14 @@ fun RegistrationScreen(
                                         modifier = Modifier
                                             .size(40.dp)
                                             .clip(CircleShape)
-                                            .background(MosqueEmeraldSoft)
-                                            .border(1.dp, MosqueEmeraldPrimary.copy(alpha = 0.25f), CircleShape),
+                                            .background(if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft)
+                                            .border(1.dp, (if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary).copy(alpha = 0.25f), CircleShape),
                                         contentAlignment = Alignment.Center
                                     ) {
                                         Icon(
                                             Icons.Default.AdminPanelSettings,
                                             contentDescription = null,
-                                            tint = MosqueEmeraldPrimary,
+                                            tint = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary,
                                             modifier = Modifier.size(22.dp)
                                         )
                                     }
@@ -352,7 +352,7 @@ fun RegistrationScreen(
                                     value = presidentNameBn,
                                     onValueChange = { presidentNameBn = it; errorMessage = null },
                                     label = { Text("সভাপতির পূর্ণ নাম *") },
-                                    leadingIcon = { Icon(Icons.Default.Badge, contentDescription = null, tint = MosqueEmeraldPrimary) },
+                                    leadingIcon = { Icon(Icons.Default.Badge, contentDescription = null, tint = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary) },
                                     singleLine = true,
                                     colors = fieldColors,
                                     modifier = Modifier
@@ -369,7 +369,7 @@ fun RegistrationScreen(
                                     onValueChange = { presidentMobile = it; errorMessage = null },
                                     label = { Text("সভাপতির মোবাইল নম্বর *") },
                                     placeholder = { Text("০১৭১১-২২৩৩৪৪") },
-                                    leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null, tint = MosqueEmeraldPrimary) },
+                                    leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null, tint = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary) },
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                                     singleLine = true,
                                     colors = fieldColors,
@@ -387,7 +387,7 @@ fun RegistrationScreen(
                                     onValueChange = { presidentEmail = it; errorMessage = null },
                                     label = { Text("ইমেইল ঠিকানা (লগইন ইউজার আইডি) *") },
                                     placeholder = { Text("আপনার ইমেইল ঠিকানা লিখুন") },
-                                    leadingIcon = { Icon(Icons.Default.Email, contentDescription = null, tint = MosqueEmeraldPrimary) },
+                                    leadingIcon = { Icon(Icons.Default.Email, contentDescription = null, tint = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary) },
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                                     singleLine = true,
                                     colors = fieldColors,
@@ -404,7 +404,7 @@ fun RegistrationScreen(
                                     value = presidentNid,
                                     onValueChange = { presidentNid = it },
                                     label = { Text("জাতীয় পরিচয়পত্র (এনআইডি) নম্বর (ঐচ্ছিক)") },
-                                    leadingIcon = { Icon(Icons.Default.Fingerprint, contentDescription = null, tint = MosqueEmeraldPrimary) },
+                                    leadingIcon = { Icon(Icons.Default.Fingerprint, contentDescription = null, tint = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary) },
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                     singleLine = true,
                                     colors = fieldColors,
@@ -442,10 +442,10 @@ fun RegistrationScreen(
                                 // Mandatory Staff Meal Willingness Confirmation Card
                                 Surface(
                                     shape = RoundedCornerShape(14.dp),
-                                    color = MosqueGoldSoft,
+                                    color = if (isDark) MosqueNightSurfaceVariant else MosqueGoldSoft,
                                     border = BorderStroke(
                                         1.dp,
-                                        if (willingToProvideStaffMeals == null) MosqueGold.copy(alpha = 0.7f) else MosqueEmeraldPrimary.copy(alpha = 0.5f)
+                                        if (isDark) MosqueNightBorder else (if (willingToProvideStaffMeals == null) MosqueGold.copy(alpha = 0.7f) else MosqueEmeraldPrimary.copy(alpha = 0.5f))
                                     ),
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
@@ -455,13 +455,13 @@ fun RegistrationScreen(
                                                 modifier = Modifier
                                                     .size(30.dp)
                                                     .clip(CircleShape)
-                                                    .background(MosqueGold.copy(alpha = 0.2f)),
+                                                    .background(if (isDark) MosqueNightSurface else MosqueGold.copy(alpha = 0.2f)),
                                                 contentAlignment = Alignment.Center
                                             ) {
                                                 Icon(
                                                     imageVector = Icons.Default.Restaurant,
                                                     contentDescription = null,
-                                                    tint = MosqueGoldDark,
+                                                    tint = if (isDark) MosqueGoldLight else MosqueGoldDark,
                                                     modifier = Modifier.size(16.dp)
                                                 )
                                             }
@@ -516,7 +516,7 @@ fun RegistrationScreen(
                                     value = password,
                                     onValueChange = { password = it; errorMessage = null },
                                     label = { Text("গোপন পাসওয়ার্ড তৈরি করুন (কমপক্ষে ৬ সংখ্যা) *") },
-                                    leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, tint = MosqueEmeraldPrimary) },
+                                    leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, tint = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary) },
                                     trailingIcon = {
                                         IconButton(onClick = { passwordVisible = !passwordVisible }) {
                                             Icon(
@@ -543,7 +543,7 @@ fun RegistrationScreen(
                                     value = confirmPassword,
                                     onValueChange = { confirmPassword = it; errorMessage = null },
                                     label = { Text("পাসওয়ার্ড নিশ্চিত করুন *") },
-                                    leadingIcon = { Icon(Icons.Default.LockReset, contentDescription = null, tint = MosqueEmeraldPrimary) },
+                                    leadingIcon = { Icon(Icons.Default.LockReset, contentDescription = null, tint = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary) },
                                     visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                                     singleLine = true,
@@ -581,7 +581,7 @@ fun RegistrationScreen(
                                         .height(52.dp)
                                         .testTag("registration_next_step1_button"),
                                     shape = RoundedCornerShape(12.dp),
-                                    colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary)
+                                    colors = ButtonDefaults.buttonColors(containerColor = if (isDark) MosqueEmeraldLight else MosqueEmeraldPrimary)
                                 ) {
                                     Text("পরবর্তী ধাপ: মসজিদের তথ্য", fontWeight = FontWeight.Bold, fontSize = 15.sp)
                                     Spacer(modifier = Modifier.width(6.dp))
@@ -603,14 +603,14 @@ fun RegistrationScreen(
                                         modifier = Modifier
                                             .size(40.dp)
                                             .clip(CircleShape)
-                                            .background(MosqueEmeraldSoft)
-                                            .border(1.dp, MosqueEmeraldPrimary.copy(alpha = 0.25f), CircleShape),
+                                            .background(if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft)
+                                            .border(1.dp, (if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary).copy(alpha = 0.25f), CircleShape),
                                         contentAlignment = Alignment.Center
                                     ) {
                                         Icon(
                                             Icons.Default.Mosque,
                                             contentDescription = null,
-                                            tint = MosqueEmeraldPrimary,
+                                            tint = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary,
                                             modifier = Modifier.size(22.dp)
                                         )
                                     }
@@ -653,7 +653,7 @@ fun RegistrationScreen(
                                     onValueChange = { mosqueNameBn = it; errorMessage = null },
                                     label = { Text("মসজিদের নাম (বাংলায়) *") },
                                     placeholder = { Text("যেমন: বায়তুল জান্নাত জামে মসজিদ") },
-                                    leadingIcon = { Icon(Icons.Default.AccountBalance, contentDescription = null, tint = MosqueEmeraldPrimary) },
+                                    leadingIcon = { Icon(Icons.Default.AccountBalance, contentDescription = null, tint = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary) },
                                     singleLine = true,
                                     colors = fieldColors,
                                     modifier = Modifier
@@ -668,7 +668,7 @@ fun RegistrationScreen(
                                     onValueChange = { address = it; errorMessage = null },
                                     label = { Text("মসজিদের পূর্ণ ঠিকানা, এলাকা ও জেলা *") },
                                     placeholder = { Text("রোড-৭, মিরপুর-১০, ঢাকা-১২১৬") },
-                                    leadingIcon = { Icon(Icons.Default.LocationOn, contentDescription = null, tint = MosqueEmeraldPrimary) },
+                                    leadingIcon = { Icon(Icons.Default.LocationOn, contentDescription = null, tint = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary) },
                                     colors = fieldColors,
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -717,7 +717,7 @@ fun RegistrationScreen(
                                     value = establishedYear,
                                     onValueChange = { establishedYear = it },
                                     label = { Text("প্রতিষ্ঠা সাল") },
-                                    leadingIcon = { Icon(Icons.Default.HistoryEdu, contentDescription = null, tint = MosqueEmeraldPrimary) },
+                                    leadingIcon = { Icon(Icons.Default.HistoryEdu, contentDescription = null, tint = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary) },
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                     singleLine = true,
                                     colors = fieldColors,
@@ -788,7 +788,7 @@ fun RegistrationScreen(
                                     },
                                     label = { Text("মসজিদের ধারণক্ষমতা / মুসল্লি সংখ্যা (ঐচ্ছিক)") },
                                     placeholder = { Text("যেমন: ৫০০") },
-                                    leadingIcon = { Icon(Icons.Default.Groups, contentDescription = null, tint = MosqueEmeraldPrimary) },
+                                    leadingIcon = { Icon(Icons.Default.Groups, contentDescription = null, tint = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary) },
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                     singleLine = true,
                                     colors = fieldColors,
@@ -806,7 +806,7 @@ fun RegistrationScreen(
                                     onValueChange = { bankAccountInfo = it },
                                     label = { Text("ব্যাংক অ্যাকাউন্ট / মোবাইল ব্যাংকিং তথ্য (ঐচ্ছিক)") },
                                     placeholder = { Text("ব্যাংকের নাম, হিসাব নম্বর বা বিকাশ/নগদ") },
-                                    leadingIcon = { Icon(Icons.Default.AccountBalanceWallet, contentDescription = null, tint = MosqueEmeraldPrimary) },
+                                    leadingIcon = { Icon(Icons.Default.AccountBalanceWallet, contentDescription = null, tint = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary) },
                                     colors = fieldColors,
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -826,7 +826,7 @@ fun RegistrationScreen(
                                             errorMessage = null
                                             step = 1
                                         },
-                                        border = BorderStroke(1.dp, MosqueEmeraldPrimary.copy(alpha = 0.45f)),
+                                        border = BorderStroke(1.dp, (if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary).copy(alpha = 0.45f)),
                                         modifier = Modifier
                                             .weight(1f)
                                             .height(52.dp)
@@ -835,7 +835,7 @@ fun RegistrationScreen(
                                     ) {
                                         Text(
                                             "পূর্ববর্তী ধাপ",
-                                            color = MosqueEmeraldPrimary,
+                                            color = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary,
                                             fontWeight = FontWeight.SemiBold
                                         )
                                     }
@@ -856,7 +856,7 @@ fun RegistrationScreen(
                                             .height(52.dp)
                                             .testTag("registration_next_step2_button"),
                                         shape = RoundedCornerShape(12.dp),
-                                        colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary)
+                                        colors = ButtonDefaults.buttonColors(containerColor = if (isDark) MosqueEmeraldLight else MosqueEmeraldPrimary)
                                     ) {
                                         Text("যাচাই ও পর্যালোচনা", fontWeight = FontWeight.Bold)
                                         Spacer(modifier = Modifier.width(6.dp))
@@ -876,14 +876,14 @@ fun RegistrationScreen(
                                         modifier = Modifier
                                             .size(40.dp)
                                             .clip(CircleShape)
-                                            .background(MosqueGoldSoft)
-                                            .border(1.dp, MosqueGold.copy(alpha = 0.5f), CircleShape),
+                                            .background(if (isDark) MosqueNightSurfaceVariant else MosqueGoldSoft)
+                                            .border(1.dp, (if (isDark) MosqueGoldLight else MosqueGold).copy(alpha = 0.5f), CircleShape),
                                         contentAlignment = Alignment.Center
                                     ) {
                                         Icon(
                                             Icons.Default.FactCheck,
                                             contentDescription = null,
-                                            tint = MosqueGoldDark,
+                                            tint = if (isDark) MosqueGoldLight else MosqueGoldDark,
                                             modifier = Modifier.size(22.dp)
                                         )
                                     }
@@ -929,13 +929,13 @@ fun RegistrationScreen(
                                                     modifier = Modifier
                                                         .size(44.dp)
                                                         .clip(RoundedCornerShape(12.dp))
-                                                        .background(MosqueEmeraldSoft),
+                                                        .background(if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft),
                                                     contentAlignment = Alignment.Center
                                                 ) {
                                                     Icon(
                                                         Icons.Default.Mosque,
                                                         contentDescription = null,
-                                                        tint = MosqueEmeraldPrimary,
+                                                        tint = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary,
                                                         modifier = Modifier.size(24.dp)
                                                     )
                                                 }
@@ -956,7 +956,7 @@ fun RegistrationScreen(
                                             }
                                         }
                                         Spacer(modifier = Modifier.height(10.dp))
-                                        HorizontalDivider(color = MosqueCardBorder)
+                                        HorizontalDivider(color = if (isDark) MosqueNightBorder else MosqueCardBorder)
                                         Spacer(modifier = Modifier.height(8.dp))
                                         SummaryRow(label = "মসজিদের নাম:", value = mosqueNameBn)
                                         SummaryRow(label = "ঠিকানা:", value = address)
@@ -1005,13 +1005,13 @@ fun RegistrationScreen(
                                                     modifier = Modifier
                                                         .size(44.dp)
                                                         .clip(CircleShape)
-                                                        .background(MosqueEmeraldSoft),
+                                                        .background(if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft),
                                                     contentAlignment = Alignment.Center
                                                 ) {
                                                     Icon(
                                                         Icons.Default.Person,
                                                         contentDescription = null,
-                                                        tint = MosqueEmeraldPrimary,
+                                                        tint = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary,
                                                         modifier = Modifier.size(24.dp)
                                                     )
                                                 }
@@ -1032,7 +1032,7 @@ fun RegistrationScreen(
                                             }
                                         }
                                         Spacer(modifier = Modifier.height(10.dp))
-                                        HorizontalDivider(color = MosqueCardBorder)
+                                        HorizontalDivider(color = if (isDark) MosqueNightBorder else MosqueCardBorder)
                                         Spacer(modifier = Modifier.height(8.dp))
                                         SummaryRow(label = "সভাপতি নাম:", value = presidentNameBn)
                                         SummaryRow(label = "ইমেইল (লগইন আইডি):", value = presidentEmail)
@@ -1054,8 +1054,8 @@ fun RegistrationScreen(
 
                                 Surface(
                                     shape = RoundedCornerShape(12.dp),
-                                    color = MosqueEmeraldSoft.copy(alpha = 0.55f),
-                                    border = BorderStroke(1.dp, MosqueEmeraldPrimary.copy(alpha = 0.25f)),
+                                    color = if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft.copy(alpha = 0.55f),
+                                    border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else MosqueEmeraldPrimary.copy(alpha = 0.25f)),
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clickable { agreeToTerms = !agreeToTerms }
@@ -1067,7 +1067,7 @@ fun RegistrationScreen(
                                         Checkbox(
                                             checked = agreeToTerms,
                                             onCheckedChange = { agreeToTerms = it },
-                                            colors = CheckboxDefaults.colors(checkedColor = MosqueEmeraldPrimary)
+                                            colors = CheckboxDefaults.colors(checkedColor = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary)
                                         )
                                         Spacer(modifier = Modifier.width(4.dp))
                                         Text(
@@ -1090,7 +1090,7 @@ fun RegistrationScreen(
                                             errorMessage = null
                                             step = 2
                                         },
-                                        border = BorderStroke(1.dp, MosqueEmeraldPrimary.copy(alpha = 0.45f)),
+                                        border = BorderStroke(1.dp, (if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary).copy(alpha = 0.45f)),
                                         modifier = Modifier
                                             .weight(1f)
                                             .height(52.dp)
@@ -1099,7 +1099,7 @@ fun RegistrationScreen(
                                     ) {
                                         Text(
                                             "সংশোধন",
-                                            color = MosqueEmeraldPrimary,
+                                            color = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary,
                                             fontWeight = FontWeight.SemiBold
                                         )
                                     }
@@ -1150,7 +1150,7 @@ fun RegistrationScreen(
                                             .height(52.dp)
                                             .testTag("registration_submit_button"),
                                         shape = RoundedCornerShape(12.dp),
-                                        colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary)
+                                        colors = ButtonDefaults.buttonColors(containerColor = if (isDark) MosqueEmeraldLight else MosqueEmeraldPrimary)
                                     ) {
                                         if (isSubmitting) {
                                             CircularProgressIndicator(
@@ -1191,7 +1191,7 @@ fun RegistrationScreen(
                     text = "লগইন করুন",
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
-                    color = MosqueEmeraldPrimary
+                    color = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary
                 )
             }
 
@@ -1232,7 +1232,7 @@ private fun PresidentPhotoUploadBanner(
                         .shadow(6.dp, CircleShape, spotColor = MosqueGoldDeep.copy(alpha = 0.28f))
                         .border(2.dp, MosqueGoldGradient, CircleShape)
                         .clip(CircleShape)
-                        .background(MosqueEmeraldSoft),
+                        .background(if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft),
                     contentAlignment = Alignment.Center
                 ) {
                     if (bitmap != null) {
@@ -1246,7 +1246,7 @@ private fun PresidentPhotoUploadBanner(
                         Icon(
                             imageVector = Icons.Default.Person,
                             contentDescription = "সভাপতির প্রোফাইল ছবি প্লেসহোল্ডার",
-                            tint = MosqueEmeraldPrimary,
+                            tint = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary,
                             modifier = Modifier.size(44.dp)
                         )
                     }
@@ -1256,7 +1256,7 @@ private fun PresidentPhotoUploadBanner(
                     modifier = Modifier
                         .size(30.dp)
                         .clip(CircleShape)
-                        .background(MosqueEmeraldPrimary)
+                        .background(if (isDark) MosqueEmeraldLight else MosqueEmeraldPrimary)
                         .border(1.5.dp, Color.White, CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
@@ -1292,7 +1292,7 @@ private fun PresidentPhotoUploadBanner(
             ) {
                 OutlinedButton(
                     onClick = onUploadClick,
-                    border = BorderStroke(1.dp, MosqueEmeraldPrimary.copy(alpha = 0.5f)),
+                    border = BorderStroke(1.dp, (if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary).copy(alpha = 0.5f)),
                     shape = RoundedCornerShape(10.dp),
                     modifier = Modifier
                         .heightIn(min = 48.dp)
@@ -1301,7 +1301,7 @@ private fun PresidentPhotoUploadBanner(
                     Icon(
                         imageVector = Icons.Default.AddPhotoAlternate,
                         contentDescription = null,
-                        tint = MosqueEmeraldPrimary,
+                        tint = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary,
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
@@ -1309,7 +1309,7 @@ private fun PresidentPhotoUploadBanner(
                         text = if (bitmap != null) "ছবি পরিবর্তন করুন" else "প্রোফাইল ছবি আপলোড",
                         fontSize = 13.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = MosqueEmeraldPrimary
+                        color = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary
                     )
                 }
 
@@ -1367,7 +1367,7 @@ private fun MosqueOfficialLogoUploadBanner(
                         .shadow(8.dp, RoundedCornerShape(22.dp), spotColor = MosqueGold)
                         .border(
                             width = 2.dp,
-                            brush = Brush.linearGradient(listOf(MosqueGold, MosqueEmeraldPrimary)),
+                            brush = Brush.linearGradient(listOf(MosqueGold, if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary)),
                             shape = RoundedCornerShape(22.dp)
                         )
                         .clip(RoundedCornerShape(22.dp))
@@ -1388,7 +1388,7 @@ private fun MosqueOfficialLogoUploadBanner(
                         Icon(
                             imageVector = Icons.Default.Mosque,
                             contentDescription = "মসজিদের অফিসিয়াল লোগো প্লেসহোল্ডার",
-                            tint = MosqueEmeraldPrimary,
+                            tint = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary,
                             modifier = Modifier.size(44.dp)
                         )
                     }
@@ -1398,7 +1398,7 @@ private fun MosqueOfficialLogoUploadBanner(
                     modifier = Modifier
                         .size(30.dp)
                         .clip(CircleShape)
-                        .background(MosqueEmeraldPrimary)
+                        .background(if (isDark) MosqueEmeraldLight else MosqueEmeraldPrimary)
                         .border(1.5.dp, Color.White, CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
@@ -1434,7 +1434,7 @@ private fun MosqueOfficialLogoUploadBanner(
             ) {
                 OutlinedButton(
                     onClick = onUploadClick,
-                    border = BorderStroke(1.dp, MosqueEmeraldPrimary.copy(alpha = 0.5f)),
+                    border = BorderStroke(1.dp, (if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary).copy(alpha = 0.5f)),
                     shape = RoundedCornerShape(10.dp),
                     modifier = Modifier
                         .heightIn(min = 48.dp)
@@ -1443,7 +1443,7 @@ private fun MosqueOfficialLogoUploadBanner(
                     Icon(
                         imageVector = Icons.Default.AddPhotoAlternate,
                         contentDescription = null,
-                        tint = MosqueEmeraldPrimary,
+                        tint = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary,
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
@@ -1451,7 +1451,7 @@ private fun MosqueOfficialLogoUploadBanner(
                         text = if (bitmap != null) "লোগো পরিবর্তন করুন" else "অফিসিয়াল লোগো আপলোড",
                         fontSize = 13.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = MosqueEmeraldPrimary
+                        color = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary
                     )
                 }
 
@@ -1518,7 +1518,7 @@ fun RegistrationStepper(currentStep: Int) {
                 StepDivider(isDone = currentStep > 2)
                 StepItem(number = 3, title = "যাচাই", isActive = currentStep >= 3, isCurrent = currentStep == 3)
             }
-            HorizontalDivider(color = MosqueCardBorderGold.copy(alpha = 0.65f))
+            HorizontalDivider(color = if (isDark) MosqueNightBorder else MosqueCardBorderGold.copy(alpha = 0.65f))
         }
     }
 }
@@ -1533,7 +1533,7 @@ fun StepItem(number: Int, title: String, isActive: Boolean, isCurrent: Boolean) 
                 .clip(CircleShape)
                 .background(
                     when {
-                        isCurrent -> MosqueEmeraldPrimary
+                        isCurrent -> if (isDark) MosqueEmeraldLight else MosqueEmeraldPrimary
                         isActive -> MosqueSuccessGreen
                         else -> if (isDark) MosqueNightSurfaceVariant else Color(0xFFE2E8F0)
                     }
@@ -1552,7 +1552,7 @@ fun StepItem(number: Int, title: String, isActive: Boolean, isCurrent: Boolean) 
             } else {
                 Text(
                     text = toBengaliDigits(number.toString()),
-                    color = if (isActive || isCurrent) Color.White else MosqueTextMuted,
+                    color = if (isActive || isCurrent) Color.White else if (isDark) MosqueNightTextSecondary else MosqueTextMuted,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -1563,7 +1563,7 @@ fun StepItem(number: Int, title: String, isActive: Boolean, isCurrent: Boolean) 
             text = title,
             fontSize = 11.sp,
             fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Medium,
-            color = if (isCurrent) (if (isDark) MosqueGoldLight else MosqueEmeraldDark) else MosqueTextSecondary
+            color = if (isCurrent) (if (isDark) MosqueGoldLight else MosqueEmeraldDark) else if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
         )
     }
 }
@@ -1592,10 +1592,10 @@ private fun MealChoiceButton(
         onClick = onClick,
         modifier = modifier.heightIn(min = 48.dp),
         shape = RoundedCornerShape(10.dp),
-        color = if (selected) MosqueEmeraldPrimary else MaterialTheme.colorScheme.surface,
+        color = if (selected) (if (isDark) MosqueEmeraldLight else MosqueEmeraldPrimary) else MaterialTheme.colorScheme.surface,
         border = BorderStroke(
             width = 1.dp,
-            color = if (selected) MosqueEmeraldPrimary else if (isDark) MosqueNightBorder else MosqueCardBorder
+            color = if (selected) (if (isDark) MosqueEmeraldLight else MosqueEmeraldPrimary) else if (isDark) MosqueNightBorder else MosqueCardBorder
         )
     ) {
         Row(

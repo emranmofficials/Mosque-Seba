@@ -38,6 +38,7 @@ val MosqueNightBg = Color(0xFF071511)
 val MosqueNightSurface = Color(0xFF0E231D)
 val MosqueNightSurfaceVariant = Color(0xFF143129)
 val MosqueNightBorder = Color(0xFF234E41)
+val MosqueNightInputBorder = Color(0xFF387162) // Crisp, accessible input box border in Dark Mode
 val MosqueNightTextPrimary = Color(0xFFECFDF5)
 val MosqueNightTextSecondary = Color(0xFFCBD5E1)
 val MosqueNightTextMuted = Color(0xFF94A3B8)

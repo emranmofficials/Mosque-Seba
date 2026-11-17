@@ -100,13 +100,19 @@ fun mosqueStandardFieldColors(isDark: Boolean = LocalIsDarkTheme.current): TextF
     OutlinedTextFieldDefaults.colors(
         focusedContainerColor = if (isDark) MosqueNightSurfaceVariant else Color.White,
         unfocusedContainerColor = if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft.copy(alpha = 0.35f),
-        focusedBorderColor = MaterialTheme.colorScheme.primary,
-        unfocusedBorderColor = if (isDark) MosqueNightBorder else MosqueCardBorder,
-        focusedLabelColor = MaterialTheme.colorScheme.primary,
-        unfocusedLabelColor = MosqueTextSecondary,
-        focusedTextColor = MaterialTheme.colorScheme.onSurface,
-        unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
-        cursorColor = MaterialTheme.colorScheme.primary
+        focusedBorderColor = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary,
+        unfocusedBorderColor = if (isDark) MosqueNightInputBorder else MosqueCardBorder,
+        focusedLabelColor = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary,
+        unfocusedLabelColor = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary,
+        focusedTextColor = if (isDark) MosqueNightTextPrimary else MosqueTextDark,
+        unfocusedTextColor = if (isDark) MosqueNightTextPrimary else MosqueTextDark,
+        focusedPlaceholderColor = if (isDark) MosqueNightTextMuted else MosqueTextMuted,
+        unfocusedPlaceholderColor = if (isDark) MosqueNightTextMuted else MosqueTextMuted,
+        focusedLeadingIconColor = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary,
+        unfocusedLeadingIconColor = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary,
+        focusedTrailingIconColor = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary,
+        unfocusedTrailingIconColor = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary,
+        cursorColor = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary
     )
 
 /**

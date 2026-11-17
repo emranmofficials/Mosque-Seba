@@ -88,9 +88,7 @@ fun MehrabArchCard(
     content: @Composable ColumnScope.() -> Unit
 ) {
     val isDark = LocalIsDarkTheme.current
-    val effectiveBorder = if (borderColor == MosqueCardBorderGold) {
-        if (isDark) MosqueNightBorder else MosqueCardBorderSubtle
-    } else borderColor
+    val effectiveBorder = if (isDark) MosqueNightBorder else borderColor
 
     Card(
         modifier = modifier

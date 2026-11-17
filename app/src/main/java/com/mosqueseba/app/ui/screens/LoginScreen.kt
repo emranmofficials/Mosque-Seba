@@ -63,15 +63,7 @@ fun LoginScreen(
     var showHelpDialog by remember { mutableStateOf(false) }
 
     val isDark = LocalIsDarkTheme.current
-    val fieldColors = OutlinedTextFieldDefaults.colors(
-        focusedBorderColor = MosqueEmeraldPrimary,
-        unfocusedBorderColor = if (isDark) MosqueNightBorder else MosqueCardBorder,
-        focusedLabelColor = MosqueEmeraldPrimary,
-        unfocusedLabelColor = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary,
-        cursorColor = MosqueEmeraldPrimary,
-        focusedContainerColor = MaterialTheme.colorScheme.surface,
-        unfocusedContainerColor = if (isDark) MosqueNightSurfaceVariant.copy(alpha = 0.5f) else MosqueBgLight.copy(alpha = 0.45f)
-    )
+    val fieldColors = mosqueStandardFieldColors(isDark)
 
     Column(
         modifier = Modifier
@@ -224,14 +216,14 @@ fun LoginScreen(
                             modifier = Modifier
                                 .size(40.dp)
                                 .clip(CircleShape)
-                                .background(MosqueEmeraldSoft)
-                                .border(1.dp, MosqueEmeraldPrimary.copy(alpha = 0.25f), CircleShape),
+                                .background(if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft)
+                                .border(1.dp, (if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary).copy(alpha = 0.25f), CircleShape),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = if (selectedTab == 0) Icons.Default.VerifiedUser else Icons.Default.Badge,
                                 contentDescription = null,
-                                tint = MosqueEmeraldPrimary,
+                                tint = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary,
                                 modifier = Modifier.size(21.dp)
                             )
                         }
@@ -262,7 +254,7 @@ fun LoginScreen(
                         onValueChange = { committeeId = it; errorMessage = null },
                         label = { Text("কমিটি আইডি *") },
                         placeholder = { Text("কমিটি আইডি লিখুন") },
-                        leadingIcon = { Icon(Icons.Default.Badge, contentDescription = null, tint = MosqueEmeraldPrimary) },
+                        leadingIcon = { Icon(Icons.Default.Badge, contentDescription = null, tint = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary) },
                         singleLine = true,
                         colors = fieldColors,
                         modifier = Modifier
@@ -279,7 +271,7 @@ fun LoginScreen(
                             onValueChange = { presidentEmail = it; errorMessage = null },
                             label = { Text("সভাপতির ইমেইল ঠিকানা *") },
                             placeholder = { Text("সভাপতির ইমেইল ঠিকানা লিখুন") },
-                            leadingIcon = { Icon(Icons.Default.Email, contentDescription = null, tint = MosqueEmeraldPrimary) },
+                            leadingIcon = { Icon(Icons.Default.Email, contentDescription = null, tint = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary) },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                             singleLine = true,
                             colors = fieldColors,
@@ -295,7 +287,7 @@ fun LoginScreen(
                             value = presidentPassword,
                             onValueChange = { presidentPassword = it; errorMessage = null },
                             label = { Text("গোপন পাসওয়ার্ড *") },
-                            leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, tint = MosqueEmeraldPrimary) },
+                            leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, tint = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary) },
                             trailingIcon = {
                                 IconButton(onClick = { passwordVisible = !passwordVisible }) {
                                     Icon(
@@ -320,7 +312,7 @@ fun LoginScreen(
                             onValueChange = { memberMobile = it; errorMessage = null },
                             label = { Text("নিবন্ধিত মোবাইল নম্বর *") },
                             placeholder = { Text("01715-556677") },
-                            leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null, tint = MosqueEmeraldPrimary) },
+                            leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null, tint = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary) },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                             singleLine = true,
                             colors = fieldColors,
@@ -337,7 +329,7 @@ fun LoginScreen(
                             onValueChange = { memberPassword = it; errorMessage = null },
                             label = { Text("পাসওয়ার্ড (মোবাইলের শেষ ৬ সংখ্যা) *") },
                             placeholder = { Text("যেমন: 556677") },
-                            leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, tint = MosqueEmeraldPrimary) },
+                            leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, tint = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary) },
                             trailingIcon = {
                                 IconButton(onClick = { passwordVisible = !passwordVisible }) {
                                     Icon(
@@ -376,9 +368,9 @@ fun LoginScreen(
                             Checkbox(
                                 checked = rememberMe,
                                 onCheckedChange = { rememberMe = it },
-                                colors = CheckboxDefaults.colors(checkedColor = MosqueEmeraldPrimary)
+                                colors = CheckboxDefaults.colors(checkedColor = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary)
                             )
-                            Text("মনে রাখুন", style = MaterialTheme.typography.bodySmall, color = MosqueTextPrimary)
+                            Text("মনে রাখুন", style = MaterialTheme.typography.bodySmall, color = if (isDark) MosqueNightTextPrimary else MosqueTextPrimary)
                         }
 
                         Row(
@@ -392,14 +384,14 @@ fun LoginScreen(
                             Icon(
                                 imageVector = Icons.Default.HelpOutline,
                                 contentDescription = null,
-                                tint = MosqueEmeraldPrimary,
+                                tint = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary,
                                 modifier = Modifier.size(16.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
                                 text = "সাহায্য প্রয়োজন?",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MosqueEmeraldPrimary,
+                                color = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary,
                                 fontWeight = FontWeight.SemiBold
                             )
                         }
@@ -471,7 +463,7 @@ fun LoginScreen(
                             .height(52.dp)
                             .testTag("login_submit_button"),
                         shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary)
+                        colors = ButtonDefaults.buttonColors(containerColor = if (isDark) MosqueEmeraldLight else MosqueEmeraldPrimary)
                     ) {
                         if (isLoading) {
                             CircularProgressIndicator(modifier = Modifier.size(22.dp), color = Color.White, strokeWidth = 2.dp)
@@ -564,13 +556,13 @@ fun LoginScreen(
                             text = if (showAllCommitteeRoles) "অন্যান্য কমিটি পদবি লুকান" else "সব কমিটি পদবি (সহ-পদ, সম্পাদকীয়, উপদেষ্টা) দেখুন",
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
-                            color = MosqueEmeraldPrimary
+                            color = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Icon(
                             imageVector = if (showAllCommitteeRoles) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                             contentDescription = null,
-                            tint = MosqueEmeraldPrimary,
+                            tint = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary,
                             modifier = Modifier.size(16.dp)
                         )
                     }
@@ -626,8 +618,8 @@ fun LoginScreen(
             // Register Mosque Call to Action Banner (President Only)
             Surface(
                 shape = RoundedCornerShape(16.dp),
-                color = MosqueGoldSoft,
-                border = BorderStroke(1.dp, MosqueCardBorderGold),
+                color = if (isDark) MosqueNightSurfaceVariant else MosqueGoldSoft,
+                border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else MosqueCardBorderGold),
                 shadowElevation = 2.dp,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -676,14 +668,14 @@ fun LoginScreen(
                     }
                     Surface(
                         shape = CircleShape,
-                        color = MosqueEmeraldSoft,
+                        color = if (isDark) MosqueNightSurface else MosqueEmeraldSoft,
                         modifier = Modifier.size(32.dp)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 imageVector = Icons.Default.ChevronRight,
                                 contentDescription = "নিবন্ধনে যান",
-                                tint = MosqueEmeraldPrimary,
+                                tint = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary,
                                 modifier = Modifier.size(20.dp)
                             )
                         }
@@ -705,13 +697,13 @@ fun LoginScreen(
                             modifier = Modifier
                                 .size(36.dp)
                                 .clip(CircleShape)
-                                .background(MosqueEmeraldSoft),
+                                .background(if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = Icons.Default.HelpOutline,
                                 contentDescription = null,
-                                tint = MosqueEmeraldPrimary
+                                tint = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary
                             )
                         }
                         Spacer(modifier = Modifier.width(10.dp))
@@ -723,7 +715,7 @@ fun LoginScreen(
                         )
                     }
                     Spacer(modifier = Modifier.height(12.dp))
-                    HorizontalDivider(color = MosqueCardBorder)
+                    HorizontalDivider(color = if (isDark) MosqueNightBorder else MosqueCardBorder)
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
                         text = "• সভাপতি লগইন: শুধুমাত্র কমিটি আইডি, ইমেইল ও পাসওয়ার্ড দিয়ে প্রবেশ করবেন (ডিফল্ট: rafiqul.islam@example.com / 123456)।\n• অন্যান্য ইউজার লগইন: কমিটি আইডি, নিবন্ধিত মোবাইল নম্বর এবং মোবাইল নম্বরের শেষ ৬টি সংখ্যা পাসওয়ার্ড হিসেবে ব্যবহার করবেন।\n• উদাহরণ (কোষাধ্যক্ষ): 01715-556677 (পাসওয়ার্ড: 556677)\n• উদাহরণ (সাধারণ সম্পাদক): 01912-445566 (পাসওয়ার্ড: 445566)\n• সভাপতি বা দায়িত্বপ্রাপ্ত ইউজার সদস্য যুক্ত করলেই সেই সদস্য ইউজার হিসেবে যুক্ত হবেন।",
@@ -738,7 +730,7 @@ fun LoginScreen(
                             .fillMaxWidth()
                             .height(48.dp)
                             .testTag("login_help_close_button"),
-                        colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary),
+                        colors = ButtonDefaults.buttonColors(containerColor = if (isDark) MosqueEmeraldLight else MosqueEmeraldPrimary),
                         shape = RoundedCornerShape(12.dp)
                     ) {
                         Text("বুঝেছি", fontWeight = FontWeight.Bold)
@@ -761,7 +753,7 @@ private fun LoginRoleTabButton(
     Surface(
         onClick = onClick,
         shape = RoundedCornerShape(10.dp),
-        color = if (selected) MosqueEmeraldPrimary else Color.Transparent,
+        color = if (selected) (if (isDark) MosqueEmeraldLight else MosqueEmeraldPrimary) else Color.Transparent,
         border = if (selected) BorderStroke(1.dp, MosqueGold.copy(alpha = 0.7f)) else null,
         modifier = modifier.heightIn(min = 48.dp)
     ) {
@@ -816,7 +808,7 @@ fun QuickRoleChip(
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = MosqueEmeraldPrimary,
+                    tint = if (isDark) MosqueGoldLight else MosqueEmeraldPrimary,
                     modifier = Modifier.size(15.dp)
                 )
                 Spacer(modifier = Modifier.width(5.dp))
