@@ -10,9 +10,9 @@ object SupabaseConfig {
     private const val KEY_LAST_SYNC_TIME = "last_sync_time"
 
     // Live Pre-configured Mosque-Seba Supabase Backend
-    const val DEFAULT_FALLBACK_URL = "https://awvdqhbdwfubztwenovr.supabase.co"
+    const val DEFAULT_FALLBACK_URL = "https://donglyxtrfyzwgtrskhz.supabase.co"
     const val DEFAULT_FALLBACK_KEY =
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3dmRxaGJkd2Z1Ynp0d2Vub3ZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ4OTQ3OTAsImV4cCI6MjExMDQ3MDc5MH0.N1oTAz6Fk5-a8WpS9LaNQQ-ylFmfeWh8-CHnldovQ-w"
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRvbmdseXh0cmZ5endndHJza2h6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ5MTI4MTgsImV4cCI6MjExMDQ4ODgxOH0.0dVON58e2nsB6g2_UuMACtzvSJvPEcdOiBnjPovxcYU"
 
     private fun getPrefs(context: Context): SharedPreferences {
         return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)

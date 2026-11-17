@@ -36,7 +36,7 @@ class SupabaseHttpClient(private val context: Context) {
         }
 
         try {
-            val url = URL("$baseUrl/rest/v1/")
+            val url = URL("$baseUrl/rest/v1/mosques?select=id&limit=1")
             val conn = (url.openConnection() as HttpURLConnection).apply {
                 requestMethod = "GET"
                 connectTimeout = 10000
