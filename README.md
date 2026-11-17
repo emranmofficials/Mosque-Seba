@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/emranmofficials/Mosque-Seba/releases/latest"><img src="https://img.shields.io/badge/Release-v1.1.2%20(Production%20Ready)-0D5C3A?style=for-the-badge&logo=android" alt="Production Ready v1.1.2" /></a>
+  <a href="https://github.com/emranmofficials/Mosque-Seba/releases/latest"><img src="https://img.shields.io/badge/Release-v1.1.3%20(Production%20Ready)-0D5C3A?style=for-the-badge&logo=android" alt="Production Ready v1.1.3" /></a>
   <img src="https://img.shields.io/badge/Platform-Android_8.0+_(API_26--35)-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Platform" />
   <img src="https://img.shields.io/badge/Kotlin-2.0-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white" alt="Kotlin" />
   <img src="https://img.shields.io/badge/UI-Jetpack%20Compose%20%26%20Material%203-4285F4?style=for-the-badge&logo=jetpackcompose&logoColor=white" alt="Compose" />
@@ -26,12 +26,12 @@
 
 ## 📥 অফিসিয়াল রিলিজ ও সরাসরি ডাউনলোড (Official Production Release)
 
-মসজিদ সেবার সর্বশেষ প্রোডাকশন-রেডি সংস্করণ **v1.1.2** সরাসরি ডাউনলোড করার জন্য প্রস্তুত:
+মসজিদ সেবার সর্বশেষ প্রোডাকশন-রেডি সংস্করণ **v1.1.3** সরাসরি ডাউনলোড করার জন্য প্রস্তুত:
 
 | ফরম্যাট | ফাইলনেম | সাইজ | ডাউনলোড লিংক | বিবরণ |
 | :--- | :--- | :---: | :---: | :--- |
-| 📦 **Android APK** | `Mosque-Seba-v1.1.2.apk` | `~16 MiB` | [**📥 সরাসরি APK ডাউনলোড করুন**](https://github.com/emranmofficials/Mosque-Seba/releases/download/v1.1.2/Mosque-Seba-v1.1.2.apk) | সরাসরি যেকোনো অ্যান্ড্রয়েড ডিভাইসে ইনস্টল করার জন্য প্রস্তুত। |
-| 📱 **App Bundle (AAB)** | `Mosque-Seba-v1.1.2.aab` | `~15.8 MiB` | [**📥 অফিসিয়াল AAB ডাউনলোড করুন**](https://github.com/emranmofficials/Mosque-Seba/releases/download/v1.1.2/Mosque-Seba-v1.1.2.aab) | গুগল প্লে স্টোর ও অফিশিয়াল স্টোর রিলিজের জন্য অপ্টিমাইজড বান্ডেল। |
+| 📦 **Android APK** | `Mosque-Seba-v1.1.3.apk` | `~16 MiB` | [**📥 সরাসরি APK ডাউনলোড করুন**](https://github.com/emranmofficials/Mosque-Seba/releases/download/v1.1.3/Mosque-Seba-v1.1.3.apk) | সরাসরি যেকোনো অ্যান্ড্রয়েড ডিভাইসে ইনস্টল করার জন্য প্রস্তুত। |
+| 📱 **App Bundle (AAB)** | `Mosque-Seba-v1.1.3.aab` | `~15.8 MiB` | [**📥 অফিসিয়াল AAB ডাউনলোড করুন**](https://github.com/emranmofficials/Mosque-Seba/releases/download/v1.1.3/Mosque-Seba-v1.1.3.aab) | গুগল প্লে স্টোর ও অফিশিয়াল স্টোর রিলিজের জন্য অপ্টিমাইজড বান্ডেল। |
 
 > 🔑 **অফিসিয়াল সিকিউর সাইনিং কি:** এই রিলিজটি স্থায়ী অফিসিয়াল রিলিজ কি-স্টোর (`keystore/mosque-seba.jks`) দ্বারা স্বাক্ষরিত। পরবর্তী যেকোনো আপডেটে অ্যাপ আনইনস্টল না করেই সরাসরি নির্বিঘ্নে আপডেট করা যাবে।
 
