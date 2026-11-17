@@ -8,6 +8,7 @@ import com.google.firebase.Firebase
 import com.google.firebase.ai.ai
 import com.google.firebase.ai.type.Schema
 import com.google.firebase.ai.type.generationConfig
+import com.mosqueseba.app.data.local.DatabaseInitializer
 import com.mosqueseba.app.data.local.MosqueDatabase
 import com.mosqueseba.app.data.local.SessionManager
 import com.mosqueseba.app.data.local.entity.*
@@ -22,10 +23,12 @@ import com.mosqueseba.app.data.remote.supabase.SupabaseSyncManager
 import com.mosqueseba.app.data.remote.supabase.SyncResult
 import com.mosqueseba.app.util.MosquePushNotificationHelper
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import com.mosqueseba.app.data.model.IslamicEvent
 import org.json.JSONObject
