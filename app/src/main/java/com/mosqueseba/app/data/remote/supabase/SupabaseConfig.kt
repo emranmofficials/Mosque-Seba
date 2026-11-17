@@ -25,8 +25,10 @@ object SupabaseConfig {
 
     fun getCredentials(context: Context): Pair<String, String> {
         val prefs = getPrefs(context)
-        val url = prefs.getString(KEY_URL, DEFAULT_FALLBACK_URL)?.trim() ?: ""
-        val key = prefs.getString(KEY_ANON_KEY, DEFAULT_FALLBACK_KEY)?.trim() ?: ""
+        val savedUrl = prefs.getString(KEY_URL, null)?.trim()
+        val savedKey = prefs.getString(KEY_ANON_KEY, null)?.trim()
+        val url = if (savedUrl.isNullOrBlank()) DEFAULT_FALLBACK_URL else savedUrl
+        val key = if (savedKey.isNullOrBlank()) DEFAULT_FALLBACK_KEY else savedKey
         return Pair(url, key)
     }
 

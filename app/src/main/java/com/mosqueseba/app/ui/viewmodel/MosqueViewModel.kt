@@ -28,6 +28,8 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import com.mosqueseba.app.data.model.IslamicEvent
@@ -75,6 +77,7 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
         repository = MosqueRepository(db)
         MosquePushNotificationHelper.initChannels(application)
         checkForAppUpdates(forceManual = false)
+        startRealtimeSyncLoop()
     }
 
     fun checkForAppUpdates(forceManual: Boolean = false, onResult: ((AppUpdateInfo?) -> Unit)? = null) {
@@ -147,7 +150,38 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
         _notificationsEnabled.value = enabled
     }
 
-    // Supabase Cloud Backend & Sync
+    // Supabase Cloud Backend & Realtime Sync Engine
+    fun triggerImmediateCloudSync() {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val db = MosqueDatabase.getDatabase(getApplication(), viewModelScope)
+                SupabaseSyncManager.performSync(getApplication(), db)
+            } catch (e: Exception) {
+                Log.w(TAG, "Immediate cloud sync skipped", e)
+            }
+        }
+    }
+
+    private fun startRealtimeSyncLoop() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val db = MosqueDatabase.getDatabase(getApplication(), viewModelScope)
+            // 1. Initial sync immediately on launch
+            try {
+                SupabaseSyncManager.performSync(getApplication(), db)
+            } catch (e: Exception) {
+                Log.w(TAG, "Initial Supabase sync skipped", e)
+            }
+            // 2. Realtime Heartbeat every 20 seconds for continuous live syncing
+            while (isActive) {
+                delay(20_000)
+                try {
+                    SupabaseSyncManager.performSync(getApplication(), db)
+                } catch (_: Exception) {
+                }
+            }
+        }
+    }
+
     fun performCloudSync(onResult: (SyncResult) -> Unit) {
         viewModelScope.launch {
             val db = MosqueDatabase.getDatabase(getApplication(), viewModelScope)
@@ -274,18 +308,31 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
         val cleanEmail = email.trim().lowercase()
         val trimmedCommitteeId = committeeId.trim()
 
-        val matchedMosque = if (trimmedCommitteeId.isNotBlank()) {
+        var matchedMosque = if (trimmedCommitteeId.isNotBlank()) {
             repository.getMosqueByCommitteeId(trimmedCommitteeId)
         } else {
             repository.getMosqueById(_activeMosqueId.value).firstOrNull() ?: repository.mosque.firstOrNull()
         }
 
         if (trimmedCommitteeId.isNotBlank() && matchedMosque == null) {
+            val db = MosqueDatabase.getDatabase(getApplication(), viewModelScope)
+            SupabaseSyncManager.performSync(getApplication(), db)
+            matchedMosque = repository.getMosqueByCommitteeId(trimmedCommitteeId)
+        }
+
+        if (trimmedCommitteeId.isNotBlank() && matchedMosque == null) {
             return Pair(false, "প্রদত্ত কমিটি আইডি খুঁজে পাওয়া যায়নি।")
         }
 
-        val member = repository.getMemberByEmail(cleanEmail)
-            ?: return Pair(false, "এই ইমেইল ঠিকানায় কোনো সভাপতি অ্যাকাউন্ট পাওয়া যায়নি।")
+        var member = repository.getMemberByEmail(cleanEmail)
+        if (member == null) {
+            val db = MosqueDatabase.getDatabase(getApplication(), viewModelScope)
+            SupabaseSyncManager.performSync(getApplication(), db)
+            member = repository.getMemberByEmail(cleanEmail)
+        }
+        if (member == null) {
+            return Pair(false, "এই ইমেইল ঠিকানায় কোনো সভাপতি অ্যাকাউন্ট পাওয়া যায়নি।")
+        }
 
         val role = UserRole.fromCode(member.roleCode)
         if (role != UserRole.PRESIDENT) {
@@ -325,18 +372,31 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
         val cleanMobile = mobile.replace("-", "").replace(" ", "").trim()
         val trimmedCommitteeId = committeeId.trim()
 
-        val matchedMosque = if (trimmedCommitteeId.isNotBlank()) {
+        var matchedMosque = if (trimmedCommitteeId.isNotBlank()) {
             repository.getMosqueByCommitteeId(trimmedCommitteeId)
         } else {
             repository.getMosqueById(_activeMosqueId.value).firstOrNull() ?: repository.mosque.firstOrNull()
         }
 
         if (trimmedCommitteeId.isNotBlank() && matchedMosque == null) {
+            val db = MosqueDatabase.getDatabase(getApplication(), viewModelScope)
+            SupabaseSyncManager.performSync(getApplication(), db)
+            matchedMosque = repository.getMosqueByCommitteeId(trimmedCommitteeId)
+        }
+
+        if (trimmedCommitteeId.isNotBlank() && matchedMosque == null) {
             return Pair(false, "প্রদত্ত কমিটি আইডি খুঁজে পাওয়া যায়নি।")
         }
 
-        val member = repository.getMemberByMobile(cleanMobile)
-            ?: return Pair(false, "এই মোবাইল নম্বরে কোনো নিবন্ধিত সদস্য পাওয়া যায়নি।")
+        var member = repository.getMemberByMobile(cleanMobile)
+        if (member == null) {
+            val db = MosqueDatabase.getDatabase(getApplication(), viewModelScope)
+            SupabaseSyncManager.performSync(getApplication(), db)
+            member = repository.getMemberByMobile(cleanMobile)
+        }
+        if (member == null) {
+            return Pair(false, "এই মোবাইল নম্বরে কোনো নিবন্ধিত সদস্য পাওয়া যায়নি।")
+        }
 
         val role = UserRole.fromCode(member.roleCode)
         if (role == UserRole.PRESIDENT) {
@@ -485,6 +545,7 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
                 rememberMe = true,
                 mosqueId = mosqueId
             )
+            triggerImmediateCloudSync()
             Result.success(committeeId)
         } else {
             Result.failure(Exception("রেজিস্ট্রেশন সংরক্ষণ করা সম্ভব হয়নি"))
@@ -807,6 +868,7 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
                 salaryAmount = salaryAmount,
                 staffMealRequired = staffMealRequired
             )
+            triggerImmediateCloudSync()
         }
     }
 
@@ -863,6 +925,7 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
                 approvalStatus = status
             )
             repository.addTransaction(txn)
+            triggerImmediateCloudSync()
         }
     }
 

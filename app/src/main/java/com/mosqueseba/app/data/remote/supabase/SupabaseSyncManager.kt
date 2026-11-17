@@ -89,6 +89,26 @@ object SupabaseSyncManager {
                         put("logo_url", mergedMosque.logoUrl ?: JSONObject.NULL)
                     }
                     client.upsert("mosques", JSONArray().apply { put(mosqueJson) }.toString())
+                } else {
+                    val newLocalMosque = MosqueEntity(
+                        id = cloudJson.optString("id", java.util.UUID.randomUUID().toString()),
+                        committeeId = cloudJson.optString("committee_id", "MC-REG-2026"),
+                        nameBn = cloudJson.optString("name_bn", "বাইতুল মুকাররম কেন্দ্রীয় জামে মসজিদ"),
+                        nameEn = cloudJson.optString("name_en", "Baitul Mukarram Central Jame Mosque"),
+                        address = cloudJson.optString("address", "ঢাকা, বাংলাদেশ"),
+                        establishedYear = cloudJson.optInt("established_year", 2026),
+                        committeeStartYear = cloudJson.optInt("committee_start_year", 2026),
+                        committeeEndYear = cloudJson.optInt("committee_end_year", 2028),
+                        status = cloudJson.optString("status", "active"),
+                        district = cloudJson.optString("district", ""),
+                        upazila = cloudJson.optString("upazila", ""),
+                        waqfRegNo = cloudJson.optString("waqf_reg_no", ""),
+                        capacity = if (cloudJson.has("capacity") && !cloudJson.isNull("capacity")) cloudJson.optInt("capacity") else null,
+                        bankAccountInfo = cloudJson.optString("bank_account_info", ""),
+                        logoUrl = cloudLogo
+                    )
+                    database.mosqueDao().insertOrUpdate(newLocalMosque)
+                    syncedMosque = 1
                 }
             } else {
                 val localMosque = database.mosqueDao().getMosque().firstOrNull()
@@ -110,7 +130,36 @@ object SupabaseSyncManager {
                 }
             }
 
-            // 2. Sync Members
+            // 2. Sync Members (Bidirectional)
+            val cloudMembersRes = client.get("members")
+            if (cloudMembersRes.isSuccess) {
+                val cArray = cloudMembersRes.getOrNull() ?: JSONArray()
+                for (i in 0 until cArray.length()) {
+                    val mJson = cArray.getJSONObject(i)
+                    val mId = mJson.optString("id")
+                    if (mId.isNotBlank()) {
+                        val member = MemberEntity(
+                            id = mId,
+                            memberCode = mJson.optString("member_code", "MEM-001"),
+                            nameBn = mJson.optString("name_bn", ""),
+                            nameEn = mJson.optString("name_en", ""),
+                            mobile = mJson.optString("mobile", ""),
+                            email = mJson.optString("email", ""),
+                            nid = mJson.optString("nid", ""),
+                            address = mJson.optString("address", ""),
+                            villageArea = mJson.optString("village_area", ""),
+                            roleCode = mJson.optString("role_code", "general_member"),
+                            monthlyChanda = mJson.optDouble("monthly_chanda", 0.0),
+                            joinDate = mJson.optString("join_date", ""),
+                            photoUrl = if (mJson.has("photo_url") && !mJson.isNull("photo_url")) mJson.optString("photo_url") else null,
+                            status = mJson.optString("status", "active"),
+                            willingToProvideStaffMeals = mJson.optBoolean("willing_to_provide_staff_meals", false)
+                        )
+                        database.memberDao().insertMember(member)
+                    }
+                }
+            }
+
             val localMembers = database.memberDao().getAllMembers().first()
             if (localMembers.isNotEmpty()) {
                 val membersArray = JSONArray()
@@ -136,7 +185,32 @@ object SupabaseSyncManager {
                 if (mRes.isSuccess) syncedMembers = localMembers.size
             }
 
-            // 3. Sync Transactions (Income & Expense)
+            // 3. Sync Transactions (Bidirectional)
+            val cloudTxnsRes = client.get("transactions")
+            if (cloudTxnsRes.isSuccess) {
+                val cTxns = cloudTxnsRes.getOrNull() ?: JSONArray()
+                for (i in 0 until cTxns.length()) {
+                    val tJson = cTxns.getJSONObject(i)
+                    val tId = tJson.optString("id")
+                    if (tId.isNotBlank()) {
+                        val txn = TransactionEntity(
+                            id = tId,
+                            transactionCode = tJson.optString("transaction_code", "TX-001"),
+                            categoryNameBn = tJson.optString("category_name_bn", "সাধারণ দান"),
+                            type = tJson.optString("type", "INCOME"),
+                            amount = tJson.optDouble("amount", 0.0),
+                            txnDate = tJson.optString("txn_date", ""),
+                            description = tJson.optString("description", ""),
+                            sourceType = tJson.optString("source_type", "manual"),
+                            createdBy = tJson.optString("created_by", "ক্যাশিয়ার"),
+                            approvalStatus = tJson.optString("approval_status", "approved"),
+                            isReversal = tJson.optBoolean("is_reversal", false)
+                        )
+                        database.transactionDao().insertTransaction(txn)
+                    }
+                }
+            }
+
             val localTxns = database.transactionDao().getAllTransactions().first()
             if (localTxns.isNotEmpty()) {
                 val txnsArray = JSONArray()

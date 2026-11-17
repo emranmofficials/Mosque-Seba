@@ -35,8 +35,10 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -44,6 +46,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import com.mosqueseba.app.ui.components.MehrabArchCard
 import com.mosqueseba.app.ui.components.RubElHizbDivider
 import com.mosqueseba.app.ui.components.mosqueStandardFieldColors
@@ -67,6 +70,7 @@ fun RegistrationScreen(
     var step by remember { mutableIntStateOf(1) } // 1: President, 2: Mosque, 3: Review
     var isSubmitting by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    var registeredCommitteeId by remember { mutableStateOf<String?>(null) }
     val scrollState = rememberScrollState()
 
     // Step 1: President Info
@@ -1139,7 +1143,12 @@ fun RegistrationScreen(
                                                 )
                                                 isSubmitting = false
                                                 if (res.isSuccess) {
-                                                    onRegistrationSuccess()
+                                                    val newId = res.getOrNull()
+                                                    if (!newId.isNullOrBlank()) {
+                                                        registeredCommitteeId = newId
+                                                    } else {
+                                                        onRegistrationSuccess()
+                                                    }
                                                 } else {
                                                     errorMessage = res.exceptionOrNull()?.message ?: "নিবন্ধন ব্যর্থ হয়েছে।"
                                                 }
@@ -1197,6 +1206,127 @@ fun RegistrationScreen(
             }
 
             Spacer(modifier = Modifier.height(16.dp))
+        }
+
+        if (registeredCommitteeId != null) {
+            val clipboardManager = LocalClipboardManager.current
+            Dialog(onDismissRequest = { onRegistrationSuccess() }) {
+                Surface(
+                    shape = RoundedCornerShape(20.dp),
+                    color = MaterialTheme.colorScheme.surface,
+                    border = BorderStroke(1.5.dp, MosqueGold.copy(alpha = 0.6f)),
+                    shadowElevation = 12.dp
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(22.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(60.dp)
+                                .clip(CircleShape)
+                                .background(MosqueEmeraldPrimary.copy(alpha = 0.15f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.CheckCircle,
+                                contentDescription = "সফল",
+                                tint = MosqueEmeraldPrimary,
+                                modifier = Modifier.size(38.dp)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        Text(
+                            text = "আলহামদুলিল্লাহ!",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = MosqueEmeraldPrimary
+                        )
+
+                        Text(
+                            text = "মসজিদ ও পরিচালনা কমিটির নিবন্ধন সফল হয়েছে",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = if (isDark) Color.White.copy(alpha = 0.85f) else Color.Black.copy(alpha = 0.75f),
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = MosqueGold.copy(alpha = 0.12f),
+                            border = BorderStroke(1.dp, MosqueGold.copy(alpha = 0.4f)),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(14.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    text = "আপনার অফিসিয়াল কমিটি আইডি",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = if (isDark) MosqueGoldLight else MosqueEmeraldDark
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = registeredCommitteeId ?: "",
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    fontWeight = FontWeight.Black,
+                                    color = MosqueEmeraldPrimary
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        Text(
+                            text = "ভবিষ্যতে লগইন ও কমিটি পরিচালনার কাজের জন্য এই কমিটি আইডি ও আপনার পাসওয়ার্ড সংরক্ষণ করুন।",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary,
+                            textAlign = TextAlign.Center
+                        )
+
+                        Spacer(modifier = Modifier.height(20.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            OutlinedButton(
+                                onClick = {
+                                    clipboardManager.setText(AnnotatedString(registeredCommitteeId ?: ""))
+                                    android.widget.Toast.makeText(context, "কমিটি আইডি কপি করা হয়েছে", android.widget.Toast.LENGTH_SHORT).show()
+                                },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(48.dp),
+                                shape = RoundedCornerShape(10.dp),
+                                border = BorderStroke(1.dp, MosqueGold)
+                            ) {
+                                Icon(Icons.Default.ContentCopy, contentDescription = "কপি", modifier = Modifier.size(16.dp), tint = MosqueGold)
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("কপি করুন", color = MosqueGold, fontWeight = FontWeight.Bold)
+                            }
+
+                            Button(
+                                onClick = { onRegistrationSuccess() },
+                                modifier = Modifier
+                                    .weight(1.3f)
+                                    .height(48.dp),
+                                shape = RoundedCornerShape(10.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary)
+                            ) {
+                                Text("ড্যাশবোর্ডে প্রবেশ", fontWeight = FontWeight.Bold, color = Color.White)
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
