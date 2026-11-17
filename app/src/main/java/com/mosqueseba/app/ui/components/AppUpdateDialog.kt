@@ -27,6 +27,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.mosqueseba.app.BuildConfig
 import com.mosqueseba.app.data.updater.AppUpdateInfo
+import com.mosqueseba.app.data.updater.AppUpdateManager
 import com.mosqueseba.app.ui.theme.MosqueEmeraldPrimary
 import com.mosqueseba.app.ui.theme.MosqueCardBorderGold
 import com.mosqueseba.app.ui.theme.MosqueGold
@@ -216,11 +217,7 @@ fun AppUpdateDialog(
 
                     Button(
                         onClick = {
-                            val targetUrl = updateInfo.apkDownloadUrl.ifBlank { updateInfo.releasePageUrl }
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(targetUrl)).apply {
-                                flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                            }
-                            context.startActivity(intent)
+                            AppUpdateManager.downloadAndInstallApk(context, updateInfo)
                             onDismiss()
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary),

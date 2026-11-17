@@ -32,6 +32,7 @@ import com.mosqueseba.app.ui.screens.*
 import com.mosqueseba.app.ui.theme.MosqueCommitteeTheme
 import com.mosqueseba.app.ui.viewmodel.MosqueViewModel
 import com.mosqueseba.app.util.MosquePushNotificationHelper
+import com.mosqueseba.app.util.MosqueSecurityManager
 import kotlinx.coroutines.flow.MutableStateFlow
 
 enum class AppScreen {
@@ -49,6 +50,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        MosqueSecurityManager.enableScreenProtection(this)
         configureAppCheck(this, intent)
         enableEdgeToEdge(
             statusBarStyle = androidx.activity.SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),

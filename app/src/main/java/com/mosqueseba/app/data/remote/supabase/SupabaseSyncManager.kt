@@ -59,23 +59,55 @@ object SupabaseSyncManager {
         var syncedChanda = 0
 
         try {
-            // 1. Sync Mosque Entity
-            val localMosque = database.mosqueDao().getMosque().firstOrNull()
-            if (localMosque != null) {
-                val mosqueJson = JSONObject().apply {
-                    put("id", localMosque.id)
-                    put("committee_id", localMosque.committeeId)
-                    put("name_bn", localMosque.nameBn)
-                    put("name_en", localMosque.nameEn)
-                    put("address", localMosque.address)
-                    put("established_year", localMosque.establishedYear)
-                    put("committee_start_year", localMosque.committeeStartYear)
-                    put("committee_end_year", localMosque.committeeEndYear)
-                    put("status", localMosque.status)
-                    put("logo_url", localMosque.logoUrl ?: JSONObject.NULL)
+            // 1. Sync Mosque Entity (Bidirectional: Pull cloud updates + Push)
+            val cloudMosqueRes = client.get("mosques", "limit=1")
+            if (cloudMosqueRes.isSuccess && (cloudMosqueRes.getOrNull()?.length() ?: 0) > 0) {
+                val cloudJson = cloudMosqueRes.getOrNull()!!.getJSONObject(0)
+                val cloudLogo = if (cloudJson.has("logo_url") && !cloudJson.isNull("logo_url")) cloudJson.optString("logo_url") else null
+                val localMosque = database.mosqueDao().getMosque().firstOrNull()
+                if (localMosque != null) {
+                    val mergedLogo = cloudLogo ?: localMosque.logoUrl
+                    val mergedMosque = localMosque.copy(
+                        nameBn = cloudJson.optString("name_bn", localMosque.nameBn),
+                        nameEn = cloudJson.optString("name_en", localMosque.nameEn),
+                        address = cloudJson.optString("address", localMosque.address),
+                        logoUrl = mergedLogo
+                    )
+                    database.mosqueDao().insertOrUpdate(mergedMosque)
+                    syncedMosque = 1
+
+                    val mosqueJson = JSONObject().apply {
+                        put("id", mergedMosque.id)
+                        put("committee_id", mergedMosque.committeeId)
+                        put("name_bn", mergedMosque.nameBn)
+                        put("name_en", mergedMosque.nameEn)
+                        put("address", mergedMosque.address)
+                        put("established_year", mergedMosque.establishedYear)
+                        put("committee_start_year", mergedMosque.committeeStartYear)
+                        put("committee_end_year", mergedMosque.committeeEndYear)
+                        put("status", mergedMosque.status)
+                        put("logo_url", mergedMosque.logoUrl ?: JSONObject.NULL)
+                    }
+                    client.upsert("mosques", JSONArray().apply { put(mosqueJson) }.toString())
                 }
-                val upsertRes = client.upsert("mosques", JSONArray().apply { put(mosqueJson) }.toString())
-                if (upsertRes.isSuccess) syncedMosque = 1
+            } else {
+                val localMosque = database.mosqueDao().getMosque().firstOrNull()
+                if (localMosque != null) {
+                    val mosqueJson = JSONObject().apply {
+                        put("id", localMosque.id)
+                        put("committee_id", localMosque.committeeId)
+                        put("name_bn", localMosque.nameBn)
+                        put("name_en", localMosque.nameEn)
+                        put("address", localMosque.address)
+                        put("established_year", localMosque.establishedYear)
+                        put("committee_start_year", localMosque.committeeStartYear)
+                        put("committee_end_year", localMosque.committeeEndYear)
+                        put("status", localMosque.status)
+                        put("logo_url", localMosque.logoUrl ?: JSONObject.NULL)
+                    }
+                    val upsertRes = client.upsert("mosques", JSONArray().apply { put(mosqueJson) }.toString())
+                    if (upsertRes.isSuccess) syncedMosque = 1
+                }
             }
 
             // 2. Sync Members
@@ -127,7 +159,29 @@ object SupabaseSyncManager {
                 if (tRes.isSuccess) syncedTransactions = localTxns.size
             }
 
-            // 4. Sync Notices
+            // 4. Sync Notices & By-Laws (Bidirectional)
+            val cloudNoticesRes = client.get("notices")
+            if (cloudNoticesRes.isSuccess) {
+                val cArray = cloudNoticesRes.getOrNull() ?: JSONArray()
+                for (i in 0 until cArray.length()) {
+                    val nJson = cArray.getJSONObject(i)
+                    val id = nJson.optString("id")
+                    if (id.isNotBlank()) {
+                        val notice = NoticeEntity(
+                            id = id,
+                            title = nJson.optString("title", ""),
+                            content = nJson.optString("content", ""),
+                            priority = nJson.optString("priority", "normal"),
+                            isPinned = nJson.optBoolean("is_pinned", false),
+                            publishDate = nJson.optString("publish_date", ""),
+                            status = nJson.optString("status", "published"),
+                            createdBy = nJson.optString("created_by", "Admin")
+                        )
+                        database.noticeDao().insertNotice(notice)
+                    }
+                }
+            }
+
             val localNotices = database.noticeDao().getAllNotices().first()
             if (localNotices.isNotEmpty()) {
                 val noticesArray = JSONArray()

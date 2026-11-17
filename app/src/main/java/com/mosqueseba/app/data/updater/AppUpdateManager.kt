@@ -1,5 +1,6 @@
 package com.mosqueseba.app.data.updater
 
+import android.app.DownloadManager
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -8,11 +9,13 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.net.Uri
 import android.os.Build
+import android.os.Environment
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.mosqueseba.app.BuildConfig
 import com.mosqueseba.app.MainActivity
 import com.mosqueseba.app.R
+import com.mosqueseba.app.ui.components.MosqueToastController
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
@@ -224,5 +227,37 @@ object AppUpdateManager {
 
     fun dismissVersion(context: Context, versionName: String) {
         getPrefs(context).edit().putString(KEY_DISMISSED_VERSION, versionName).apply()
+    }
+
+    /**
+     * Directly downloads and triggers installation of the new APK using Android DownloadManager.
+     */
+    fun downloadAndInstallApk(context: Context, updateInfo: AppUpdateInfo) {
+        val apkUrl = updateInfo.apkDownloadUrl.ifBlank { updateInfo.releasePageUrl }
+        try {
+            val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as? DownloadManager
+            if (downloadManager != null && apkUrl.startsWith("http")) {
+                val fileName = "Mosque-Seba-v${updateInfo.latestVersionName}.apk"
+                val request = DownloadManager.Request(Uri.parse(apkUrl)).apply {
+                    setTitle("Mosque Seba v${updateInfo.latestVersionName}")
+                    setDescription("মসজিদ সেবার নতুন সংস্করণ ডাউনলোড হচ্ছে...")
+                    setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                    setDestinationInExternalFilesDir(context, Environment.DIRECTORY_DOWNLOADS, fileName)
+                    setMimeType("application/vnd.android.package-archive")
+                }
+                downloadManager.enqueue(request)
+                MosqueToastController.info("আপডেট ডাউনলোড শুরু হয়েছে। নোটিফিকেশন বারে লক্ষ্য করুন।")
+            } else {
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(apkUrl)).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                }
+                context.startActivity(intent)
+            }
+        } catch (_: Exception) {
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(apkUrl)).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }
+            context.startActivity(intent)
+        }
     }
 }
