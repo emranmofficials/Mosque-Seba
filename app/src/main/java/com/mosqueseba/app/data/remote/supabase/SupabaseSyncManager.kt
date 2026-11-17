@@ -244,6 +244,158 @@ object SupabaseSyncManager {
                 if (cRes.isSuccess) syncedChanda = localChanda.size
             }
 
+            // 7. Sync Madrasa Students
+            try {
+                val localStudents = database.studentDao().getAllActiveStudents().first()
+                if (localStudents.isNotEmpty()) {
+                    val sArray = JSONArray()
+                    localStudents.forEach { s ->
+                        sArray.put(JSONObject().apply {
+                            put("id", s.id)
+                            put("student_code", s.studentCode)
+                            put("name_bn", s.nameBn)
+                            put("name_en", s.nameEn)
+                            put("class_name", s.className)
+                            put("guardian_name", s.guardianName)
+                            put("guardian_mobile", s.guardianMobile)
+                            put("monthly_fee", s.monthlyFee)
+                            put("join_date", s.joinDate)
+                            put("status", s.status)
+                        })
+                    }
+                    client.upsert("madrasa_students", sArray.toString())
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "Madrasa sync skipped", e)
+            }
+
+            // 8. Sync Cashbox Records
+            try {
+                val localCashbox = database.cashboxDao().getAllRecords().first()
+                if (localCashbox.isNotEmpty()) {
+                    val cbArray = JSONArray()
+                    localCashbox.forEach { cb ->
+                        cbArray.put(JSONObject().apply {
+                            put("id", cb.id)
+                            put("collection_date", cb.collectionDate)
+                            put("box_type", cb.boxType)
+                            put("counted_amount", cb.countedAmount)
+                            put("counted_by", cb.countedBy)
+                            put("witness_names", cb.witnessNames)
+                            put("witness_verified", cb.witnessVerified)
+                            put("verified_by", cb.verifiedBy ?: JSONObject.NULL)
+                            put("bank_name", cb.bankName)
+                            put("deposit_slip_no", cb.depositSlipNo)
+                            put("deposit_status", cb.depositStatus)
+                            put("notes", cb.notes)
+                        })
+                    }
+                    client.upsert("cashbox_records", cbArray.toString())
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "Cashbox sync skipped", e)
+            }
+
+            // 9. Sync Welfare Cases
+            try {
+                val localWelfare = database.welfareDao().getAllCases().first()
+                if (localWelfare.isNotEmpty()) {
+                    val wArray = JSONArray()
+                    localWelfare.forEach { w ->
+                        wArray.put(JSONObject().apply {
+                            put("id", w.id)
+                            put("beneficiary_name", w.beneficiaryName)
+                            put("category", w.category)
+                            put("mobile", w.mobile)
+                            put("amount_requested", w.amountRequested)
+                            put("amount_approved", w.amountApproved)
+                            put("status", w.status)
+                            put("application_date", w.applicationDate)
+                            put("remarks", w.remarks)
+                        })
+                    }
+                    client.upsert("welfare_cases", wArray.toString())
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "Welfare sync skipped", e)
+            }
+
+            // 10. Sync Election Schedules & Candidates
+            try {
+                val localElections = database.electionDao().getAllElections().first()
+                if (localElections.isNotEmpty()) {
+                    val elArray = JSONArray()
+                    localElections.forEach { el ->
+                        elArray.put(JSONObject().apply {
+                            put("id", el.id)
+                            put("term_title", el.termTitle)
+                            put("term_start_year", el.termStartYear)
+                            put("term_end_year", el.termEndYear)
+                            put("chief_election_commissioner", el.chiefElectionCommissioner)
+                            put("commissioner_mobile", el.commissionerMobile)
+                            put("schedule_date", el.scheduleDate)
+                            put("nomination_deadline", el.nominationDeadline)
+                            put("voting_date", el.votingDate)
+                            put("status", el.status)
+                            put("election_type", el.electionType)
+                            put("gazette_notes", el.gazetteNotes)
+                        })
+                    }
+                    client.upsert("election_schedules", elArray.toString())
+                }
+
+                val localCandidates = database.electionDao().getAllCandidates().first()
+                if (localCandidates.isNotEmpty()) {
+                    val candArray = JSONArray()
+                    localCandidates.forEach { c ->
+                        candArray.put(JSONObject().apply {
+                            put("id", c.id)
+                            put("election_id", c.electionId)
+                            put("target_role_code", c.targetRoleCode)
+                            put("target_role_title_bn", c.targetRoleTitleBn)
+                            put("candidate_name_bn", c.candidateNameBn)
+                            put("candidate_mobile", c.candidateMobile)
+                            put("member_code", c.memberCode)
+                            put("proposer_name_bn", c.proposerNameBn)
+                            put("seconder_name_bn", c.seconderNameBn)
+                            put("status", c.status)
+                            put("symbol_or_panel", c.symbolOrPanel)
+                            put("votes_received", c.votesReceived)
+                            put("is_elected", c.isElected)
+                        })
+                    }
+                    client.upsert("election_candidates", candArray.toString())
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "Election sync skipped", e)
+            }
+
+            // 11. Sync Mosque Properties
+            try {
+                val localProps = database.mosquePropertyDao().getAllProperties().first()
+                if (localProps.isNotEmpty()) {
+                    val pArray = JSONArray()
+                    localProps.forEach { p ->
+                        pArray.put(JSONObject().apply {
+                            put("id", p.id)
+                            put("title", p.title)
+                            put("category", p.category)
+                            put("area_or_quantity", p.areaOrQuantity)
+                            put("location_or_dag_no", p.locationOrDagNo)
+                            put("deed_or_reg_no", p.deedOrRegNo)
+                            put("estimated_value_or_income", p.estimatedValueOrIncome)
+                            put("photo_url", p.photoUrl ?: JSONObject.NULL)
+                            put("status", p.status)
+                            put("description", p.description)
+                            put("recorded_date", p.recordedDate)
+                        })
+                    }
+                    client.upsert("mosque_properties", pArray.toString())
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "Properties sync skipped", e)
+            }
+
             val nowFormatted = SimpleDateFormat("dd MMMM, hh:mm a", Locale("bn", "BD")).format(Date())
             SupabaseConfig.saveLastSyncTime(context, nowFormatted)
 
