@@ -16,6 +16,10 @@ import com.mosqueseba.app.data.repository.MosqueRepository
 import com.mosqueseba.app.data.updater.AppUpdateInfo
 import com.mosqueseba.app.data.updater.AppUpdateManager
 import com.mosqueseba.app.ui.components.toBengaliDigits
+import com.mosqueseba.app.data.remote.supabase.SupabaseConfig
+import com.mosqueseba.app.data.remote.supabase.SupabaseHttpClient
+import com.mosqueseba.app.data.remote.supabase.SupabaseSyncManager
+import com.mosqueseba.app.data.remote.supabase.SyncResult
 import com.mosqueseba.app.util.MosquePushNotificationHelper
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -138,6 +142,36 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
     fun setNotificationsEnabled(enabled: Boolean) {
         sessionManager.setNotificationsEnabled(enabled)
         _notificationsEnabled.value = enabled
+    }
+
+    // Supabase Cloud Backend & Sync
+    fun performCloudSync(onResult: (SyncResult) -> Unit) {
+        viewModelScope.launch {
+            val db = MosqueDatabase.getDatabase(getApplication(), viewModelScope)
+            val result = SupabaseSyncManager.performSync(getApplication(), db)
+            onResult(result)
+        }
+    }
+
+    suspend fun testCloudConnection(): Result<Boolean> {
+        val client = SupabaseHttpClient(getApplication())
+        return client.testConnection()
+    }
+
+    fun saveSupabaseCredentials(url: String, key: String) {
+        SupabaseConfig.saveCredentials(getApplication(), url, key)
+    }
+
+    fun getSupabaseCredentials(): Pair<String, String> {
+        return SupabaseConfig.getCredentials(getApplication())
+    }
+
+    fun isSupabaseConfigured(): Boolean {
+        return SupabaseConfig.isConfigured(getApplication())
+    }
+
+    fun getLastCloudSyncTime(): String? {
+        return SupabaseConfig.getLastSyncTime(getApplication())
     }
 
     fun setShowHijriBanner(visible: Boolean) {

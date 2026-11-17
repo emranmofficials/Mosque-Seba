@@ -351,6 +351,7 @@ fun MosqueAppShell(
     var showPublishNoticeDialog by remember { mutableStateOf(false) }
     var showScheduleMeetingDialog by remember { mutableStateOf(false) }
     var showRamadanHubDialog by remember { mutableStateOf(false) }
+    var showCloudSyncDialog by remember { mutableStateOf(false) }
     var openFinanceReportRequest by remember { mutableIntStateOf(0) }
     var openFinancePendingRequest by remember { mutableIntStateOf(0) }
 
@@ -703,6 +704,9 @@ fun MosqueAppShell(
                                     "ramadan_hub" -> {
                                         showRamadanHubDialog = true
                                     }
+                                    "cloud_sync", "supabase_sync", "sync" -> {
+                                        showCloudSyncDialog = true
+                                    }
                                 }
                             }
                         )
@@ -1042,6 +1046,14 @@ fun MosqueAppShell(
         RamadanHubDialog(
             viewModel = viewModel,
             onDismiss = { showRamadanHubDialog = false }
+        )
+    }
+
+    // Cloud Database & Supabase Sync Dialog
+    if (showCloudSyncDialog) {
+        CloudSyncDialog(
+            viewModel = viewModel,
+            onDismiss = { showCloudSyncDialog = false }
         )
     }
 

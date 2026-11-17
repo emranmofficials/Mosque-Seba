@@ -74,6 +74,7 @@ fun AccountHubScreen(
     var showHelplineGuideDialog by remember { mutableStateOf(false) }
     var showAboutAppDialog by remember { mutableStateOf(false) }
     var showLogoutConfirmDialog by remember { mutableStateOf(false) }
+    var showCloudSyncDialog by remember { mutableStateOf(false) }
 
     val currentMember = remember(currentRole, allMembers) {
         val savedId = viewModel.sessionManager.getSavedMemberId()
@@ -545,10 +546,10 @@ fun AccountHubScreen(
                             iconColor = MosqueEmeraldPrimary,
                             title = "অফলাইন ডেটা ও ক্লাউড সিঙ্ক",
                             subtitle = "ডিভাইসে সম্পূর্ণ ডেটা সংরক্ষিত ও রিয়েলটাইমে ক্লাউডে সিঙ্কড",
-                            badgeText = "সক্রিয়",
+                            badgeText = if (viewModel.isSupabaseConfigured()) "সক্রিয়" else "অফলাইন",
                             testTag = "account_hub_data_sync",
                             onClick = {
-                                Toast.makeText(context, "ক্লাউড ডেটা সিঙ্ক সক্রিয় এবং আপ-টু-ডেট রয়েছে।", Toast.LENGTH_SHORT).show()
+                                showCloudSyncDialog = true
                             }
                         )
                     }
@@ -736,6 +737,13 @@ fun AccountHubScreen(
             mosqueName = mosqueNameBn,
             committeeId = mosqueCommitteeId,
             onDismiss = { showAboutAppDialog = false }
+        )
+    }
+
+    if (showCloudSyncDialog) {
+        CloudSyncDialog(
+            viewModel = viewModel,
+            onDismiss = { showCloudSyncDialog = false }
         )
     }
 
