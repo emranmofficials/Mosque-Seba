@@ -264,10 +264,10 @@ fun ExecutiveMosqueHeroCard(
 
     Surface(
         onClick = { onMosqueProfileClick?.invoke() },
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(18.dp),
         color = surfaceColor,
         border = BorderStroke(1.dp, effectiveBorder),
-        shadowElevation = 2.dp,
+        shadowElevation = 1.dp,
         modifier = Modifier
             .fillMaxWidth()
             .testTag("executive_hero_card")
@@ -275,17 +275,17 @@ fun ExecutiveMosqueHeroCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
+                .padding(14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Left: Mosque Photo / Image Container
             Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = MosqueEmeraldDark.copy(alpha = 0.08f),
+                shape = RoundedCornerShape(14.dp),
+                color = if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft,
                 border = BorderStroke(1.dp, effectiveBorder),
                 modifier = Modifier
-                    .size(width = 96.dp, height = 82.dp)
-                    .clip(RoundedCornerShape(12.dp))
+                    .size(width = 88.dp, height = 76.dp)
+                    .clip(RoundedCornerShape(14.dp))
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     if (mosqueLogoBitmap != null) {
@@ -306,27 +306,27 @@ fun ExecutiveMosqueHeroCard(
                 }
             }
 
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(14.dp))
 
             // Right: Mosque Name, Location, Established Date & Active Badge
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = nameBn,
-                    fontSize = 15.5.sp,
+                    fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = primaryText,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
 
-                Spacer(modifier = Modifier.height(5.dp))
+                Spacer(modifier = Modifier.height(4.dp))
 
                 // Location with emerald pin
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Default.LocationOn,
                         contentDescription = "ঠিকানা",
-                        tint = Color(0xFF047857),
+                        tint = MosqueEmeraldLight,
                         modifier = Modifier.size(14.dp)
                     )
                     Spacer(modifier = Modifier.width(3.dp))
@@ -339,7 +339,7 @@ fun ExecutiveMosqueHeroCard(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(5.dp))
+                Spacer(modifier = Modifier.height(6.dp))
 
                 // Established Date + Active Badge
                 Row(
@@ -351,8 +351,8 @@ fun ExecutiveMosqueHeroCard(
                         Icon(
                             imageVector = Icons.Default.CalendarMonth,
                             contentDescription = "প্রতিষ্ঠা সাল",
-                            tint = Color(0xFF047857),
-                            modifier = Modifier.size(13.5.dp)
+                            tint = MosqueEmeraldLight,
+                            modifier = Modifier.size(13.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
@@ -362,19 +362,30 @@ fun ExecutiveMosqueHeroCard(
                         )
                     }
 
-                    // Green Pill Badge: "সক্রিয়"
+                    // Modern Pill Badge: "সক্রিয়"
                     Surface(
                         shape = RoundedCornerShape(20.dp),
-                        color = Color(0xFF047857),
-                        modifier = Modifier.padding(top = 1.dp)
+                        color = if (isDark) Color(0xFF064E3B) else Color(0xFFE6F4EA),
+                        border = BorderStroke(1.dp, if (isDark) Color(0xFF047857) else Color(0xFFA7F3D0))
                     ) {
-                        Text(
-                            text = "সক্রিয়",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White,
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp)
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.5.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(6.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFF059669))
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "সক্রিয়",
+                                fontSize = 10.5.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isDark) Color(0xFF34D399) else Color(0xFF047857)
+                            )
+                        }
                     }
                 }
             }

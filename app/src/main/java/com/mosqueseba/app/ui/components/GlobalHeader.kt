@@ -47,227 +47,167 @@ fun GlobalHeader(
     onAvatarClick: () -> Unit = {},
     onLogout: (() -> Unit)? = null
 ) {
-    val headerShape = remember { RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp) }
+    val isDark = LocalIsDarkTheme.current
+    val surfaceColor = if (isDark) MosqueNightSurface else Color.White
+    val borderColor = if (isDark) MosqueNightBorder else MosqueCardBorderSubtle
+    val primaryText = if (isDark) MosqueNightTextPrimary else MosqueTextPrimary
+    val secondaryText = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
+    val logoBitmap = remember(mosqueLogoUrl) { loadLocalThumbnail(mosqueLogoUrl, 192) }
+    val userPhotoBitmap = remember(userPhotoUrl) { loadLocalThumbnail(userPhotoUrl, 192) }
 
     Surface(
-        color = Color.Transparent,
-        shadowElevation = 6.dp
+        color = surfaceColor,
+        shadowElevation = 1.5.dp,
+        border = BorderStroke(1.dp, borderColor),
+        modifier = Modifier.fillMaxWidth()
     ) {
-        Box(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(headerShape)
-                .background(MosqueEmeraldDarkGradient)
+                .statusBarsPadding()
+                .padding(horizontal = 16.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            // Background Arabesque watermark pattern (confined strictly to parent size)
-            IslamicGeometricWatermark(
-                modifier = Modifier.matchParentSize(),
-                patternColor = Color.White.copy(alpha = 0.05f),
-                cellSize = 44.dp
-            )
-
-            Column(
+            // Left: Logo + Greeting + Mosque Name (Clickable for Mosque Profile)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .statusBarsPadding()
-                    .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 20.dp)
+                    .weight(1f)
+                    .clip(RoundedCornerShape(12.dp))
+                    .clickable(onClick = onMosqueProfileClick)
+                    .testTag("header_brand_button")
             ) {
-                // Top Row: Arched Logo + Brand Title ("মসজিদ সেবা" / "Mosque Seba") + (Bell & Avatar)
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+                // Sleek Rounded Mosque/App Logo Container
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft,
+                    border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else Color(0xFFD1FAE5)),
+                    modifier = Modifier.size(42.dp)
                 ) {
-                    // Left: Mosque Crest Logo + App Brand Title
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .weight(1f)
-                            .clip(RoundedCornerShape(12.dp))
-                            .clickable(onClick = onMosqueProfileClick)
-                            .testTag("header_brand_button")
-                    ) {
-                        // Arched Mosque Emblem Container
-                        Surface(
-                            shape = RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomStart = 8.dp, bottomEnd = 8.dp),
-                            color = Color.White.copy(alpha = 0.14f),
-                            border = androidx.compose.foundation.BorderStroke(
-                                1.5.dp,
-                                Brush.verticalGradient(listOf(MosqueGoldLight, MosqueGold))
-                            ),
-                            modifier = Modifier.size(48.dp)
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Image(
-                                    painter = painterResource(id = R.drawable.app_logo),
-                                    contentDescription = "মসজিদ সেবা লোগো",
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier.fillMaxSize()
-                                )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.width(10.dp))
-
-                        Column {
-                            // "মসজিদ সেবা" (মসজিদ in White, সেবা in Royal Gold)
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(
-                                    text = "মসজিদ ",
-                                    fontSize = 19.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White,
-                                    letterSpacing = 0.2.sp
-                                )
-                                Text(
-                                    text = "সেবা",
-                                    fontSize = 19.sp,
-                                    fontWeight = FontWeight.ExtraBold,
-                                    color = MosqueGold
-                                )
-                            }
-                            Text(
-                                text = "Mosque Seba",
-                                fontSize = 11.5.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = Color.White.copy(alpha = 0.88f),
-                                letterSpacing = 0.4.sp
+                    Box(contentAlignment = Alignment.Center) {
+                        if (logoBitmap != null) {
+                            Image(
+                                bitmap = logoBitmap,
+                                contentDescription = mosqueName ?: "মসজিদ সেবা",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
                             )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    // Right: Notification Bell + Profile Avatar
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        // Notification Bell with Badge
-                        IconButton(
-                            onClick = onNotificationClick,
-                            modifier = Modifier
-                                .clip(CircleShape)
-                                .background(Color.White.copy(alpha = 0.16f))
-                                .size(40.dp)
-                                .testTag("header_notifications_button")
-                        ) {
-                            BadgedBox(
-                                badge = {
-                                    if (notificationCount > 0) {
-                                        Badge(
-                                            containerColor = MosqueUrgentRed,
-                                            contentColor = Color.White
-                                        ) {
-                                            Text(toBengaliDigits(notificationCount.toString()), fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                                        }
-                                    }
-                                }
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Notifications,
-                                    contentDescription = "বিজ্ঞপ্তি ও বার্তা",
-                                    tint = Color.White,
-                                    modifier = Modifier.size(21.dp)
-                                )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.width(10.dp))
-
-                        // User Avatar with clean white circular ring
-                        val userPhotoBitmap = remember(userPhotoUrl) { loadLocalThumbnail(userPhotoUrl, 192) }
-                        Surface(
-                            onClick = onAvatarClick,
-                            shape = CircleShape,
-                            color = MosqueEmeraldLight,
-                            border = androidx.compose.foundation.BorderStroke(2.dp, Color.White),
-                            modifier = Modifier
-                                .size(42.dp)
-                                .testTag("header_user_avatar_button")
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                if (userPhotoBitmap != null) {
-                                    Image(
-                                        bitmap = userPhotoBitmap,
-                                        contentDescription = "অ্যাকাউন্ট ও সেটিংস",
-                                        contentScale = ContentScale.Crop,
-                                        modifier = Modifier.fillMaxSize()
-                                    )
-                                } else {
-                                    Icon(
-                                        imageVector = Icons.Default.Person,
-                                        contentDescription = "অ্যাকাউন্ট ও সেটিংস",
-                                        tint = Color.White,
-                                        modifier = Modifier.size(24.dp)
-                                    )
-                                }
-                            }
+                        } else {
+                            Image(
+                                painter = painterResource(id = R.drawable.app_logo),
+                                contentDescription = "মসজিদ সেবা",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
+                            )
                         }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.width(10.dp))
 
-                // Slogan Banner Row: — সেবায় ঐক্য, উন্নয়নে অগ্রগতি —
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .width(36.dp)
-                            .height(1.dp)
-                            .background(
-                                Brush.horizontalGradient(
-                                    listOf(Color.Transparent, MosqueGold.copy(alpha = 0.7f))
-                                )
-                            )
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    ArabesqueStarMotif(size = 7.dp, color = MosqueGoldLight, fillAlpha = 0.4f)
-                    Spacer(modifier = Modifier.width(6.dp))
-
+                Column {
+                    // Salam / Greeting Line
+                    val greeting = if (!memberName.isNullOrBlank() && memberName != "সদস্য") {
+                        "আসসালামু আলাইকুম, ${memberName.split(" ").firstOrNull() ?: memberName}"
+                    } else {
+                        "আসসালামু আলাইকুম"
+                    }
                     Text(
-                        text = "সেবায় ঐক্য, উন্নয়নে অগ্রগতি",
+                        text = greeting,
                         fontSize = 11.5.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MosqueGoldLight,
-                        letterSpacing = 0.3.sp
+                        fontWeight = FontWeight.Medium,
+                        color = secondaryText,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
 
-                    Spacer(modifier = Modifier.width(6.dp))
-                    ArabesqueStarMotif(size = 7.dp, color = MosqueGoldLight, fillAlpha = 0.4f)
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Box(
-                        modifier = Modifier
-                            .width(36.dp)
-                            .height(1.dp)
-                            .background(
-                                Brush.horizontalGradient(
-                                    listOf(MosqueGold.copy(alpha = 0.7f), Color.Transparent)
-                                )
-                            )
-                    )
+                    Spacer(modifier = Modifier.height(1.dp))
+
+                    // Mosque Name / App Title
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = mosqueName ?: "মসজিদ সেবা",
+                            fontSize = 15.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = primaryText,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
                 }
             }
 
-            // Bottom Gold Mehrab Outline Stroke
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.BottomCenter)
-                    .height(2.dp)
-                    .background(
-                        Brush.horizontalGradient(
-                            listOf(
-                                Color.Transparent,
-                                MosqueGold.copy(alpha = 0.85f),
-                                MosqueGoldLight,
-                                MosqueGold.copy(alpha = 0.85f),
-                                Color.Transparent
-                            )
+            Spacer(modifier = Modifier.width(10.dp))
+
+            // Right: Notification Bell + Profile Avatar
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                // Modern Notification Bell with Tonal Container
+                IconButton(
+                    onClick = onNotificationClick,
+                    modifier = Modifier
+                        .size(38.dp)
+                        .clip(CircleShape)
+                        .background(if (isDark) MosqueNightSurfaceVariant else Color(0xFFF1F5F9))
+                        .testTag("header_notifications_button")
+                ) {
+                    BadgedBox(
+                        badge = {
+                            if (notificationCount > 0) {
+                                Badge(
+                                    containerColor = MosqueUrgentRed,
+                                    contentColor = Color.White
+                                ) {
+                                    Text(
+                                        text = toBengaliDigits(notificationCount.toString()),
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Notifications,
+                            contentDescription = "বিজ্ঞপ্তি ও বার্তা",
+                            tint = if (isDark) MosqueNightTextPrimary else Color(0xFF334155),
+                            modifier = Modifier.size(20.dp)
                         )
-                    )
-            )
+                    }
+                }
+
+                // Modern Circular Profile Avatar
+                Surface(
+                    onClick = onAvatarClick,
+                    shape = CircleShape,
+                    color = if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft,
+                    border = BorderStroke(1.5.dp, if (isDark) MosqueNightBorder else Color(0xFFE2E8F0)),
+                    modifier = Modifier
+                        .size(38.dp)
+                        .testTag("header_user_avatar_button")
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        if (userPhotoBitmap != null) {
+                            Image(
+                                bitmap = userPhotoBitmap,
+                                contentDescription = "অ্যাকাউন্ট ও সেটিংস",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.Person,
+                                contentDescription = "অ্যাকাউন্ট ও সেটিংস",
+                                tint = MosqueEmeraldPrimary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }

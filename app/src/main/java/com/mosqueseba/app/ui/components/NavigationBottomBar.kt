@@ -150,33 +150,21 @@ fun NavigationBottomBar(
 ) {
     val items = getNavItemsForRole(currentRole)
     val isDark = LocalIsDarkTheme.current
-    val surfaceColor = if (isDark) MosqueNightSurface else MosqueEmeraldDark
-    val topLine = Brush.horizontalGradient(
-        colors = listOf(
-            Color.Transparent,
-            MosqueGold.copy(alpha = if (isDark) 0.6f else 0.85f),
-            MosqueGoldLight,
-            MosqueGold.copy(alpha = if (isDark) 0.6f else 0.85f),
-            Color.Transparent
-        )
-    )
+    val surfaceColor = if (isDark) MosqueNightSurface else Color.White
+    val borderColor = if (isDark) MosqueNightBorder else MosqueCardBorderSubtle
+    val activeColor = if (isDark) Color(0xFF34D399) else MosqueEmeraldPrimary
+    val inactiveColor = if (isDark) MosqueNightTextSecondary else Color(0xFF64748B)
 
     Surface(
         color = surfaceColor,
         shape = RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp),
-        shadowElevation = 12.dp
+        border = BorderStroke(1.dp, borderColor),
+        shadowElevation = 8.dp
     ) {
         Column {
-            // Premium gold accent trim (Islamic identity)
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(2.dp)
-                    .background(topLine)
-            )
             NavigationBar(
                 containerColor = Color.Transparent,
-                contentColor = Color.White,
+                contentColor = activeColor,
                 tonalElevation = 0.dp,
                 windowInsets = NavigationBarDefaults.windowInsets
             ) {
@@ -209,10 +197,10 @@ fun NavigationBottomBar(
                                 if (isSelected) {
                                     Box(
                                         modifier = Modifier
-                                            .width(26.dp)
+                                            .width(22.dp)
                                             .height(2.5.dp)
                                             .clip(RoundedCornerShape(2.dp))
-                                            .background(MosqueGold)
+                                            .background(activeColor)
                                     )
                                 } else {
                                     Spacer(modifier = Modifier.height(2.5.dp))
@@ -221,11 +209,11 @@ fun NavigationBottomBar(
                         },
                         alwaysShowLabel = true,
                         colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = Color.White,
-                            selectedTextColor = Color.White,
-                            indicatorColor = Color.Transparent,
-                            unselectedIconColor = Color.White.copy(alpha = 0.70f),
-                            unselectedTextColor = Color.White.copy(alpha = 0.70f)
+                            selectedIconColor = activeColor,
+                            selectedTextColor = activeColor,
+                            indicatorColor = if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft,
+                            unselectedIconColor = inactiveColor,
+                            unselectedTextColor = inactiveColor
                         )
                     )
                 }
