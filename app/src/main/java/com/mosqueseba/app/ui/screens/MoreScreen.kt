@@ -4,6 +4,7 @@ import java.util.Locale
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -21,6 +22,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -38,6 +40,7 @@ import androidx.compose.ui.platform.testTag
 import com.mosqueseba.app.ui.components.AddEventDialog
 import com.mosqueseba.app.ui.components.AddFoodScheduleFormDialog
 import com.mosqueseba.app.ui.components.AddMemberDialog
+import com.mosqueseba.app.ui.components.ArabesqueStarMotif
 import com.mosqueseba.app.ui.components.IslamicCalendarHubDialog
 import com.mosqueseba.app.ui.components.AddRosterFormDialog
 import com.mosqueseba.app.ui.components.AddWelfareDialog
@@ -2604,11 +2607,19 @@ fun OperationMenuItem(
         onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(min = 68.dp),
-        shape = RoundedCornerShape(14.dp),
+            .heightIn(min = 70.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else MosqueCardBorderSubtle),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        border = BorderStroke(
+            width = if (badgeIsAlert) 1.4.dp else 1.dp,
+            brush = if (badgeIsAlert) RoyalGoldShimmerGradient else Brush.linearGradient(
+                listOf(
+                    if (isDark) MosqueNightBorder else MosqueCardBorderGold.copy(alpha = 0.5f),
+                    if (isDark) MosqueNightBorder else MosqueCardBorderSubtle
+                )
+            )
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.2.dp)
     ) {
         Row(
             modifier = Modifier
@@ -2618,20 +2629,28 @@ fun OperationMenuItem(
         ) {
             Box(
                 modifier = Modifier
-                    .size(44.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(iconColor.copy(alpha = 0.14f)),
+                    .size(46.dp)
+                    .clip(RoundedCornerShape(13.dp))
+                    .background(
+                        Brush.linearGradient(
+                            listOf(
+                                iconColor.copy(alpha = 0.18f),
+                                iconColor.copy(alpha = 0.08f)
+                            )
+                        )
+                    )
+                    .border(0.9.dp, iconColor.copy(alpha = 0.28f), RoundedCornerShape(13.dp)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = title,
                     tint = iconColor,
-                    modifier = Modifier.size(22.dp)
+                    modifier = Modifier.size(23.dp)
                 )
             }
 
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(13.dp))
 
             Column(modifier = Modifier.weight(1f)) {
                 Row(
@@ -2649,21 +2668,34 @@ fun OperationMenuItem(
                     )
                     if (!badgeText.isNullOrBlank()) {
                         Surface(
-                            shape = RoundedCornerShape(6.dp),
+                            shape = RoundedCornerShape(7.dp),
                             color = when {
-                                badgeIsAlert -> MosqueWarningAmber.copy(alpha = 0.14f)
+                                badgeIsAlert -> MosqueWarningAmber.copy(alpha = 0.16f)
                                 isDark -> MosqueNightSurfaceVariant
                                 else -> MosqueEmeraldSoft
-                            }
-                        ) {
-                            Text(
-                                text = badgeText,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = if (badgeIsAlert) MosqueWarningAmber else primaryColor,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                                maxLines = 1
+                            },
+                            border = BorderStroke(
+                                0.7.dp,
+                                if (badgeIsAlert) MosqueWarningAmber.copy(alpha = 0.6f)
+                                else MosqueGold.copy(alpha = 0.45f)
                             )
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(3.dp),
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            ) {
+                                if (badgeIsAlert) {
+                                    ArabesqueStarMotif(size = 8.dp, color = MosqueWarningAmber)
+                                }
+                                Text(
+                                    text = badgeText,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (badgeIsAlert) MosqueWarningAmber else primaryColor,
+                                    maxLines = 1
+                                )
+                            }
                         }
                     }
                 }
@@ -2676,14 +2708,22 @@ fun OperationMenuItem(
                 )
             }
 
-            Spacer(modifier = Modifier.width(4.dp))
+            Spacer(modifier = Modifier.width(6.dp))
 
-            Icon(
-                imageVector = Icons.Default.ChevronRight,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(20.dp)
-            )
+            Surface(
+                shape = CircleShape,
+                color = if (isDark) Color.White.copy(alpha = 0.05f) else MaterialTheme.colorScheme.primary.copy(alpha = 0.06f),
+                modifier = Modifier.size(28.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Default.ChevronRight,
+                        contentDescription = null,
+                        tint = if (isDark) MosqueGoldLight else MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
         }
     }
 }

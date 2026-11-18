@@ -8,6 +8,8 @@ import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -144,28 +146,44 @@ fun NavigationBottomBar(
     onTabSelected: (Int) -> Unit
 ) {
     val items = getNavItemsForRole(currentRole)
-    val surfaceColor = MaterialTheme.colorScheme.surface
-    val activeColor = MaterialTheme.colorScheme.primary
-    val inactiveTextColor = MaterialTheme.colorScheme.onSurfaceVariant
-
     val isDark = LocalIsDarkTheme.current
-    val topBorderColor = if (isDark) MosqueNightBorder else MosqueCardBorderSubtle
+    val surfaceColor = if (isDark) {
+        MaterialTheme.colorScheme.surface.copy(alpha = 0.98f)
+    } else {
+        MaterialTheme.colorScheme.surface
+    }
+    val activeColor = MaterialTheme.colorScheme.primary
+    val inactiveIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.68f)
+    val inactiveTextColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.82f)
+    val indicatorColor = if (isDark) MosqueGreenAccent.copy(alpha = 0.18f) else activeColor.copy(alpha = 0.12f)
+    val topLine = Brush.horizontalGradient(
+        colors = listOf(
+            Color.Transparent,
+            MosqueGold.copy(alpha = if (isDark) 0.55f else 0.45f),
+            MosqueGoldLight.copy(alpha = if (isDark) 0.35f else 0.25f),
+            MosqueGold.copy(alpha = if (isDark) 0.55f else 0.45f),
+            Color.Transparent
+        )
+    )
 
     Surface(
         color = surfaceColor,
-        shadowElevation = 6.dp
+        tonalElevation = 2.dp,
+        shadowElevation = 10.dp
     ) {
         Column {
+            // Premium gold accent trim (Islamic identity)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(0.8.dp)
-                    .background(topBorderColor)
+                    .height(1.5.dp)
+                    .background(topLine)
             )
             NavigationBar(
-                containerColor = surfaceColor,
+                containerColor = Color.Transparent,
                 contentColor = activeColor,
-                tonalElevation = 0.dp
+                tonalElevation = 0.dp,
+                windowInsets = NavigationBarDefaults.windowInsets
             ) {
                 items.forEachIndexed { index, item ->
                     val isSelected = currentTabIndex == index
@@ -176,14 +194,14 @@ fun NavigationBottomBar(
                             Icon(
                                 imageVector = if (isSelected) item.selectedIcon else item.unselectedIcon,
                                 contentDescription = item.titleBn,
-                                modifier = Modifier.size(22.dp)
+                                modifier = Modifier.size(if (isSelected) 23.dp else 21.dp)
                             )
                         },
                         label = {
                             Text(
                                 text = item.titleBn,
                                 style = MaterialTheme.typography.labelSmall,
-                                fontSize = 11.sp,
+                                fontSize = 10.5.sp,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
@@ -193,8 +211,8 @@ fun NavigationBottomBar(
                         colors = NavigationBarItemDefaults.colors(
                             selectedIconColor = activeColor,
                             selectedTextColor = activeColor,
-                            indicatorColor = activeColor.copy(alpha = 0.16f),
-                            unselectedIconColor = inactiveTextColor.copy(alpha = 0.72f),
+                            indicatorColor = indicatorColor,
+                            unselectedIconColor = inactiveIconColor,
                             unselectedTextColor = inactiveTextColor
                         )
                     )
@@ -211,19 +229,38 @@ fun MosqueNavigationRail(
     onTabSelected: (Int) -> Unit
 ) {
     val items = getNavItemsForRole(currentRole)
-    val surfaceColor = MaterialTheme.colorScheme.surface
+    val isDark = LocalIsDarkTheme.current
+    val surfaceColor = if (isDark) MaterialTheme.colorScheme.surface.copy(alpha = 0.98f) else MaterialTheme.colorScheme.surface
     val activeColor = MaterialTheme.colorScheme.primary
-    val inactiveTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+    val inactiveIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.68f)
+    val inactiveTextColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.82f)
+    val indicatorColor = if (isDark) MosqueGreenAccent.copy(alpha = 0.18f) else activeColor.copy(alpha = 0.12f)
 
     Surface(
         color = surfaceColor,
-        shadowElevation = 6.dp
+        tonalElevation = 2.dp,
+        shadowElevation = 8.dp
     ) {
         Row {
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .width(1.5.dp)
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                MosqueGold.copy(alpha = 0.5f),
+                                MosqueGold.copy(alpha = 0.5f),
+                                Color.Transparent
+                            )
+                        )
+                    )
+            )
             NavigationRail(
-                containerColor = surfaceColor,
+                containerColor = Color.Transparent,
                 contentColor = activeColor,
-                modifier = Modifier.padding(vertical = 8.dp)
+                modifier = Modifier.padding(vertical = 10.dp, horizontal = 2.dp)
             ) {
                 items.forEachIndexed { index, item ->
                     val isSelected = currentTabIndex == index
@@ -234,14 +271,14 @@ fun MosqueNavigationRail(
                             Icon(
                                 imageVector = if (isSelected) item.selectedIcon else item.unselectedIcon,
                                 contentDescription = item.titleBn,
-                                modifier = Modifier.size(22.dp)
+                                modifier = Modifier.size(if (isSelected) 23.dp else 21.dp)
                             )
                         },
                         label = {
                             Text(
                                 text = item.titleBn,
                                 style = MaterialTheme.typography.labelSmall,
-                                fontSize = 11.sp,
+                                fontSize = 10.5.sp,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
@@ -250,19 +287,13 @@ fun MosqueNavigationRail(
                         colors = NavigationRailItemDefaults.colors(
                             selectedIconColor = activeColor,
                             selectedTextColor = activeColor,
-                            indicatorColor = activeColor.copy(alpha = 0.16f),
-                            unselectedIconColor = inactiveTextColor.copy(alpha = 0.72f),
+                            indicatorColor = indicatorColor,
+                            unselectedIconColor = inactiveIconColor,
                             unselectedTextColor = inactiveTextColor
                         )
                     )
                 }
             }
-            Box(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .width(1.5.dp)
-                    .background(MosqueGold.copy(alpha = 0.35f))
-            )
         }
     }
 }

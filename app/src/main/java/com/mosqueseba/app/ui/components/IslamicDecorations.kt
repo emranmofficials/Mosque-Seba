@@ -1,6 +1,8 @@
 package com.mosqueseba.app.ui.components
 
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -12,6 +14,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -19,6 +22,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -519,3 +525,173 @@ fun MosqueMemberAvatar(
         }
     }
 }
+
+/**
+ * 8-pointed Rub-el-Hizb Arabesque Star Motif with elegant dual-square geometry
+ */
+@Composable
+fun ArabesqueStarMotif(
+    modifier: Modifier = Modifier,
+    size: Dp = 22.dp,
+    color: Color = MosqueGold,
+    strokeWidth: Dp = 1.2.dp,
+    fillAlpha: Float = 0.15f
+) {
+    Canvas(modifier = modifier.size(size)) {
+        val side = this.size.minDimension
+        val half = side / 2f
+        val squareSide = side * 0.72f
+        val offset = (side - squareSide) / 2f
+        val strokePx = strokeWidth.toPx()
+
+        // Square 1 (0 deg)
+        drawRect(
+            color = color.copy(alpha = fillAlpha),
+            topLeft = androidx.compose.ui.geometry.Offset(offset, offset),
+            size = androidx.compose.ui.geometry.Size(squareSide, squareSide)
+        )
+        drawRect(
+            color = color,
+            topLeft = androidx.compose.ui.geometry.Offset(offset, offset),
+            size = androidx.compose.ui.geometry.Size(squareSide, squareSide),
+            style = Stroke(width = strokePx)
+        )
+
+        // Square 2 (45 deg rotated)
+        rotate(45f, pivot = androidx.compose.ui.geometry.Offset(half, half)) {
+            drawRect(
+                color = color.copy(alpha = fillAlpha),
+                topLeft = androidx.compose.ui.geometry.Offset(offset, offset),
+                size = androidx.compose.ui.geometry.Size(squareSide, squareSide)
+            )
+            drawRect(
+                color = color,
+                topLeft = androidx.compose.ui.geometry.Offset(offset, offset),
+                size = androidx.compose.ui.geometry.Size(squareSide, squareSide),
+                style = Stroke(width = strokePx)
+            )
+        }
+
+        // Center jewel dot
+        drawCircle(
+            color = color,
+            radius = side * 0.09f,
+            center = androidx.compose.ui.geometry.Offset(half, half)
+        )
+    }
+}
+
+/**
+ * Luxury Circular Prayer Countdown Ring with animated radial progress & gold shimmer
+ */
+@Composable
+fun CircularPrayerCountdownRing(
+    prayerName: String,
+    remainingMinutes: Long,
+    totalWindowMinutes: Long = 180L,
+    modifier: Modifier = Modifier,
+    size: Dp = 92.dp
+) {
+    val progress = (1f - (remainingMinutes.toFloat() / totalWindowMinutes.coerceAtLeast(1))).coerceIn(0.05f, 0.98f)
+    val animatedProgress by animateFloatAsState(
+        targetValue = progress,
+        animationSpec = tween(durationMillis = 1000, easing = FastOutSlowInEasing),
+        label = "prayerCountdownProgress"
+    )
+
+    val infiniteTransition = rememberInfiniteTransition(label = "ringShimmer")
+    val pulseGlow by infiniteTransition.animateFloat(
+        initialValue = 0.55f,
+        targetValue = 0.95f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1500, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "pulseGlow"
+    )
+
+    Box(
+        modifier = modifier.size(size),
+        contentAlignment = Alignment.Center
+    ) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val strokeWidth = 5.5.dp.toPx()
+            val diameter = this.size.minDimension - strokeWidth
+            val radius = diameter / 2f
+            val center = androidx.compose.ui.geometry.Offset(this.size.width / 2f, this.size.height / 2f)
+
+            // Background track (soft golden ring)
+            drawCircle(
+                color = Color.White.copy(alpha = 0.14f),
+                radius = radius,
+                center = center,
+                style = Stroke(width = strokeWidth)
+            )
+
+            // Outer decorative thin ring
+            drawCircle(
+                color = MosqueGold.copy(alpha = 0.25f),
+                radius = radius + (strokeWidth * 0.85f),
+                center = center,
+                style = Stroke(width = 1.dp.toPx())
+            )
+
+            // Active animated progress arc (Royal Gold sweep)
+            val sweepAngle = animatedProgress * 360f
+            drawArc(
+                brush = RoyalGoldShimmerGradient,
+                startAngle = -90f,
+                sweepAngle = sweepAngle,
+                useCenter = false,
+                topLeft = androidx.compose.ui.geometry.Offset(strokeWidth / 2f, strokeWidth / 2f),
+                size = androidx.compose.ui.geometry.Size(diameter, diameter),
+                style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
+            )
+
+            // Glowing indicator bead at current progress point
+            val angleRad = Math.toRadians((sweepAngle - 90f).toDouble())
+            val beadX = center.x + (radius * Math.cos(angleRad)).toFloat()
+            val beadY = center.y + (radius * Math.sin(angleRad)).toFloat()
+
+            drawCircle(
+                color = MosqueGold.copy(alpha = pulseGlow * 0.45f),
+                radius = strokeWidth * 1.5f,
+                center = androidx.compose.ui.geometry.Offset(beadX, beadY)
+            )
+            drawCircle(
+                color = Color.White,
+                radius = strokeWidth * 0.7f,
+                center = androidx.compose.ui.geometry.Offset(beadX, beadY)
+            )
+        }
+
+        // Center remaining time & waqt
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = prayerName,
+                fontSize = 11.5.sp,
+                fontWeight = FontWeight.Bold,
+                color = MosqueGoldLight
+            )
+            val hours = remainingMinutes / 60
+            val mins = remainingMinutes % 60
+            val timeText = if (hours > 0) "${hours}ঘ ${mins}মি" else "${mins} মি."
+            Text(
+                text = toBengaliDigits(timeText),
+                fontSize = 12.sp,
+                fontWeight = FontWeight.ExtraBold,
+                color = Color.White
+            )
+            Text(
+                text = "বাকি",
+                fontSize = 9.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color.White.copy(alpha = 0.82f)
+            )
+        }
+    }
+}
+

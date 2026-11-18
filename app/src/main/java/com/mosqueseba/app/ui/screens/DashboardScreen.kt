@@ -973,7 +973,22 @@ fun DashboardScreen(
             }
 
             else -> {
-                // Executive Members, Advisory Board
+                // Duty-aligned fallback for executive/advisory roles
+                val dutyKpiTitle = when (currentRole) {
+                    UserRole.EXECUTIVE_MEMBER -> "সাক্ষী ও কার্যনির্বাহী তদারকি সূচক"
+                    UserRole.ADVISORY_BOARD -> "উপদেষ্টা ও স্বচ্ছতা সূচক"
+                    else -> "দায়িত্বভিত্তিক কর্মসূচি সূচক"
+                }
+                val dutyActionsTitle = when (currentRole) {
+                    UserRole.EXECUTIVE_MEMBER -> "সাক্ষী ও কমিটি দ্রুত কার্যক্রম"
+                    UserRole.ADVISORY_BOARD -> "উপদেষ্টা ও তদারকি দ্রুত কার্যক্রম"
+                    else -> "দায়িত্ব ও দ্রুত কার্যক্রম"
+                }
+                val dutyMeetingsTitle = when (currentRole) {
+                    UserRole.ADVISORY_BOARD -> "সভা, নির্বাচন ও পরামর্শ অগ্রগতি"
+                    else -> "আসন্ন সভা ও এজেন্ডা"
+                }
+
                 if (activeAdvisories.isNotEmpty()) {
                     item(key = "other_advisory") {
                         StaggeredDashboardItem(index = 1, modifier = Modifier.animateItem()) {
@@ -1000,7 +1015,7 @@ fun DashboardScreen(
 
                 item(key = "other_kpi_div") {
                     StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
-                        RubElHizbDivider(title = "পরামর্শ ও তদারকি সূচক", modifier = Modifier.padding(vertical = 2.dp))
+                        RubElHizbDivider(title = dutyKpiTitle, modifier = Modifier.padding(vertical = 2.dp))
                     }
                 }
 
@@ -1038,7 +1053,7 @@ fun DashboardScreen(
 
                 item(key = "other_actions_div") {
                     StaggeredDashboardItem(index = 4, modifier = Modifier.animateItem()) {
-                        RubElHizbDivider(title = "কমিটি কুইক অ্যাকশন", modifier = Modifier.padding(vertical = 2.dp))
+                        RubElHizbDivider(title = dutyActionsTitle, modifier = Modifier.padding(vertical = 2.dp))
                     }
                 }
 
@@ -1053,7 +1068,7 @@ fun DashboardScreen(
 
                 item(key = "other_meetings_div") {
                     StaggeredDashboardItem(index = 5, modifier = Modifier.animateItem()) {
-                        RubElHizbDivider(title = "আসন্ন সভা ও এজেন্ডা", modifier = Modifier.padding(vertical = 2.dp))
+                        RubElHizbDivider(title = dutyMeetingsTitle, modifier = Modifier.padding(vertical = 2.dp))
                     }
                 }
 

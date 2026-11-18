@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,7 +43,8 @@ data class PrayerTimeItem(
 data class NextPrayerSummary(
     val nameBn: String,
     val iqamahTimeBn: String,
-    val remainingTextBn: String
+    val remainingTextBn: String,
+    val remainingMinutes: Long = 0L
 )
 
 fun computeTodayPrayerSchedule(now: LocalTime = LocalTime.now()): Pair<List<PrayerTimeItem>, NextPrayerSummary> {
@@ -80,7 +82,8 @@ fun computeTodayPrayerSchedule(now: LocalTime = LocalTime.now()): Pair<List<Pray
     return updatedList to NextPrayerSummary(
         nameBn = nextPrayer.nameBn,
         iqamahTimeBn = nextPrayer.iqamahTime,
-        remainingTextBn = remainingBn
+        remainingTextBn = remainingBn,
+        remainingMinutes = minutesUntil
     )
 }
 
@@ -110,147 +113,206 @@ fun PrayerCard(
     MehrabArchCard(
         modifier = Modifier.fillMaxWidth(),
         backgroundColor = MaterialTheme.colorScheme.surface,
-        borderColor = if (isDark) MosqueNightBorder else MosqueCardBorderSubtle,
-        elevation = 1.5.dp
+        borderColor = if (isDark) MosqueNightBorder else MosqueCardBorderGold.copy(alpha = 0.8f),
+        elevation = if (isDark) 2.dp else 1.5.dp
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
-            // Card Title
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            // Gold trim line
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(1.5.dp)
+                    .background(IslamicGoldTrimGradient)
+            )
+            Column(modifier = Modifier.padding(14.dp)) {
+                // Card Title
                 Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.AccessTime,
-                        contentDescription = null,
-                        tint = primaryColor,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Column {
-                        Text(
-                            text = "আজকের নামাজের সময়সূচি",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = primaryColor
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        ArabesqueStarMotif(
+                            size = 18.dp,
+                            color = if (isDark) MosqueGold else MosqueGoldDark
                         )
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(top = 1.dp)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(6.dp)
-                                    .clip(CircleShape)
-                                    .background(subtitleHighlight.copy(alpha = pulseAlpha))
-                            )
-                            Spacer(modifier = Modifier.width(5.dp))
+                        Spacer(modifier = Modifier.width(7.dp))
+                        Column {
                             Text(
-                                text = "পরবর্তী ${nextSummary.nameBn} • বাকি ${nextSummary.remainingTextBn}",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = subtitleHighlight,
-                                fontWeight = FontWeight.SemiBold
+                                text = "আজকের নামাজের সময়সূচি",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = primaryColor
                             )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(top = 1.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(6.dp)
+                                        .clip(CircleShape)
+                                        .background(subtitleHighlight.copy(alpha = pulseAlpha))
+                                )
+                                Spacer(modifier = Modifier.width(5.dp))
+                                Text(
+                                    text = "পরবর্তী ${nextSummary.nameBn} • বাকি ${nextSummary.remainingTextBn}",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = subtitleHighlight,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
                         }
                     }
-                }
 
-                TextButton(
-                    onClick = onViewFullScheduleClick,
-                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
-                ) {
-                    Text(
-                        text = "পূর্ণ সূচি",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = primaryColor,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // 5 Prayer Rows
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                prayers.forEach { item ->
-                    Column(
-                        modifier = Modifier
-                            .weight(1f)
-                            .clip(RoundedCornerShape(12.dp))
-                            .then(
-                                if (item.isNext) {
-                                    Modifier
-                                        .background(
-                                            Brush.verticalGradient(
-                                                listOf(
-                                                    MosqueEmeraldPrimary,
-                                                    MosqueEmeraldDark
-                                                )
-                                            )
-                                        )
-                                        .border(
-                                            width = 1.5.dp,
-                                            brush = Brush.verticalGradient(
-                                                listOf(
-                                                    MosqueGoldLight.copy(alpha = pulseAlpha),
-                                                    MosqueGoldDeep
-                                                )
-                                            ),
-                                            shape = RoundedCornerShape(12.dp)
-                                        )
-                                } else {
-                                    Modifier
-                                        .background(tileInactiveBg)
-                                        .border(
-                                            width = 1.dp,
-                                            color = tileInactiveBorder,
-                                            shape = RoundedCornerShape(12.dp)
-                                        )
-                                }
-                            )
-                            .padding(vertical = 8.dp, horizontal = 2.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                    TextButton(
+                        onClick = onViewFullScheduleClick,
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
                     ) {
-                        if (item.isNext) {
-                            Box(
-                                modifier = Modifier
-                                    .size(5.dp)
-                                    .clip(CircleShape)
-                                    .background(MosqueGold.copy(alpha = pulseAlpha))
-                            )
-                            Spacer(modifier = Modifier.height(2.dp))
-                        }
                         Text(
-                            text = item.nameBn,
+                            text = "পূর্ণ সূচি",
                             style = MaterialTheme.typography.labelSmall,
-                            color = if (item.isNext) MosqueGold else secondaryColor,
-                            fontWeight = if (item.isNext) FontWeight.ExtraBold else FontWeight.Medium,
-                            maxLines = 1
-                        )
-                        Spacer(modifier = Modifier.height(3.dp))
-                        Text(
-                            text = item.iqamahTime,
-                            style = MaterialTheme.typography.labelMedium,
-                            color = if (item.isNext) Color.White else MaterialTheme.colorScheme.onSurface,
+                            color = primaryColor,
                             fontWeight = FontWeight.Bold
                         )
-                        Spacer(modifier = Modifier.height(1.dp))
-                        Text(
-                            text = "আজান ${item.azanTime}",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontSize = 9.sp,
-                            color = if (item.isNext) Color.White.copy(alpha = 0.85f) else secondaryColor.copy(alpha = 0.85f)
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Spotlight Banner: Animated Countdown Ring & Prayer Callout
+                Surface(
+                    shape = RoundedCornerShape(16.dp),
+                    border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else MosqueCardBorderGold),
+                    color = Color.Transparent,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    val nextSkyGradient = remember(nextSummary.nameBn) { getPrayerSkyGradient(nextSummary.nameBn) }
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(nextSkyGradient)
+                            .padding(horizontal = 14.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                ArabesqueStarMotif(size = 11.dp, color = MosqueGoldLight)
+                                Text(
+                                    text = "পরবর্তী জামাত কাউন্টডাউন",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MosqueGoldLight
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(3.dp))
+                            Text(
+                                text = "${nextSummary.nameBn} জামাত ${nextSummary.iqamahTimeBn}",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = Color.White
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "বাকি ${nextSummary.remainingTextBn} • ওয়াক্তে উপস্থিত হোন",
+                                fontSize = 10.5.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = Color.White.copy(alpha = 0.88f)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(10.dp))
+
+                        CircularPrayerCountdownRing(
+                            prayerName = nextSummary.nameBn,
+                            remainingMinutes = nextSummary.remainingMinutes,
+                            size = 72.dp
                         )
                     }
-                    if (item != prayers.last()) {
-                        Spacer(modifier = Modifier.width(5.dp))
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // 5 Prayer Rows
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    prayers.forEach { item ->
+                        Column(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(12.dp))
+                                .then(
+                                    if (item.isNext) {
+                                        Modifier
+                                            .background(
+                                                Brush.verticalGradient(
+                                                    listOf(
+                                                        MosqueEmeraldPrimary,
+                                                        MosqueEmeraldDark
+                                                    )
+                                                )
+                                            )
+                                            .border(
+                                                width = 1.5.dp,
+                                                brush = RoyalGoldShimmerGradient,
+                                                shape = RoundedCornerShape(12.dp)
+                                            )
+                                    } else {
+                                        Modifier
+                                            .background(tileInactiveBg)
+                                            .border(
+                                                width = 1.dp,
+                                                color = tileInactiveBorder,
+                                                shape = RoundedCornerShape(12.dp)
+                                            )
+                                    }
+                                )
+                                .padding(vertical = 8.dp, horizontal = 2.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            if (item.isNext) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(5.dp)
+                                        .clip(CircleShape)
+                                        .background(MosqueGold.copy(alpha = pulseAlpha))
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                            }
+                            Text(
+                                text = item.nameBn,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = if (item.isNext) MosqueGold else secondaryColor,
+                                fontWeight = if (item.isNext) FontWeight.ExtraBold else FontWeight.Medium,
+                                maxLines = 1
+                            )
+                            Spacer(modifier = Modifier.height(3.dp))
+                            Text(
+                                text = item.iqamahTime,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = if (item.isNext) Color.White else MaterialTheme.colorScheme.onSurface,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.height(1.dp))
+                            Text(
+                                text = "আজান ${item.azanTime}",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontSize = 9.sp,
+                                color = if (item.isNext) Color.White.copy(alpha = 0.85f) else secondaryColor.copy(alpha = 0.85f)
+                            )
+                        }
+                        if (item != prayers.last()) {
+                            Spacer(modifier = Modifier.width(5.dp))
+                        }
                     }
                 }
             }

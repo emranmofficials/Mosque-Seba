@@ -768,9 +768,11 @@ fun MosqueAppShell(
                     onAddExpenseClick = null,
                     isReadOnlyTransparencyMode = true
                 )
-                "treasurer_chanda" -> MembersScreen(
+                "treasurer_chanda" -> MoreScreen(
                     viewModel = viewModel,
-                    onAddMemberClick = if (currentRole.canManageMembers()) { { showAddMemberDialog = true } } else null
+                    initialSubModule = "chanda",
+                    onOpenReceiveChanda = { showReceiveChandaDialog = true },
+                    onOpenScheduleMeeting = { showScheduleMeetingDialog = true }
                 )
                 "treasurer_payroll" -> MoreScreen(
                     viewModel = viewModel,

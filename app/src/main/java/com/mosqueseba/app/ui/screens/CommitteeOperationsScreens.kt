@@ -54,6 +54,7 @@ import java.util.Locale
 // =========================================================================
 // 1. ৩-স্তরীয় আদর্শ কমিটি সনদ ও দায়িত্ব নির্দেশিকা (Committee Charter)
 // =========================================================================
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun CommitteeCharterScreen(
     viewModel: MosqueViewModel
@@ -91,7 +92,7 @@ fun CommitteeCharterScreen(
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "৩টি স্তরে বিভক্ত ১৩টি আনুষ্ঠানিক পদবি ও প্রতিটি দায়িত্বশীলের সুনির্দিষ্ট কর্তব্য তালিকা",
+                        text = "৩টি স্তরে বিভক্ত ১৩টি আনুষ্ঠানিক পদবি, দায়িত্ব ও পদভিত্তিক ফিচার অপশন",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -271,6 +272,37 @@ fun CommitteeCharterScreen(
                                 )
                             }
                         }
+
+                        // পদ ও দায়িত্ব অনুযায়ী এই পদে পাওয়া ফিচার অপশনসমূহ
+                        Spacer(modifier = Modifier.height(8.dp))
+                        HorizontalDivider(color = cardBorder)
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = "এই পদবির ফিচার অপশন",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.height(5.dp))
+                        FlowRow(
+                            horizontalArrangement = Arrangement.spacedBy(5.dp),
+                            verticalArrangement = Arrangement.spacedBy(5.dp)
+                        ) {
+                            role.featureOptionsBn.forEach { feature ->
+                                Surface(
+                                    shape = RoundedCornerShape(6.dp),
+                                    color = if (isDark) MosqueNightSurfaceVariant else MosqueGoldSoft,
+                                    border = BorderStroke(1.dp, cardBorder)
+                                ) {
+                                    Text(
+                                        text = feature,
+                                        fontSize = 10.sp,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -281,6 +313,7 @@ fun CommitteeCharterScreen(
 // =========================================================================
 // 1.1 ড্যাশবোর্ড থেকে দ্রুত "আমার দায়িত্ব তালিকা" ডায়ালগ
 // =========================================================================
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun MyRoleDutiesDialog(
     role: UserRole,
@@ -375,6 +408,36 @@ fun MyRoleDutiesDialog(
                             color = MaterialTheme.colorScheme.onSurface,
                             lineHeight = 18.sp
                         )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+                HorizontalDivider()
+                Spacer(modifier = Modifier.height(10.dp))
+                Text(
+                    text = "আপনার পদবির ফিচার অপশন",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(5.dp),
+                    verticalArrangement = Arrangement.spacedBy(5.dp)
+                ) {
+                    role.featureOptionsBn.forEach { feature ->
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = MosqueGoldSoft,
+                            border = BorderStroke(1.dp, MosqueCardBorderGold)
+                        ) {
+                            Text(
+                                text = feature,
+                                fontSize = 10.sp,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)
+                            )
+                        }
                     }
                 }
 

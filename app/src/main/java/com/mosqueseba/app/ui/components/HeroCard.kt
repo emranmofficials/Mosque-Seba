@@ -53,6 +53,8 @@ fun HeroCard(
     val startYearBn = mosque?.committeeStartYear?.let { toBengaliDigits(it.toString()) } ?: "—"
     val endYearBn = mosque?.committeeEndYear?.let { toBengaliDigits(it.toString()) } ?: "—"
     val mosqueLogoBitmap = remember(mosque?.logoUrl) { loadLocalThumbnail(mosque?.logoUrl, 256) }
+    val (_, nextPrayerSummary) = remember { computeTodayPrayerSchedule() }
+    val skyGradient = remember(nextPrayerSummary.nameBn) { getPrayerSkyGradient(nextPrayerSummary.nameBn) }
 
     MehrabArchCard(
         modifier = Modifier
@@ -63,12 +65,12 @@ fun HeroCard(
                 } else Modifier
             ),
         backgroundColor = Color.Transparent,
-        borderColor = MosqueCardBorderGold.copy(alpha = 0.5f),
+        borderColor = MosqueCardBorderGold.copy(alpha = 0.65f),
         elevation = 4.dp
     ) {
         Box(
             modifier = Modifier
-                .background(MosqueEmeraldDarkGradient)
+                .background(skyGradient)
                 .padding(18.dp)
         ) {
             Column {
@@ -77,35 +79,50 @@ fun HeroCard(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Committee ID Pill
+                    // Committee ID Pill with Arabesque Star
                     Row(
                         modifier = Modifier
                             .clip(RoundedCornerShape(20.dp))
-                            .background(Color.White.copy(alpha = 0.15f))
+                            .background(Color.Black.copy(alpha = 0.22f))
+                            .border(BorderStroke(0.8.dp, MosqueGold.copy(alpha = 0.45f)), RoundedCornerShape(20.dp))
                             .padding(horizontal = 10.dp, vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Verified,
-                            contentDescription = null,
-                            tint = MosqueGold,
-                            modifier = Modifier.size(14.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
+                        ArabesqueStarMotif(size = 12.dp, color = MosqueGoldLight)
+                        Spacer(modifier = Modifier.width(5.dp))
                         Text(
                             text = "কমিটি আইডি: $committeeId",
                             style = MaterialTheme.typography.labelSmall,
-                            color = MosqueGold,
+                            color = MosqueGoldLight,
                             fontWeight = FontWeight.Bold
                         )
                     }
 
-                    // Established badge
-                    Text(
-                        text = "স্থাপিত: $establishedBn ইং",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Color.White.copy(alpha = 0.85f)
-                    )
+                    // Live Next Prayer Ambient Pill
+                    Surface(
+                        color = Color.Black.copy(alpha = 0.25f),
+                        shape = RoundedCornerShape(20.dp),
+                        border = BorderStroke(0.8.dp, MosqueGold.copy(alpha = 0.4f))
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.AccessTime,
+                                contentDescription = null,
+                                tint = MosqueGoldLight,
+                                modifier = Modifier.size(12.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "${nextPrayerSummary.nameBn}: ${nextPrayerSummary.remainingTextBn} বাকি",
+                                fontSize = 10.5.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color.White
+                            )
+                        }
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(10.dp))
@@ -233,6 +250,8 @@ fun ExecutiveMosqueHeroCard(
     val endYearBn = mosque?.committeeEndYear?.let { toBengaliDigits(it.toString()) } ?: "—"
     val hijriDate = remember { formatCurrentHijriDateBn() }
     val mosqueLogoBitmap = remember(mosque?.logoUrl) { loadLocalThumbnail(mosque?.logoUrl, 256) }
+    val (_, nextPrayerSummary) = remember { computeTodayPrayerSchedule() }
+    val skyGradient = remember(nextPrayerSummary.nameBn) { getPrayerSkyGradient(nextPrayerSummary.nameBn) }
 
     var copied by remember { mutableStateOf(false) }
     LaunchedEffect(copied) {
@@ -245,13 +264,13 @@ fun ExecutiveMosqueHeroCard(
     MehrabArchCard(
         modifier = Modifier.fillMaxWidth(),
         backgroundColor = Color.Transparent,
-        borderColor = MosqueGold.copy(alpha = 0.35f),
-        elevation = 2.dp
+        borderColor = MosqueGold.copy(alpha = 0.45f),
+        elevation = 3.dp
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(MosqueEmeraldDarkGradient)
+                .background(skyGradient)
                 .padding(horizontal = 14.dp, vertical = 11.dp)
         ) {
             // Row 1: Compact Hijri Date & Bismillah on one slim strip
@@ -262,20 +281,15 @@ fun ExecutiveMosqueHeroCard(
             ) {
                 if (showHijriDate) {
                     Surface(
-                        color = MosqueGold.copy(alpha = 0.16f),
+                        color = Color.Black.copy(alpha = 0.22f),
                         shape = RoundedCornerShape(6.dp),
-                        border = BorderStroke(0.7.dp, MosqueGold.copy(alpha = 0.4f))
+                        border = BorderStroke(0.7.dp, MosqueGold.copy(alpha = 0.45f))
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp)
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.NightsStay,
-                                contentDescription = null,
-                                tint = MosqueGoldLight,
-                                modifier = Modifier.size(11.dp)
-                            )
+                            ArabesqueStarMotif(size = 11.dp, color = MosqueGoldLight)
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
                                 text = hijriDate,
@@ -287,12 +301,19 @@ fun ExecutiveMosqueHeroCard(
                     }
                 }
 
-                Text(
-                    text = "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MosqueGoldLight
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    ArabesqueStarMotif(size = 9.dp, color = MosqueGold.copy(alpha = 0.6f))
+                    Text(
+                        text = "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MosqueGoldLight
+                    )
+                    ArabesqueStarMotif(size = 9.dp, color = MosqueGold.copy(alpha = 0.6f))
+                }
             }
 
             Spacer(modifier = Modifier.height(8.dp))

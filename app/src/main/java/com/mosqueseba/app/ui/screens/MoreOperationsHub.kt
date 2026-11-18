@@ -2,6 +2,7 @@ package com.mosqueseba.app.ui.screens
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -17,6 +18,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
@@ -25,8 +27,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mosqueseba.app.data.model.UserRole
+import com.mosqueseba.app.ui.components.ArabesqueStarMotif
+import com.mosqueseba.app.ui.components.MehrabArchCard
 import com.mosqueseba.app.ui.components.MosqueSearchBar
 import com.mosqueseba.app.ui.components.StaggeredItemEntrance
+import com.mosqueseba.app.ui.components.roleIcon
 import com.mosqueseba.app.ui.components.toBengaliDigits
 import com.mosqueseba.app.ui.theme.*
 
@@ -141,152 +146,236 @@ fun MoreOperationsHub(
                 .fillMaxSize()
                 .widthIn(max = 840.dp)
         ) {
-            // 1. Modern Clean Control Bar Header
+            // 1. Premium Role-Aware Control Header with Mehrab & Royal Emerald Shimmer
             item(key = "more_control_header") {
+                MehrabArchCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    borderColor = if (isDark) MosqueNightBorder else MosqueCardBorderGold.copy(alpha = 0.75f),
+                    elevation = 2.dp,
+                    showAccentTrim = false
+                ) {
+                    // Royal Emerald Shimmer Header Strip with Arabesque Star Motif
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(RoyalEmeraldShimmerGradient)
+                    ) {
+                        // Decorative Arabesque Star Motif in top-right background
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .padding(top = 4.dp, end = 8.dp)
+                        ) {
+                            ArabesqueStarMotif(size = 72.dp, color = MosqueGoldLight.copy(alpha = 0.12f))
+                        }
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 14.dp, vertical = 14.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Surface(
+                                shape = RoundedCornerShape(14.dp),
+                                color = Color.White.copy(alpha = 0.12f),
+                                border = BorderStroke(1.5.dp, RoyalGoldShimmerGradient),
+                                modifier = Modifier.size(46.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = currentRole.roleIcon(),
+                                        contentDescription = null,
+                                        tint = MosqueGoldLight,
+                                        modifier = Modifier.size(23.dp)
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(5.dp)
+                                ) {
+                                    ArabesqueStarMotif(size = 11.dp, color = MosqueGoldLight)
+                                    Text(
+                                        text = "আপনার দায়িত্বের ফিচার ও সেবা",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.ExtraBold,
+                                        color = Color.White
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = currentRole.shortSummaryBn,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = Color.White.copy(alpha = 0.88f),
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis,
+                                    lineHeight = 16.sp
+                                )
+                            }
+                        }
+                    }
+
+                    // Royal Gold accent divider
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(2.dp)
+                            .background(IslamicGoldTrimGradient)
+                    )
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 14.dp, vertical = 12.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                ArabesqueStarMotif(size = 13.dp, color = MosqueGold)
+                                Text(
+                                    text = "পদভিত্তিক অপারেশন হাব",
+                                    style = MaterialTheme.typography.labelLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                            Surface(
+                                shape = RoundedCornerShape(20.dp),
+                                color = if (isDark) MosqueEmeraldPrimary.copy(alpha = 0.22f) else MosqueEmeraldSoft,
+                                border = BorderStroke(1.dp, if (isDark) MosqueGold.copy(alpha = 0.45f) else MosqueGold.copy(alpha = 0.65f))
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                                ) {
+                                    ArabesqueStarMotif(size = 9.dp, color = MosqueGold)
+                                    Text(
+                                        text = currentRole.titleBn,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (isDark) MosqueGoldLight else MosqueEmeraldDark,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            MoreHeaderSummaryPill(
+                                modifier = Modifier.weight(1f),
+                                label = "সক্রিয় মডিউল",
+                                value = "${toBengaliDigits(allRoleModules.size.toString())} টি",
+                                accent = MaterialTheme.colorScheme.primary
+                            )
+                            MoreHeaderSummaryPill(
+                                modifier = Modifier.weight(1f),
+                                label = "সভা ও ইভেন্ট",
+                                value = "${toBengaliDigits((liveCounts.upcomingMeetingsCount + liveCounts.upcomingEventsCount).toString())} টি",
+                                accent = if (isDark) MosqueGreenAccent else MosqueSuccessGreen
+                            )
+                            MoreHeaderSummaryPill(
+                                modifier = Modifier.weight(1f),
+                                label = "অপেক্ষমাণ কাজ",
+                                value = "${toBengaliDigits(pendingTotal.toString())} টি",
+                                accent = if (pendingTotal > 0) MosqueWarningAmber else (if (isDark) MosqueGreenAccent else MosqueSuccessGreen),
+                                isAlert = pendingTotal > 0
+                            )
+                        }
+                    }
+                }
+            }
+
+            // 2. Search & Category Filter Card
+            item(key = "more_search_filters") {
                 Surface(
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(14.dp),
                     color = MaterialTheme.colorScheme.surface,
-                    tonalElevation = 1.dp,
-                    shadowElevation = 0.5.dp,
-                    border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else MosqueCardBorderSubtle),
+                    shadowElevation = 1.dp,
+                    border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else MosqueCardBorderGold.copy(alpha = 0.5f)),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 14.dp, vertical = 12.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "আরও সেবা ও অপারেশন",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Text(
-                            text = "মসজিদ পরিচালনা, দপ্তর ও সেবামূলক মডিউলসমূহ",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-
-                    Surface(
-                        shape = RoundedCornerShape(8.dp),
-                        color = if (isDark) MosqueEmeraldPrimary.copy(alpha = 0.22f) else MosqueEmeraldSoft,
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.35f))
-                    ) {
-                        Text(
-                            text = currentRole.titleBn,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    MoreHeaderSummaryPill(
-                        modifier = Modifier.weight(1f),
-                        label = "সক্রিয় মডিউল",
-                        value = "${toBengaliDigits(allRoleModules.size.toString())} টি",
-                        accent = MaterialTheme.colorScheme.primary
-                    )
-                    MoreHeaderSummaryPill(
-                        modifier = Modifier.weight(1f),
-                        label = "আসন্ন সভা ও ইভেন্ট",
-                        value = "${toBengaliDigits((liveCounts.upcomingMeetingsCount + liveCounts.upcomingEventsCount).toString())} টি",
-                        accent = if (isDark) MosqueGreenAccent else MosqueSuccessGreen
-                    )
-                    MoreHeaderSummaryPill(
-                        modifier = Modifier.weight(1f),
-                        label = "অপেক্ষমাণ কাজ",
-                        value = "${toBengaliDigits(pendingTotal.toString())} টি",
-                        accent = if (pendingTotal > 0) MosqueWarningAmber else (if (isDark) MosqueGreenAccent else MosqueSuccessGreen)
-                    )
-                }
-            }
-        }
-    }
-
-    // 2. Search & Category Filter Card
-    item(key = "more_search_filters") {
-            Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = MaterialTheme.colorScheme.surface,
-                shadowElevation = 0.5.dp,
-                border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else MosqueCardBorderSubtle),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 14.dp, vertical = 10.dp)
-            ) {
-                    MosqueSearchBar(
-                        value = searchQuery,
-                        onValueChange = { searchQuery = it },
-                        placeholder = "মডিউল খুঁজুন (যেমন: মাদরাসা, ক্যাশবক্স, রোস্টার)...",
                         modifier = Modifier
                             .fillMaxWidth()
-                            .testTag("more_search_input")
-                    )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    items(availableCategories) { category ->
-                        val count = if (category == OperationCategory.ALL) {
-                            allRoleModules.size
-                        } else {
-                            allRoleModules.count { it.category == category }
-                        }
-                        FilterChip(
-                            selected = selectedCategory == category,
-                            onClick = { selectedCategory = category },
-                            label = {
-                                Text(
-                                    text = "${category.labelBn} (${toBengaliDigits(count.toString())})",
-                                    fontSize = 12.sp
-                                )
-                            },
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary,
-                                selectedLabelColor = if (isDark) MosqueEmeraldDark else Color.White,
-                                containerColor = if (isDark) MosqueNightSurfaceVariant else MosqueBgLight,
-                                labelColor = if (isDark) MosqueNightTextPrimary else MosqueTextPrimary
-                            ),
-                            border = FilterChipDefaults.filterChipBorder(
-                                enabled = true,
-                                selected = selectedCategory == category,
-                                borderColor = if (isDark) MosqueNightBorder else MosqueCardBorderSubtle,
-                                selectedBorderColor = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary
-                            ),
-                            modifier = Modifier.testTag("more_filter_${category.name.lowercase()}")
+                            .padding(horizontal = 14.dp, vertical = 10.dp)
+                    ) {
+                        MosqueSearchBar(
+                            value = searchQuery,
+                            onValueChange = { searchQuery = it },
+                            placeholder = "মডিউল খুঁজুন (যেমন: মাদরাসা, ক্যাশবক্স, রোস্টার)...",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("more_search_input")
                         )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            items(availableCategories) { category ->
+                                val count = if (category == OperationCategory.ALL) {
+                                    allRoleModules.size
+                                } else {
+                                    allRoleModules.count { it.category == category }
+                                }
+                                val isSelected = selectedCategory == category
+                                FilterChip(
+                                    selected = isSelected,
+                                    onClick = { selectedCategory = category },
+                                    label = {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                        ) {
+                                            if (isSelected) {
+                                                ArabesqueStarMotif(size = 8.dp, color = MosqueGoldLight)
+                                            }
+                                            Text(
+                                                text = "${category.labelBn} (${toBengaliDigits(count.toString())})",
+                                                fontSize = 12.sp,
+                                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                                            )
+                                        }
+                                    },
+                                    colors = FilterChipDefaults.filterChipColors(
+                                        selectedContainerColor = if (isDark) MosqueEmeraldPrimary else MosqueEmeraldPrimary,
+                                        selectedLabelColor = Color.White,
+                                        containerColor = if (isDark) MosqueNightSurfaceVariant else MosqueBgLight,
+                                        labelColor = if (isDark) MosqueNightTextPrimary else MosqueTextPrimary
+                                    ),
+                                    border = FilterChipDefaults.filterChipBorder(
+                                        enabled = true,
+                                        selected = isSelected,
+                                        borderColor = if (isDark) MosqueNightBorder else MosqueCardBorderSubtle,
+                                        selectedBorderColor = if (isDark) MosqueGoldLight else MosqueGold
+                                    ),
+                                    modifier = Modifier.testTag("more_filter_${category.name.lowercase()}")
+                                )
+                            }
+                        }
                     }
                 }
             }
-        }
-    }
 
-    // 3. Quick Access Grid + Categorized Module Cards
-    if (filteredModules.isEmpty()) {
+            // 3. Quick Access Grid + Categorized Module Cards
+            if (filteredModules.isEmpty()) {
                 item {
                     Card(
                         modifier = Modifier
@@ -408,14 +497,21 @@ private fun MoreHeaderSummaryPill(
     modifier: Modifier = Modifier,
     label: String,
     value: String,
-    accent: Color
+    accent: Color,
+    isAlert: Boolean = false
 ) {
     val isDark = LocalIsDarkTheme.current
     Surface(
         modifier = modifier,
-        shape = RoundedCornerShape(10.dp),
-        color = if (isDark) MosqueNightSurfaceVariant else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-        border = BorderStroke(0.8.dp, if (isDark) MosqueNightBorder else MosqueCardBorderSubtle)
+        shape = RoundedCornerShape(11.dp),
+        color = if (isAlert) {
+            MosqueWarningAmber.copy(alpha = if (isDark) 0.18f else 0.10f)
+        } else if (isDark) MosqueNightSurfaceVariant else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+        border = BorderStroke(
+            0.9.dp,
+            if (isAlert) MosqueWarningAmber.copy(alpha = 0.7f)
+            else if (isDark) MosqueNightBorder else MosqueCardBorderGold.copy(alpha = 0.35f)
+        )
     ) {
         Column(
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 7.dp),
@@ -450,19 +546,15 @@ private fun MoreSectionHeader(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 2.dp),
+            .padding(vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(
-                modifier = Modifier
-                    .width(4.dp)
-                    .height(16.dp)
-                    .clip(RoundedCornerShape(2.dp))
-                    .background(primaryColor)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            ArabesqueStarMotif(size = 12.dp, color = MosqueGold)
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleSmall,
@@ -472,7 +564,8 @@ private fun MoreSectionHeader(
         }
         Surface(
             shape = RoundedCornerShape(8.dp),
-            color = if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft
+            color = if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft,
+            border = BorderStroke(0.7.dp, MosqueGold.copy(alpha = 0.45f))
         ) {
             Text(
                 text = badgeText,
@@ -493,15 +586,24 @@ private fun QuickAccessGridCard(
 ) {
     val isDark = LocalIsDarkTheme.current
     val primaryColor = MaterialTheme.colorScheme.primary
+    val hasAlert = module.badgeIsAlert
     Card(
         onClick = onClick,
         modifier = modifier
             .heightIn(min = 104.dp)
             .testTag("more_quick_${module.key}"),
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else MosqueCardBorderSubtle),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        border = BorderStroke(
+            width = if (hasAlert) 1.5.dp else 1.dp,
+            brush = if (hasAlert) RoyalGoldShimmerGradient else Brush.linearGradient(
+                listOf(
+                    if (isDark) MosqueNightBorder else MosqueCardBorderGold.copy(alpha = 0.5f),
+                    if (isDark) MosqueNightBorder else MosqueCardBorderSubtle
+                )
+            )
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.5.dp)
     ) {
         Column(
             modifier = Modifier
@@ -516,36 +618,57 @@ private fun QuickAccessGridCard(
             ) {
                 Box(
                     modifier = Modifier
-                        .size(36.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(module.iconColor.copy(alpha = 0.14f)),
+                        .size(38.dp)
+                        .clip(RoundedCornerShape(11.dp))
+                        .background(
+                            Brush.linearGradient(
+                                listOf(
+                                    module.iconColor.copy(alpha = 0.18f),
+                                    module.iconColor.copy(alpha = 0.08f)
+                                )
+                            )
+                        )
+                        .border(0.8.dp, module.iconColor.copy(alpha = 0.25f), RoundedCornerShape(11.dp)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = module.icon,
                         contentDescription = module.title,
                         tint = module.iconColor,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(21.dp)
                     )
                 }
 
                 module.badgeText?.let { badge ->
                     Surface(
-                        shape = RoundedCornerShape(6.dp),
+                        shape = RoundedCornerShape(7.dp),
                         color = when {
-                            module.badgeIsAlert -> MosqueWarningAmber.copy(alpha = 0.14f)
+                            module.badgeIsAlert -> MosqueWarningAmber.copy(alpha = 0.16f)
                             isDark -> MosqueNightSurfaceVariant
                             else -> MosqueEmeraldSoft
-                        }
-                    ) {
-                        Text(
-                            text = badge,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = if (module.badgeIsAlert) MosqueWarningAmber else primaryColor,
-                            maxLines = 1,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        },
+                        border = BorderStroke(
+                            0.7.dp,
+                            if (module.badgeIsAlert) MosqueWarningAmber.copy(alpha = 0.6f)
+                            else MosqueGold.copy(alpha = 0.4f)
                         )
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(3.dp),
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        ) {
+                            if (module.badgeIsAlert) {
+                                ArabesqueStarMotif(size = 8.dp, color = MosqueWarningAmber)
+                            }
+                            Text(
+                                text = badge,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (module.badgeIsAlert) MosqueWarningAmber else primaryColor,
+                                maxLines = 1
+                            )
+                        }
                     }
                 }
             }
@@ -630,178 +753,134 @@ private fun buildRoleOperationModules(
     } else null
 
     val baseModules = when (currentRole) {
-        UserRole.TREASURER -> listOf(
+        UserRole.PRESIDENT -> listOf(
+            OperationModuleEntry("meetings", "কমিটি সভা ও আর্থিক রিপোর্ট", "কমিটি সভার তারিখ ও সভায় মাসিক আর্থিক রিপোর্ট পেশ", Icons.Default.EventAvailable, MosqueGoldDeep, OperationCategory.ADMIN, meetingsBadge, counts.upcomingMeetingsCount > 0),
+            OperationModuleEntry("election", "কমিটি নির্বাচন ও পুনর্গঠন", "তফসিল, প্রার্থী মনোনয়ন, ভোটার তালিকা ও ফলাফল গেজেট", Icons.Default.HowToVote, MosqueGoldDeep, OperationCategory.ADMIN, electionBadge, counts.hasActiveElection),
+            OperationModuleEntry("cashbox", "দান বাক্স (ক্যাশবক্স) সাক্ষ্য", "দান বাক্স খোলার সময় উপস্থিত সাক্ষী নিশ্চিতকরণ ও পর্যবেক্ষণ", Icons.Default.Inventory2, MosqueGoldDeep, OperationCategory.FINANCE, cashboxBadge, counts.pendingCashboxCount > 0),
+            OperationModuleEntry("audit", "স্বচ্ছতা ও সিস্টেম অডিট লগ", "সকল আর্থিক অনুমোদন ও ডাটা পরিবর্তনের অপরিবর্তনীয় রেকর্ড", Icons.Default.FactCheck, MosqueWarningAmber, OperationCategory.FINANCE, auditBadge),
+            OperationModuleEntry("charter", "আদর্শ কমিটি সনদ ও দায়িত্ব", "৩-স্তরীয় কমিটির ১৩টি পদের দায়িত্ব ও পোর্টফোলিও নির্দেশিকা", Icons.Default.VerifiedUser, MosqueEmeraldDark, OperationCategory.INFO)
+        )
+        UserRole.VICE_PRESIDENT -> listOf(
+            OperationModuleEntry("meetings", "কমিটি সভা ও আর্থিক রিপোর্ট", "কমিটি সভার তারিখ ও সভায় মাসিক আর্থিক রিপোর্ট পেশ", Icons.Default.EventAvailable, MosqueGoldDeep, OperationCategory.ADMIN, meetingsBadge, counts.upcomingMeetingsCount > 0),
+            OperationModuleEntry("election", "কমিটি নির্বাচন ও পুনর্গঠন", "তফসিল, প্রার্থী মনোনয়ন, ভোটার তালিকা ও ফলাফল গেজেট", Icons.Default.HowToVote, MosqueGoldDeep, OperationCategory.ADMIN, electionBadge, counts.hasActiveElection),
+            OperationModuleEntry("cashbox", "দান বাক্স (ক্যাশবক্স) সাক্ষ্য", "দান বাক্স খোলার সময় উপস্থিত সাক্ষী নিশ্চিতকরণ ও পর্যবেক্ষণ", Icons.Default.Inventory2, MosqueGoldDeep, OperationCategory.FINANCE, cashboxBadge, counts.pendingCashboxCount > 0),
             OperationModuleEntry("staff", "ইমাম ও কর্মচারী বেতন ব্যবস্থাপনা", "পেশ ইমাম, মুয়াজ্জিন ও খাদেমদের বেতন বিতরণ ও পে-রোল", Icons.Default.Badge, MosqueInfoBlue, OperationCategory.EDUCATION_STAFF, staffBadge),
+            OperationModuleEntry("audit", "স্বচ্ছতা ও সিস্টেম অডিট লগ", "সকল আর্থিক অনুমোদন ও ডাটা পরিবর্তনের অপরিবর্তনীয় রেকর্ড", Icons.Default.FactCheck, MosqueWarningAmber, OperationCategory.FINANCE, auditBadge),
+            OperationModuleEntry("office_docs", "ওয়াকফ দলিল, চুক্তি ও নথি", "মসজিদের জমি, চুক্তিপত্র ও দাপ্তরিক নথিপত্র পর্যবেক্ষণ", Icons.Default.FolderShared, RoleOfficeAccent, OperationCategory.ADMIN, docsBadge, counts.pendingDocsCount > 0),
+            OperationModuleEntry("charter", "আদর্শ কমিটি সনদ ও দায়িত্ব", "৩-স্তরীয় কমিটির ১৩টি পদের দায়িত্ব ও পোর্টফোলিও নির্দেশিকা", Icons.Default.VerifiedUser, MosqueEmeraldDark, OperationCategory.INFO)
+        )
+        UserRole.GENERAL_SECRETARY -> listOf(
+            OperationModuleEntry("meetings", "কমিটি সভা ও আর্থিক রিপোর্ট", "কমিটি সভার তারিখ ও সভায় মাসিক আর্থিক রিপোর্ট পেশ", Icons.Default.EventAvailable, MosqueGoldDeep, OperationCategory.ADMIN, meetingsBadge, counts.upcomingMeetingsCount > 0),
+            OperationModuleEntry("members", "কমিটি ও সদস্য তালিকা", "কমিটি সদস্য ও মুসল্লিদের পরিচিতি ও তথ্য", Icons.Default.Groups, MosqueEmeraldPrimary, OperationCategory.ADMIN),
+            OperationModuleEntry("staff", "ইমাম ও কর্মচারী বেতন ব্যবস্থাপনা", "পেশ ইমাম, মুয়াজ্জিন ও খাদেমদের বেতন বিতরণ ও পে-রোল", Icons.Default.Badge, MosqueInfoBlue, OperationCategory.EDUCATION_STAFF, staffBadge),
+            OperationModuleEntry("notices", "নোটিশ বোর্ড ও ঘোষণা", "মসজিদের জরুরি বিজ্ঞপ্তি ও সাধারণ নোটিশ দেখুন", Icons.Default.Campaign, MosqueEmeraldDark, OperationCategory.ADMIN),
+            OperationModuleEntry("office_docs", "ওয়াকফ দলিল, চুক্তি ও নথি", "মসজিদের জমি, চুক্তিপত্র ও দাপ্তরিক নথিপত্র পর্যবেক্ষণ", Icons.Default.FolderShared, RoleOfficeAccent, OperationCategory.ADMIN, docsBadge, counts.pendingDocsCount > 0),
+            OperationModuleEntry("charter", "আদর্শ কমিটি সনদ ও দায়িত্ব", "৩-স্তরীয় কমিটির ১৩টি পদের দায়িত্ব ও পোর্টফোলিও নির্দেশিকা", Icons.Default.VerifiedUser, MosqueEmeraldDark, OperationCategory.INFO)
+        )
+        UserRole.ASSISTANT_SECRETARY -> listOf(
+            OperationModuleEntry("meetings", "কমিটি সভা ও আর্থিক রিপোর্ট", "কমিটি সভার তারিখ ও সভায় মাসিক আর্থিক রিপোর্ট পেশ", Icons.Default.EventAvailable, MosqueGoldDeep, OperationCategory.ADMIN, meetingsBadge, counts.upcomingMeetingsCount > 0),
+            OperationModuleEntry("members", "কমিটি ও সদস্য তালিকা", "কমিটি সদস্য ও মুসল্লিদের পরিচিতি ও তথ্য", Icons.Default.Groups, MosqueEmeraldPrimary, OperationCategory.ADMIN),
+            OperationModuleEntry("notices", "নোটিশ বোর্ড ও ঘোষণা", "মসজিদের জরুরি বিজ্ঞপ্তি ও সাধারণ নোটিশ দেখুন", Icons.Default.Campaign, MosqueEmeraldDark, OperationCategory.ADMIN),
+            OperationModuleEntry("office_docs", "ওয়াকফ দলিল, চুক্তি ও নথি", "মসজিদের জমি, চুক্তিপত্র ও দাপ্তরিক নথিপত্র পর্যবেক্ষণ", Icons.Default.FolderShared, RoleOfficeAccent, OperationCategory.ADMIN, docsBadge, counts.pendingDocsCount > 0),
+            OperationModuleEntry("staff", "ইমাম ও কর্মচারী বেতন ব্যবস্থাপনা", "পেশ ইমাম, মুয়াজ্জিন ও খাদেমদের বেতন বিতরণ ও পে-রোল", Icons.Default.Badge, MosqueInfoBlue, OperationCategory.EDUCATION_STAFF, staffBadge),
+            OperationModuleEntry("charter", "আদর্শ কমিটি সনদ ও দায়িত্ব", "৩-স্তরীয় কমিটির ১৩টি পদের দায়িত্ব ও পোর্টফোলিও নির্দেশিকা", Icons.Default.VerifiedUser, MosqueEmeraldDark, OperationCategory.INFO)
+        )
+        UserRole.TREASURER -> listOf(
+            OperationModuleEntry("cashbox", "দান বাক্স (ক্যাশবক্স) সাক্ষ্য", "দান বাক্স খোলার সময় উপস্থিত সাক্ষী নিশ্চিতকরণ ও পর্যবেক্ষণ", Icons.Default.Inventory2, MosqueGoldDeep, OperationCategory.FINANCE, cashboxBadge, counts.pendingCashboxCount > 0),
             OperationModuleEntry("chanda", "চাঁদা আদায় ও রসিদ বহি", "সকল পরিশোধিত চাঁদার তালিকা ও ডিজিটাল কিউআর রসিদ", Icons.Default.ReceiptLong, MosqueEmeraldPrimary, OperationCategory.FINANCE, chandaBadge),
+            OperationModuleEntry("staff", "ইমাম ও কর্মচারী বেতন ব্যবস্থাপনা", "পেশ ইমাম, মুয়াজ্জিন ও খাদেমদের বেতন বিতরণ ও পে-রোল", Icons.Default.Badge, MosqueInfoBlue, OperationCategory.EDUCATION_STAFF, staffBadge),
             OperationModuleEntry("madrasa", "মাদরাসা ও মক্তব ফি আদায়", "হিফজ ও মক্তব শিক্ষার্থীদের মাসিক বেতন ও ফি কালেকশন", Icons.Default.School, MosqueEmeraldPrimary, OperationCategory.EDUCATION_STAFF, madrasaBadge),
+            OperationModuleEntry("audit", "স্বচ্ছতা ও সিস্টেম অডিট লগ", "সকল আর্থিক অনুমোদন ও ডাটা পরিবর্তনের অপরিবর্তনীয় রেকর্ড", Icons.Default.FactCheck, MosqueWarningAmber, OperationCategory.FINANCE, auditBadge),
+            OperationModuleEntry("meetings", "কমিটি সভা ও আর্থিক রিপোর্ট", "কমিটি সভার তারিখ ও সভায় মাসিক আর্থিক রিপোর্ট পেশ", Icons.Default.EventAvailable, MosqueGoldDeep, OperationCategory.ADMIN, meetingsBadge, counts.upcomingMeetingsCount > 0),
+            OperationModuleEntry("charter", "আদর্শ কমিটি সনদ ও দায়িত্ব", "৩-স্তরীয় কমিটির ১৩টি পদের দায়িত্ব ও পোর্টফোলিও নির্দেশিকা", Icons.Default.VerifiedUser, MosqueEmeraldDark, OperationCategory.INFO)
+        )
+        UserRole.ASSISTANT_TREASURER -> listOf(
+            OperationModuleEntry("cashbox", "দান বাক্স (ক্যাশবক্স) সাক্ষ্য", "দান বাক্স খোলার সময় উপস্থিত সাক্ষী নিশ্চিতকরণ ও পর্যবেক্ষণ", Icons.Default.Inventory2, MosqueGoldDeep, OperationCategory.FINANCE, cashboxBadge, counts.pendingCashboxCount > 0),
+            OperationModuleEntry("chanda", "চাঁদা আদায় ও রসিদ বহি", "সকল পরিশোধিত চাঁদার তালিকা ও ডিজিটাল কিউআর রসিদ", Icons.Default.ReceiptLong, MosqueEmeraldPrimary, OperationCategory.FINANCE, chandaBadge),
+            OperationModuleEntry("staff", "ইমাম ও কর্মচারী বেতন ব্যবস্থাপনা", "পেশ ইমাম, মুয়াজ্জিন ও খাদেমদের বেতন বিতরণ ও পে-রোল", Icons.Default.Badge, MosqueInfoBlue, OperationCategory.EDUCATION_STAFF, staffBadge),
+            OperationModuleEntry("audit", "স্বচ্ছতা ও সিস্টেম অডিট লগ", "সকল আর্থিক অনুমোদন ও ডাটা পরিবর্তনের অপরিবর্তনীয় রেকর্ড", Icons.Default.FactCheck, MosqueWarningAmber, OperationCategory.FINANCE, auditBadge),
+            OperationModuleEntry("charter", "আদর্শ কমিটি সনদ ও দায়িত্ব", "৩-স্তরীয় কমিটির ১৩টি পদের দায়িত্ব ও পোর্টফোলিও নির্দেশিকা", Icons.Default.VerifiedUser, MosqueEmeraldDark, OperationCategory.INFO)
+        )
+        UserRole.ORGANIZING_SECRETARY -> listOf(
+            OperationModuleEntry("members", "কমিটি ও সদস্য তালিকা", "কমিটি সদস্য ও মুসল্লিদের পরিচিতি ও তথ্য", Icons.Default.Groups, MosqueEmeraldPrimary, OperationCategory.ADMIN),
+            OperationModuleEntry("events", "মাহফিল ও বিশেষ অনুষ্ঠান", "বাৎসরিক ওয়াজ, শবে কদর, ইফতার মাহফিল ও বিশেষ আয়োজন", Icons.Default.Celebration, MosqueGoldDeep, OperationCategory.WELFARE_EVENTS, eventsBadge, counts.upcomingEventsCount > 0),
+            OperationModuleEntry("meetings", "কমিটি সভা ও আর্থিক রিপোর্ট", "কমিটি সভার তারিখ ও সভায় মাসিক আর্থিক রিপোর্ট পেশ", Icons.Default.EventAvailable, MosqueGoldDeep, OperationCategory.ADMIN, meetingsBadge, counts.upcomingMeetingsCount > 0),
+            OperationModuleEntry("notices", "নোটিশ বোর্ড ও ঘোষণা", "মসজিদের জরুরি বিজ্ঞপ্তি ও সাধারণ নোটিশ দেখুন", Icons.Default.Campaign, MosqueEmeraldDark, OperationCategory.ADMIN),
+            OperationModuleEntry("charter", "আদর্শ কমিটি সনদ ও দায়িত্ব", "৩-স্তরীয় কমিটির ১৩টি পদের দায়িত্ব ও পোর্টফোলিও নির্দেশিকা", Icons.Default.VerifiedUser, MosqueEmeraldDark, OperationCategory.INFO)
+        )
+        UserRole.PUBLICITY_SECRETARY -> listOf(
+            OperationModuleEntry("publicity", "প্রচার, দেয়াল উক্তি ও স্মার্ট বোর্ড", "মসজিদের দেয়াল লিখন/উক্তি ও স্মার্ট বোর্ড পরিচালনা", Icons.Default.ViewCarousel, RolePublicityAccent, OperationCategory.ADMIN, publicityBadge),
+            OperationModuleEntry("notices", "নোটিশ বোর্ড ও ঘোষণা", "মসজিদের জরুরি বিজ্ঞপ্তি ও সাধারণ নোটিশ দেখুন", Icons.Default.Campaign, MosqueEmeraldDark, OperationCategory.ADMIN),
+            OperationModuleEntry("events", "মাহফিল ও বিশেষ অনুষ্ঠান", "বাৎসরিক ওয়াজ, শবে কদর, ইফতার মাহফিল ও বিশেষ আয়োজন", Icons.Default.Celebration, MosqueGoldDeep, OperationCategory.WELFARE_EVENTS, eventsBadge, counts.upcomingEventsCount > 0),
+            OperationModuleEntry("charter", "আদর্শ কমিটি সনদ ও দায়িত্ব", "৩-স্তরীয় কমিটির ১৩টি পদের দায়িত্ব ও পোর্টফোলিও নির্দেশিকা", Icons.Default.VerifiedUser, MosqueEmeraldDark, OperationCategory.INFO)
+        )
+        UserRole.OFFICE_SECRETARY -> listOf(
+            OperationModuleEntry("office_docs", "ওয়াকফ দলিল, চুক্তি ও নথি", "মসজিদের জমি, চুক্তিপত্র ও দাপ্তরিক নথিপত্র পর্যবেক্ষণ", Icons.Default.FolderShared, RoleOfficeAccent, OperationCategory.ADMIN, docsBadge, counts.pendingDocsCount > 0),
             OperationModuleEntry("meetings", "কমিটি সভা ও আর্থিক রিপোর্ট", "কমিটি সভার তারিখ ও সভায় মাসিক আর্থিক রিপোর্ট পেশ", Icons.Default.EventAvailable, MosqueGoldDeep, OperationCategory.ADMIN, meetingsBadge, counts.upcomingMeetingsCount > 0),
             OperationModuleEntry("notices", "নোটিশ বোর্ড ও ঘোষণা", "মসজিদের জরুরি বিজ্ঞপ্তি ও সাধারণ নোটিশ দেখুন", Icons.Default.Campaign, MosqueEmeraldDark, OperationCategory.ADMIN),
             OperationModuleEntry("audit", "স্বচ্ছতা ও সিস্টেম অডিট লগ", "সকল আর্থিক অনুমোদন ও ডাটা পরিবর্তনের অপরিবর্তনীয় রেকর্ড", Icons.Default.FactCheck, MosqueWarningAmber, OperationCategory.FINANCE, auditBadge),
             OperationModuleEntry("charter", "আদর্শ কমিটি সনদ ও দায়িত্ব", "৩-স্তরীয় কমিটির ১৩টি পদের দায়িত্ব ও পোর্টফোলিও নির্দেশিকা", Icons.Default.VerifiedUser, MosqueEmeraldDark, OperationCategory.INFO)
         )
-        UserRole.ASSISTANT_TREASURER -> listOf(
-            OperationModuleEntry("staff", "ইমাম ও কর্মচারী বেতন ব্যবস্থাপনা", "পেশ ইমাম, মুয়াজ্জিন ও খাদেমদের বেতন বিতরণ ও পে-রোল", Icons.Default.Badge, MosqueInfoBlue, OperationCategory.EDUCATION_STAFF, staffBadge),
-            OperationModuleEntry("chanda", "চাঁদা আদায় ও রসিদ বহি", "সকল পরিশোধিত চাঁদার তালিকা ও ডিজিটাল কিউআর রসিদ", Icons.Default.ReceiptLong, MosqueEmeraldPrimary, OperationCategory.FINANCE, chandaBadge),
-            OperationModuleEntry("madrasa", "মাদরাসা ও মক্তব ফি আদায়", "হিফজ ও মক্তব শিক্ষার্থীদের মাসিক ফি কালেকশন", Icons.Default.School, MosqueEmeraldPrimary, OperationCategory.EDUCATION_STAFF, madrasaBadge),
-            OperationModuleEntry("meetings", "কমিটি সভা ও আর্থিক রিপোর্ট", "কমিটি সভার তারিখ ও আর্থিক রিপোর্ট প্রস্তুতি", Icons.Default.EventAvailable, MosqueGoldDeep, OperationCategory.ADMIN, meetingsBadge, counts.upcomingMeetingsCount > 0),
-            OperationModuleEntry("notices", "নোটিশ বোর্ড ও ঘোষণা", "মসজিদের জরুরি বিজ্ঞপ্তি ও সাধারণ নোটিশ দেখুন", Icons.Default.Campaign, MosqueEmeraldDark, OperationCategory.ADMIN),
-            OperationModuleEntry("audit", "আর্থিক অডিট ও ভাউচার লগ", "সকল চাঁদা ও বেতন ভাউচারের অপরিবর্তনীয় রেকর্ড", Icons.Default.FactCheck, MosqueWarningAmber, OperationCategory.FINANCE, auditBadge),
-            OperationModuleEntry("charter", "আদর্শ কমিটি সনদ ও দায়িত্ব", "৩-স্তরীয় কমিটির সকল পদ ও দায়িত্বের তালিকা", Icons.Default.VerifiedUser, MosqueEmeraldDark, OperationCategory.INFO)
-        )
-        UserRole.GENERAL_SECRETARY -> listOf(
-            OperationModuleEntry("election", "কমিটি নির্বাচন ও পুনর্গঠন", "তফসিল, প্রার্থী মনোনয়ন, ভোটার তালিকা ও ফলাফল গেজেট", Icons.Default.HowToVote, MosqueGoldDeep, OperationCategory.ADMIN, electionBadge, counts.hasActiveElection),
-            OperationModuleEntry("notices", "নোটিশ বোর্ড ও ঘোষণা", "জরুরি ও সাধারণ বিজ্ঞপ্তি প্রকাশ এবং পরিচালনা", Icons.Default.Campaign, MosqueEmeraldDark, OperationCategory.ADMIN),
-            OperationModuleEntry("roster", "ওয়াক্ত ও নামাজের দায়িত্ব বণ্টন", "ইমাম, মুয়াজ্জিন ও খাদেমের ডিউটি রোস্টার তদারকি", Icons.Default.EventNote, MosqueGoldDeep, OperationCategory.EDUCATION_STAFF, rosterBadge),
-            OperationModuleEntry("food", "ইমাম ও খাদেমদের খাবার শিডিউল", "দৈনিক খাবার বণ্টন ও দাতাদের তালিকা", Icons.Default.Restaurant, MosqueInfoBlue, OperationCategory.EDUCATION_STAFF, foodBadge),
-            OperationModuleEntry("staff", "ইমাম ও কর্মচারী তালিকা ও খেদমত", "মসজিদের ইমাম, মুয়াজ্জিন ও খাদেমদের সার্ভিস রেকর্ড ও তদারকি", Icons.Default.Badge, MosqueInfoBlue, OperationCategory.EDUCATION_STAFF, staffBadge),
-            OperationModuleEntry("madrasa", "মাদরাসা ও মক্তব পরিচালনা", "ছাত্র ভর্তি, দৈনিক হাজিরা ও মক্তব-হিফজ কার্যক্রম তদারকি", Icons.Default.School, MosqueEmeraldPrimary, OperationCategory.EDUCATION_STAFF, madrasaBadge),
-            OperationModuleEntry("cashbox", "দান বাক্স (ক্যাশবক্স) সাক্ষ্য", "দান বাক্স খোলার সময় উপস্থিত সাক্ষী নিশ্চিতকরণ ও পর্যবেক্ষণ", Icons.Default.Inventory2, MosqueGoldDeep, OperationCategory.FINANCE, cashboxBadge, counts.pendingCashboxCount > 0),
-            OperationModuleEntry("sharia_advisory", "শরিয়াহ পর্যালোচনা ও উপদেষ্টা পরিষদ", "ইমামের শরিয়াহ মতামত ও উপদেষ্টা পরিষদের পরামর্শ সমন্বয়", Icons.Default.AccountBalance, RoleAdvisoryAccent, OperationCategory.ADMIN, advisoryBadge, counts.activeAdvisoryCount > 0),
-            OperationModuleEntry("publicity", "প্রচার, দেয়াল উক্তি ও স্মার্ট বোর্ড", "মসজিদের দেয়াল লিখন/উক্তি ও স্মার্ট বোর্ড পরিচালনা", Icons.Default.ViewCarousel, RolePublicityAccent, OperationCategory.ADMIN, publicityBadge),
-            OperationModuleEntry("welfare", "সমাজকল্যাণ, মেডিকেল ক্যাম্প ও যাকাত", "যাকাত ও ফেতরা বিতরণ, মেডিকেল ক্যাম্প এবং ত্রাণ তদারকি", Icons.Default.Favorite, MosqueEmeraldPrimary, OperationCategory.WELFARE_EVENTS, welfareBadge),
-            OperationModuleEntry("events", "মাহফিল ও বিশেষ অনুষ্ঠান", "বাৎসরিক ওয়াজ, শবে কদর, ইফতার মাহফিল ও বিশেষ আয়োজন", Icons.Default.Celebration, MosqueGoldDeep, OperationCategory.WELFARE_EVENTS, eventsBadge, counts.upcomingEventsCount > 0),
-            OperationModuleEntry("audit", "স্বচ্ছতা ও সিস্টেম অডিট লগ", "সকল প্রশাসনিক ও আর্থিক কার্যক্রমের অপরিবর্তনীয় রেকর্ড", Icons.Default.FactCheck, MosqueWarningAmber, OperationCategory.ADMIN, auditBadge),
-            OperationModuleEntry("charter", "আদর্শ কমিটি সনদ ও দায়িত্ব", "৩-স্তরীয় কমিটির সকল পদ ও দায়িত্বের বিস্তারিত তালিকা", Icons.Default.VerifiedUser, MosqueEmeraldPrimary, OperationCategory.INFO)
-        )
-        UserRole.ASSISTANT_SECRETARY -> listOf(
-            OperationModuleEntry("meetings", "কমিটি সভা ও এজেন্ডা রেজুলেশন", "সাধারণ সম্পাদকের নির্দেশনায় সভা আহ্বান ও কার্যবিবরণী সংরক্ষণ", Icons.Default.Event, MosqueGoldDeep, OperationCategory.ADMIN, meetingsBadge, counts.upcomingMeetingsCount > 0),
-            OperationModuleEntry("roster", "ওয়াক্ত ও নামাজের দায়িত্ব বণ্টন", "ইমাম, মুয়াজ্জিন ও খাদেমের ডিউটি রোস্টার তদারকি", Icons.Default.EventNote, MosqueEmeraldPrimary, OperationCategory.EDUCATION_STAFF, rosterBadge),
-            OperationModuleEntry("staff", "ইমাম ও কর্মচারী তালিকা ও খেদমত", "মসজিদের ইমাম, মুয়াজ্জিন ও খাদেমদের সার্ভিস রেকর্ড ও তদারকি", Icons.Default.Badge, MosqueInfoBlue, OperationCategory.EDUCATION_STAFF, staffBadge),
-            OperationModuleEntry("food", "ইমাম ও খাদেমদের খাবার শিডিউল", "দৈনিক খাবার বণ্টন ও দাতাদের তালিকা সমন্বয়", Icons.Default.Restaurant, MosqueInfoBlue, OperationCategory.EDUCATION_STAFF, foodBadge),
-            OperationModuleEntry("sharia_advisory", "শরিয়াহ পর্যালোচনা ও উপদেষ্টা পরিষদ", "ইমামের শরিয়াহ মতামত ও উপদেষ্টা পরিষদের পরামর্শ পর্যালোচনা", Icons.Default.AccountBalance, RoleAdvisoryAccent, OperationCategory.ADMIN, advisoryBadge, counts.activeAdvisoryCount > 0),
-            OperationModuleEntry("madrasa", "মক্তব ও মাদরাসা কার্যক্রম", "শিক্ষার্থী তালিকা ও মক্তব-হিফজ কার্যক্রম সমন্বয়", Icons.Default.School, MosqueEmeraldPrimary, OperationCategory.EDUCATION_STAFF, madrasaBadge),
-            OperationModuleEntry("welfare", "সমাজকল্যাণ ও যাকাত তদারকি", "যাকাত-ফেতরা ও দুস্থ সহায়তা আবেদন সমন্বয়", Icons.Default.Favorite, MosqueEmeraldPrimary, OperationCategory.WELFARE_EVENTS, welfareBadge),
-            OperationModuleEntry("events", "মাহফিল ও বিশেষ অনুষ্ঠান", "মসজিদের অনুষ্ঠান ও স্বেচ্ছাসেবক সমন্বয়", Icons.Default.Celebration, MosqueGoldDeep, OperationCategory.WELFARE_EVENTS, eventsBadge, counts.upcomingEventsCount > 0),
-            OperationModuleEntry("charter", "আদর্শ কমিটি সনদ ও দায়িত্ব", "৩-স্তরীয় কমিটির সকল পদ ও দায়িত্বের বিস্তারিত তালিকা", Icons.Default.VerifiedUser, MosqueEmeraldPrimary, OperationCategory.INFO),
-            OperationModuleEntry("prayer", "পূর্ণ নামাজের সময়সূচি ও ওয়াক্ত", "আজান ও জামাতের বিস্তারিত সূচি ও ক্যালেন্ডার", Icons.Default.AccessTime, MosqueEmeraldLight, OperationCategory.INFO)
-        )
-        UserRole.ORGANIZING_SECRETARY -> listOf(
-            OperationModuleEntry("notices", "নোটিশ বোর্ড ও ঘোষণা", "সাংগঠনিক বিজ্ঞপ্তি ও মুসল্লি আহ্বান", Icons.Default.Campaign, MosqueEmeraldDark, OperationCategory.ADMIN),
-            OperationModuleEntry("welfare", "সমাজকল্যাণ ও যাকাত তহবিল", "যাকাত ও ফেতরা বিতরণ, দুস্থ সহায়তা এবং যুব সমাজকল্যাণ", Icons.Default.Favorite, MosqueEmeraldPrimary, OperationCategory.WELFARE_EVENTS, welfareBadge),
-            OperationModuleEntry("food", "ইমাম ও খাদেমদের খাবার শিডিউল", "মুসল্লিদের জায়গির ও খাবার দায়িত্ব বণ্টন", Icons.Default.Restaurant, MosqueInfoBlue, OperationCategory.EDUCATION_STAFF, foodBadge),
-            OperationModuleEntry("roster", "ওয়াক্ত ও জামাত দায়িত্ব রোস্টার", "জুমা, নামাজ ও মসজিদ শৃঙ্খলায় দায়িত্ব সমন্বয়", Icons.Default.EventNote, MosqueGoldDeep, OperationCategory.EDUCATION_STAFF, rosterBadge),
-            OperationModuleEntry("madrasa", "মক্তব ও মাদরাসা কার্যক্রম", "এলাকার শিশু-কিশোরদের ধর্মীয় শিক্ষা ও অভিভাবক সংযোগ", Icons.Default.School, MosqueEmeraldPrimary, OperationCategory.EDUCATION_STAFF, madrasaBadge),
-            OperationModuleEntry("charter", "আদর্শ কমিটি সনদ ও দায়িত্ব", "৩-স্তরীয় কমিটির সকল পদ ও দায়িত্বের বিস্তারিত তালিকা", Icons.Default.VerifiedUser, MosqueEmeraldPrimary, OperationCategory.INFO),
-            OperationModuleEntry("prayer", "পূর্ণ নামাজের সময়সূচি ও ওয়াক্ত", "আজান ও জামাতের বিস্তারিত সূচি ও ক্যালেন্ডার", Icons.Default.AccessTime, MosqueEmeraldLight, OperationCategory.INFO)
-        )
-        UserRole.PUBLICITY_SECRETARY -> listOf(
-            OperationModuleEntry("meetings", "কমিটি সভা ও আলোচ্যসূচি", "কমিটির আসন্ন সভা, এজেন্ডা ও গৃহীত সিদ্ধান্তসমূহ", Icons.Default.Event, MosqueGoldDeep, OperationCategory.ADMIN, meetingsBadge, counts.upcomingMeetingsCount > 0),
-            OperationModuleEntry("members", "কমিটি ও সদস্য তালিকা", "কমিটি সদস্য ও মুসল্লিদের পরিচিতি ও তথ্য", Icons.Default.Groups, MosqueEmeraldPrimary, OperationCategory.ADMIN),
-            OperationModuleEntry("roster", "ওয়াক্ত ও ইমাম-মুয়াজ্জিন রোস্টার", "জুমা, ওয়াক্ত ও খতিব/ইমাম দায়িত্ব সূচি", Icons.Default.EventNote, MosqueInfoBlue, OperationCategory.EDUCATION_STAFF, rosterBadge),
-            OperationModuleEntry("madrasa", "মক্তব ও মাদরাসা তথ্য", "মাদরাসা ভর্তি ও ধর্মীয় শিক্ষা প্রচার সমন্বয়", Icons.Default.School, MosqueEmeraldPrimary, OperationCategory.EDUCATION_STAFF, madrasaBadge),
-            OperationModuleEntry("charter", "আদর্শ কমিটি সনদ ও দায়িত্ব", "৩-স্তরীয় কমিটির সকল পদ ও দায়িত্বের বিস্তারিত তালিকা", Icons.Default.VerifiedUser, MosqueEmeraldPrimary, OperationCategory.INFO),
-            OperationModuleEntry("prayer", "পূর্ণ নামাজের সময়সূচি ও ওয়াক্ত", "আজান ও জামাতের বিস্তারিত সূচি ও ক্যালেন্ডার", Icons.Default.AccessTime, MosqueEmeraldLight, OperationCategory.INFO)
-        )
-        UserRole.OFFICE_SECRETARY -> listOf(
-            OperationModuleEntry("members", "কমিটি ও সদস্য নথিপত্র", "কার্যনির্বাহী ও সাধারণ সদস্যদের পরিচিতি ও তথ্য ফাইল", Icons.Default.Groups, MosqueEmeraldPrimary, OperationCategory.ADMIN),
-            OperationModuleEntry("audit", "স্বচ্ছতা ও সিস্টেম অডিট লগ", "সকল নথিপত্র ও প্রশাসনিক কার্যক্রমের অপরিবর্তনীয় রেকর্ড", Icons.Default.FactCheck, MosqueWarningAmber, OperationCategory.ADMIN, auditBadge),
-            OperationModuleEntry("sharia_advisory", "শরিয়াহ ও উপদেষ্টা নথি", "ইমামের শরিয়াহ মতামত ও উপদেষ্টা পরিষদের রেজুলেশন ফাইল", Icons.Default.AccountBalance, RoleAdvisoryAccent, OperationCategory.ADMIN, advisoryBadge, counts.activeAdvisoryCount > 0),
-            OperationModuleEntry("staff", "ইমাম ও কর্মচারী সার্ভিস রেকর্ড", "পেশ ইমাম, মুয়াজ্জিন ও খাদেমদের নিয়োগ ও বেতন নথি", Icons.Default.Badge, MosqueInfoBlue, OperationCategory.EDUCATION_STAFF, staffBadge),
-            OperationModuleEntry("events", "অনুষ্ঠান ও মাহফিল আর্কাইভ", "মসজিদের বাৎসরিক মাহফিল ও বিশেষ অনুষ্ঠানের বিবরণ", Icons.Default.Celebration, MosqueGoldDeep, OperationCategory.WELFARE_EVENTS, eventsBadge, counts.upcomingEventsCount > 0),
-            OperationModuleEntry("charter", "আদর্শ কমিটি সনদ ও দায়িত্ব", "৩-স্তরীয় কমিটির সকল পদ ও দায়িত্বের বিস্তারিত তালিকা", Icons.Default.VerifiedUser, MosqueEmeraldPrimary, OperationCategory.INFO),
-            OperationModuleEntry("prayer", "পূর্ণ নামাজের সময়সূচি ও ওয়াক্ত", "আজান ও জামাতের বিস্তারিত সূচি ও ক্যালেন্ডার", Icons.Default.AccessTime, MosqueEmeraldLight, OperationCategory.INFO)
-        )
         UserRole.WELFARE_EDUCATION_SECRETARY -> listOf(
-            OperationModuleEntry("events", "মেডিকেল ক্যাম্প, মাহফিল ও সেমিনার", "ধর্মীয় শিক্ষা অনুষ্ঠান, ফ্রি মেডিকেল ক্যাম্প ও ত্রাণ আয়োজন", Icons.Default.Celebration, MosqueGoldDeep, OperationCategory.WELFARE_EVENTS, eventsBadge, counts.upcomingEventsCount > 0),
-            OperationModuleEntry("meetings", "কমিটি সভা ও কার্যবিবরণী", "কমিটির আসন্ন সভা, এজেন্ডা ও কল্যাণমূলক সিদ্ধান্ত", Icons.Default.EventAvailable, MosqueEmeraldPrimary, OperationCategory.ADMIN, meetingsBadge, counts.upcomingMeetingsCount > 0),
-            OperationModuleEntry("sharia_advisory", "শরিয়াহ নীতি ও উপদেষ্টা পরামর্শ", "যাকাত-ফেতরা ও ধর্মীয় শিক্ষায় ইমাম ও উপদেষ্টাদের নির্দেশনা", Icons.Default.AccountBalance, RoleAdvisoryAccent, OperationCategory.ADMIN, advisoryBadge, counts.activeAdvisoryCount > 0),
-            OperationModuleEntry("food", "শিক্ষার্থী ও স্টাফ খাবার সূচি", "দৈনিক খাবার বণ্টন ও জায়গির দাতাদের তালিকা", Icons.Default.Restaurant, MosqueInfoBlue, OperationCategory.EDUCATION_STAFF, foodBadge),
-            OperationModuleEntry("roster", "তালিম ও নামাজ দায়িত্ব রোস্টার", "ইমাম-মুয়াজ্জিনদের ওয়াক্ত ও তালিম সূচি", Icons.Default.EventNote, MosqueEmeraldDark, OperationCategory.EDUCATION_STAFF, rosterBadge),
-            OperationModuleEntry("members", "সদস্য ও অভিভাবক পরিষদ", "কমিটি সদস্য, দাতা ও মুসল্লিদের পরিচিতি", Icons.Default.Groups, MosqueEmeraldPrimary, OperationCategory.ADMIN),
-            OperationModuleEntry("charter", "আদর্শ কমিটি সনদ ও দায়িত্ব", "৩-স্তরীয় কমিটির সকল পদ ও দায়িত্বের বিস্তারিত তালিকা", Icons.Default.VerifiedUser, MosqueEmeraldDark, OperationCategory.INFO),
-            OperationModuleEntry("prayer", "পূর্ণ নামাজের সময়সূচি ও ওয়াক্ত", "আজান ও জামাতের বিস্তারিত সূচি ও ক্যালেন্ডার", Icons.Default.AccessTime, MosqueEmeraldLight, OperationCategory.INFO)
+            OperationModuleEntry("welfare", "সমাজকল্যাণ, মেডিকেল ক্যাম্প ও যাকাত", "যাকাত ও ফেতরা বিতরণ, মেডিকেল ক্যাম্প এবং ত্রাণ তদারকি", Icons.Default.Favorite, MosqueEmeraldPrimary, OperationCategory.WELFARE_EVENTS, welfareBadge),
+            OperationModuleEntry("madrasa", "মাদরাসা ও মক্তব ফি আদায়", "হিফজ ও মক্তব শিক্ষার্থীদের মাসিক বেতন ও ফি কালেকশন", Icons.Default.School, MosqueEmeraldPrimary, OperationCategory.EDUCATION_STAFF, madrasaBadge),
+            OperationModuleEntry("events", "মাহফিল ও বিশেষ অনুষ্ঠান", "বাৎসরিক ওয়াজ, শবে কদর, ইফতার মাহফিল ও বিশেষ আয়োজন", Icons.Default.Celebration, MosqueGoldDeep, OperationCategory.WELFARE_EVENTS, eventsBadge, counts.upcomingEventsCount > 0),
+            OperationModuleEntry("notices", "নোটিশ বোর্ড ও ঘোষণা", "মসজিদের জরুরি বিজ্ঞপ্তি ও সাধারণ নোটিশ দেখুন", Icons.Default.Campaign, MosqueEmeraldDark, OperationCategory.ADMIN),
+            OperationModuleEntry("charter", "আদর্শ কমিটি সনদ ও দায়িত্ব", "৩-স্তরীয় কমিটির ১৩টি পদের দায়িত্ব ও পোর্টফোলিও নির্দেশিকা", Icons.Default.VerifiedUser, MosqueEmeraldDark, OperationCategory.INFO)
         )
         UserRole.EXECUTIVE_MEMBER -> listOf(
-            OperationModuleEntry("election", "কমিটি নির্বাচন ও পুনর্গঠন", "তফসিল, প্রার্থী মনোনয়ন, ভোটার তালিকা ও ফলাফল গেজেট", Icons.Default.HowToVote, MosqueGoldDeep, OperationCategory.ADMIN, electionBadge, counts.hasActiveElection),
-            OperationModuleEntry("notices", "নোটিশ বোর্ড ও ঘোষণা", "মসজিদের জরুরি বিজ্ঞপ্তি ও সাধারণ নোটিশ দেখুন", Icons.Default.Campaign, MosqueEmeraldDark, OperationCategory.ADMIN),
-            OperationModuleEntry("events", "জুমা, ঈদ শৃঙ্খলা ও অনুষ্ঠান", "জামাত শৃঙ্খলা ও মাহফিল ব্যবস্থাপনায় সহায়তা", Icons.Default.Celebration, MosqueGoldDeep, OperationCategory.WELFARE_EVENTS, eventsBadge, counts.upcomingEventsCount > 0),
-            OperationModuleEntry("transparency", "মসজিদ স্বচ্ছ তহবিল ও হিসাব", "আয়-ব্যয়, চাঁদা ও ক্রয়-বিক্রয়ের উন্মুক্ত আর্থিক বিবরণী", Icons.Default.AccountBalanceWallet, MosqueSuccessGreen, OperationCategory.FINANCE),
-            OperationModuleEntry("audit", "স্বচ্ছতা ও সিস্টেম অডিট লগ", "সকল দান বাক্স সাক্ষ্য, ক্রয় ও অনুমোদনের অপরিবর্তনীয় রেকর্ড", Icons.Default.FactCheck, MosqueWarningAmber, OperationCategory.FINANCE, auditBadge),
-            OperationModuleEntry("welfare", "সমাজকল্যাণ ও যাকাত তহবিল", "যাকাত, চিকিৎসা ও দুস্থ সহায়তা কার্যক্রম পর্যবেক্ষণ", Icons.Default.Favorite, MosqueEmeraldPrimary, OperationCategory.WELFARE_EVENTS, welfareBadge),
-            OperationModuleEntry("madrasa", "মক্তব ও হিফজ শিক্ষা", "মসজিদভিত্তিক শিক্ষা ও শিক্ষার্থীদের অগ্রগতি", Icons.Default.School, MosqueEmeraldPrimary, OperationCategory.EDUCATION_STAFF, madrasaBadge),
-            OperationModuleEntry("roster", "ওয়াক্ত ও নামাজের দায়িত্ব রোস্টার", "ইমাম, মুয়াজ্জিন ও খাদেমের ডিউটি সূচি", Icons.Default.EventNote, MosqueInfoBlue, OperationCategory.EDUCATION_STAFF, rosterBadge),
-            OperationModuleEntry("charter", "আদর্শ কমিটি সনদ ও দায়িত্ব", "৩-স্তরীয় কমিটির সকল পদ ও দায়িত্বের বিস্তারিত তালিকা", Icons.Default.VerifiedUser, MosqueEmeraldDark, OperationCategory.INFO),
-            OperationModuleEntry("prayer", "পূর্ণ নামাজের সময়সূচি ও ওয়াক্ত", "আজান ও জামাতের বিস্তারিত সূচি ও ক্যালেন্ডার", Icons.Default.AccessTime, MosqueEmeraldLight, OperationCategory.INFO)
-        )
-        UserRole.ADVISORY_BOARD -> listOf(
-            OperationModuleEntry("election", "নির্বাচন কমিশন ও তদারকি", "নির্বাচন পরিচালনা, তফসিল, প্রার্থী ও গেজেট চূড়ান্তকরণ", Icons.Default.HowToVote, MosqueGoldDeep, OperationCategory.ADMIN, electionBadge, counts.hasActiveElection),
-            OperationModuleEntry("meetings", "কমিটি সভা ও এজেন্ডা", "কমিটি সভার আলোচ্যসূচি ও রেজুলেশন পর্যবেক্ষণ", Icons.Default.EventAvailable, MosqueGoldDeep, OperationCategory.ADMIN, meetingsBadge, counts.upcomingMeetingsCount > 0),
-            OperationModuleEntry("audit", "স্বচ্ছতা ও সিস্টেম অডিট লগ", "সকল আর্থিক অনুমোদন ও তহবিলের স্বচ্ছ অডিট পর্যবেক্ষণ", Icons.Default.FactCheck, MosqueWarningAmber, OperationCategory.FINANCE, auditBadge),
-            OperationModuleEntry("members", "মসজিদ কমিটি ও সদস্য পরিষদ", "সকল স্তরের দায়িত্বশীল ও সাধারণ সদস্যদের পরিচিতি", Icons.Default.Groups, MosqueEmeraldPrimary, OperationCategory.ADMIN),
-            OperationModuleEntry("office_docs", "ওয়াকফ দলিল, চুক্তি ও নথি", "মসজিদের জমি, চুক্তিপত্র ও দাপ্তরিক নথিপত্র পর্যবেক্ষণ", Icons.Default.FolderShared, RoleOfficeAccent, OperationCategory.ADMIN, docsBadge, counts.pendingDocsCount > 0),
-            OperationModuleEntry("cashbox", "দান বাক্স (ক্যাশবক্স) ও ব্যাংক জমা", "সাপ্তাহিক ও মাসিক ক্যাশবক্স গণনা এবং ব্যাংক জমার স্বচ্ছ রেকর্ড", Icons.Default.Inventory2, MosqueGoldDeep, OperationCategory.FINANCE, cashboxBadge),
-            OperationModuleEntry("events", "উন্নয়ন প্রকল্প, মাহফিল ও অনুষ্ঠান", "মসজিদ সম্প্রসারণ, ওয়াজ ও বিশেষ আয়োজন তদারকি", Icons.Default.Celebration, MosqueEmeraldPrimary, OperationCategory.WELFARE_EVENTS, eventsBadge, counts.upcomingEventsCount > 0),
-            OperationModuleEntry("welfare", "সমাজকল্যাণ, যাকাত ও ত্রাণ", "যাকাত বিতরণ, মেডিকেল ক্যাম্প ও দুস্থ সহায়তা কার্যক্রম", Icons.Default.Favorite, MosqueSuccessGreen, OperationCategory.WELFARE_EVENTS, welfareBadge),
-            OperationModuleEntry("madrasa", "মক্তব ও মাদরাসা শিক্ষা", "মসজিদভিত্তিক নূরানী ও হিফজ বিভাগের অগ্রগতি", Icons.Default.School, MosqueInfoBlue, OperationCategory.EDUCATION_STAFF, madrasaBadge),
-            OperationModuleEntry("notices", "নোটিশ বোর্ড ও ঘোষণা", "কমিটি কর্তৃক প্রকাশিত সকল বিজ্ঞপ্তি", Icons.Default.Campaign, MosqueEmeraldDark, OperationCategory.INFO),
-            OperationModuleEntry("prayer", "পূর্ণ নামাজের সময়সূচি ও ওয়াক্ত", "আজান ও জামাতের বিস্তারিত সূচি ও ক্যালেন্ডার", Icons.Default.AccessTime, MosqueEmeraldLight, OperationCategory.INFO)
+            OperationModuleEntry("cashbox", "দান বাক্স (ক্যাশবক্স) সাক্ষ্য", "দান বাক্স খোলার সময় উপস্থিত সাক্ষী নিশ্চিতকরণ ও পর্যবেক্ষণ", Icons.Default.Inventory2, MosqueGoldDeep, OperationCategory.FINANCE, cashboxBadge, counts.pendingCashboxCount > 0),
+            OperationModuleEntry("meetings", "কমিটি সভা ও আর্থিক রিপোর্ট", "কমিটি সভার তারিখ ও সভায় মাসিক আর্থিক রিপোর্ট পেশ", Icons.Default.EventAvailable, MosqueGoldDeep, OperationCategory.ADMIN, meetingsBadge, counts.upcomingMeetingsCount > 0),
+            OperationModuleEntry("members", "কমিটি ও সদস্য তালিকা", "কমিটি সদস্য ও মুসল্লিদের পরিচিতি ও তথ্য", Icons.Default.Groups, MosqueEmeraldPrimary, OperationCategory.ADMIN),
+            OperationModuleEntry("events", "মাহফিল ও বিশেষ অনুষ্ঠান", "বাৎসরিক ওয়াজ, শবে কদর, ইফতার মাহফিল ও বিশেষ আয়োজন", Icons.Default.Celebration, MosqueGoldDeep, OperationCategory.WELFARE_EVENTS, eventsBadge, counts.upcomingEventsCount > 0),
+            OperationModuleEntry("charter", "আদর্শ কমিটি সনদ ও দায়িত্ব", "৩-স্তরীয় কমিটির ১৩টি পদের দায়িত্ব ও পোর্টফোলিও নির্দেশিকা", Icons.Default.VerifiedUser, MosqueEmeraldDark, OperationCategory.INFO)
         )
         UserRole.IMAM -> listOf(
-            OperationModuleEntry("meetings", "কমিটি সভা ও রেজুলেশন", "কমিটির সকল সিদ্ধান্ত ইসলামিক নীতিমালায় পর্যালোচনা", Icons.Default.EventAvailable, MosqueGoldDeep, OperationCategory.ADMIN, meetingsBadge, counts.upcomingMeetingsCount > 0),
-            OperationModuleEntry("events", "মাহফিল, খুতবা ও তালিম আয়োজন", "বাৎসরিক ওয়াজ, শবে কদর ও দ্বীনি অনুষ্ঠান পরিচালনা", Icons.Default.Celebration, MosqueEmeraldPrimary, OperationCategory.WELFARE_EVENTS, eventsBadge, counts.upcomingEventsCount > 0),
-            OperationModuleEntry("welfare", "সমাজকল্যাণ ও যাকাত নির্দেশনা", "যাকাত, ফেতরা ও দুস্থ সহায়তায় শরিয়াহ সমন্বয়", Icons.Default.Favorite, MosqueSuccessGreen, OperationCategory.WELFARE_EVENTS, welfareBadge),
-            OperationModuleEntry("notices", "নোটিশ বোর্ড ও ঘোষণা", "মসজিদের জরুরি বিজ্ঞপ্তি ও সাধারণ নোটিশ দেখুন", Icons.Default.Campaign, MosqueEmeraldDark, OperationCategory.ADMIN),
-            OperationModuleEntry("food", "ইমাম ও খাদেমদের খাবার শিডিউল", "দৈনিক দুপুর ও রাতের খাবার বণ্টন ও দাতাদের তালিকা", Icons.Default.Restaurant, MosqueInfoBlue, OperationCategory.EDUCATION_STAFF, foodBadge),
-            OperationModuleEntry("staff", "আমার বেতন ও সার্ভিস বিবরণী", "পেশ ইমামের মাসিক বেতন স্লিপ ও খেদমত রেকর্ড", Icons.Default.Badge, MosqueInfoBlue, OperationCategory.EDUCATION_STAFF, staffBadge),
-            OperationModuleEntry("charter", "আদর্শ কমিটি সনদ ও দায়িত্ব", "৩-স্তরীয় কমিটির সকল পদ ও দায়িত্বের বিস্তারিত তালিকা", Icons.Default.VerifiedUser, MosqueEmeraldDark, OperationCategory.INFO),
-            OperationModuleEntry("prayer", "পূর্ণ নামাজের সময়সূচি ও ওয়াক্ত", "আজান ও জামাতের বিস্তারিত সূচি ও ক্যালেন্ডার", Icons.Default.AccessTime, MosqueEmeraldLight, OperationCategory.INFO)
+            OperationModuleEntry("sharia_advisory", "শরিয়াহ পর্যালোচনা ও উপদেষ্টা পরিষদ", "ইমামের শরিয়াহ মতামত ও উপদেষ্টা পরিষদের পরামর্শ সমন্বয়", Icons.Default.AccountBalance, RoleAdvisoryAccent, OperationCategory.ADMIN, advisoryBadge, counts.activeAdvisoryCount > 0),
+            OperationModuleEntry("roster", "ওয়াক্ত ও নামাজের দায়িত্ব বণ্টন", "ইমাম, মুয়াজ্জিন ও খাদেমের ডিউটি রোস্টার তদারকি", Icons.Default.EventNote, MosqueGoldDeep, OperationCategory.EDUCATION_STAFF, rosterBadge),
+            OperationModuleEntry("madrasa", "মাদরাসা ও মক্তব ফি আদায়", "হিফজ ও মক্তব শিক্ষার্থীদের মাসিক বেতন ও ফি কালেকশন", Icons.Default.School, MosqueEmeraldPrimary, OperationCategory.EDUCATION_STAFF, madrasaBadge),
+            OperationModuleEntry("events", "মাহফিল ও বিশেষ অনুষ্ঠান", "বাৎসরিক ওয়াজ, শবে কদর, ইফতার মাহফিল ও বিশেষ আয়োজন", Icons.Default.Celebration, MosqueGoldDeep, OperationCategory.WELFARE_EVENTS, eventsBadge, counts.upcomingEventsCount > 0),
+            OperationModuleEntry("prayer", "পূর্ণ নামাজের সময়সূচি ও ওয়াক্ত", "আজান ও জামাতের বিস্তারিত সূচি ও ক্যালেন্ডার", Icons.Default.AccessTime, MosqueEmeraldLight, OperationCategory.INFO),
+            OperationModuleEntry("charter", "আদর্শ কমিটি সনদ ও দায়িত্ব", "৩-স্তরীয় কমিটির ১৩টি পদের দায়িত্ব ও পোর্টফোলিও নির্দেশিকা", Icons.Default.VerifiedUser, MosqueEmeraldDark, OperationCategory.INFO)
+        )
+        UserRole.ADVISORY_BOARD -> listOf(
+            OperationModuleEntry("sharia_advisory", "শরিয়াহ পর্যালোচনা ও উপদেষ্টা পরিষদ", "ইমামের শরিয়াহ মতামত ও উপদেষ্টা পরিষদের পরামর্শ সমন্বয়", Icons.Default.AccountBalance, RoleAdvisoryAccent, OperationCategory.ADMIN, advisoryBadge, counts.activeAdvisoryCount > 0),
+            OperationModuleEntry("audit", "স্বচ্ছতা ও সিস্টেম অডিট লগ", "সকল আর্থিক অনুমোদন ও ডাটা পরিবর্তনের অপরিবর্তনীয় রেকর্ড", Icons.Default.FactCheck, MosqueWarningAmber, OperationCategory.FINANCE, auditBadge),
+            OperationModuleEntry("election", "কমিটি নির্বাচন ও পুনর্গঠন", "তফসিল, প্রার্থী মনোনয়ন, ভোটার তালিকা ও ফলাফল গেজেট", Icons.Default.HowToVote, MosqueGoldDeep, OperationCategory.ADMIN, electionBadge, counts.hasActiveElection),
+            OperationModuleEntry("members", "কমিটি ও সদস্য তালিকা", "কমিটি সদস্য ও মুসল্লিদের পরিচিতি ও তথ্য", Icons.Default.Groups, MosqueEmeraldPrimary, OperationCategory.ADMIN),
+            OperationModuleEntry("office_docs", "ওয়াকফ দলিল, চুক্তি ও নথি", "মসজিদের জমি, চুক্তিপত্র ও দাপ্তরিক নথিপত্র পর্যবেক্ষণ", Icons.Default.FolderShared, RoleOfficeAccent, OperationCategory.ADMIN, docsBadge, counts.pendingDocsCount > 0),
+            OperationModuleEntry("charter", "আদর্শ কমিটি সনদ ও দায়িত্ব", "৩-স্তরীয় কমিটির ১৩টি পদের দায়িত্ব ও পোর্টফোলিও নির্দেশিকা", Icons.Default.VerifiedUser, MosqueEmeraldDark, OperationCategory.INFO)
         )
         UserRole.MUAZZIN -> listOf(
-            OperationModuleEntry("prayer", "পূর্ণ নামাজের সময়সূচি ও আজান", "৫ ওয়াক্ত আজান ও জামাতের বিস্তারিত সূচি", Icons.Default.AccessTime, MosqueEmeraldPrimary, OperationCategory.INFO),
-            OperationModuleEntry("roster", "ওয়াক্ত ও নামাজের দায়িত্ব বণ্টন", "ইমাম ও মুয়াজ্জিনদের ৫ ওয়াক্তের ডিউটি রোস্টার", Icons.Default.EventNote, MosqueGoldDeep, OperationCategory.EDUCATION_STAFF, rosterBadge),
-            OperationModuleEntry("food", "ইমাম ও মুয়াজ্জিনের খাবার শিডিউল", "দৈনিক দুপুর ও রাতের খাবার বণ্টন ও দাতাদের তালিকা", Icons.Default.Restaurant, MosqueInfoBlue, OperationCategory.EDUCATION_STAFF, foodBadge),
-            OperationModuleEntry("madrasa", "মক্তব ও তালিম সহায়তা", "মক্তব ও নূরানী বিভাগের পাঠদান ও হাজিরা", Icons.Default.School, MosqueEmeraldDark, OperationCategory.EDUCATION_STAFF, madrasaBadge)
+            OperationModuleEntry("prayer", "পূর্ণ নামাজের সময়সূচি ও ওয়াক্ত", "আজান ও জামাতের বিস্তারিত সূচি ও ক্যালেন্ডার", Icons.Default.AccessTime, MosqueEmeraldLight, OperationCategory.INFO),
+            OperationModuleEntry("roster", "ওয়াক্ত ও নামাজের দায়িত্ব বণ্টন", "ইমাম, মুয়াজ্জিন ও খাদেমের ডিউটি রোস্টার তদারকি", Icons.Default.EventNote, MosqueGoldDeep, OperationCategory.EDUCATION_STAFF, rosterBadge),
+            OperationModuleEntry("charter", "আদর্শ কমিটি সনদ ও দায়িত্ব", "৩-স্তরীয় কমিটির ১৩টি পদের দায়িত্ব ও পোর্টফোলিও নির্দেশিকা", Icons.Default.VerifiedUser, MosqueEmeraldDark, OperationCategory.INFO)
         )
         UserRole.KHADEM -> listOf(
-            OperationModuleEntry("food", "খাদেম ও স্টাফ খাবার শিডিউল", "দৈনিক দুপুর ও রাতের খাবার বণ্টন ও দাতাদের তালিকা", Icons.Default.Restaurant, MosqueInfoBlue, OperationCategory.EDUCATION_STAFF, foodBadge),
-            OperationModuleEntry("roster", "মসজিদ খেদমত ও পরিচ্ছন্নতা রোস্টার", "অজুখানা, ফ্যান-লাইট ও জেনারেটর রক্ষণাবেক্ষণ সূচি", Icons.Default.EventNote, MosqueGoldDeep, OperationCategory.EDUCATION_STAFF, rosterBadge),
-            OperationModuleEntry("notices", "মসজিদ নোটিশ ও নির্দেশনা", "কমিটি কর্তৃক প্রকাশিত নির্দেশনা ও বিজ্ঞপ্তি", Icons.Default.Campaign, MosqueEmeraldDark, OperationCategory.ADMIN),
-            OperationModuleEntry("prayer", "পূর্ণ নামাজের সময়সূচি ও ওয়াক্ত", "আজান ও জামাতের বিস্তারিত সূচি", Icons.Default.AccessTime, MosqueEmeraldLight, OperationCategory.INFO)
+            OperationModuleEntry("roster", "ওয়াক্ত ও নামাজের দায়িত্ব বণ্টন", "ইমাম, মুয়াজ্জিন ও খাদেমের ডিউটি রোস্টার তদারকি", Icons.Default.EventNote, MosqueGoldDeep, OperationCategory.EDUCATION_STAFF, rosterBadge),
+            OperationModuleEntry("prayer", "পূর্ণ নামাজের সময়সূচি ও ওয়াক্ত", "আজান ও জামাতের বিস্তারিত সূচি ও ক্যালেন্ডার", Icons.Default.AccessTime, MosqueEmeraldLight, OperationCategory.INFO),
+            OperationModuleEntry("notices", "নোটিশ বোর্ড ও ঘোষণা", "মসজিদের জরুরি বিজ্ঞপ্তি ও সাধারণ নোটিশ দেখুন", Icons.Default.Campaign, MosqueEmeraldDark, OperationCategory.ADMIN),
+            OperationModuleEntry("charter", "আদর্শ কমিটি সনদ ও দায়িত্ব", "৩-স্তরীয় কমিটির ১৩টি পদের দায়িত্ব ও পোর্টফোলিও নির্দেশিকা", Icons.Default.VerifiedUser, MosqueEmeraldDark, OperationCategory.INFO)
         )
         UserRole.GENERAL_MEMBER -> listOf(
-            OperationModuleEntry("election", "কমিটি নির্বাচন ও ভোটার তালিকা", "চলমান তফসিল, প্রার্থী পরিচিতি, ভোটার তালিকা ও ফলাফল", Icons.Default.HowToVote, MosqueGoldDeep, OperationCategory.ADMIN, electionBadge, counts.hasActiveElection),
-            OperationModuleEntry("events", "মাহফিল ও বিশেষ অনুষ্ঠান", "বাৎসরিক ওয়াজ, ইফতার মাহফিল ও বিশেষ দ্বীনি আয়োজন", Icons.Default.Celebration, MosqueGoldDeep, OperationCategory.WELFARE_EVENTS, eventsBadge, counts.upcomingEventsCount > 0),
-            OperationModuleEntry("welfare", "সমাজকল্যাণ ও যাকাত আবেদন", "যাকাত, চিকিৎসা ও দুস্থ সহায়তার জন্য আবেদনপত্র দাখিল", Icons.Default.Favorite, MosqueEmeraldPrimary, OperationCategory.WELFARE_EVENTS, welfareBadge),
-            OperationModuleEntry("food", "ইমাম-খাদেম খাবার পালা তালিকা", "সদস্যদের দৈনিক মেহমানদারি ও খাবারের পালা দেখুন", Icons.Default.Restaurant, MosqueInfoBlue, OperationCategory.EDUCATION_STAFF, foodBadge),
-            OperationModuleEntry("madrasa", "মক্তব ও হিফজ বিভাগ পরিচিতি", "মসজিদভিত্তিক নূরানী ও হিফজ শিক্ষা কার্যক্রম দেখুন", Icons.Default.School, MosqueEmeraldPrimary, OperationCategory.EDUCATION_STAFF, madrasaBadge),
-            OperationModuleEntry("charter", "আদর্শ কমিটি সনদ ও দায়িত্ব", "মসজিদ পরিচালনা কমিটির সকল দায়িত্বশীল ও তাদের কর্তব্য", Icons.Default.VerifiedUser, MosqueEmeraldDark, OperationCategory.INFO),
-            OperationModuleEntry("prayer", "পূর্ণ নামাজের সময়সূচি ও ওয়াক্ত", "আজান ও জামাতের বিস্তারিত সূচি ও ক্যালেন্ডার", Icons.Default.AccessTime, MosqueEmeraldLight, OperationCategory.INFO)
-        )
-        UserRole.VICE_PRESIDENT -> listOf(
+            OperationModuleEntry("transparency", "মসজিদ স্বচ্ছ তহবিল ও হিসাব", "আয়-ব্যয়, চাঁদা ও ক্রয়-বিক্রয়ের উন্মুক্ত আর্থিক বিবরণী", Icons.Default.AccountBalanceWallet, MosqueSuccessGreen, OperationCategory.FINANCE),
+            OperationModuleEntry("notices", "নোটিশ বোর্ড ও ঘোষণা", "মসজিদের জরুরি বিজ্ঞপ্তি ও সাধারণ নোটিশ দেখুন", Icons.Default.Campaign, MosqueEmeraldDark, OperationCategory.ADMIN),
             OperationModuleEntry("election", "কমিটি নির্বাচন ও পুনর্গঠন", "তফসিল, প্রার্থী মনোনয়ন, ভোটার তালিকা ও ফলাফল গেজেট", Icons.Default.HowToVote, MosqueGoldDeep, OperationCategory.ADMIN, electionBadge, counts.hasActiveElection),
-            OperationModuleEntry("events", "উন্নয়ন প্রকল্প, মাহফিল ও অনুষ্ঠান", "বিশেষ উপ-কমিটি, নির্মাণ ও ধর্মীয় অনুষ্ঠান তদারকি", Icons.Default.Engineering, MosqueGoldDeep, OperationCategory.WELFARE_EVENTS, eventsBadge, counts.upcomingEventsCount > 0),
-            OperationModuleEntry("notices", "নোটিশ বোর্ড ও ঘোষণা", "মসজিদের জরুরি বিজ্ঞপ্তি ও সাধারণ নোটিশ পরিচালনা", Icons.Default.Campaign, MosqueEmeraldDark, OperationCategory.ADMIN),
-            OperationModuleEntry("cashbox", "দান বাক্স (ক্যাশবক্স) ও ব্যাংক জমা", "ক্যাশবক্স গণনা, সাক্ষী নিশ্চিতকরণ ও ব্যাংক জমার অনুমোদন", Icons.Default.Inventory2, MosqueGoldDeep, OperationCategory.FINANCE, cashboxBadge, counts.pendingCashboxCount > 0),
-            OperationModuleEntry("chanda", "চাঁদা আদায় ও রসিদ বহি", "সকল পরিশোধিত চাঁদার তালিকা ও ডিজিটাল কিউআর রসিদ", Icons.Default.ReceiptLong, MosqueEmeraldPrimary, OperationCategory.FINANCE, chandaBadge),
-            OperationModuleEntry("staff", "ইমাম ও কর্মচারী বেতন ও পে-রোল", "পেশ ইমাম, মুয়াজ্জিন ও খাদেমদের বেতন বিতরণ ও সার্ভিস রেকর্ড", Icons.Default.Badge, MosqueInfoBlue, OperationCategory.EDUCATION_STAFF, staffBadge),
-            OperationModuleEntry("office_docs", "দপ্তর, দলিল-চুক্তি ও চিঠিপত্র", "ওয়াকফ দলিল, চুক্তি ও আগত-প্রেরিত চিঠিপত্র তদারকি", Icons.Default.FolderShared, RoleOfficeAccent, OperationCategory.ADMIN, docsBadge, counts.pendingDocsCount > 0),
-            OperationModuleEntry("sharia_advisory", "শরিয়াহ পর্যালোচনা ও উপদেষ্টা পরিষদ", "ইমামের শরিয়াহ মতামত ও উপদেষ্টা পরিষদের পরামর্শ পর্যালোচনা", Icons.Default.AccountBalance, RoleAdvisoryAccent, OperationCategory.ADMIN, advisoryBadge, counts.activeAdvisoryCount > 0),
-            OperationModuleEntry("welfare", "সমাজকল্যাণ ও যাকাত তহবিল", "যাকাত ও ফেতরা বিতরণ, মেডিকেল ক্যাম্প এবং ত্রাণ অনুমোদন", Icons.Default.Favorite, MosqueEmeraldPrimary, OperationCategory.WELFARE_EVENTS, welfareBadge),
-            OperationModuleEntry("madrasa", "মাদরাসা ও মক্তব পরিচালনা", "ছাত্র ভর্তি, দৈনিক হাজিরা ও মাদরাসা তদারকি", Icons.Default.School, MosqueEmeraldPrimary, OperationCategory.EDUCATION_STAFF, madrasaBadge),
-            OperationModuleEntry("audit", "স্বচ্ছতা ও সিস্টেম অডিট লগ", "সকল আর্থিক অনুমোদন ও ডাটা পরিবর্তনের অপরিবর্তনীয় রেকর্ড", Icons.Default.FactCheck, MosqueWarningAmber, OperationCategory.FINANCE, auditBadge),
-            OperationModuleEntry("charter", "আদর্শ কমিটি সনদ ও দায়িত্ব", "৩-স্তরীয় কমিটির ১৩টি পদের দায়িত্ব ও পোর্টফোলিও তদারকি", Icons.Default.VerifiedUser, MosqueEmeraldDark, OperationCategory.INFO)
+            OperationModuleEntry("events", "মাহফিল ও বিশেষ অনুষ্ঠান", "বাৎসরিক ওয়াজ, শবে কদর, ইফতার মাহফিল ও বিশেষ আয়োজন", Icons.Default.Celebration, MosqueGoldDeep, OperationCategory.WELFARE_EVENTS, eventsBadge, counts.upcomingEventsCount > 0),
+            OperationModuleEntry("welfare", "সমাজকল্যাণ, মেডিকেল ক্যাম্প ও যাকাত", "যাকাত ও ফেতরা বিতরণ, মেডিকেল ক্যাম্প এবং ত্রাণ তদারকি", Icons.Default.Favorite, MosqueEmeraldPrimary, OperationCategory.WELFARE_EVENTS, welfareBadge),
+            OperationModuleEntry("charter", "আদর্শ কমিটি সনদ ও দায়িত্ব", "৩-স্তরীয় কমিটির ১৩টি পদের দায়িত্ব ও পোর্টফোলিও নির্দেশিকা", Icons.Default.VerifiedUser, MosqueEmeraldDark, OperationCategory.INFO)
         )
         else -> listOf(
-            // PRESIDENT
-            OperationModuleEntry("election", "কমিটি নির্বাচন ও পুনর্গঠন", "তফসিল ঘোষণা, মনোনয়ন, ভোটার তালিকা, ভোট ও ফলাফল গেজেট", Icons.Default.HowToVote, MosqueGoldDeep, OperationCategory.ADMIN, electionBadge, counts.hasActiveElection),
-            OperationModuleEntry("meetings", "কমিটি সভা ও এজেন্ডা রেজুলেশন", "কমিটির সকল সাধারণ ও জরুরি সভায় সভাপতিত্ব এবং সিদ্ধান্ত চূড়ান্তকরণ", Icons.Default.Event, MosqueGoldDeep, OperationCategory.ADMIN, meetingsBadge, counts.upcomingMeetingsCount > 0),
-            OperationModuleEntry("cashbox", "দান বাক্স (ক্যাশবক্স) ও ব্যাংক জমা", "ক্যাশবক্স গণনা, সাক্ষী নিশ্চিতকরণ ও ব্যাংক জমার অনুমোদন", Icons.Default.Inventory2, MosqueGoldDeep, OperationCategory.FINANCE, cashboxBadge, counts.pendingCashboxCount > 0),
-            OperationModuleEntry("chanda", "চাঁদা আদায় ও রসিদ বহি", "সকল পরিশোধিত চাঁদার তালিকা ও ডিজিটাল কিউআর রসিদ", Icons.Default.ReceiptLong, MosqueEmeraldPrimary, OperationCategory.FINANCE, chandaBadge),
-            OperationModuleEntry("staff", "ইমাম ও কর্মচারী বেতন ও পে-রোল", "পেশ ইমাম, মুয়াজ্জিন ও খাদেমদের বেতন বিতরণ ও সার্ভিস রেকর্ড", Icons.Default.Badge, MosqueInfoBlue, OperationCategory.EDUCATION_STAFF, staffBadge),
-            OperationModuleEntry("office_docs", "দপ্তর, দলিল-চুক্তি ও চিঠিপত্র", "ওয়াকফ দলিল, চুক্তি ও আগত-প্রেরিত চিঠিপত্রের তদারকি", Icons.Default.FolderShared, RoleOfficeAccent, OperationCategory.ADMIN, docsBadge, counts.pendingDocsCount > 0),
-            OperationModuleEntry("madrasa", "মাদরাসা ও মক্তব পরিচালনা", "ছাত্র ভর্তি, দৈনিক হাজিরা, হিফজ ট্র্যাকার ও মাদরাসা ফি তদারকি", Icons.Default.School, MosqueEmeraldPrimary, OperationCategory.EDUCATION_STAFF, madrasaBadge),
-            OperationModuleEntry("sharia_advisory", "শরিয়াহ পর্যালোচনা ও উপদেষ্টা পরিষদ", "ইমামের শরিয়াহ ফতোয়া/মতামত ও উপদেষ্টা পরিষদের দিকনির্দেশনা", Icons.Default.AccountBalance, RoleAdvisoryAccent, OperationCategory.ADMIN, advisoryBadge, counts.activeAdvisoryCount > 0),
-            OperationModuleEntry("publicity", "প্রচার, দেয়াল উক্তি ও স্মার্ট বোর্ড", "মসজিদের দেয়াল লিখন/উক্তি ও স্মার্ট নোটিশ বোর্ড পরিচালনা", Icons.Default.ViewCarousel, RolePublicityAccent, OperationCategory.ADMIN, publicityBadge),
-            OperationModuleEntry("audit", "স্বচ্ছতা ও সিস্টেম অডিট লগ", "সকল আর্থিক অনুমোদন ও ডাটা পরিবর্তনের অপরিবর্তনীয় রেকর্ড", Icons.Default.FactCheck, MosqueWarningAmber, OperationCategory.ADMIN, auditBadge),
-            OperationModuleEntry("roster", "ওয়াক্ত ও নামাজের দায়িত্ব বণ্টন", "ইমাম ও মুয়াজ্জিনদের ৫ ওয়াক্তের ডিউটি রোস্টার ও পরিচালনা", Icons.Default.EventNote, MosqueGoldDeep, OperationCategory.EDUCATION_STAFF, rosterBadge),
-            OperationModuleEntry("food", "ইমাম ও খাদেমদের খাবার শিডিউল", "দৈনিক দুপুর ও রাতের খাবার বণ্টন ও দায়িত্বপ্রাপ্ত দাতাদের তালিকা", Icons.Default.Restaurant, MosqueInfoBlue, OperationCategory.EDUCATION_STAFF, foodBadge),
-            OperationModuleEntry("welfare", "সমাজকল্যাণ ও যাকাত তহবিল", "যাকাত ও ফেতরা বিতরণ, মেডিকেল ক্যাম্প এবং ত্রাণ অনুমোদন", Icons.Default.Favorite, MosqueEmeraldPrimary, OperationCategory.WELFARE_EVENTS, welfareBadge),
-            OperationModuleEntry("events", "মাহফিল ও বিশেষ অনুষ্ঠান", "বাৎসরিক ওয়াজ, শবে কদর, ইফতার মাহফিল ও বিশেষ আয়োজন", Icons.Default.Campaign, MosqueGoldDeep, OperationCategory.WELFARE_EVENTS, eventsBadge, counts.upcomingEventsCount > 0),
-            OperationModuleEntry("charter", "আদর্শ কমিটি সনদ ও দায়িত্ব", "৩-স্তরীয় কমিটির ১৩টি পদের দায়িত্ব ও পোর্টফোলিও তদারকি", Icons.Default.VerifiedUser, MosqueEmeraldDark, OperationCategory.INFO)
+            OperationModuleEntry("meetings", "কমিটি সভা ও আর্থিক রিপোর্ট", "কমিটি সভার তারিখ ও সভায় মাসিক আর্থিক রিপোর্ট পেশ", Icons.Default.EventAvailable, MosqueGoldDeep, OperationCategory.ADMIN, meetingsBadge, counts.upcomingMeetingsCount > 0),
+            OperationModuleEntry("election", "কমিটি নির্বাচন ও পুনর্গঠন", "তফসিল, প্রার্থী মনোনয়ন, ভোটার তালিকা ও ফলাফল গেজেট", Icons.Default.HowToVote, MosqueGoldDeep, OperationCategory.ADMIN, electionBadge, counts.hasActiveElection),
+            OperationModuleEntry("cashbox", "দান বাক্স (ক্যাশবক্স) সাক্ষ্য", "দান বাক্স খোলার সময় উপস্থিত সাক্ষী নিশ্চিতকরণ ও পর্যবেক্ষণ", Icons.Default.Inventory2, MosqueGoldDeep, OperationCategory.FINANCE, cashboxBadge, counts.pendingCashboxCount > 0),
+            OperationModuleEntry("audit", "স্বচ্ছতা ও সিস্টেম অডিট লগ", "সকল আর্থিক অনুমোদন ও ডাটা পরিবর্তনের অপরিবর্তনীয় রেকর্ড", Icons.Default.FactCheck, MosqueWarningAmber, OperationCategory.FINANCE, auditBadge),
+            OperationModuleEntry("charter", "আদর্শ কমিটি সনদ ও দায়িত্ব", "৩-স্তরীয় কমিটির ১৩টি পদের দায়িত্ব ও পোর্টফোলিও নির্দেশিকা", Icons.Default.VerifiedUser, MosqueEmeraldDark, OperationCategory.INFO)
         )
     }
-
-    return baseModules + listOf(
+    // Common extras are NOT for everyone: each one is shown only to the roles
+    // whose duties actually need it. This keeps every interface duty-focused.
+    val commonExtras = listOf(
         OperationModuleEntry(
             key = "islamic_calendar",
             title = "ইসলামিক ক্যালেন্ডার ও এআই ইভেন্ট",
@@ -851,4 +930,19 @@ private fun buildRoleOperationModules(
             category = OperationCategory.ADMIN
         )
     )
+    return baseModules + commonExtras.filter { it.key in commonExtrasForRole(currentRole) }
+}
+
+/** Which of the shared utility modules a role actually needs for its duties. */
+private fun commonExtrasForRole(role: UserRole): Set<String> = when (role) {
+    UserRole.PRESIDENT -> setOf("islamic_calendar", "ramadan_hub", "official_seals")
+    UserRole.VICE_PRESIDENT, UserRole.GENERAL_SECRETARY -> setOf("islamic_calendar", "ramadan_hub", "official_seals")
+    UserRole.ASSISTANT_SECRETARY, UserRole.OFFICE_SECRETARY -> setOf("islamic_calendar", "ramadan_hub", "official_seals")
+    UserRole.TREASURER, UserRole.ASSISTANT_TREASURER -> setOf("islamic_calendar", "ramadan_hub", "cashbox_counter")
+    UserRole.PUBLICITY_SECRETARY, UserRole.ORGANIZING_SECRETARY -> setOf("islamic_calendar", "ramadan_hub", "invitation")
+    UserRole.WELFARE_EDUCATION_SECRETARY -> setOf("islamic_calendar", "ramadan_hub", "invitation", "janaza_alert")
+    UserRole.EXECUTIVE_MEMBER, UserRole.ADVISORY_BOARD -> setOf("islamic_calendar", "ramadan_hub", "cashbox_counter")
+    UserRole.IMAM -> setOf("islamic_calendar", "ramadan_hub", "janaza_alert", "invitation")
+    UserRole.MUAZZIN, UserRole.KHADEM -> setOf("islamic_calendar", "ramadan_hub", "janaza_alert")
+    UserRole.GENERAL_MEMBER -> setOf("islamic_calendar", "ramadan_hub")
 }

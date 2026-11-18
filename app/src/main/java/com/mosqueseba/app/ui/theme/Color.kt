@@ -103,3 +103,85 @@ val IslamicGoldTrimGradient = Brush.horizontalGradient(
         Color.Transparent
     )
 )
+
+// Royal Metallic Gold Shimmer Gradient (রাজকীয় স্বর্ণালী মেটালিক শিমার)
+val RoyalGoldShimmerGradient = Brush.linearGradient(
+    colors = listOf(
+        Color(0xFFBF953F),
+        Color(0xFFFCF6BA),
+        Color(0xFFB38728),
+        Color(0xFFFBF5B7),
+        Color(0xFFAA771C)
+    )
+)
+
+// Royal Emerald Shimmer Gradient (রাজকীয় পান্না ও মেহরাব শিমার)
+val RoyalEmeraldShimmerGradient = Brush.linearGradient(
+    colors = listOf(
+        Color(0xFF022C22),
+        Color(0xFF065F46),
+        Color(0xFF047857),
+        Color(0xFF10B981),
+        Color(0xFF064E3B)
+    )
+)
+
+// Dynamic Waqt Sky Ambient Lighting (ওয়াক্তভিত্তিক জীবন্ত আকাশ আবহ)
+val WaqtFajrSkyGradient = Brush.verticalGradient(
+    colors = listOf(
+        Color(0xFF0A1128),
+        Color(0xFF1C1A3A),
+        Color(0xFF38234A),
+        Color(0xFF5B304C),
+        Color(0xFF8C4A5A)
+    )
+)
+
+val WaqtDhuhrSkyGradient = Brush.verticalGradient(
+    colors = listOf(
+        Color(0xFF022C22),
+        Color(0xFF064E3B),
+        Color(0xFF0F766E),
+        Color(0xFF0284C7).copy(alpha = 0.75f)
+    )
+)
+
+val WaqtAsrSkyGradient = Brush.verticalGradient(
+    colors = listOf(
+        Color(0xFF1F1610),
+        Color(0xFF451A03),
+        Color(0xFF78350F),
+        Color(0xFFB45309),
+        Color(0xFFD97706).copy(alpha = 0.85f)
+    )
+)
+
+val WaqtMaghribSkyGradient = Brush.verticalGradient(
+    colors = listOf(
+        Color(0xFF1C0A26),
+        Color(0xFF400E32),
+        Color(0xFF6B1D38),
+        Color(0xFF9A3412),
+        Color(0xFFC2410C)
+    )
+)
+
+val WaqtIshaSkyGradient = Brush.verticalGradient(
+    colors = listOf(
+        Color(0xFF01140E),
+        Color(0xFF031E17),
+        Color(0xFF082F26),
+        Color(0xFF0F3B32),
+        Color(0xFF13282A)
+    )
+)
+
+fun getPrayerSkyGradient(prayerNameBn: String): Brush = when {
+    prayerNameBn.contains("ফজর", ignoreCase = true) -> WaqtFajrSkyGradient
+    prayerNameBn.contains("যোহর", ignoreCase = true) || prayerNameBn.contains("জুমুআ", ignoreCase = true) -> WaqtDhuhrSkyGradient
+    prayerNameBn.contains("আসর", ignoreCase = true) -> WaqtAsrSkyGradient
+    prayerNameBn.contains("মাগরিব", ignoreCase = true) -> WaqtMaghribSkyGradient
+    prayerNameBn.contains("ইশা", ignoreCase = true) -> WaqtIshaSkyGradient
+    else -> MosqueEmeraldDarkGradient
+}
+

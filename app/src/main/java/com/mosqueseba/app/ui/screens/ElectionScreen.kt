@@ -1360,15 +1360,17 @@ private fun AddCandidateNominationDialog(
     val roles = listOf(
         "president" to "সভাপতি",
         "vice_president" to "সহ-সভাপতি",
-        "general_secretary" to "সাধারণ সম্পাদক",
+        "general_secretary" to "সাধারণ সম্পাদক / সেক্রেটারি",
         "assistant_secretary" to "সহ-সাধারণ সম্পাদক",
-        "treasurer" to "কোষাধ্যক্ষ",
-        "assistant_treasurer" to "সহ-কোষাধ্যক্ষ",
+        "treasurer" to "কোষাধ্যক্ষ / অর্থ সম্পাদক",
+        "assistant_treasurer" to "সহ-অর্থ সম্পাদক",
         "organizing_secretary" to "সাংগঠনিক সম্পাদক",
-        "publicity" to "প্রচার ও প্রকাশনা সম্পাদক",
+        "publicity_secretary" to "প্রচার ও প্রকাশনা সম্পাদক",
         "office_secretary" to "দপ্তর সম্পাদক",
-        "welfare_edu" to "সমাজকল্যাণ ও শিক্ষা সম্পাদক",
-        "executive_member" to "কার্যনির্বাহী সদস্য"
+        "welfare_education_secretary" to "সমাজকল্যাণ ও ধর্মীয় শিক্ষা সম্পাদক",
+        "executive_member" to "সাধারণ সদস্য (কার্যনির্বাহী)",
+        "imam" to "পদাধিকারবলে সদস্য (খতিব/ইমাম)",
+        "advisory_board" to "উপদেষ্টা পরিষদ"
     )
 
     var selectedRoleIndex by remember { mutableIntStateOf(0) }
