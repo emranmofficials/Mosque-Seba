@@ -256,233 +256,127 @@ fun ExecutiveMosqueHeroCard(
         }
     }
 
-    MehrabArchCard(
-        modifier = Modifier.fillMaxWidth(),
-        backgroundColor = Color.Transparent,
-        borderColor = MosqueGold.copy(alpha = 0.45f),
-        elevation = 3.dp
+    val isDark = LocalIsDarkTheme.current
+    val surfaceColor = if (isDark) MosqueNightSurface else Color.White
+    val effectiveBorder = if (isDark) MosqueNightBorder else MosqueCardBorderSubtle
+    val primaryText = if (isDark) MosqueNightTextPrimary else MosqueTextPrimary
+    val secondaryText = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
+
+    Surface(
+        onClick = { onMosqueProfileClick?.invoke() },
+        shape = RoundedCornerShape(16.dp),
+        color = surfaceColor,
+        border = BorderStroke(1.dp, effectiveBorder),
+        shadowElevation = 2.dp,
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("executive_hero_card")
     ) {
-        Column(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(skyGradient)
-                .padding(horizontal = 14.dp, vertical = 11.dp)
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            // Row 1: Compact Hijri Date & Bismillah on one slim strip
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = if (showHijriDate) Arrangement.SpaceBetween else Arrangement.End,
-                verticalAlignment = Alignment.CenterVertically
+            // Left: Mosque Photo / Image Container
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = MosqueEmeraldDark.copy(alpha = 0.08f),
+                border = BorderStroke(1.dp, effectiveBorder),
+                modifier = Modifier
+                    .size(width = 96.dp, height = 82.dp)
+                    .clip(RoundedCornerShape(12.dp))
             ) {
-                if (showHijriDate) {
-                    Surface(
-                        color = Color.Black.copy(alpha = 0.22f),
-                        shape = RoundedCornerShape(6.dp),
-                        border = BorderStroke(0.7.dp, MosqueGold.copy(alpha = 0.45f))
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp)
-                        ) {
-                            ArabesqueStarMotif(size = 11.dp, color = MosqueGoldLight)
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = hijriDate,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MosqueGoldLight
-                            )
-                        }
+                Box(contentAlignment = Alignment.Center) {
+                    if (mosqueLogoBitmap != null) {
+                        Image(
+                            bitmap = mosqueLogoBitmap,
+                            contentDescription = nameBn,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    } else {
+                        Image(
+                            painter = painterResource(id = R.drawable.app_logo),
+                            contentDescription = nameBn,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
                     }
-                }
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    ArabesqueStarMotif(size = 9.dp, color = MosqueGold.copy(alpha = 0.6f))
-                    Text(
-                        text = "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MosqueGoldLight
-                    )
-                    ArabesqueStarMotif(size = 9.dp, color = MosqueGold.copy(alpha = 0.6f))
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.width(12.dp))
 
-            // Row 2: Official Logo + Mosque Name + Address + Duties Pill
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            // Right: Mosque Name, Location, Established Date & Active Badge
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = nameBn,
+                    fontSize = 15.5.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = primaryText,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                Spacer(modifier = Modifier.height(5.dp))
+
+                // Location with emerald pin
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.LocationOn,
+                        contentDescription = "ঠিকানা",
+                        tint = Color(0xFF047857),
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Spacer(modifier = Modifier.width(3.dp))
+                    Text(
+                        text = fullAddress,
+                        fontSize = 12.sp,
+                        color = secondaryText,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(5.dp))
+
+                // Established Date + Active Badge
                 Row(
-                    modifier = Modifier
-                        .weight(1f)
-                        .clip(RoundedCornerShape(10.dp))
-                        .then(
-                            if (onMosqueProfileClick != null) {
-                                Modifier.clickable(onClick = onMosqueProfileClick)
-                            } else Modifier
-                        ),
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(46.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .border(1.5.dp, MosqueGoldGradient, RoundedCornerShape(12.dp))
-                            .background(MosqueEmeraldDark)
-                            .padding(2.dp)
-                            .testTag("hero_mosque_logo"),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        if (mosqueLogoBitmap != null) {
-                            Image(
-                                bitmap = mosqueLogoBitmap,
-                                contentDescription = "মসজিদের অফিসিয়াল লোগো",
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .clip(RoundedCornerShape(10.dp))
-                            )
-                        } else {
-                            Image(
-                                painter = painterResource(id = R.drawable.app_logo),
-                                contentDescription = "মসজিদের অফিসিয়াল লোগো",
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .clip(RoundedCornerShape(10.dp))
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.width(10.dp))
-
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = nameBn,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = Color.White,
-                            fontWeight = FontWeight.ExtraBold,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Default.LocationOn,
-                                contentDescription = null,
-                                tint = MosqueGold,
-                                modifier = Modifier.size(12.dp)
-                            )
-                            Spacer(modifier = Modifier.width(3.dp))
-                            Text(
-                                text = fullAddress,
-                                fontSize = 11.sp,
-                                color = Color.White.copy(alpha = 0.86f),
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.width(6.dp))
-
-                // Compact Role Duties Button
-                Surface(
-                    onClick = onDutiesClick,
-                    shape = RoundedCornerShape(8.dp),
-                    color = MosqueGold,
-                    modifier = Modifier.testTag("president_duties_strip_button")
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
-                            imageVector = Icons.Default.VerifiedUser,
-                            contentDescription = "দায়িত্ব তালিকা",
-                            tint = MosqueEmeraldDark,
-                            modifier = Modifier.size(13.dp)
+                            imageVector = Icons.Default.CalendarMonth,
+                            contentDescription = "প্রতিষ্ঠা সাল",
+                            tint = Color(0xFF047857),
+                            modifier = Modifier.size(13.5.dp)
                         )
-                        Spacer(modifier = Modifier.width(3.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = "দায়িত্ব",
+                            text = "স্থাপিত: ${if (establishedBn != "—") establishedBn else "২০২৪"} ইং",
+                            fontSize = 11.5.sp,
+                            color = secondaryText
+                        )
+                    }
+
+                    // Green Pill Badge: "সক্রিয়"
+                    Surface(
+                        shape = RoundedCornerShape(20.dp),
+                        color = Color(0xFF047857),
+                        modifier = Modifier.padding(top = 1.dp)
+                    ) {
+                        Text(
+                            text = "সক্রিয়",
                             fontSize = 11.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = MosqueEmeraldDark
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White,
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp)
                         )
                     }
                 }
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Row 3: Slim Footer Strip — Copyable Committee ID + Established & Tenure
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(Color.White.copy(alpha = 0.1f))
-                    .padding(horizontal = 8.dp, vertical = 5.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(6.dp))
-                        .clickable {
-                            clipboardManager.setText(AnnotatedString(committeeId))
-                            copied = true
-                            Toast.makeText(context, "কমিটি আইডি ($committeeId) কপি করা হয়েছে", Toast.LENGTH_SHORT).show()
-                        }
-                        .padding(horizontal = 4.dp, vertical = 2.dp)
-                        .testTag("hero_copy_committee_id_button")
-                ) {
-                    AnimatedContent(
-                        targetState = copied,
-                        transitionSpec = {
-                            (fadeIn(tween(180)) + scaleIn(initialScale = 0.85f)) togetherWith
-                                (fadeOut(tween(140)) + scaleOut(targetScale = 0.85f))
-                        },
-                        label = "CopyCommitteeIdAnim"
-                    ) { isCopied ->
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = if (isCopied) Icons.Default.CheckCircle else Icons.Default.ContentCopy,
-                                contentDescription = "কমিটি আইডি কপি করুন",
-                                tint = if (isCopied) MosqueGreenAccent else MosqueGold,
-                                modifier = Modifier.size(13.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = if (isCopied) "কপি হয়েছে" else "আইডি: $committeeId",
-                                fontSize = 11.sp,
-                                color = if (isCopied) MosqueGreenAccent else MosqueGoldLight,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
-                }
-
-                Text(
-                    text = if (onMosqueProfileClick != null) "প্রোফাইল › ($establishedBn • $startYearBn–$endYearBn)" else "স্থাপিত $establishedBn • মেয়াদ $startYearBn–$endYearBn",
-                    fontSize = 10.sp,
-                    color = MosqueGoldLight.copy(alpha = 0.92f),
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = if (onMosqueProfileClick != null) {
-                        Modifier
-                            .clip(RoundedCornerShape(6.dp))
-                            .clickable(onClick = onMosqueProfileClick)
-                            .padding(horizontal = 4.dp, vertical = 2.dp)
-                    } else Modifier
-                )
             }
         }
     }

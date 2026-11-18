@@ -32,6 +32,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.graphics.Outline
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.LayoutDirection
 import com.mosqueseba.app.data.model.UserRole
 import com.mosqueseba.app.ui.theme.*
 import java.time.DayOfWeek
@@ -692,6 +697,112 @@ fun CircularPrayerCountdownRing(
                 color = Color.White.copy(alpha = 0.82f)
             )
         }
+    }
+}
+
+/**
+ * Custom Mehrab Header Curved Arch Shape for Global App Header
+ */
+class MehrabHeaderShape(private val archDepthDp: Dp = 16.dp) : Shape {
+    override fun createOutline(
+        size: androidx.compose.ui.geometry.Size,
+        layoutDirection: LayoutDirection,
+        density: Density
+    ): Outline {
+        val archDepthPx = with(density) { archDepthDp.toPx() }
+        val path = Path().apply {
+            moveTo(0f, 0f)
+            lineTo(size.width, 0f)
+            lineTo(size.width, size.height - archDepthPx)
+            cubicTo(
+                size.width * 0.70f, size.height,
+                size.width * 0.30f, size.height,
+                0f, size.height - archDepthPx
+            )
+            close()
+        }
+        return Outline.Generic(path)
+    }
+}
+
+/**
+ * Subtle Islamic Geometric Arabesque Watermark pattern for Headers and Cards
+ */
+@Composable
+fun IslamicGeometricWatermark(
+    modifier: Modifier = Modifier,
+    patternColor: Color = Color.White.copy(alpha = 0.05f),
+    cellSize: Dp = 44.dp
+) {
+    Canvas(modifier = modifier.fillMaxSize()) {
+        val cellPx = cellSize.toPx()
+        val cols = (size.width / cellPx).toInt() + 2
+        val rows = (size.height / cellPx).toInt() + 2
+        val starRadius = cellPx * 0.32f
+
+        for (i in 0 until cols) {
+            for (j in 0 until rows) {
+                val cx = i * cellPx
+                val cy = j * cellPx
+                val half = starRadius
+                drawRect(
+                    color = patternColor,
+                    topLeft = androidx.compose.ui.geometry.Offset(cx - half * 0.7f, cy - half * 0.7f),
+                    size = androidx.compose.ui.geometry.Size(half * 1.4f, half * 1.4f),
+                    style = Stroke(width = 0.75.dp.toPx())
+                )
+                rotate(45f, pivot = androidx.compose.ui.geometry.Offset(cx, cy)) {
+                    drawRect(
+                        color = patternColor,
+                        topLeft = androidx.compose.ui.geometry.Offset(cx - half * 0.7f, cy - half * 0.7f),
+                        size = androidx.compose.ui.geometry.Size(half * 1.4f, half * 1.4f),
+                        style = Stroke(width = 0.75.dp.toPx())
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Subtle Mosque Skyline Silhouette for Background Cards & Quotes
+ */
+@Composable
+fun MosqueSkylineSilhouette(
+    modifier: Modifier = Modifier,
+    color: Color = Color.White.copy(alpha = 0.08f)
+) {
+    Canvas(modifier = modifier.fillMaxWidth()) {
+        val w = size.width
+        val h = size.height
+        val path = Path().apply {
+            moveTo(0f, h)
+            lineTo(w * 0.15f, h)
+            lineTo(w * 0.15f, h * 0.65f)
+            cubicTo(w * 0.18f, h * 0.40f, w * 0.26f, h * 0.40f, w * 0.29f, h * 0.65f)
+            lineTo(w * 0.29f, h)
+            lineTo(w * 0.36f, h)
+            lineTo(w * 0.36f, h * 0.25f)
+            lineTo(w * 0.38f, h * 0.15f)
+            lineTo(w * 0.40f, h * 0.25f)
+            lineTo(w * 0.40f, h)
+            lineTo(w * 0.45f, h)
+            lineTo(w * 0.45f, h * 0.55f)
+            cubicTo(w * 0.50f, h * 0.20f, w * 0.62f, h * 0.20f, w * 0.67f, h * 0.55f)
+            lineTo(w * 0.67f, h)
+            lineTo(w * 0.72f, h)
+            lineTo(w * 0.72f, h * 0.25f)
+            lineTo(w * 0.74f, h * 0.15f)
+            lineTo(w * 0.76f, h * 0.25f)
+            lineTo(w * 0.76f, h)
+            lineTo(w * 0.81f, h)
+            lineTo(w * 0.81f, h * 0.65f)
+            cubicTo(w * 0.84f, h * 0.42f, w * 0.92f, h * 0.42f, w * 0.95f, h * 0.65f)
+            lineTo(w * 0.95f, h)
+            lineTo(w, h)
+            close()
+        }
+        drawPath(path = path, color = color)
     }
 }
 
