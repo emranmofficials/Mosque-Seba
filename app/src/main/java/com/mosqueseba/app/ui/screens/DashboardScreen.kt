@@ -82,6 +82,7 @@ fun DashboardScreen(
     val showHijriBanner by viewModel.showHijriBanner.collectAsState()
     val hijriDayOffset by viewModel.hijriDayOffset.collectAsState()
     val context = LocalContext.current
+    val isDark = LocalIsDarkTheme.current
 
     var showDutiesDialog by remember { mutableStateOf(false) }
     var pendingRejectVoucher by remember { mutableStateOf<TransactionEntity?>(null) }
@@ -175,7 +176,7 @@ fun DashboardScreen(
             }
         }
 
-        // 0. Mosque Executive & Operational Overview (Hero Card at the very top of all cards)
+        // 1. Mosque Overview Card (Photo, Location, Established Date & Active Status)
         item(key = "role_hero") {
             ExecutiveMosqueHeroCard(
                 mosque = mosque,
@@ -186,7 +187,84 @@ fun DashboardScreen(
             )
         }
 
-        // 1. Royal Quick Actions 2x3 Grid (6 Core Modules) matching Mockup
+        // 2. Actionable Priority Alerts (Conditionally shown ONLY when user action is required)
+        if ((currentRole == UserRole.PRESIDENT || currentRole == UserRole.VICE_PRESIDENT || currentRole == UserRole.TREASURER) && pendingTransactions.isNotEmpty()) {
+            item(key = "priority_pending_vouchers") {
+                PresidentPendingVouchersCard(
+                    pendingTransactions = pendingTransactions,
+                    onApprove = { txn ->
+                        viewModel.updateTransactionStatus(txn, true)
+                        MosqueToastController.success(
+                            "${txn.categoryNameBn} ভাউচারটি অনুমোদিত হয়েছে।",
+                            "ভাউচার অনুমোদিত"
+                        )
+                    },
+                    onReject = { txn -> pendingRejectVoucher = txn },
+                    onViewAll = { onOpenDialog("pending_approval") }
+                )
+            }
+        }
+
+        if (unverifiedCashboxes.isNotEmpty() && currentRole.canWitnessCashbox()) {
+            item(key = "priority_cashbox_witness") {
+                PendingCashboxWitnessCard(
+                    records = unverifiedCashboxes,
+                    canVerify = currentRole.canWitnessCashbox(),
+                    onVerify = { viewModel.verifyCashboxAsWitness(it) },
+                    onOpenCashbox = { onOpenDialog("cashbox") }
+                )
+            }
+        }
+
+        if (currentRole == UserRole.KHADEM && khademChecklistProgress != null) {
+            item(key = "priority_khadem_checklist") {
+                Surface(
+                    onClick = { showDutiesDialog = true },
+                    shape = RoundedCornerShape(16.dp),
+                    color = if (isDark) MosqueNightSurfaceVariant else Color(0xFFF0FDF4),
+                    border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else Color(0xFFBBF7D0)),
+                    shadowElevation = 1.dp,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 14.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.CheckCircle,
+                                contentDescription = null,
+                                tint = MosqueSuccessGreen,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "আজকের মসজিদ সেবা ও পরিচ্ছন্নতা ডিউটি",
+                                fontSize = 13.5.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isDark) MosqueNightTextPrimary else MosqueTextPrimary
+                            )
+                        }
+                        Text(
+                            text = khademChecklistProgress,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MosqueSuccessGreen
+                        )
+                    }
+                }
+            }
+        }
+
+        // 3. Daily Prayer Schedule & Jamat Times (Prime Devotional Utility)
+        item(key = "global_top_prayer_card") {
+            PrayerCard(onViewFullScheduleClick = { onOpenDialog("view_prayers") })
+        }
+
+        // 4. Quick Actions Grid (6 Core Modules - Single Unified Grid)
         item(key = "royal_home_quick_actions") {
             RoyalQuickActionsGrid(
                 notificationCount = allNotices.size.coerceAtLeast(3),
@@ -204,7 +282,7 @@ fun DashboardScreen(
             )
         }
 
-        // 2. Royal Mosque Summary KPI Card ("মসজিদের সংক্ষিপ্ত তথ্য") matching Mockup
+        // 5. Mosque Summary KPI Card ("মসজিদের সংক্ষিপ্ত তথ্য" - মুসল্লী, পরিবার, চলতি তহবিল)
         item(key = "royal_home_summary_kpi") {
             RoyalMosqueSummaryKpiCard(
                 totalMembers = totalMembers,
@@ -214,28 +292,7 @@ fun DashboardScreen(
             )
         }
 
-        // 3. Royal Recent Activities Feed ("সাম্প্রতিক কার্যক্রম") matching Mockup
-        item(key = "royal_home_recent_activities") {
-            RoyalRecentActivitiesCard(
-                transactions = allTransactions.filter { it.approvalStatus != "pending" }.take(3),
-                meetings = allMeetings.take(2),
-                onViewAllClick = { onOpenDialog("finance") }
-            )
-        }
-
-        // 4. Inspirational Islamic Banner ("মসজিদ হলো সমাজের শান্তি ও ঐক্যের কেন্দ্রবিন্দু") matching Mockup
-        item(key = "royal_home_quote_banner") {
-            InspirationalIslamicQuoteBanner(
-                quoteText = allSmartBoardQuotes.firstOrNull()?.message ?: "মসজিদ হলো সমাজের শান্তি ও ঐক্যের কেন্দ্রবিন্দু"
-            )
-        }
-
-        // 5. Daily Prayer Schedule & Jamat Times
-        item(key = "global_top_prayer_card") {
-            PrayerCard(onViewFullScheduleClick = { onOpenDialog("view_prayers") })
-        }
-
-        // 6. Dynamic Smart Digital Board (Unified Hub for Islamic Calendar, Ramadan, Notices & Wall Quotes)
+        // 6. Dynamic Smart Digital Board (Hijri Calendar, Ramadan Hub, Notices & Wall Quotes)
         item(key = "global_top_smart_board") {
             SmartBoardCard(
                 quotes = allSmartBoardQuotes,
@@ -249,894 +306,25 @@ fun DashboardScreen(
             )
         }
 
-        when (currentRole) {
-            UserRole.PRESIDENT, UserRole.VICE_PRESIDENT -> {
-                // Priority Approvals & Executive Oversight
-                item(key = "pres_pending_vouchers") {
-                    StaggeredDashboardItem(index = 1, modifier = Modifier.animateItem()) {
-                        PresidentPendingVouchersCard(
-                            pendingTransactions = pendingTransactions,
-                            onApprove = { txn ->
-                                viewModel.updateTransactionStatus(txn, true)
-                                MosqueToastController.success(
-                                    "${txn.categoryNameBn} ভাউচারটি অনুমোদিত হয়েছে।",
-                                    "ভাউচার অনুমোদিত"
-                                )
-                            },
-                            onReject = { txn -> pendingRejectVoucher = txn },
-                            onViewAll = { onOpenDialog("pending_approval") }
-                        )
-                    }
-                }
-
-                if (unverifiedCashboxes.isNotEmpty()) {
-                    item(key = "pres_cashbox_witness") {
-                        StaggeredDashboardItem(index = 1, modifier = Modifier.animateItem()) {
-                            PendingCashboxWitnessCard(
-                                records = unverifiedCashboxes,
-                                canVerify = currentRole.canWitnessCashbox(),
-                                onVerify = { viewModel.verifyCashboxAsWitness(it) },
-                                onOpenCashbox = { onOpenDialog("cashbox") }
-                            )
-                        }
-                    }
-                }
-
-                if (activeAdvisories.isNotEmpty()) {
-                    item(key = "pres_advisory") {
-                        StaggeredDashboardItem(index = 1, modifier = Modifier.animateItem()) {
-                            AdvisoryHighlightCard(
-                                notes = activeAdvisories,
-                                onOpenAdvisory = { onOpenDialog("sharia_advisory") }
-                            )
-                        }
-                    }
-                }
-
-                item(key = "pres_kpi_div") {
-                    StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
-                        RubElHizbDivider(title = "কমিটি সারসংক্ষেপ ও তহবিল", modifier = Modifier.padding(vertical = 2.dp))
-                    }
-                }
-
-                item(key = "pres_kpi_grid") {
-                    StaggeredDashboardItem(index = 3, modifier = Modifier.animateItem()) {
-                        DashboardKpiGrid(
-                            role = currentRole,
-                            totalMembers = totalMembers,
-                            netBalance = netBalance,
-                            dueChanda = dueChanda,
-                            pendingItems = pendingTransactions.size,
-                            studentCount = studentCount,
-                            staffCount = activeStaff.size,
-                            noticeCount = allNotices.size,
-                            upcomingEventCount = upcomingEventCount,
-                            totalEventCount = allEvents.size,
-                            welfareCount = allWelfareCases.size,
-                            pendingWelfareCount = pendingWelfareCases.size,
-                            cashboxCount = allCashboxRecords.size,
-                            pendingCashboxWitnessCount = unverifiedCashboxes.size,
-                            officeDocCount = allOfficeDocuments.size,
-                            pendingReplyDocCount = pendingReplyDocs,
-                            advisoryCount = allAdvisoryNotes.size,
-                            smartQuoteCount = allSmartBoardQuotes.size,
-                            nextMeetingTitleDate = nextMeeting?.meetingDate?.substringBefore(",") ?: "নির্ধারিত নেই",
-                            nextMeetingSubtitle = nextMeeting?.title ?: "কোনো আসন্ন সভা নেই",
-                            myChandaPaid = myChandaPaid,
-                            myChandaSubtitle = myChandaSub,
-                            nextPrayerName = nextPrayerSummary.nameBn,
-                            nextPrayerSubtitle = "${nextPrayerSummary.iqamahTimeBn} (বাকি ${nextPrayerSummary.remainingTextBn})",
-                            onKpiClick = onKpiClickHandler
-                        )
-                    }
-                }
-
-                item(key = "pres_quick_actions") {
-                    StaggeredDashboardItem(index = 4, modifier = Modifier.animateItem()) {
-                        QuickActionsGrid(
-                            role = currentRole,
-                            onActionClick = { actionKey -> onOpenDialog(actionKey) }
-                        )
-                    }
-                }
-
-                item(key = "pres_meetings_div") {
-                    StaggeredDashboardItem(index = 5, modifier = Modifier.animateItem()) {
-                        RubElHizbDivider(title = "আসন্ন সভা ও সর্বশেষ অডিট লেনদেন", modifier = Modifier.padding(vertical = 2.dp))
-                    }
-                }
-
-                item(key = "pres_meetings_card") {
-                    StaggeredDashboardItem(index = 5, modifier = Modifier.animateItem()) {
-                        UpcomingMeetingsCard(
-                            meetings = allMeetings,
-                            canSchedule = currentRole.canScheduleMeetings(),
-                            onScheduleClick = { onOpenDialog("schedule_meeting") },
-                            onViewAllClick = { onOpenDialog("meetings") }
-                        )
-                    }
-                }
-
-                val completedTransactions = allTransactions.filter { it.approvalStatus != "pending" }.take(4)
-                if (completedTransactions.isNotEmpty()) {
-                    item(key = "pres_recent_txns") {
-                        StaggeredDashboardItem(index = 6, modifier = Modifier.animateItem()) {
-                            RecentActivityCard(transactions = completedTransactions, onViewAllClick = { onOpenDialog("finance") })
-                        }
-                    }
-                }
-            }
-
-            UserRole.TREASURER, UserRole.ASSISTANT_TREASURER -> {
-                // Primary Desk: Treasury Ledger
-                item(key = "treasurer_desk") {
-                    StaggeredDashboardItem(index = 1, modifier = Modifier.animateItem()) {
-                        TreasurerTreasuryLedgerCard(
-                            netBalance = netBalance,
-                            totalIncome = totalIncome,
-                            totalExpense = totalExpense,
-                            dueChanda = dueChanda,
-                            unverifiedCashboxCount = unverifiedCashboxes.size,
-                            pendingVoucherCount = pendingTransactions.size,
-                            onReceiveChanda = { onOpenDialog("receive_chanda") },
-                            onOpenCashbox = { onOpenDialog("cashbox") },
-                            onOpenPayroll = { onOpenDialog("treasurer_payroll") },
-                            onViewFinance = { onOpenDialog("finance") }
-                        )
-                    }
-                }
-
-                if (unverifiedCashboxes.isNotEmpty()) {
-                    item(key = "treasurer_cashbox_pending") {
-                        StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
-                            PendingCashboxWitnessCard(
-                                records = unverifiedCashboxes,
-                                canVerify = currentRole.canWitnessCashbox(),
-                                onVerify = { viewModel.verifyCashboxAsWitness(it) },
-                                onOpenCashbox = { onOpenDialog("cashbox") }
-                            )
-                        }
-                    }
-                }
-
-                item(key = "treasurer_kpi_div") {
-                    StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
-                        RubElHizbDivider(title = "বায়তুলমাল আর্থিক সূচক ও সেবা", modifier = Modifier.padding(vertical = 2.dp))
-                    }
-                }
-
-                item(key = "treasurer_kpi_grid") {
-                    StaggeredDashboardItem(index = 3, modifier = Modifier.animateItem()) {
-                        DashboardKpiGrid(
-                            role = currentRole,
-                            totalMembers = totalMembers,
-                            netBalance = netBalance,
-                            dueChanda = dueChanda,
-                            pendingItems = pendingTransactions.size,
-                            studentCount = studentCount,
-                            staffCount = activeStaff.size,
-                            noticeCount = allNotices.size,
-                            upcomingEventCount = upcomingEventCount,
-                            totalEventCount = allEvents.size,
-                            welfareCount = allWelfareCases.size,
-                            pendingWelfareCount = pendingWelfareCases.size,
-                            cashboxCount = allCashboxRecords.size,
-                            pendingCashboxWitnessCount = unverifiedCashboxes.size,
-                            officeDocCount = allOfficeDocuments.size,
-                            pendingReplyDocCount = pendingReplyDocs,
-                            advisoryCount = allAdvisoryNotes.size,
-                            smartQuoteCount = allSmartBoardQuotes.size,
-                            nextMeetingTitleDate = nextMeeting?.meetingDate?.substringBefore(",") ?: "নির্ধারিত নেই",
-                            nextMeetingSubtitle = nextMeeting?.title ?: "কোনো আসন্ন সভা নেই",
-                            myChandaPaid = myChandaPaid,
-                            myChandaSubtitle = myChandaSub,
-                            nextPrayerName = nextPrayerSummary.nameBn,
-                            nextPrayerSubtitle = "${nextPrayerSummary.iqamahTimeBn} (বাকি ${nextPrayerSummary.remainingTextBn})",
-                            onKpiClick = onKpiClickHandler
-                        )
-                    }
-                }
-
-                item(key = "treasurer_actions_grid") {
-                    StaggeredDashboardItem(index = 4, modifier = Modifier.animateItem()) {
-                        QuickActionsGrid(
-                            role = currentRole,
-                            onActionClick = { actionKey -> onOpenDialog(actionKey) }
-                        )
-                    }
-                }
-
-                item(key = "treasurer_txns_div") {
-                    StaggeredDashboardItem(index = 5, modifier = Modifier.animateItem()) {
-                        RubElHizbDivider(title = "সাম্প্রতিক লেনদেন ও আসন্ন সভা", modifier = Modifier.padding(vertical = 2.dp))
-                    }
-                }
-
-                item(key = "treasurer_recent_txns") {
-                    StaggeredDashboardItem(index = 5, modifier = Modifier.animateItem()) {
-                        RecentActivityCard(
-                            transactions = allTransactions.take(5),
-                            onViewAllClick = { onOpenDialog("finance") }
-                        )
-                    }
-                }
-
-                item(key = "treasurer_meetings_card") {
-                    StaggeredDashboardItem(index = 6, modifier = Modifier.animateItem()) {
-                        UpcomingMeetingsCard(
-                            meetings = allMeetings,
-                            canSchedule = currentRole.canScheduleMeetings(),
-                            onScheduleClick = { onOpenDialog("schedule_meeting") },
-                            onViewAllClick = { onOpenDialog("meetings") }
-                        )
-                    }
-                }
-            }
-
-            UserRole.GENERAL_SECRETARY, UserRole.ASSISTANT_SECRETARY, UserRole.ORGANIZING_SECRETARY, UserRole.OFFICE_SECRETARY -> {
-                // Primary Desk: Secretariat Executive Hub
-                item(key = "sec_hub") {
-                    StaggeredDashboardItem(index = 1, modifier = Modifier.animateItem()) {
-                        SecretariatExecutiveHubCard(
-                            nextMeeting = nextMeeting,
-                            pendingDocsCount = pendingReplyDocs,
-                            onScheduleMeeting = { onOpenDialog("schedule_meeting") },
-                            onDraftNotice = { onOpenDialog("publish_notice") },
-                            onOpenOfficeDocs = { onOpenDialog("office_docs") },
-                            onViewMeetings = { onOpenDialog("meetings") }
-                        )
-                    }
-                }
-
-                if (pendingOfficeDocs.isNotEmpty()) {
-                    item(key = "sec_office_docs") {
-                        StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
-                            PendingOfficeDocsHighlightCard(
-                                pendingDocs = pendingOfficeDocs,
-                                onOpenOfficeDocs = { onOpenDialog("office_docs") }
-                            )
-                        }
-                    }
-                }
-
-                item(key = "sec_kpi_div") {
-                    StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
-                        RubElHizbDivider(title = "প্রশাসনিক সূচক ও দ্রুত সেবা", modifier = Modifier.padding(vertical = 2.dp))
-                    }
-                }
-
-                item(key = "sec_kpi_grid") {
-                    StaggeredDashboardItem(index = 3, modifier = Modifier.animateItem()) {
-                        DashboardKpiGrid(
-                            role = currentRole,
-                            totalMembers = totalMembers,
-                            netBalance = netBalance,
-                            dueChanda = dueChanda,
-                            pendingItems = pendingTransactions.size,
-                            studentCount = studentCount,
-                            staffCount = activeStaff.size,
-                            noticeCount = allNotices.size,
-                            upcomingEventCount = upcomingEventCount,
-                            totalEventCount = allEvents.size,
-                            welfareCount = allWelfareCases.size,
-                            pendingWelfareCount = pendingWelfareCases.size,
-                            cashboxCount = allCashboxRecords.size,
-                            pendingCashboxWitnessCount = unverifiedCashboxes.size,
-                            officeDocCount = allOfficeDocuments.size,
-                            pendingReplyDocCount = pendingReplyDocs,
-                            advisoryCount = allAdvisoryNotes.size,
-                            smartQuoteCount = allSmartBoardQuotes.size,
-                            nextMeetingTitleDate = nextMeeting?.meetingDate?.substringBefore(",") ?: "নির্ধারিত নেই",
-                            nextMeetingSubtitle = nextMeeting?.title ?: "কোনো আসন্ন সভা নেই",
-                            myChandaPaid = myChandaPaid,
-                            myChandaSubtitle = myChandaSub,
-                            nextPrayerName = nextPrayerSummary.nameBn,
-                            nextPrayerSubtitle = "${nextPrayerSummary.iqamahTimeBn} (বাকি ${nextPrayerSummary.remainingTextBn})",
-                            onKpiClick = onKpiClickHandler
-                        )
-                    }
-                }
-
-                item(key = "sec_actions_grid") {
-                    StaggeredDashboardItem(index = 4, modifier = Modifier.animateItem()) {
-                        QuickActionsGrid(
-                            role = currentRole,
-                            onActionClick = { actionKey -> onOpenDialog(actionKey) }
-                        )
-                    }
-                }
-
-                item(key = "sec_meetings_div") {
-                    StaggeredDashboardItem(index = 5, modifier = Modifier.animateItem()) {
-                        RubElHizbDivider(title = "আসন্ন সভা ও ডিজিটাল বোর্ড", modifier = Modifier.padding(vertical = 2.dp))
-                    }
-                }
-
-                item(key = "sec_meetings_card") {
-                    StaggeredDashboardItem(index = 5, modifier = Modifier.animateItem()) {
-                        UpcomingMeetingsCard(
-                            meetings = allMeetings,
-                            canSchedule = currentRole.canScheduleMeetings(),
-                            onScheduleClick = { onOpenDialog("schedule_meeting") },
-                            onViewAllClick = { onOpenDialog("meetings") }
-                        )
-                    }
-                }
-            }
-
-            UserRole.IMAM -> {
-                // Primary Desk: Mehrab & Imamat
-                item(key = "imam_mehrab_desk") {
-                    StaggeredDashboardItem(index = 1, modifier = Modifier.animateItem()) {
-                        ImamMehrabDutyCard(
-                            nextPrayerName = nextPrayerSummary.nameBn,
-                            nextPrayerIqamah = nextPrayerSummary.iqamahTimeBn,
-                            remainingText = nextPrayerSummary.remainingTextBn,
-                            onViewFullSchedule = { onOpenDialog("view_prayers") },
-                            onOpenAdvisory = { onOpenDialog("sharia_advisory") },
-                            onOpenSmartBoard = { onOpenDialog("publicity") },
-                            onOpenMadrasa = { onOpenDialog("madrasa") }
-                        )
-                    }
-                }
-
-                if (studentCount > 0) {
-                    item(key = "imam_madrasa_desk") {
-                        StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
-                            ImamMadrasaHifzDeskCard(
-                                studentCount = studentCount,
-                                onOpenMadrasa = { onOpenDialog("madrasa") }
-                            )
-                        }
-                    }
-                }
-
-                item(key = "imam_food_desk") {
-                    StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
-                        StaffFoodScheduleCard(
-                            todayFoodProvider = todayStaffFoodProvider,
-                            onOpenFood = { onOpenDialog("food") }
-                        )
-                    }
-                }
-
-                if (activeAdvisories.isNotEmpty()) {
-                    item(key = "imam_advisories") {
-                        StaggeredDashboardItem(index = 3, modifier = Modifier.animateItem()) {
-                            AdvisoryHighlightCard(
-                                notes = activeAdvisories,
-                                onOpenAdvisory = { onOpenDialog("sharia_advisory") }
-                            )
-                        }
-                    }
-                }
-
-                item(key = "imam_kpi_div") {
-                    StaggeredDashboardItem(index = 3, modifier = Modifier.animateItem()) {
-                        RubElHizbDivider(title = "দ্বীনি সূচক ও ইমামতি সেবা", modifier = Modifier.padding(vertical = 2.dp))
-                    }
-                }
-
-                item(key = "imam_kpi_grid") {
-                    StaggeredDashboardItem(index = 4, modifier = Modifier.animateItem()) {
-                        DashboardKpiGrid(
-                            role = currentRole,
-                            totalMembers = totalMembers,
-                            netBalance = netBalance,
-                            dueChanda = dueChanda,
-                            pendingItems = pendingTransactions.size,
-                            studentCount = studentCount,
-                            staffCount = activeStaff.size,
-                            noticeCount = allNotices.size,
-                            upcomingEventCount = upcomingEventCount,
-                            totalEventCount = allEvents.size,
-                            welfareCount = allWelfareCases.size,
-                            pendingWelfareCount = pendingWelfareCases.size,
-                            cashboxCount = allCashboxRecords.size,
-                            pendingCashboxWitnessCount = unverifiedCashboxes.size,
-                            officeDocCount = allOfficeDocuments.size,
-                            pendingReplyDocCount = pendingReplyDocs,
-                            advisoryCount = allAdvisoryNotes.size,
-                            mySalaryStatusValue = mySalaryValue,
-                            mySalaryStatusSubtitle = mySalarySub,
-                            todayStaffFoodProvider = todayStaffFoodProvider,
-                            smartQuoteCount = allSmartBoardQuotes.size,
-                            nextMeetingTitleDate = nextMeeting?.meetingDate?.substringBefore(",") ?: "নির্ধারিত নেই",
-                            nextMeetingSubtitle = nextMeeting?.title ?: "কোনো আসন্ন সভা নেই",
-                            myChandaPaid = myChandaPaid,
-                            myChandaSubtitle = myChandaSub,
-                            nextPrayerName = nextPrayerSummary.nameBn,
-                            nextPrayerSubtitle = "${nextPrayerSummary.iqamahTimeBn} (বাকি ${nextPrayerSummary.remainingTextBn})",
-                            onKpiClick = onKpiClickHandler
-                        )
-                    }
-                }
-
-                item(key = "imam_actions_grid") {
-                    StaggeredDashboardItem(index = 5, modifier = Modifier.animateItem()) {
-                        QuickActionsGrid(
-                            role = currentRole,
-                            onActionClick = { actionKey -> onOpenDialog(actionKey) }
-                        )
-                    }
-                }
-
-                item(key = "imam_meetings_card") {
-                    StaggeredDashboardItem(index = 8, modifier = Modifier.animateItem()) {
-                        UpcomingMeetingsCard(
-                            meetings = allMeetings,
-                            canSchedule = currentRole.canScheduleMeetings(),
-                            onScheduleClick = { onOpenDialog("schedule_meeting") },
-                            onViewAllClick = { onOpenDialog("meetings") }
-                        )
-                    }
-                }
-            }
-
-            UserRole.MUAZZIN -> {
-                // Primary Desk: Azan & Sound Desk
-                item(key = "muazzin_azan_desk") {
-                    StaggeredDashboardItem(index = 1, modifier = Modifier.animateItem()) {
-                        MuazzinAzanDutyCard(
-                            nextPrayerName = nextPrayerSummary.nameBn,
-                            nextPrayerIqamah = nextPrayerSummary.iqamahTimeBn,
-                            remainingText = nextPrayerSummary.remainingTextBn,
-                            onViewFullSchedule = { onOpenDialog("view_prayers") },
-                            onOpenRoster = { onOpenDialog("roster") },
-                            onOpenFood = { onOpenDialog("food") },
-                            onOpenSmartBoard = { onOpenDialog("publicity") }
-                        )
-                    }
-                }
-
-                item(key = "muazzin_food_card") {
-                    StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
-                        StaffFoodScheduleCard(
-                            todayFoodProvider = todayStaffFoodProvider,
-                            onOpenFood = { onOpenDialog("food") }
-                        )
-                    }
-                }
-
-                item(key = "muazzin_kpi_div") {
-                    StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
-                        RubElHizbDivider(title = "খেদমত সূচক ও দ্রুত সেবা", modifier = Modifier.padding(vertical = 2.dp))
-                    }
-                }
-
-                item(key = "muazzin_kpi_grid") {
-                    StaggeredDashboardItem(index = 3, modifier = Modifier.animateItem()) {
-                        DashboardKpiGrid(
-                            role = currentRole,
-                            totalMembers = totalMembers,
-                            netBalance = netBalance,
-                            dueChanda = dueChanda,
-                            studentCount = studentCount,
-                            staffCount = activeStaff.size,
-                            noticeCount = allNotices.size,
-                            upcomingEventCount = upcomingEventCount,
-                            totalEventCount = allEvents.size,
-                            welfareCount = allWelfareCases.size,
-                            mySalaryStatusValue = mySalaryValue,
-                            mySalaryStatusSubtitle = mySalarySub,
-                            todayStaffFoodProvider = todayStaffFoodProvider,
-                            smartQuoteCount = allSmartBoardQuotes.size,
-                            nextPrayerName = nextPrayerSummary.nameBn,
-                            nextPrayerSubtitle = "${nextPrayerSummary.iqamahTimeBn} (বাকি ${nextPrayerSummary.remainingTextBn})",
-                            onKpiClick = onKpiClickHandler
-                        )
-                    }
-                }
-
-                item(key = "muazzin_actions_grid") {
-                    StaggeredDashboardItem(index = 4, modifier = Modifier.animateItem()) {
-                        QuickActionsGrid(
-                            role = currentRole,
-                            onActionClick = { actionKey -> onOpenDialog(actionKey) }
-                        )
-                    }
-                }
-
-            }
-
-            UserRole.KHADEM -> {
-                // Primary Desk: Facility & Cleanliness Checklist
-                item(key = "khadem_checklist_desk") {
-                    StaggeredDashboardItem(index = 1, modifier = Modifier.animateItem()) {
-                        KhademFacilityChecklistCard(
-                            checkedTasks = khademCheckedTasks,
-                            onToggleTask = { taskId -> viewModel.toggleKhademTask(taskId) },
-                            onOpenRoster = { onOpenDialog("roster") },
-                            onOpenFood = { onOpenDialog("food") }
-                        )
-                    }
-                }
-
-                item(key = "khadem_food_card") {
-                    StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
-                        StaffFoodScheduleCard(
-                            todayFoodProvider = todayStaffFoodProvider,
-                            onOpenFood = { onOpenDialog("food") }
-                        )
-                    }
-                }
-
-                item(key = "khadem_kpi_div") {
-                    StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
-                        RubElHizbDivider(title = "খেদমত সূচক ও দ্রুত সেবা", modifier = Modifier.padding(vertical = 2.dp))
-                    }
-                }
-
-                item(key = "khadem_kpi_grid") {
-                    StaggeredDashboardItem(index = 3, modifier = Modifier.animateItem()) {
-                        DashboardKpiGrid(
-                            role = currentRole,
-                            totalMembers = totalMembers,
-                            netBalance = netBalance,
-                            dueChanda = dueChanda,
-                            noticeCount = allNotices.size,
-                            mySalaryStatusValue = mySalaryValue,
-                            mySalaryStatusSubtitle = mySalarySub,
-                            todayStaffFoodProvider = todayStaffFoodProvider,
-                            khademChecklistProgress = khademChecklistProgress,
-                            smartQuoteCount = allSmartBoardQuotes.size,
-                            nextPrayerName = nextPrayerSummary.nameBn,
-                            nextPrayerSubtitle = "${nextPrayerSummary.iqamahTimeBn} (বাকি ${nextPrayerSummary.remainingTextBn})",
-                            onKpiClick = onKpiClickHandler
-                        )
-                    }
-                }
-
-                item(key = "khadem_actions_grid") {
-                    StaggeredDashboardItem(index = 4, modifier = Modifier.animateItem()) {
-                        QuickActionsGrid(
-                            role = currentRole,
-                            onActionClick = { actionKey -> onOpenDialog(actionKey) }
-                        )
-                    }
-                }
-
-            }
-
-            UserRole.WELFARE_EDUCATION_SECRETARY -> {
-                // Primary Desk: Welfare & Education
-                item(key = "welfare_desk") {
-                    StaggeredDashboardItem(index = 1, modifier = Modifier.animateItem()) {
-                        WelfareEduDeskCard(
-                            studentCount = studentCount,
-                            pendingWelfareCount = pendingWelfareCases.size,
-                            onOpenWelfare = { onOpenDialog("welfare") },
-                            onOpenMadrasa = { onOpenDialog("madrasa") },
-                            onOpenNewApplication = { onOpenDialog("welfare") },
-                            onOpenEvents = { onOpenDialog("events") }
-                        )
-                    }
-                }
-
-                if (pendingWelfareCases.isNotEmpty()) {
-                    item(key = "welfare_highlight") {
-                        StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
-                            PendingWelfareHighlightCard(
-                                pendingCases = pendingWelfareCases,
-                                onOpenWelfare = { onOpenDialog("welfare") }
-                            )
-                        }
-                    }
-                }
-
-                item(key = "welfare_kpi_div") {
-                    StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
-                        RubElHizbDivider(title = "সমাজকল্যাণ ও শিক্ষা সূচক", modifier = Modifier.padding(vertical = 2.dp))
-                    }
-                }
-
-                item(key = "welfare_kpi_grid") {
-                    StaggeredDashboardItem(index = 3, modifier = Modifier.animateItem()) {
-                        DashboardKpiGrid(
-                            role = currentRole,
-                            totalMembers = totalMembers,
-                            netBalance = netBalance,
-                            dueChanda = dueChanda,
-                            studentCount = studentCount,
-                            staffCount = activeStaff.size,
-                            noticeCount = allNotices.size,
-                            upcomingEventCount = upcomingEventCount,
-                            totalEventCount = allEvents.size,
-                            welfareCount = allWelfareCases.size,
-                            pendingWelfareCount = pendingWelfareCases.size,
-                            smartQuoteCount = allSmartBoardQuotes.size,
-                            nextMeetingTitleDate = nextMeeting?.meetingDate?.substringBefore(",") ?: "নির্ধারিত নেই",
-                            nextMeetingSubtitle = nextMeeting?.title ?: "কোনো আসন্ন সভা নেই",
-                            onKpiClick = onKpiClickHandler
-                        )
-                    }
-                }
-
-                item(key = "welfare_actions_div") {
-                    StaggeredDashboardItem(index = 4, modifier = Modifier.animateItem()) {
-                        RubElHizbDivider(title = "কল্যাণ ও শিক্ষা অ্যাকশন", modifier = Modifier.padding(vertical = 2.dp))
-                    }
-                }
-
-                item(key = "welfare_actions_grid") {
-                    StaggeredDashboardItem(index = 4, modifier = Modifier.animateItem()) {
-                        QuickActionsGrid(
-                            role = currentRole,
-                            onActionClick = { actionKey -> onOpenDialog(actionKey) }
-                        )
-                    }
-                }
-
-                item(key = "welfare_meetings_card") {
-                    StaggeredDashboardItem(index = 5, modifier = Modifier.animateItem()) {
-                        UpcomingMeetingsCard(
-                            meetings = allMeetings,
-                            canSchedule = currentRole.canScheduleMeetings(),
-                            onScheduleClick = { onOpenDialog("schedule_meeting") },
-                            onViewAllClick = { onOpenDialog("meetings") }
-                        )
-                    }
-                }
-            }
-
-            UserRole.PUBLICITY_SECRETARY -> {
-                // Primary Desk: Publicity & Smart Board
-                item(key = "publicity_desk") {
-                    StaggeredDashboardItem(index = 1, modifier = Modifier.animateItem()) {
-                        PublicityNoticeDeskCard(
-                            quoteCount = allSmartBoardQuotes.size,
-                            noticeCount = allNotices.size,
-                            onOpenPublicity = { onOpenDialog("publicity") },
-                            onOpenNotices = { onOpenDialog("publish_notice") },
-                            onOpenEvents = { onOpenDialog("events") },
-                            onOpenPrayerSchedule = { onOpenDialog("view_prayers") }
-                        )
-                    }
-                }
-
-                item(key = "publicity_kpi_div") {
-                    StaggeredDashboardItem(index = 3, modifier = Modifier.animateItem()) {
-                        RubElHizbDivider(title = "প্রচার ও তথ্যপ্রযুক্তি সূচক", modifier = Modifier.padding(vertical = 2.dp))
-                    }
-                }
-
-                item(key = "publicity_kpi_grid") {
-                    StaggeredDashboardItem(index = 3, modifier = Modifier.animateItem()) {
-                        DashboardKpiGrid(
-                            role = currentRole,
-                            totalMembers = totalMembers,
-                            netBalance = netBalance,
-                            dueChanda = dueChanda,
-                            noticeCount = allNotices.size,
-                            upcomingEventCount = upcomingEventCount,
-                            totalEventCount = allEvents.size,
-                            smartQuoteCount = allSmartBoardQuotes.size,
-                            nextMeetingTitleDate = nextMeeting?.meetingDate?.substringBefore(",") ?: "নির্ধারিত নেই",
-                            nextMeetingSubtitle = nextMeeting?.title ?: "কোনো আসন্ন সভা নেই",
-                            onKpiClick = onKpiClickHandler
-                        )
-                    }
-                }
-
-                item(key = "publicity_actions_div") {
-                    StaggeredDashboardItem(index = 4, modifier = Modifier.animateItem()) {
-                        RubElHizbDivider(title = "প্রচার ও প্রকাশনা অ্যাকশন", modifier = Modifier.padding(vertical = 2.dp))
-                    }
-                }
-
-                item(key = "publicity_actions_grid") {
-                    StaggeredDashboardItem(index = 4, modifier = Modifier.animateItem()) {
-                        QuickActionsGrid(
-                            role = currentRole,
-                            onActionClick = { actionKey -> onOpenDialog(actionKey) }
-                        )
-                    }
-                }
-
-                item(key = "publicity_meetings_card") {
-                    StaggeredDashboardItem(index = 6, modifier = Modifier.animateItem()) {
-                        UpcomingMeetingsCard(
-                            meetings = allMeetings,
-                            canSchedule = currentRole.canScheduleMeetings(),
-                            onScheduleClick = { onOpenDialog("schedule_meeting") },
-                            onViewAllClick = { onOpenDialog("meetings") }
-                        )
-                    }
-                }
-            }
-
-            UserRole.GENERAL_MEMBER -> {
-                // Primary Desk: Musalli Devotional & Transparency
-                item(key = "musalli_transparency_desk") {
-                    StaggeredDashboardItem(index = 1, modifier = Modifier.animateItem()) {
-                        MusalliTransparencySummaryCard(
-                            netBalance = netBalance,
-                            myChandaPaid = myChandaPaid,
-                            myChandaSub = myChandaSub,
-                            onViewReceipt = { onOpenDialog("view_receipt") },
-                            onMakeDonation = { onOpenDialog("my_chanda") },
-                            onOpenTransparency = { onOpenDialog("transparency") },
-                            onViewPrayerSchedule = { onOpenDialog("view_prayers") }
-                        )
-                    }
-                }
-
-                item(key = "musalli_devotional") {
-                    StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
-                        MusalliDevotionalCard(
-                            onViewReceipt = { onOpenDialog("view_receipt") },
-                            onMakeDonation = { onOpenDialog("my_chanda") }
-                        )
-                    }
-                }
-
-                item(key = "musalli_kpi_div") {
-                    StaggeredDashboardItem(index = 3, modifier = Modifier.animateItem()) {
-                        RubElHizbDivider(title = "মুসল্লি সারসংক্ষেপ ও হিসাব", modifier = Modifier.padding(vertical = 2.dp))
-                    }
-                }
-
-                item(key = "musalli_kpi_grid") {
-                    StaggeredDashboardItem(index = 3, modifier = Modifier.animateItem()) {
-                        DashboardKpiGrid(
-                            role = currentRole,
-                            totalMembers = totalMembers,
-                            netBalance = netBalance,
-                            dueChanda = dueChanda,
-                            noticeCount = allNotices.size,
-                            myChandaPaid = myChandaPaid,
-                            myChandaSubtitle = myChandaSub,
-                            smartQuoteCount = allSmartBoardQuotes.size,
-                            nextPrayerName = nextPrayerSummary.nameBn,
-                            nextPrayerSubtitle = "${nextPrayerSummary.iqamahTimeBn} (বাকি ${nextPrayerSummary.remainingTextBn})",
-                            onKpiClick = onKpiClickHandler
-                        )
-                    }
-                }
-
-                item(key = "musalli_actions_div") {
-                    StaggeredDashboardItem(index = 4, modifier = Modifier.animateItem()) {
-                        RubElHizbDivider(title = "প্রয়োজনীয় সেবা ও চাঁদা", modifier = Modifier.padding(vertical = 2.dp))
-                    }
-                }
-
-                item(key = "musalli_actions_grid") {
-                    StaggeredDashboardItem(index = 4, modifier = Modifier.animateItem()) {
-                        QuickActionsGrid(
-                            role = currentRole,
-                            onActionClick = { actionKey -> onOpenDialog(actionKey) }
-                        )
-                    }
-                }
-            }
-
-            else -> {
-                // Duty-aligned fallback for executive/advisory roles
-                val dutyKpiTitle = when (currentRole) {
-                    UserRole.EXECUTIVE_MEMBER -> "সাক্ষী ও কার্যনির্বাহী তদারকি সূচক"
-                    UserRole.ADVISORY_BOARD -> "উপদেষ্টা ও স্বচ্ছতা সূচক"
-                    else -> "দায়িত্বভিত্তিক কর্মসূচি সূচক"
-                }
-                val dutyActionsTitle = when (currentRole) {
-                    UserRole.EXECUTIVE_MEMBER -> "সাক্ষী ও কমিটি দ্রুত কার্যক্রম"
-                    UserRole.ADVISORY_BOARD -> "উপদেষ্টা ও তদারকি দ্রুত কার্যক্রম"
-                    else -> "দায়িত্ব ও দ্রুত কার্যক্রম"
-                }
-                val dutyMeetingsTitle = when (currentRole) {
-                    UserRole.ADVISORY_BOARD -> "সভা, নির্বাচন ও পরামর্শ অগ্রগতি"
-                    else -> "আসন্ন সভা ও এজেন্ডা"
-                }
-
-                if (activeAdvisories.isNotEmpty()) {
-                    item(key = "other_advisory") {
-                        StaggeredDashboardItem(index = 1, modifier = Modifier.animateItem()) {
-                            AdvisoryHighlightCard(
-                                notes = activeAdvisories,
-                                onOpenAdvisory = { onOpenDialog("sharia_advisory") }
-                            )
-                        }
-                    }
-                }
-
-                if (unverifiedCashboxes.isNotEmpty()) {
-                    item(key = "other_cashbox") {
-                        StaggeredDashboardItem(index = 1, modifier = Modifier.animateItem()) {
-                            PendingCashboxWitnessCard(
-                                records = unverifiedCashboxes,
-                                canVerify = currentRole.canWitnessCashbox(),
-                                onVerify = { viewModel.verifyCashboxAsWitness(it) },
-                                onOpenCashbox = { onOpenDialog("cashbox") }
-                            )
-                        }
-                    }
-                }
-
-                item(key = "other_kpi_div") {
-                    StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
-                        RubElHizbDivider(title = dutyKpiTitle, modifier = Modifier.padding(vertical = 2.dp))
-                    }
-                }
-
-                item(key = "other_kpi_grid") {
-                    StaggeredDashboardItem(index = 3, modifier = Modifier.animateItem()) {
-                        DashboardKpiGrid(
-                            role = currentRole,
-                            totalMembers = totalMembers,
-                            netBalance = netBalance,
-                            dueChanda = dueChanda,
-                            pendingItems = pendingTransactions.size,
-                            studentCount = studentCount,
-                            staffCount = activeStaff.size,
-                            noticeCount = allNotices.size,
-                            upcomingEventCount = upcomingEventCount,
-                            totalEventCount = allEvents.size,
-                            welfareCount = allWelfareCases.size,
-                            pendingWelfareCount = pendingWelfareCases.size,
-                            cashboxCount = allCashboxRecords.size,
-                            pendingCashboxWitnessCount = unverifiedCashboxes.size,
-                            officeDocCount = allOfficeDocuments.size,
-                            pendingReplyDocCount = pendingReplyDocs,
-                            advisoryCount = allAdvisoryNotes.size,
-                            smartQuoteCount = allSmartBoardQuotes.size,
-                            nextMeetingTitleDate = nextMeeting?.meetingDate?.substringBefore(",") ?: "নির্ধারিত নেই",
-                            nextMeetingSubtitle = nextMeeting?.title ?: "কোনো আসন্ন সভা নেই",
-                            myChandaPaid = myChandaPaid,
-                            myChandaSubtitle = myChandaSub,
-                            nextPrayerName = nextPrayerSummary.nameBn,
-                            nextPrayerSubtitle = "${nextPrayerSummary.iqamahTimeBn} (বাকি ${nextPrayerSummary.remainingTextBn})",
-                            onKpiClick = onKpiClickHandler
-                        )
-                    }
-                }
-
-                item(key = "other_actions_div") {
-                    StaggeredDashboardItem(index = 4, modifier = Modifier.animateItem()) {
-                        RubElHizbDivider(title = dutyActionsTitle, modifier = Modifier.padding(vertical = 2.dp))
-                    }
-                }
-
-                item(key = "other_actions_grid") {
-                    StaggeredDashboardItem(index = 4, modifier = Modifier.animateItem()) {
-                        QuickActionsGrid(
-                            role = currentRole,
-                            onActionClick = { actionKey -> onOpenDialog(actionKey) }
-                        )
-                    }
-                }
-
-                item(key = "other_meetings_div") {
-                    StaggeredDashboardItem(index = 5, modifier = Modifier.animateItem()) {
-                        RubElHizbDivider(title = dutyMeetingsTitle, modifier = Modifier.padding(vertical = 2.dp))
-                    }
-                }
-
-                item(key = "other_meetings_card") {
-                    StaggeredDashboardItem(index = 5, modifier = Modifier.animateItem()) {
-                        UpcomingMeetingsCard(
-                            meetings = allMeetings,
-                            canSchedule = currentRole.canScheduleMeetings(),
-                            onScheduleClick = { onOpenDialog("schedule_meeting") },
-                            onViewAllClick = { onOpenDialog("meetings") }
-                        )
-                    }
-                }
-
-                if (currentRole.canManageFinance()) {
-                    item(key = "other_recent_txns") {
-                        StaggeredDashboardItem(index = 8, modifier = Modifier.animateItem()) {
-                            RecentActivityCard(
-                                transactions = allTransactions.take(4),
-                                onViewAllClick = { onOpenDialog("finance") }
-                            )
-                        }
-                    }
-                }
-            }
+        // 7. Recent Activities Feed ("সাম্প্রতিক কার্যক্রম")
+        item(key = "royal_home_recent_activities") {
+            RoyalRecentActivitiesCard(
+                transactions = allTransactions.filter { it.approvalStatus != "pending" }.take(3),
+                meetings = allMeetings.take(2),
+                onViewAllClick = { onOpenDialog("finance") }
+            )
+        }
+
+        // 8. Inspirational Islamic Quote Banner
+        item(key = "royal_home_quote_banner") {
+            InspirationalIslamicQuoteBanner(
+                quoteText = allSmartBoardQuotes.firstOrNull()?.message ?: "মসজিদ হলো সমাজের শান্তি ও ঐক্যের কেন্দ্রবিন্দু"
+            )
         }
 
         // Bottom space padding
         item {
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
         }
         }
     }
