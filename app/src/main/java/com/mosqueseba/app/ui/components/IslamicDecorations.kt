@@ -734,7 +734,7 @@ fun IslamicGeometricWatermark(
     patternColor: Color = Color.White.copy(alpha = 0.05f),
     cellSize: Dp = 44.dp
 ) {
-    Canvas(modifier = modifier.fillMaxSize()) {
+    Canvas(modifier = modifier) {
         val cellPx = cellSize.toPx()
         val cols = (size.width / cellPx).toInt() + 2
         val rows = (size.height / cellPx).toInt() + 2

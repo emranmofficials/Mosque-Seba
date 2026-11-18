@@ -47,7 +47,7 @@ fun GlobalHeader(
     onAvatarClick: () -> Unit = {},
     onLogout: (() -> Unit)? = null
 ) {
-    val headerShape = remember { MehrabHeaderShape(archDepthDp = 16.dp) }
+    val headerShape = remember { RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp) }
 
     Surface(
         color = Color.Transparent,
@@ -59,8 +59,9 @@ fun GlobalHeader(
                 .clip(headerShape)
                 .background(MosqueEmeraldDarkGradient)
         ) {
-            // Background Arabesque watermark pattern
+            // Background Arabesque watermark pattern (confined strictly to parent size)
             IslamicGeometricWatermark(
+                modifier = Modifier.matchParentSize(),
                 patternColor = Color.White.copy(alpha = 0.05f),
                 cellSize = 44.dp
             )

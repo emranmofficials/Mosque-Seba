@@ -177,90 +177,76 @@ fun DashboardScreen(
 
         // 0. Mosque Executive & Operational Overview (Hero Card at the very top of all cards)
         item(key = "role_hero") {
-            StaggeredDashboardItem(index = 0, modifier = Modifier.animateItem()) {
-                ExecutiveMosqueHeroCard(
-                    mosque = mosque,
-                    currentRole = currentRole,
-                    showHijriDate = showHijriBanner,
-                    onDutiesClick = { showDutiesDialog = true },
-                    onMosqueProfileClick = { onOpenDialog("mosque_profile") }
-                )
-            }
+            ExecutiveMosqueHeroCard(
+                mosque = mosque,
+                currentRole = currentRole,
+                showHijriDate = showHijriBanner,
+                onDutiesClick = { showDutiesDialog = true },
+                onMosqueProfileClick = { onOpenDialog("mosque_profile") }
+            )
         }
 
         // 1. Royal Quick Actions 2x3 Grid (6 Core Modules) matching Mockup
         item(key = "royal_home_quick_actions") {
-            StaggeredDashboardItem(index = 1, modifier = Modifier.animateItem()) {
-                RoyalQuickActionsGrid(
-                    notificationCount = allNotices.size.coerceAtLeast(3),
-                    onActionClick = { key ->
-                        when (key) {
-                            "members" -> onOpenDialog("members")
-                            "chanda" -> onOpenDialog(if (currentRole.canManageFinance()) "receive_chanda" else "my_chanda")
-                            "meetings" -> onOpenDialog("meetings")
-                            "finance" -> onOpenDialog("finance")
-                            "office_docs" -> onOpenDialog("office_docs")
-                            "notices" -> onOpenDialog("notices")
-                            else -> onOpenDialog(key)
-                        }
+            RoyalQuickActionsGrid(
+                notificationCount = allNotices.size.coerceAtLeast(3),
+                onActionClick = { key ->
+                    when (key) {
+                        "members" -> onOpenDialog("members")
+                        "chanda" -> onOpenDialog(if (currentRole.canManageFinance()) "receive_chanda" else "my_chanda")
+                        "meetings" -> onOpenDialog("meetings")
+                        "finance" -> onOpenDialog("finance")
+                        "office_docs" -> onOpenDialog("office_docs")
+                        "notices" -> onOpenDialog("notices")
+                        else -> onOpenDialog(key)
                     }
-                )
-            }
+                }
+            )
         }
 
         // 2. Royal Mosque Summary KPI Card ("মসজিদের সংক্ষিপ্ত তথ্য") matching Mockup
         item(key = "royal_home_summary_kpi") {
-            StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
-                RoyalMosqueSummaryKpiCard(
-                    totalMembers = totalMembers,
-                    netBalance = netBalance,
-                    totalIncome = totalIncome,
-                    onViewDetailsClick = { onOpenDialog("transparency") }
-                )
-            }
+            RoyalMosqueSummaryKpiCard(
+                totalMembers = totalMembers,
+                netBalance = netBalance,
+                totalIncome = totalIncome,
+                onViewDetailsClick = { onOpenDialog("transparency") }
+            )
         }
 
         // 3. Royal Recent Activities Feed ("সাম্প্রতিক কার্যক্রম") matching Mockup
         item(key = "royal_home_recent_activities") {
-            StaggeredDashboardItem(index = 3, modifier = Modifier.animateItem()) {
-                RoyalRecentActivitiesCard(
-                    transactions = allTransactions.filter { it.approvalStatus != "pending" }.take(3),
-                    meetings = allMeetings.take(2),
-                    onViewAllClick = { onOpenDialog("finance") }
-                )
-            }
+            RoyalRecentActivitiesCard(
+                transactions = allTransactions.filter { it.approvalStatus != "pending" }.take(3),
+                meetings = allMeetings.take(2),
+                onViewAllClick = { onOpenDialog("finance") }
+            )
         }
 
         // 4. Inspirational Islamic Banner ("মসজিদ হলো সমাজের শান্তি ও ঐক্যের কেন্দ্রবিন্দু") matching Mockup
         item(key = "royal_home_quote_banner") {
-            StaggeredDashboardItem(index = 4, modifier = Modifier.animateItem()) {
-                InspirationalIslamicQuoteBanner(
-                    quoteText = allSmartBoardQuotes.firstOrNull()?.message ?: "মসজিদ হলো সমাজের শান্তি ও ঐক্যের কেন্দ্রবিন্দু"
-                )
-            }
+            InspirationalIslamicQuoteBanner(
+                quoteText = allSmartBoardQuotes.firstOrNull()?.message ?: "মসজিদ হলো সমাজের শান্তি ও ঐক্যের কেন্দ্রবিন্দু"
+            )
         }
 
         // 5. Daily Prayer Schedule & Jamat Times
         item(key = "global_top_prayer_card") {
-            StaggeredDashboardItem(index = 5, modifier = Modifier.animateItem()) {
-                PrayerCard(onViewFullScheduleClick = { onOpenDialog("view_prayers") })
-            }
+            PrayerCard(onViewFullScheduleClick = { onOpenDialog("view_prayers") })
         }
 
         // 6. Dynamic Smart Digital Board (Unified Hub for Islamic Calendar, Ramadan, Notices & Wall Quotes)
         item(key = "global_top_smart_board") {
-            StaggeredDashboardItem(index = 6, modifier = Modifier.animateItem()) {
-                SmartBoardCard(
-                    quotes = allSmartBoardQuotes,
-                    notices = allNotices,
-                    hijriDayOffset = hijriDayOffset,
-                    includeDateAndPrayerSlides = true,
-                    onOpenIslamicCalendar = { onOpenDialog("islamic_calendar") },
-                    onOpenRamadanHub = { onOpenDialog("ramadan_hub") },
-                    onOpenPrayerSchedule = { onOpenDialog("view_prayers") },
-                    onOpenNotices = { onOpenDialog("notices") }
-                )
-            }
+            SmartBoardCard(
+                quotes = allSmartBoardQuotes,
+                notices = allNotices,
+                hijriDayOffset = hijriDayOffset,
+                includeDateAndPrayerSlides = true,
+                onOpenIslamicCalendar = { onOpenDialog("islamic_calendar") },
+                onOpenRamadanHub = { onOpenDialog("ramadan_hub") },
+                onOpenPrayerSchedule = { onOpenDialog("view_prayers") },
+                onOpenNotices = { onOpenDialog("notices") }
+            )
         }
 
         when (currentRole) {
