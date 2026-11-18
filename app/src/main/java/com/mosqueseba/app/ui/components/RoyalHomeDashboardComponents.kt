@@ -196,12 +196,11 @@ private fun RoyalQuickActionCard(
 fun RoyalMosqueSummaryKpiCard(
     totalMembers: Int,
     netBalance: Double,
-    totalIncome: Double = 0.0,
     onViewDetailsClick: () -> Unit
 ) {
-    val displayMembers = if (totalMembers > 0) totalMembers else 120
-    val displayFamilies = if (totalMembers > 0) (totalMembers / 2).coerceAtLeast(1) else 60
-    val displayChandaAmount = if (totalIncome > 0) totalIncome else 85500.0
+    val displayMembers = totalMembers.coerceAtLeast(0)
+    val displayFamilies = if (displayMembers > 0) (displayMembers / 2).coerceAtLeast(1) else 0
+    val displayBalance = netBalance
 
     val isDark = LocalIsDarkTheme.current
     val surfaceColor = if (isDark) MosqueNightSurface else Color.White
@@ -294,7 +293,7 @@ fun RoyalMosqueSummaryKpiCard(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "${toBengaliDigits(displayMembers.toString())}+",
+                        text = toBengaliDigits(displayMembers.toString()),
                         fontSize = 17.sp,
                         fontWeight = FontWeight.Bold,
                         color = primaryText
@@ -350,7 +349,7 @@ fun RoyalMosqueSummaryKpiCard(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "৳ ${toBengaliDigits(String.format(Locale.getDefault(), "%,.0f", displayChandaAmount))}",
+                        text = "৳ ${toBengaliDigits(String.format(Locale.getDefault(), "%,.0f", displayBalance))}",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         color = if (isDark) Color(0xFF34D399) else MosqueEmeraldLight,
@@ -456,68 +455,58 @@ fun RoyalRecentActivitiesCard(
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(modifier = Modifier.fillMaxWidth().padding(14.dp)) {
-                // Item 1: চাঁদা প্রদান
-                val latestTxn = transactions.firstOrNull()
-                val donorTitle = latestTxn?.description?.takeIf { it.isNotBlank() } ?: "চাঁদা প্রদান করেছেন: মোঃ আব্দুল করিম"
-                val donorDate = latestTxn?.txnDate?.let { "তারিখ: $it" } ?: "১৮ নভেম্বর ২০২৫, ০৯:২০ AM"
-                val chandaAmt = latestTxn?.amount?.let { "৳ ${toBengaliDigits(it.toInt().toString())}" } ?: "৳ ৫০০"
+                val recentTransactions = transactions.take(3)
+                val recentMeetings = meetings.take(2)
 
-                ActivityRowItem(
-                    icon = Icons.Default.AccountBalanceWallet,
-                    iconBg = if (isDark) Color(0xFF064E3B) else Color(0xFFE6F4EA),
-                    iconTint = if (isDark) Color(0xFF34D399) else Color(0xFF047857),
-                    title = donorTitle,
-                    subtitle = donorDate,
-                    tagText = chandaAmt,
-                    tagBg = if (isDark) Color(0xFF064E3B) else Color(0xFFE6F4EA),
-                    tagTextColor = if (isDark) Color(0xFF34D399) else Color(0xFF047857),
-                    primaryText = primaryText,
-                    secondaryText = secondaryText
-                )
+                if (recentTransactions.isEmpty() && recentMeetings.isEmpty()) {
+                    Text(
+                        text = "এখনো কোনো কার্যক্রম রেকর্ড করা হয়নি।",
+                        fontSize = 12.sp,
+                        color = secondaryText
+                    )
+                } else {
+                    recentTransactions.forEachIndexed { index, txn ->
+                        if (index > 0) {
+                            HorizontalDivider(
+                                modifier = Modifier.padding(vertical = 10.dp),
+                                thickness = 0.8.dp,
+                                color = effectiveBorder.copy(alpha = 0.7f)
+                            )
+                        }
+                        ActivityRowItem(
+                            icon = Icons.Default.AccountBalanceWallet,
+                            iconBg = if (isDark) Color(0xFF064E3B) else Color(0xFFE6F4EA),
+                            iconTint = if (isDark) Color(0xFF34D399) else Color(0xFF047857),
+                            title = txn.description.takeIf { it.isNotBlank() } ?: txn.categoryNameBn,
+                            subtitle = "তারিখ: ${txn.txnDate}",
+                            tagText = "৳ ${toBengaliDigits(txn.amount.toInt().toString())}",
+                            tagBg = if (isDark) Color(0xFF064E3B) else Color(0xFFE6F4EA),
+                            tagTextColor = if (isDark) Color(0xFF34D399) else Color(0xFF047857),
+                            primaryText = primaryText,
+                            secondaryText = secondaryText
+                        )
+                    }
 
-                HorizontalDivider(
-                    modifier = Modifier.padding(vertical = 10.dp),
-                    thickness = 0.8.dp,
-                    color = effectiveBorder.copy(alpha = 0.7f)
-                )
-
-                // Item 2: নতুন সদস্য
-                ActivityRowItem(
-                    icon = Icons.Default.People,
-                    iconBg = if (isDark) Color(0xFF1E3A8A).copy(alpha = 0.4f) else Color(0xFFEFF6FF),
-                    iconTint = if (isDark) Color(0xFF60A5FA) else Color(0xFF2563EB),
-                    title = "নতুন সদস্য যুক্ত হয়েছেন: মোঃ রফিকুল ইসলাম",
-                    subtitle = "১৭ নভেম্বর ২০২৫",
-                    tagText = "সদস্য",
-                    tagBg = if (isDark) Color(0xFF1E3A8A).copy(alpha = 0.4f) else Color(0xFFEFF6FF),
-                    tagTextColor = if (isDark) Color(0xFF60A5FA) else Color(0xFF1D4ED8),
-                    primaryText = primaryText,
-                    secondaryText = secondaryText
-                )
-
-                HorizontalDivider(
-                    modifier = Modifier.padding(vertical = 10.dp),
-                    thickness = 0.8.dp,
-                    color = effectiveBorder.copy(alpha = 0.7f)
-                )
-
-                // Item 3: সভা অনুষ্ঠিত
-                val latestMeeting = meetings.firstOrNull()
-                val meetingTitle = latestMeeting?.title?.takeIf { it.isNotBlank() } ?: "সভা অনুষ্ঠিত হয়েছে"
-                val meetingDate = latestMeeting?.meetingDate?.let { "তারিখ: $it" } ?: "১৫ নভেম্বর ২০২৫"
-
-                ActivityRowItem(
-                    icon = Icons.Default.Article,
-                    iconBg = if (isDark) Color(0xFF78350F).copy(alpha = 0.4f) else Color(0xFFFFFBEB),
-                    iconTint = if (isDark) Color(0xFFFBBF24) else Color(0xFFD97706),
-                    title = meetingTitle,
-                    subtitle = meetingDate,
-                    tagText = "সভা",
-                    tagBg = if (isDark) Color(0xFF78350F).copy(alpha = 0.4f) else Color(0xFFFFFBEB),
-                    tagTextColor = if (isDark) Color(0xFFFBBF24) else Color(0xFFB45309),
-                    primaryText = primaryText,
-                    secondaryText = secondaryText
-                )
+                    recentMeetings.forEach { meeting ->
+                        HorizontalDivider(
+                            modifier = Modifier.padding(vertical = 10.dp),
+                            thickness = 0.8.dp,
+                            color = effectiveBorder.copy(alpha = 0.7f)
+                        )
+                        ActivityRowItem(
+                            icon = Icons.Default.Article,
+                            iconBg = if (isDark) Color(0xFF78350F).copy(alpha = 0.4f) else Color(0xFFFFFBEB),
+                            iconTint = if (isDark) Color(0xFFFBBF24) else Color(0xFFD97706),
+                            title = meeting.title.takeIf { it.isNotBlank() } ?: "কমিটি সভা",
+                            subtitle = "তারিখ: ${meeting.meetingDate}",
+                            tagText = "সভা",
+                            tagBg = if (isDark) Color(0xFF78350F).copy(alpha = 0.4f) else Color(0xFFFFFBEB),
+                            tagTextColor = if (isDark) Color(0xFFFBBF24) else Color(0xFFB45309),
+                            primaryText = primaryText,
+                            secondaryText = secondaryText
+                        )
+                    }
+                }
             }
         }
     }

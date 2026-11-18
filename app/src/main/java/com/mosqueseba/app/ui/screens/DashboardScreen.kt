@@ -187,6 +187,14 @@ fun DashboardScreen(
             )
         }
 
+        // 1.1 Duty-based personal header: role, responsibility areas, duties and quick actions
+        item(key = "role_responsibility_header") {
+            RoleResponsibilityHeader(
+                role = currentRole,
+                onViewAllDuties = { showDutiesDialog = true }
+            )
+        }
+
         // 2. Actionable Priority Alerts (Conditionally shown ONLY when user action is required)
         if ((currentRole == UserRole.PRESIDENT || currentRole == UserRole.VICE_PRESIDENT || currentRole == UserRole.TREASURER) && pendingTransactions.isNotEmpty()) {
             item(key = "priority_pending_vouchers") {
@@ -264,21 +272,11 @@ fun DashboardScreen(
             PrayerCard(onViewFullScheduleClick = { onOpenDialog("view_prayers") })
         }
 
-        // 4. Quick Actions Grid (6 Core Modules - Single Unified Grid)
+        // 4. Quick Actions Grid — role-specific 6 tiles aligned with the role's duties
         item(key = "royal_home_quick_actions") {
-            RoyalQuickActionsGrid(
-                notificationCount = allNotices.size.coerceAtLeast(3),
-                onActionClick = { key ->
-                    when (key) {
-                        "members" -> onOpenDialog("members")
-                        "chanda" -> onOpenDialog(if (currentRole.canManageFinance()) "receive_chanda" else "my_chanda")
-                        "meetings" -> onOpenDialog("meetings")
-                        "finance" -> onOpenDialog("finance")
-                        "office_docs" -> onOpenDialog("office_docs")
-                        "notices" -> onOpenDialog("notices")
-                        else -> onOpenDialog(key)
-                    }
-                }
+            QuickActionsGrid(
+                role = currentRole,
+                onActionClick = { key -> onOpenDialog(key) }
             )
         }
 
@@ -287,7 +285,6 @@ fun DashboardScreen(
             RoyalMosqueSummaryKpiCard(
                 totalMembers = totalMembers,
                 netBalance = netBalance,
-                totalIncome = totalIncome,
                 onViewDetailsClick = { onOpenDialog("transparency") }
             )
         }
@@ -320,6 +317,245 @@ fun DashboardScreen(
             InspirationalIslamicQuoteBanner(
                 quoteText = allSmartBoardQuotes.firstOrNull()?.message ?: "মসজিদ হলো সমাজের শান্তি ও ঐক্যের কেন্দ্রবিন্দু"
             )
+        }
+
+        // 9. Duty-based desks — only the areas assigned to the current role are shown.
+        item(key = "duty_desk_div") {
+            StaggeredDashboardItem(index = 1, modifier = Modifier.animateItem()) {
+                RubElHizbDivider(
+                    title = "আপনার দায়িত্বভিত্তিক কর্মসূচি",
+                    modifier = Modifier.padding(vertical = 2.dp)
+                )
+            }
+        }
+
+        if (DashboardRolePolicy.has(currentRole, DashboardResponsibility.LEADERSHIP)) {
+            item(key = "duty_leadership_meetings") {
+                StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
+                    UpcomingMeetingsCard(
+                        meetings = allMeetings,
+                        canSchedule = currentRole.canScheduleMeetings(),
+                        onScheduleClick = { onOpenDialog("schedule_meeting") },
+                        onViewAllClick = { onOpenDialog("meetings") }
+                    )
+                }
+            }
+            if (activeAdvisories.isNotEmpty()) {
+                item(key = "duty_leadership_advisory") {
+                    StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
+                        AdvisoryHighlightCard(
+                            notes = activeAdvisories,
+                            onOpenAdvisory = { onOpenDialog("sharia_advisory") }
+                        )
+                    }
+                }
+            }
+        }
+
+        if (DashboardRolePolicy.has(currentRole, DashboardResponsibility.FINANCE)) {
+            item(key = "duty_finance_desk") {
+                StaggeredDashboardItem(index = 1, modifier = Modifier.animateItem()) {
+                    TreasurerTreasuryLedgerCard(
+                        netBalance = netBalance,
+                        totalIncome = totalIncome,
+                        totalExpense = totalExpense,
+                        dueChanda = dueChanda,
+                        unverifiedCashboxCount = unverifiedCashboxes.size,
+                        pendingVoucherCount = pendingTransactions.size,
+                        onReceiveChanda = { onOpenDialog("receive_chanda") },
+                        onOpenCashbox = { onOpenDialog("cashbox") },
+                        onOpenPayroll = { onOpenDialog("treasurer_payroll") },
+                        onViewFinance = { onOpenDialog("finance") }
+                    )
+                }
+            }
+        }
+
+        if (DashboardRolePolicy.has(currentRole, DashboardResponsibility.SECRETARIAT)) {
+            item(key = "duty_secretariat_desk") {
+                StaggeredDashboardItem(index = 1, modifier = Modifier.animateItem()) {
+                    SecretariatExecutiveHubCard(
+                        nextMeeting = nextMeeting,
+                        pendingDocsCount = pendingReplyDocs,
+                        onScheduleMeeting = { onOpenDialog("schedule_meeting") },
+                        onDraftNotice = { onOpenDialog("publish_notice") },
+                        onOpenOfficeDocs = { onOpenDialog("office_docs") },
+                        onViewMeetings = { onOpenDialog("meetings") }
+                    )
+                }
+            }
+            if (pendingOfficeDocs.isNotEmpty()) {
+                item(key = "duty_secretariat_office_docs") {
+                    StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
+                        PendingOfficeDocsHighlightCard(
+                            pendingDocs = pendingOfficeDocs,
+                            onOpenOfficeDocs = { onOpenDialog("office_docs") }
+                        )
+                    }
+                }
+            }
+        }
+
+        if (DashboardRolePolicy.has(currentRole, DashboardResponsibility.ISLAMIC_SERVICE)) {
+            item(key = "duty_imam_mehrab") {
+                StaggeredDashboardItem(index = 1, modifier = Modifier.animateItem()) {
+                    ImamMehrabDutyCard(
+                        nextPrayerName = nextPrayerSummary.nameBn,
+                        nextPrayerIqamah = nextPrayerSummary.iqamahTimeBn,
+                        remainingText = nextPrayerSummary.remainingTextBn,
+                        onViewFullSchedule = { onOpenDialog("view_prayers") },
+                        onOpenAdvisory = { onOpenDialog("sharia_advisory") },
+                        onOpenSmartBoard = { onOpenDialog("publicity") },
+                        onOpenMadrasa = { onOpenDialog("madrasa") }
+                    )
+                }
+            }
+            if (studentCount > 0) {
+                item(key = "duty_imam_madrasa") {
+                    StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
+                        ImamMadrasaHifzDeskCard(
+                            studentCount = studentCount,
+                            onOpenMadrasa = { onOpenDialog("madrasa") }
+                        )
+                    }
+                }
+            }
+        }
+
+        if (DashboardRolePolicy.has(currentRole, DashboardResponsibility.PRAYER_SERVICE)) {
+            item(key = "duty_muazzin_azan") {
+                StaggeredDashboardItem(index = 1, modifier = Modifier.animateItem()) {
+                    MuazzinAzanDutyCard(
+                        nextPrayerName = nextPrayerSummary.nameBn,
+                        nextPrayerIqamah = nextPrayerSummary.iqamahTimeBn,
+                        remainingText = nextPrayerSummary.remainingTextBn,
+                        onViewFullSchedule = { onOpenDialog("view_prayers") },
+                        onOpenRoster = { onOpenDialog("roster") },
+                        onOpenFood = { onOpenDialog("food") },
+                        onOpenSmartBoard = { onOpenDialog("publicity") }
+                    )
+                }
+            }
+            item(key = "duty_muazzin_food") {
+                StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
+                    StaffFoodScheduleCard(
+                        todayFoodProvider = todayStaffFoodProvider,
+                        onOpenFood = { onOpenDialog("food") }
+                    )
+                }
+            }
+        }
+
+        if (currentRole == UserRole.KHADEM && DashboardRolePolicy.has(currentRole, DashboardResponsibility.FACILITY)) {
+            item(key = "duty_khadem_checklist") {
+                StaggeredDashboardItem(index = 1, modifier = Modifier.animateItem()) {
+                    KhademFacilityChecklistCard(
+                        checkedTasks = khademCheckedTasks,
+                        onToggleTask = { taskId -> viewModel.toggleKhademTask(taskId) },
+                        onOpenRoster = { onOpenDialog("roster") },
+                        onOpenFood = { onOpenDialog("food") }
+                    )
+                }
+            }
+            item(key = "duty_khadem_food") {
+                StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
+                    StaffFoodScheduleCard(
+                        todayFoodProvider = todayStaffFoodProvider,
+                        onOpenFood = { onOpenDialog("food") }
+                    )
+                }
+            }
+        }
+
+        if (DashboardRolePolicy.has(currentRole, DashboardResponsibility.WELFARE) &&
+            !DashboardRolePolicy.has(currentRole, DashboardResponsibility.ISLAMIC_SERVICE)
+        ) {
+            item(key = "duty_welfare_desk") {
+                StaggeredDashboardItem(index = 1, modifier = Modifier.animateItem()) {
+                    WelfareEduDeskCard(
+                        studentCount = studentCount,
+                        pendingWelfareCount = pendingWelfareCases.size,
+                        onOpenWelfare = { onOpenDialog("welfare") },
+                        onOpenMadrasa = { onOpenDialog("madrasa") },
+                        onOpenNewApplication = { onOpenDialog("welfare") },
+                        onOpenEvents = { onOpenDialog("events") }
+                    )
+                }
+            }
+            if (pendingWelfareCases.isNotEmpty()) {
+                item(key = "duty_welfare_highlight") {
+                    StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
+                        PendingWelfareHighlightCard(
+                            pendingCases = pendingWelfareCases,
+                            onOpenWelfare = { onOpenDialog("welfare") }
+                        )
+                    }
+                }
+            }
+        }
+
+        if (DashboardRolePolicy.has(currentRole, DashboardResponsibility.PUBLICITY)) {
+            item(key = "duty_publicity_desk") {
+                StaggeredDashboardItem(index = 1, modifier = Modifier.animateItem()) {
+                    PublicityNoticeDeskCard(
+                        quoteCount = allSmartBoardQuotes.size,
+                        noticeCount = allNotices.size,
+                        onOpenPublicity = { onOpenDialog("publicity") },
+                        onOpenNotices = { onOpenDialog("publish_notice") },
+                        onOpenEvents = { onOpenDialog("events") },
+                        onOpenPrayerSchedule = { onOpenDialog("view_prayers") }
+                    )
+                }
+            }
+        }
+
+        if (DashboardRolePolicy.has(currentRole, DashboardResponsibility.OVERSIGHT)) {
+            if (activeAdvisories.isNotEmpty()) {
+                item(key = "duty_oversight_advisory") {
+                    StaggeredDashboardItem(index = 1, modifier = Modifier.animateItem()) {
+                        AdvisoryHighlightCard(
+                            notes = activeAdvisories,
+                            onOpenAdvisory = { onOpenDialog("sharia_advisory") }
+                        )
+                    }
+                }
+            }
+            item(key = "duty_oversight_meetings") {
+                StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
+                    UpcomingMeetingsCard(
+                        meetings = allMeetings,
+                        canSchedule = currentRole.canScheduleMeetings(),
+                        onScheduleClick = { onOpenDialog("schedule_meeting") },
+                        onViewAllClick = { onOpenDialog("meetings") }
+                    )
+                }
+            }
+        }
+
+        if (currentRole == UserRole.GENERAL_MEMBER &&
+            DashboardRolePolicy.has(currentRole, DashboardResponsibility.MEMBERSHIP)
+        ) {
+            item(key = "duty_member_transparency") {
+                StaggeredDashboardItem(index = 1, modifier = Modifier.animateItem()) {
+                    MusalliTransparencySummaryCard(
+                        netBalance = netBalance,
+                        myChandaPaid = myChandaPaid,
+                        myChandaSub = myChandaSub,
+                        onViewReceipt = { onOpenDialog("view_receipt") },
+                        onMakeDonation = { onOpenDialog("my_chanda") },
+                        onOpenTransparency = { onOpenDialog("transparency") },
+                        onViewPrayerSchedule = { onOpenDialog("view_prayers") }
+                    )
+                }
+            }
+            item(key = "duty_member_devotional") {
+                StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
+                    MusalliDevotionalCard(
+                        onViewReceipt = { onOpenDialog("view_receipt") },
+                        onMakeDonation = { onOpenDialog("my_chanda") }
+                    )
+                }
+            }
         }
 
         // Bottom space padding

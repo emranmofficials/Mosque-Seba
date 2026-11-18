@@ -10,10 +10,17 @@ import java.security.MessageDigest
 
 /**
  * Enterprise-grade Security Guardian for Mosque Seba.
- * Provides root detection, screen recording / screenshot prevention,
+ * Provides root detection, optional screen capture protection,
  * integrity verification, and secure hashing.
  */
 object MosqueSecurityManager {
+
+    /**
+     * Screen capture protection is opt-in and OFF by default so screenshots,
+     * screen recordings, tutorials and receipts work normally. Flip this to
+     * true when a deployment needs to block captures of sensitive screens.
+     */
+    private const val SCREEN_PROTECTION_ENABLED = false
 
     private val ROOT_PATHS = arrayOf(
         "/system/app/Superuser.apk",
@@ -66,12 +73,19 @@ object MosqueSecurityManager {
     }
 
     /**
-     * Prevents screen recording, screenshots, and task switcher previews
-     * on sensitive financial and management screens.
+     * Blocks screen recording, screenshots and task switcher previews when
+     * [SCREEN_PROTECTION_ENABLED] is true. No-op by default.
      */
     fun enableScreenProtection(activity: Activity) {
-        // Disabled by default so screen recordings, tutorials, receipts, and screenshots
-        // do not produce a black screen on Android devices.
+        if (!SCREEN_PROTECTION_ENABLED) return
+        try {
+            activity.window.setFlags(
+                WindowManager.LayoutParams.FLAG_SECURE,
+                WindowManager.LayoutParams.FLAG_SECURE
+            )
+        } catch (_: Exception) {
+            // Ignore if window is not attached
+        }
     }
 
     /**

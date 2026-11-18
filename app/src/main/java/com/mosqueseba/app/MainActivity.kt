@@ -51,6 +51,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        MosqueSecurityManager.enableScreenProtection(this)
         configureAppCheck(this, intent)
         enableEdgeToEdge(
             statusBarStyle = androidx.activity.SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
@@ -96,93 +97,93 @@ class MainActivity : ComponentActivity() {
                     Box(modifier = Modifier.fillMaxSize()) {
                         var currentScreen by remember { mutableStateOf(AppScreen.SPLASH) }
 
-                    BackHandler(enabled = currentScreen == AppScreen.REGISTRATION) {
-                        currentScreen = AppScreen.LOGIN
-                    }
+                        BackHandler(enabled = currentScreen == AppScreen.REGISTRATION) {
+                            currentScreen = AppScreen.LOGIN
+                        }
 
-                    AnimatedContent(
-                        targetState = currentScreen,
-                        transitionSpec = {
-                            fadeIn(animationSpec = tween(300)) togetherWith fadeOut(animationSpec = tween(250))
-                        },
-                        label = "AppScreenTransition"
-                    ) { screen ->
-                        when (screen) {
-                            AppScreen.SPLASH -> {
-                                SplashScreen(
-                                    onSplashFinished = {
-                                        val isOnboarded = viewModel.sessionManager.isOnboardingCompleted()
-                                        currentScreen = when {
-                                            !isOnboarded -> AppScreen.ONBOARDING
-                                            viewModel.sessionManager.isLoggedIn() -> AppScreen.MAIN
-                                            else -> AppScreen.LOGIN
+                        AnimatedContent(
+                            targetState = currentScreen,
+                            transitionSpec = {
+                                fadeIn(animationSpec = tween(300)) togetherWith fadeOut(animationSpec = tween(250))
+                            },
+                            label = "AppScreenTransition"
+                        ) { screen ->
+                            when (screen) {
+                                AppScreen.SPLASH -> {
+                                    SplashScreen(
+                                        onSplashFinished = {
+                                            val isOnboarded = viewModel.sessionManager.isOnboardingCompleted()
+                                            currentScreen = when {
+                                                !isOnboarded -> AppScreen.ONBOARDING
+                                                viewModel.sessionManager.isLoggedIn() -> AppScreen.MAIN
+                                                else -> AppScreen.LOGIN
+                                            }
                                         }
-                                    }
-                                )
-                            }
-                            AppScreen.ONBOARDING -> {
-                                OnboardingScreen(
-                                    onOnboardingFinished = {
-                                        viewModel.sessionManager.setOnboardingCompleted(true)
-                                        currentScreen = if (viewModel.sessionManager.isLoggedIn()) {
-                                            AppScreen.MAIN
-                                        } else {
-                                            AppScreen.LOGIN
+                                    )
+                                }
+                                AppScreen.ONBOARDING -> {
+                                    OnboardingScreen(
+                                        onOnboardingFinished = {
+                                            viewModel.sessionManager.setOnboardingCompleted(true)
+                                            currentScreen = if (viewModel.sessionManager.isLoggedIn()) {
+                                                AppScreen.MAIN
+                                            } else {
+                                                AppScreen.LOGIN
+                                            }
                                         }
-                                    }
-                                )
-                            }
-                            AppScreen.LOGIN -> {
-                                LoginScreen(
-                                    viewModel = viewModel,
-                                    onLoginSuccess = {
-                                        currentScreen = AppScreen.MAIN
-                                    },
-                                    onNavigateToRegister = {
-                                        currentScreen = AppScreen.REGISTRATION
-                                    }
-                                )
-                            }
-                            AppScreen.REGISTRATION -> {
-                                RegistrationScreen(
-                                    viewModel = viewModel,
-                                    onNavigateBackToLogin = {
-                                        currentScreen = AppScreen.LOGIN
-                                    },
-                                    onRegistrationSuccess = {
-                                        currentScreen = AppScreen.MAIN
-                                    }
-                                )
-                            }
-                            AppScreen.MAIN -> {
-                                MosqueAppShell(
-                                    viewModel = viewModel,
-                                    requestedModule = requestedModule,
-                                    onClearDeepLink = { deepLinkModule.value = null },
-                                    onOpenOnboarding = {
-                                        currentScreen = AppScreen.ONBOARDING
-                                    },
-                                    onLogout = {
-                                        viewModel.logout()
-                                        currentScreen = AppScreen.LOGIN
-                                    }
-                                )
+                                    )
+                                }
+                                AppScreen.LOGIN -> {
+                                    LoginScreen(
+                                        viewModel = viewModel,
+                                        onLoginSuccess = {
+                                            currentScreen = AppScreen.MAIN
+                                        },
+                                        onNavigateToRegister = {
+                                            currentScreen = AppScreen.REGISTRATION
+                                        }
+                                    )
+                                }
+                                AppScreen.REGISTRATION -> {
+                                    RegistrationScreen(
+                                        viewModel = viewModel,
+                                        onNavigateBackToLogin = {
+                                            currentScreen = AppScreen.LOGIN
+                                        },
+                                        onRegistrationSuccess = {
+                                            currentScreen = AppScreen.MAIN
+                                        }
+                                    )
+                                }
+                                AppScreen.MAIN -> {
+                                    MosqueAppShell(
+                                        viewModel = viewModel,
+                                        requestedModule = requestedModule,
+                                        onClearDeepLink = { deepLinkModule.value = null },
+                                        onOpenOnboarding = {
+                                            currentScreen = AppScreen.ONBOARDING
+                                        },
+                                        onLogout = {
+                                            viewModel.logout()
+                                            currentScreen = AppScreen.LOGIN
+                                        }
+                                    )
+                                }
                             }
                         }
-                    }
 
-                    // Global Floating Islamic Toast Host
-                    MosqueToastHost(
-                        modifier = Modifier
-                            .align(Alignment.TopCenter)
-                            .statusBarsPadding()
-                            .padding(top = 10.dp, start = 14.dp, end = 14.dp)
-                    )
+                        // Global Floating Islamic Toast Host
+                        MosqueToastHost(
+                            modifier = Modifier
+                                .align(Alignment.TopCenter)
+                                .statusBarsPadding()
+                                .padding(top = 10.dp, start = 14.dp, end = 14.dp)
+                        )
+                    }
                 }
             }
         }
     }
-}
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
