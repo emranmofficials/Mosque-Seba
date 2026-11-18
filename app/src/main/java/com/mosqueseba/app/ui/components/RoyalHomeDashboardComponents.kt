@@ -19,6 +19,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -471,7 +472,7 @@ fun RoyalRecentActivitiesCard(
                 // Item 1: চাঁদা প্রদান
                 val latestTxn = transactions.firstOrNull()
                 val donorTitle = latestTxn?.description?.takeIf { it.isNotBlank() } ?: "চাঁদা প্রদান করেছেন: মোঃ আব্দুল করিম"
-                val donorDate = latestTxn?.date?.let { "তারিখ: $it" } ?: "তারিখ: ১৮ নভেম্বর ২০২৫, সময়: ০৯:২০ AM"
+                val donorDate = latestTxn?.txnDate?.let { "তারিখ: $it" } ?: "তারিখ: ১৮ নভেম্বর ২০২৫, সময়: ০৯:২০ AM"
                 val chandaAmt = latestTxn?.amount?.let { "৳ ${toBengaliDigits(it.toInt().toString())}" } ?: "৳ ৫০০"
 
                 ActivityRowItem(

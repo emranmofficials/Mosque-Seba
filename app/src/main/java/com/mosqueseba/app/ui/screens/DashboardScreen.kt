@@ -235,7 +235,7 @@ fun DashboardScreen(
         item(key = "royal_home_quote_banner") {
             StaggeredDashboardItem(index = 4, modifier = Modifier.animateItem()) {
                 InspirationalIslamicQuoteBanner(
-                    quoteText = allSmartBoardQuotes.firstOrNull()?.quoteText ?: "মসজিদ হলো সমাজের শান্তি ও ঐক্যের কেন্দ্রবিন্দু"
+                    quoteText = allSmartBoardQuotes.firstOrNull()?.message ?: "মসজিদ হলো সমাজের শান্তি ও ঐক্যের কেন্দ্রবিন্দু"
                 )
             }
         }
