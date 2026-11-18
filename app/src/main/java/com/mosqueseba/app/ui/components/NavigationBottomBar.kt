@@ -1,17 +1,13 @@
 package com.mosqueseba.app.ui.components
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -151,18 +147,38 @@ fun NavigationBottomBar(
 ) {
     val items = getNavItemsForRole(currentRole)
     val isDark = LocalIsDarkTheme.current
-    val surfaceColor = if (isDark) MosqueNightSurface else Color.White
-    val borderColor = if (isDark) MosqueNightBorder else MosqueCardBorderSubtle
-    val activeColor = if (isDark) Color(0xFF34D399) else MosqueEmeraldPrimary
-    val inactiveColor = if (isDark) MosqueNightTextSecondary else Color(0xFF64748B)
+    val surfaceColor = if (isDark) {
+        MaterialTheme.colorScheme.surface.copy(alpha = 0.98f)
+    } else {
+        MaterialTheme.colorScheme.surface
+    }
+    val activeColor = MaterialTheme.colorScheme.primary
+    val inactiveIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.68f)
+    val inactiveTextColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.82f)
+    val indicatorColor = if (isDark) MosqueGreenAccent.copy(alpha = 0.18f) else activeColor.copy(alpha = 0.12f)
+    val topLine = Brush.horizontalGradient(
+        colors = listOf(
+            Color.Transparent,
+            MosqueGold.copy(alpha = if (isDark) 0.55f else 0.45f),
+            MosqueGoldLight.copy(alpha = if (isDark) 0.35f else 0.25f),
+            MosqueGold.copy(alpha = if (isDark) 0.55f else 0.45f),
+            Color.Transparent
+        )
+    )
 
     Surface(
         color = surfaceColor,
-        shape = RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp),
-        border = BorderStroke(1.dp, borderColor),
-        shadowElevation = 8.dp
+        tonalElevation = 2.dp,
+        shadowElevation = 10.dp
     ) {
         Column {
+            // Premium gold accent trim (Islamic identity)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(1.5.dp)
+                    .background(topLine)
+            )
             NavigationBar(
                 containerColor = Color.Transparent,
                 contentColor = activeColor,
@@ -178,43 +194,26 @@ fun NavigationBottomBar(
                             Icon(
                                 imageVector = if (isSelected) item.selectedIcon else item.unselectedIcon,
                                 contentDescription = item.titleBn,
-                                modifier = Modifier.size(if (isSelected) 24.dp else 22.dp)
+                                modifier = Modifier.size(if (isSelected) 23.dp else 21.dp)
                             )
                         },
                         label = {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                modifier = Modifier.padding(top = 2.dp)
-                            ) {
-                                Text(
-                                    text = item.titleBn,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontSize = 11.sp,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                                Spacer(modifier = Modifier.height(2.dp))
-                                if (isSelected) {
-                                    Box(
-                                        modifier = Modifier
-                                            .width(22.dp)
-                                            .height(2.5.dp)
-                                            .clip(RoundedCornerShape(2.dp))
-                                            .background(activeColor)
-                                    )
-                                } else {
-                                    Spacer(modifier = Modifier.height(2.5.dp))
-                                }
-                            }
+                            Text(
+                                text = item.titleBn,
+                                style = MaterialTheme.typography.labelSmall,
+                                fontSize = 10.5.sp,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
                         },
                         alwaysShowLabel = true,
                         colors = NavigationBarItemDefaults.colors(
                             selectedIconColor = activeColor,
                             selectedTextColor = activeColor,
-                            indicatorColor = if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft,
-                            unselectedIconColor = inactiveColor,
-                            unselectedTextColor = inactiveColor
+                            indicatorColor = indicatorColor,
+                            unselectedIconColor = inactiveIconColor,
+                            unselectedTextColor = inactiveTextColor
                         )
                     )
                 }
