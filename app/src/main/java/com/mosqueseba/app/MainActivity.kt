@@ -51,7 +51,6 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        MosqueSecurityManager.enableScreenProtection(this)
         configureAppCheck(this, intent)
         enableEdgeToEdge(
             statusBarStyle = androidx.activity.SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
@@ -90,8 +89,12 @@ class MainActivity : ComponentActivity() {
             }
 
             MosqueCommitteeTheme(darkTheme = effectiveDarkTheme) {
-                Box(modifier = Modifier.fillMaxSize()) {
-                    var currentScreen by remember { mutableStateOf(AppScreen.SPLASH) }
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        var currentScreen by remember { mutableStateOf(AppScreen.SPLASH) }
 
                     BackHandler(enabled = currentScreen == AppScreen.REGISTRATION) {
                         currentScreen = AppScreen.LOGIN
@@ -179,6 +182,7 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+}
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)

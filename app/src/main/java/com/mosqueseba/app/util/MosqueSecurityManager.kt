@@ -70,14 +70,8 @@ object MosqueSecurityManager {
      * on sensitive financial and management screens.
      */
     fun enableScreenProtection(activity: Activity) {
-        try {
-            activity.window.setFlags(
-                WindowManager.LayoutParams.FLAG_SECURE,
-                WindowManager.LayoutParams.FLAG_SECURE
-            )
-        } catch (_: Exception) {
-            // Ignore if window is not attached
-        }
+        // Disabled by default so screen recordings, tutorials, receipts, and screenshots
+        // do not produce a black screen on Android devices.
     }
 
     /**
