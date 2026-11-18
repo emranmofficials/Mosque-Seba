@@ -70,6 +70,7 @@ fun AccountHubScreen(
     val showHijriBanner by viewModel.showHijriBanner.collectAsState()
     val rememberMeEnabled by viewModel.rememberMeEnabled.collectAsState()
     val darkModeEnabled by viewModel.darkModeEnabled.collectAsState()
+    val darkModeFollowSystem by viewModel.darkModeFollowSystem.collectAsState()
 
     var showChangePasswordDialog by remember { mutableStateOf(false) }
     var showHelplineGuideDialog by remember { mutableStateOf(false) }
@@ -458,20 +459,21 @@ fun AccountHubScreen(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(modifier = Modifier.padding(vertical = 4.dp)) {
-                        AccountSettingSwitchRow(
-                            icon = Icons.Default.DarkMode,
-                            iconColor = MosqueGoldDeep,
-                            title = "আই-কমফোর্ট ডার্ক মোড (নাইট থিম)",
-                            subtitle = "ফজর ও এশার সময় চোখের আরামের জন্য গাঢ় সবুজ ডার্ক থিম",
-                            checked = darkModeEnabled,
-                            testTag = "setting_dark_mode_switch",
-                            onCheckedChange = {
-                                viewModel.setDarkModeEnabled(it)
-                                Toast.makeText(
-                                    context,
-                                    if (it) "ডার্ক মোড চালু করা হয়েছে।" else "লাইট মোড চালু করা হয়েছে।",
-                                    Toast.LENGTH_SHORT
-                                ).show()
+                        DarkModePreferenceRow(
+                            isDark = isDark,
+                            followSystem = darkModeFollowSystem,
+                            darkEnabled = darkModeEnabled,
+                            onFollowSystem = {
+                                viewModel.setDarkModeFollowSystem()
+                                Toast.makeText(context, "সিস্টেম থিম অনুসরণ করা হচ্ছে।", Toast.LENGTH_SHORT).show()
+                            },
+                            onLight = {
+                                viewModel.setDarkModeEnabled(false)
+                                Toast.makeText(context, "লাইট মোড চালু করা হয়েছে।", Toast.LENGTH_SHORT).show()
+                            },
+                            onDark = {
+                                viewModel.setDarkModeEnabled(true)
+                                Toast.makeText(context, "ডার্ক মোড চালু করা হয়েছে।", Toast.LENGTH_SHORT).show()
                             }
                         )
                         HorizontalDivider(
@@ -896,6 +898,87 @@ private fun AccountSettingSwitchRow(
             ),
             modifier = Modifier.testTag(testTag)
         )
+    }
+}
+
+@Composable
+private fun DarkModePreferenceRow(
+    isDark: Boolean,
+    followSystem: Boolean,
+    darkEnabled: Boolean,
+    onFollowSystem: () -> Unit,
+    onLight: () -> Unit,
+    onDark: () -> Unit
+) {
+    val options: List<Triple<String, Boolean, () -> Unit>> = listOf(
+        Triple("সিস্টেম", followSystem, onFollowSystem),
+        Triple("লাইট", !followSystem && !darkEnabled, onLight),
+        Triple("ডার্ক", !followSystem && darkEnabled, onDark)
+    )
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 14.dp, vertical = 12.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                modifier = Modifier
+                    .size(38.dp)
+                    .clip(RoundedCornerShape(MosqueRadius.Md))
+                    .background(MosqueGoldDeep.copy(alpha = 0.14f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.DarkMode,
+                    contentDescription = null,
+                    tint = MosqueGoldDeep,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+            Spacer(modifier = Modifier.width(MosqueSpace.Md))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "অ্যাপ থিম",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = "সিস্টেম অনুসরণ বা লাইট/ডার্ক বেছে নিন",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    lineHeight = 15.sp
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(10.dp))
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(MosqueRadius.Md))
+                .background(if (isDark) MosqueNightSurfaceVariant else MosqueBgLight)
+                .padding(MosqueSpace.Xs)
+        ) {
+            options.forEach { (label, selected, action) ->
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(36.dp)
+                        .clip(RoundedCornerShape(MosqueRadius.Sm))
+                        .background(if (selected) MosqueEmeraldPrimary else Color.Transparent)
+                        .clickable { action() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = label,
+                        fontSize = 12.sp,
+                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                        color = if (selected) Color.White
+                        else if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
+                    )
+                }
+            }
+        }
     }
 }
 

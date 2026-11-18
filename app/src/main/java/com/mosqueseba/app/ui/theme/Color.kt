@@ -42,6 +42,7 @@ val MosqueNightInputBorder = Color(0xFF387162) // Crisp, accessible input box bo
 val MosqueNightTextPrimary = Color(0xFFECFDF5)
 val MosqueNightTextSecondary = Color(0xFFCBD5E1)
 val MosqueNightTextMuted = Color(0xFF94A3B8)
+val MosqueNightSecondaryContainer = Color(0xFF3A2D0B) // Dark amber container for gold accents
 
 // Status & Alert Colors
 val MosqueUrgentRed = Color(0xFFDC2626)

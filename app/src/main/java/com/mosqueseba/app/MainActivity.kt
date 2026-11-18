@@ -30,6 +30,7 @@ import com.mosqueseba.app.ui.components.*
 import com.mosqueseba.app.ui.dialogs.*
 import com.mosqueseba.app.ui.screens.*
 import com.mosqueseba.app.ui.theme.MosqueCommitteeTheme
+import com.mosqueseba.app.ui.viewmodel.AiDawatnamaUiState
 import com.mosqueseba.app.ui.viewmodel.MosqueViewModel
 import com.mosqueseba.app.util.MosquePushNotificationHelper
 import com.mosqueseba.app.util.MosqueSecurityManager
@@ -61,8 +62,9 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val darkModeEnabled by viewModel.darkModeEnabled.collectAsState()
+            val darkModeFollowSystem by viewModel.darkModeFollowSystem.collectAsState()
             val systemInDark = androidx.compose.foundation.isSystemInDarkTheme()
-            val effectiveDarkTheme = if (viewModel.sessionManager.hasUserSetDarkMode()) darkModeEnabled else systemInDark
+            val effectiveDarkTheme = if (darkModeFollowSystem) systemInDark else darkModeEnabled
             val requestedModule by deepLinkModule.collectAsState()
             val context = LocalContext.current
 
@@ -220,6 +222,7 @@ fun MosqueAppShell(
     val activeStaff by viewModel.activeStaff.collectAsState()
     val allChandaPayments by viewModel.allChandaPayments.collectAsState()
     val aiNoticeState by viewModel.aiNoticeState.collectAsState()
+    val aiDawatnamaState by viewModel.aiDawatnamaState.collectAsState()
     val pendingTransactions by viewModel.pendingTransactions.collectAsState()
     val allCashboxRecords by viewModel.allCashboxRecords.collectAsState()
     val allOfficeDocuments by viewModel.allOfficeDocuments.collectAsState()
@@ -1092,6 +1095,20 @@ fun MosqueAppShell(
             presidentSignatureUrl = president?.signatureUrl,
             presidentStampUrl = president?.stampUrl,
             mosqueSealUrl = mosque?.sealUrl,
+            aiState = aiDawatnamaState,
+            onPolishWithAi = { eventType, title, chiefGuest, date, time, venue ->
+                viewModel.generateDawatnamaDescription(
+                    mosqueName = mosque?.nameBn ?: "মসজিদ সেবা",
+                    mosqueAddress = mosque?.address ?: "বাংলাদেশ",
+                    eventType = eventType,
+                    title = title,
+                    chiefGuest = chiefGuest,
+                    date = date,
+                    time = time,
+                    venue = venue
+                )
+            },
+            onClearAiState = { viewModel.clearAiDawatnamaState() },
             onPublishAsNotice = { title, content ->
                 viewModel.publishNotice(
                     title = title,

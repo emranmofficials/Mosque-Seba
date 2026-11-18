@@ -66,6 +66,35 @@ sealed interface AiEventGuidanceUiState {
     data class Error(val message: String) : AiEventGuidanceUiState
 }
 
+sealed interface AiDawatnamaUiState {
+    data object Idle : AiDawatnamaUiState
+    data object Loading : AiDawatnamaUiState
+    data class Success(val description: String) : AiDawatnamaUiState
+    data class Error(val message: String) : AiDawatnamaUiState
+}
+
+/** Firebase AI errors -> actionable Bengali guidance for mosque staff. */
+internal fun friendlyAiError(e: Exception): String {
+    val raw = "${e.localizedMessage.orEmpty()} ${e.javaClass.simpleName}".lowercase(Locale.US)
+    return when {
+        "403" in raw || "appcheck" in raw || "app check" in raw || "attestation" in raw ||
+                "unauthenticated" in raw || "permission" in raw ->
+            "এআই পরিষেবায় প্রবেশ বাতিল হয়েছে (App Check)। Firebase Console-এ App Check ও reCAPTCHA সঠিকভাবে সেট আছে কি না যাচাই করুন।"
+        "429" in raw || "quota" in raw || "rate" in raw || "resource_exhausted" in raw ->
+            "এআই ব্যবহারের দৈনিক সীমা শেষ হয়েছে। কিছুক্ষণ পর আবার চেষ্টা করুন।"
+        "404" in raw || "notfound" in raw || "not found" in raw ||
+                ("api" in raw && ("disabled" in raw || "not enabled" in raw)) ->
+            "Firebase প্রকল্পে Gemini / AI Logic API চালু নেই। Firebase Console → AI Logic-এ API enable করুন।"
+        "401" in raw || "api key" in raw || "invalid key" in raw || "unauthorized" in raw ->
+            "Firebase কনফিগারেশন বৈধ নয়। app/google-services.json-এ আসল কনফিগ আছে কি না যাচাই করুন।"
+        "network" in raw || "unresolved" in raw || "failed to connect" in raw ||
+                "timeout" in raw || "offline" in raw ->
+            "ইন্টারনেট সংযোগ পাওয়া যায়নি। সংযোগ ঠিক করে আবার চেষ্টা করুন।"
+        else -> e.localizedMessage?.takeIf { it.isNotBlank() }
+            ?: "এআই অনুরোধ ব্যর্থ হয়েছে। আবার চেষ্টা করুন।"
+    }
+}
+
 @OptIn(ExperimentalCoroutinesApi::class)
 class MosqueViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -137,6 +166,9 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
 
     private val _darkModeEnabled = MutableStateFlow(sessionManager.isDarkModeEnabled())
     val darkModeEnabled: StateFlow<Boolean> = _darkModeEnabled.asStateFlow()
+
+    private val _darkModeFollowSystem = MutableStateFlow(sessionManager.hasUserSetDarkMode().not())
+    val darkModeFollowSystem: StateFlow<Boolean> = _darkModeFollowSystem.asStateFlow()
 
     private val _readNotificationIds = MutableStateFlow(sessionManager.getReadNotificationIds())
     val readNotificationIds: StateFlow<Set<String>> = _readNotificationIds.asStateFlow()
@@ -291,6 +323,12 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
     fun setDarkModeEnabled(enabled: Boolean) {
         sessionManager.setDarkModeEnabled(enabled)
         _darkModeEnabled.value = enabled
+        _darkModeFollowSystem.value = false
+    }
+
+    fun setDarkModeFollowSystem() {
+        sessionManager.clearDarkModePreference()
+        _darkModeFollowSystem.value = true
     }
 
     fun markNotificationAsRead(notificationId: String) {
@@ -756,8 +794,15 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
         )
     )
 
+    // Replay-protected (limited-use) App Check tokens are REQUIRED by Firebase AI Logic
+    // since 2 Nov 2026. Without this, every request is rejected with HTTP 403 even with
+    // a valid google-services.json — the main reason "AI was not working".
+    private val firebaseAi by lazy {
+        Firebase.ai(useLimitedUseAppCheckTokens = true)
+    }
+
     private val noticeDraftModel by lazy {
-        Firebase.ai.generativeModel(
+        firebaseAi.generativeModel(
             modelName = "gemini-3.8-flash",
             generationConfig = generationConfig {
                 responseMimeType = "application/json"
@@ -767,7 +812,7 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     private val summaryModel by lazy {
-        Firebase.ai.generativeModel("gemini-3.8-flash")
+        firebaseAi.generativeModel("gemini-3.8-flash")
     }
 
     private val _aiNoticeState = MutableStateFlow<AiNoticeUiState>(AiNoticeUiState.Idle)
@@ -825,9 +870,7 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
                 throw e
             } catch (e: Exception) {
                 Log.e(TAG, "Firebase AI notice drafting failed", e)
-                _aiNoticeState.value = AiNoticeUiState.Error(
-                    e.localizedMessage ?: "এআই নোটিশ খসড়া তৈরি ব্যর্থ হয়েছে।"
-                )
+                _aiNoticeState.value = AiNoticeUiState.Error(friendlyAiError(e))
             }
         }
     }
@@ -874,9 +917,7 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
                 throw e
             } catch (e: Exception) {
                 Log.e(TAG, "Firebase AI finance summary failed", e)
-                _aiSummaryState.value = AiSummaryUiState.Error(
-                    e.localizedMessage ?: "আর্থিক সারসংক্ষেপ তৈরি ব্যর্থ হয়েছে।"
-                )
+                _aiSummaryState.value = AiSummaryUiState.Error(friendlyAiError(e))
             }
         }
     }
@@ -915,9 +956,8 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
                 }
                 val text = response.text
                 if (text.isNullOrBlank()) {
-                    _aiEventGuidanceState.value = AiEventGuidanceUiState.Success(
-                        eventId = event.id,
-                        fullGuidanceText = event.buildDefaultGuidanceSummary()
+                    _aiEventGuidanceState.value = AiEventGuidanceUiState.Error(
+                        "এআই থেকে কোনো দিকনির্দেশনা পাওয়া যায়নি। আবার চেষ্টা করুন।"
                     )
                 } else {
                     _aiEventGuidanceState.value = AiEventGuidanceUiState.Success(
@@ -926,19 +966,77 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
                     )
                 }
             } catch (e: TimeoutCancellationException) {
-                Log.e(TAG, "AI event guidance timed out, fallback to default", e)
-                _aiEventGuidanceState.value = AiEventGuidanceUiState.Success(
-                    eventId = event.id,
-                    fullGuidanceText = event.buildDefaultGuidanceSummary()
+                Log.e(TAG, "AI event guidance timed out", e)
+                _aiEventGuidanceState.value = AiEventGuidanceUiState.Error(
+                    "৬০ সেকেন্ডে উত্তর পাওয়া যায়নি। ইন্টারনেট সংযোগ যাচাই করে আবার চেষ্টা করুন।"
                 )
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                Log.e(TAG, "Firebase AI event guidance failed, fallback to default", e)
-                _aiEventGuidanceState.value = AiEventGuidanceUiState.Success(
-                    eventId = event.id,
-                    fullGuidanceText = event.buildDefaultGuidanceSummary()
+                Log.e(TAG, "Firebase AI event guidance failed", e)
+                _aiEventGuidanceState.value = AiEventGuidanceUiState.Error(friendlyAiError(e))
+            }
+        }
+    }
+
+    // --- AI: Islamic Dawatnama / invitation poster description ---
+    private val _aiDawatnamaState = MutableStateFlow<AiDawatnamaUiState>(AiDawatnamaUiState.Idle)
+    val aiDawatnamaState: StateFlow<AiDawatnamaUiState> = _aiDawatnamaState.asStateFlow()
+
+    fun clearAiDawatnamaState() {
+        _aiDawatnamaState.value = AiDawatnamaUiState.Idle
+    }
+
+    fun generateDawatnamaDescription(
+        mosqueName: String,
+        mosqueAddress: String,
+        eventType: String,
+        title: String,
+        chiefGuest: String,
+        date: String,
+        time: String,
+        venue: String
+    ) {
+        viewModelScope.launch {
+            _aiDawatnamaState.value = AiDawatnamaUiState.Loading
+            try {
+                val prompt = """
+                    আপনি "$mosqueName" ($mosqueAddress)-এর দাওয়াতনামা ও মাহফিল উপলক্ষে দাপ্তরিক বাংলা লেখক।
+                    নিচের তথ্য ব্যবহার করে খুবই মার্জিত, আন্তরিক ও ইসলামিক শিষ্টাচারসম্পন্ন একটি বর্ণনা (description) রচনা করুন।
+                    শুরুতে "বিসমিল্লাহির রাহমানির রাহিম" লিখবেন এবং শেষে "— $mosqueName পরিচালনা কমিটি" দিয়ে শেষ করবেন।
+                    কোনো বানানো সংখ্যা, তারিখ বা নাম যোগ করবেন না; শুধু নিচের তথ্যই ব্যবহার করুন।
+
+                    অনুষ্ঠানের ধরন: $eventType
+                    শিরোনাম: $title
+                    প্রধান অতিথি: ${chiefGuest.ifBlank { "উল্লেখ নেই" }}
+                    তারিখ: $date
+                    সময়: $time
+                    স্থান: $venue
+
+                    বাংলা উত্তর শুধু বর্ণনাটিই দিন, কোনো ব্যাখ্যা বা শিরোনাম ছাড়া।
+                """.trimIndent()
+
+                val response = withTimeout(60_000L) {
+                    summaryModel.generateContent(prompt)
+                }
+                val text = response.text?.trim()
+                if (text.isNullOrBlank()) {
+                    _aiDawatnamaState.value = AiDawatnamaUiState.Error(
+                        "এআই থেকে কোনো বর্ণনা পাওয়া যায়নি। আবার চেষ্টা করুন।"
+                    )
+                } else {
+                    _aiDawatnamaState.value = AiDawatnamaUiState.Success(text)
+                }
+            } catch (e: TimeoutCancellationException) {
+                Log.e(TAG, "AI dawatnama timed out", e)
+                _aiDawatnamaState.value = AiDawatnamaUiState.Error(
+                    "৬০ সেকেন্ডে উত্তর পাওয়া যায়নি। আবার চেষ্টা করুন।"
                 )
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.e(TAG, "Firebase AI dawatnama failed", e)
+                _aiDawatnamaState.value = AiDawatnamaUiState.Error(friendlyAiError(e))
             }
         }
     }

@@ -8,7 +8,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.staticCompositionLocalOf
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
@@ -40,7 +39,7 @@ private val MosqueDarkColorScheme = darkColorScheme(
     onPrimaryContainer = MosqueNightTextPrimary,
     secondary = MosqueGold,
     onSecondary = MosqueEmeraldDark,
-    secondaryContainer = Color(0xFF3A2D0B),
+    secondaryContainer = MosqueNightSecondaryContainer,
     onSecondaryContainer = MosqueGoldLight,
     tertiary = MosqueGreenAccent,
     background = MosqueNightBg,

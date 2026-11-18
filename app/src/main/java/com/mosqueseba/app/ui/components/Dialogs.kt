@@ -975,30 +975,34 @@ private fun MealOptionButton(
     selectedColor: Color,
     onClick: () -> Unit
 ) {
+    val isDark = LocalIsDarkTheme.current
     Surface(
         onClick = onClick,
-        shape = RoundedCornerShape(10.dp),
-        color = if (selected) selectedColor else Color.White,
-        border = BorderStroke(1.dp, if (selected) selectedColor else MosqueCardBorderGold),
+        shape = RoundedCornerShape(MosqueRadius.Md),
+        color = if (selected) selectedColor else if (isDark) MosqueNightSurfaceVariant else Color.White,
+        border = BorderStroke(
+            1.dp,
+            if (selected) selectedColor else if (isDark) MosqueNightBorder else MosqueCardBorderGold
+        ),
         modifier = modifier.heightIn(min = 44.dp)
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+            modifier = Modifier.padding(horizontal = MosqueSpace.Md, vertical = MosqueSpace.Sm),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = if (selected) Color.White else MosqueTextMuted,
+                tint = if (selected) Color.White else if (isDark) MosqueNightTextSecondary else MosqueTextMuted,
                 modifier = Modifier.size(16.dp)
             )
-            Spacer(modifier = Modifier.width(5.dp))
+            Spacer(modifier = Modifier.width(MosqueSpace.Xs))
             Text(
                 text = label,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold,
-                color = if (selected) Color.White else MosqueTextPrimary,
+                color = if (selected) Color.White else if (isDark) MosqueNightTextPrimary else MosqueTextPrimary,
                 maxLines = 1
             )
         }

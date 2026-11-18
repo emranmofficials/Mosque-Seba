@@ -580,10 +580,10 @@ private fun OfficialsListTab(
                                         modifier = Modifier
                                             .height(44.dp)
                                             .fillMaxWidth()
-                                            .background(Color(0xFFF9F9F9), RoundedCornerShape(4.dp)),
+                                            .background(if (isDark) MosqueNightSurfaceVariant else Color(0xFFF9F9F9), RoundedCornerShape(4.dp)),
                                         contentAlignment = Alignment.Center
                                     ) {
-                                        Text("স্বাক্ষর নেই", fontSize = 10.5.sp, color = Color.Gray)
+                                        Text("স্বাক্ষর নেই", fontSize = 10.5.sp, color = if (isDark) MosqueNightTextMuted else Color.Gray)
                                     }
                                     Spacer(modifier = Modifier.height(6.dp))
                                     Row(
@@ -667,10 +667,10 @@ private fun OfficialsListTab(
                                         modifier = Modifier
                                             .height(44.dp)
                                             .fillMaxWidth()
-                                            .background(Color(0xFFF9F9F9), RoundedCornerShape(4.dp)),
+                                            .background(if (isDark) MosqueNightSurfaceVariant else Color(0xFFF9F9F9), RoundedCornerShape(4.dp)),
                                         contentAlignment = Alignment.Center
                                     ) {
-                                        Text("সিল নেই", fontSize = 10.5.sp, color = Color.Gray)
+                                        Text("সিল নেই", fontSize = 10.5.sp, color = if (isDark) MosqueNightTextMuted else Color.Gray)
                                     }
                                     Spacer(modifier = Modifier.height(6.dp))
                                     OutlinedButton(

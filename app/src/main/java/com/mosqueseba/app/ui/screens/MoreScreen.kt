@@ -46,6 +46,7 @@ import com.mosqueseba.app.ui.components.MeetingResolutionDialog
 import com.mosqueseba.app.ui.dialogs.*
 import com.mosqueseba.app.ui.components.MosqueConfirmDialog
 import com.mosqueseba.app.ui.components.MosqueMemberAvatar
+import com.mosqueseba.app.ui.components.MosqueToastController
 import com.mosqueseba.app.ui.components.OfficialReceiptDialog
 import com.mosqueseba.app.ui.components.PaySalaryFormDialog
 import com.mosqueseba.app.ui.components.ScheduleMeetingDialog
@@ -90,6 +91,7 @@ fun MoreScreen(
     val activeStaff by viewModel.activeStaff.collectAsState()
     val auditLogs by viewModel.recentAuditLogs.collectAsState()
     val mosque by viewModel.mosque.collectAsState()
+    val aiDawatnamaState by viewModel.aiDawatnamaState.collectAsState()
     val dutyRosters by viewModel.allDutyRosters.collectAsState()
     val foodSchedules by viewModel.allFoodSchedules.collectAsState()
     val payrolls by viewModel.allPayrolls.collectAsState()
@@ -277,6 +279,20 @@ fun MoreScreen(
                 IslamicDawatnamaDialog(
                     defaultMosqueName = mosque?.nameBn ?: "মসজিদ সেবা",
                     defaultMosqueAddress = mosque?.address ?: "বাংলাদেশ",
+                    aiState = aiDawatnamaState,
+                    onPolishWithAi = { eventType, title, chiefGuest, date, time, venue ->
+                        viewModel.generateDawatnamaDescription(
+                            mosqueName = mosque?.nameBn ?: "মসজিদ সেবা",
+                            mosqueAddress = mosque?.address ?: "বাংলাদেশ",
+                            eventType = eventType,
+                            title = title,
+                            chiefGuest = chiefGuest,
+                            date = date,
+                            time = time,
+                            venue = venue
+                        )
+                    },
+                    onClearAiState = { viewModel.clearAiDawatnamaState() },
                     onPublishAsNotice = { title, content ->
                         viewModel.publishNotice(
                             title = title,
@@ -1261,7 +1277,7 @@ fun MoreScreen(
                                                     } else {
                                                         "অপারগতা জানানো হয়েছে। বিকল্প দাতা নির্ধারণের জন্য কমিটিকে সতর্কবার্তা পাঠানো হয়েছে।"
                                                     }
-                                                    android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_LONG).show()
+                                                    MosqueToastController.info(msg)
                                                 }
                                             },
                                             shape = RoundedCornerShape(10.dp),
@@ -1277,11 +1293,9 @@ fun MoreScreen(
                                         Button(
                                             onClick = {
                                                 viewModel.approveFoodSchedule(myMeal)
-                                                android.widget.Toast.makeText(
-                                                    context,
-                                                    "আগামীকালের খাবারের দায়িত্বে আপনার সম্মতি নিশ্চিত হয়েছে।",
-                                                    android.widget.Toast.LENGTH_SHORT
-                                                ).show()
+                                                MosqueToastController.success(
+                                                    "আগামীকালের খাবারের দায়িত্বে আপনার সম্মতি নিশ্চিত হয়েছে।"
+                                                )
                                             },
                                             shape = RoundedCornerShape(10.dp),
                                             colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary),
@@ -1420,11 +1434,9 @@ fun MoreScreen(
                                                     startDateIso = todayIso,
                                                     targetStaffLabels = staffLabels
                                                 ) { created, _ ->
-                                                    android.widget.Toast.makeText(
-                                                        context,
-                                                        "আজ থেকে ৭ দিনের ${toBengaliDigits(created.toString())} টি দৈনিক খাবারের পালা তৈরি হয়েছে।",
-                                                        android.widget.Toast.LENGTH_SHORT
-                                                    ).show()
+                                                    MosqueToastController.success(
+                                                        "আজ থেকে ৭ দিনের ${toBengaliDigits(created.toString())} টি দৈনিক খাবারের পালা তৈরি হয়েছে।"
+                                                    )
                                                 }
                                             },
                                             shape = RoundedCornerShape(8.dp),
@@ -1658,11 +1670,9 @@ fun MoreScreen(
                                             Button(
                                                 onClick = {
                                                     viewModel.markFoodScheduleDelivered(food)
-                                                    android.widget.Toast.makeText(
-                                                        context,
-                                                        "${food.providerName}-এর খাবার বিতরণ সম্পন্ন হিসেবে চিহ্নিত হয়েছে।",
-                                                        android.widget.Toast.LENGTH_SHORT
-                                                    ).show()
+                                                    MosqueToastController.success(
+                                                        "${food.providerName}-এর খাবার বিতরণ সম্পন্ন হিসেবে চিহ্নিত হয়েছে।"
+                                                    )
                                                 },
                                                 shape = RoundedCornerShape(8.dp),
                                                 colors = ButtonDefaults.buttonColors(containerColor = MosqueSuccessGreen),
@@ -1682,11 +1692,9 @@ fun MoreScreen(
                                                 onClick = {
                                                     viewModel.rotateFoodScheduleDonor(food) { updated ->
                                                         if (updated != null) {
-                                                            android.widget.Toast.makeText(
-                                                                context,
-                                                                "দাতা স্বয়ংক্রিয়ভাবে পরিবর্তিত হয়েছে: ${updated.providerName}",
-                                                                android.widget.Toast.LENGTH_SHORT
-                                                            ).show()
+                                                            MosqueToastController.success(
+                                                                "দাতা স্বয়ংক্রিয়ভাবে পরিবর্তিত হয়েছে: ${updated.providerName}"
+                                                            )
                                                         }
                                                     }
                                                 },
@@ -1753,11 +1761,9 @@ fun MoreScreen(
                         onConfirm = {
                             viewModel.cancelFoodSchedule(target)
                             pendingCancelFood = null
-                            android.widget.Toast.makeText(
-                                context,
-                                "খাবারের পালা বাতিল করা হয়েছে।",
-                                android.widget.Toast.LENGTH_SHORT
-                            ).show()
+                            MosqueToastController.success(
+                                "খাবারের পালা বাতিল করা হয়েছে।"
+                            )
                         }
                     )
                 }
@@ -1773,11 +1779,9 @@ fun MoreScreen(
                         onConfirm = {
                             viewModel.deleteFoodSchedule(target)
                             pendingDeleteFood = null
-                            android.widget.Toast.makeText(
-                                context,
-                                "খাবারের পালা তালিকা থেকে মুছে ফেলা হয়েছে।",
-                                android.widget.Toast.LENGTH_SHORT
-                            ).show()
+                            MosqueToastController.success(
+                                "খাবারের পালা তালিকা থেকে মুছে ফেলা হয়েছে।"
+                            )
                         }
                     )
                 }
@@ -1857,11 +1861,9 @@ fun MoreScreen(
                                 canEditResolution = canScheduleMeeting || currentRole.canManageOfficeDocs(),
                                 onToggleStatus = {
                                     viewModel.toggleMeetingStatus(meeting)
-                                    android.widget.Toast.makeText(
-                                        context,
-                                        if (meeting.status == "completed") "সভা আসন্ন হিসেবে চিহ্নিত হয়েছে।" else "সভা সম্পন্ন হিসেবে চিহ্নিত হয়েছে।",
-                                        android.widget.Toast.LENGTH_SHORT
-                                    ).show()
+                                    MosqueToastController.success(
+                                        if (meeting.status == "completed") "সভা আসন্ন হিসেবে চিহ্নিত হয়েছে।" else "সভা সম্পন্ন হিসেবে চিহ্নিত হয়েছে।"
+                                    )
                                 },
                                 onEdit = { editingMeeting = meeting },
                                 onEditResolution = { resolutionTargetMeeting = meeting },
@@ -1884,11 +1886,9 @@ fun MoreScreen(
                                 location = location,
                                 agenda = agenda
                             )
-                            android.widget.Toast.makeText(
-                                context,
-                                "সভার তথ্য সফলভাবে হালনাগাদ হয়েছে।",
-                                android.widget.Toast.LENGTH_SHORT
-                            ).show()
+                            MosqueToastController.success(
+                                "সভার তথ্য সফলভাবে হালনাগাদ হয়েছে।"
+                            )
                         }
                     )
                 }
@@ -1903,11 +1903,9 @@ fun MoreScreen(
                                 resolution = resolution,
                                 markCompleted = markCompleted
                             )
-                            android.widget.Toast.makeText(
-                                context,
-                                "সভার কার্যবিবরণী সংরক্ষিত হয়েছে।",
-                                android.widget.Toast.LENGTH_SHORT
-                            ).show()
+                            MosqueToastController.success(
+                                "সভার কার্যবিবরণী সংরক্ষিত হয়েছে।"
+                            )
                         }
                     )
                 }
@@ -1923,11 +1921,9 @@ fun MoreScreen(
                         onConfirm = {
                             viewModel.deleteMeeting(target)
                             pendingDeleteMeeting = null
-                            android.widget.Toast.makeText(
-                                context,
-                                "সভাটি তালিকা থেকে মুছে ফেলা হয়েছে।",
-                                android.widget.Toast.LENGTH_SHORT
-                            ).show()
+                            MosqueToastController.success(
+                                "সভাটি তালিকা থেকে মুছে ফেলা হয়েছে।"
+                            )
                         }
                     )
                 }
@@ -2131,11 +2127,9 @@ fun MoreScreen(
                                         OutlinedButton(
                                             onClick = {
                                                 viewModel.markWelfareDisbursed(item)
-                                                android.widget.Toast.makeText(
-                                                    context,
-                                                    "${item.beneficiaryName}-এর সহায়তা বিতরণ সম্পন্ন হিসেবে চিহ্নিত হয়েছে।",
-                                                    android.widget.Toast.LENGTH_SHORT
-                                                ).show()
+                                                MosqueToastController.success(
+                                                    "${item.beneficiaryName}-এর সহায়তা বিতরণ সম্পন্ন হিসেবে চিহ্নিত হয়েছে।"
+                                                )
                                             },
                                             modifier = Modifier
                                                 .fillMaxWidth()
@@ -2470,11 +2464,9 @@ fun MoreScreen(
                     staffMealRequired = staffMealRequired
                 )
                 showAddStaffDialog = false
-                android.widget.Toast.makeText(
-                    context,
-                    "$nameBn-কে তালিকাভুক্ত করা হয়েছে।",
-                    android.widget.Toast.LENGTH_SHORT
-                ).show()
+                MosqueToastController.success(
+                    "$nameBn-কে তালিকাভুক্ত করা হয়েছে।"
+                )
             }
         )
     }
@@ -2491,11 +2483,9 @@ fun MoreScreen(
                     bonus = bonus,
                     paymentMethod = paymentMethod,
                     onDisbursed = { payroll ->
-                        android.widget.Toast.makeText(
-                            context,
-                            "${staff.nameBn}-এর বেতন ৳${toBengaliDigits(payroll.netSalary.toInt().toString())} পরিশোধিত এবং স্বয়ংক্রিয়ভাবে মোট ব্যয়ের সাথে যুক্ত হয়েছে।",
-                            android.widget.Toast.LENGTH_SHORT
-                        ).show()
+                        MosqueToastController.success(
+                            "${staff.nameBn}-এর বেতন ৳${toBengaliDigits(payroll.netSalary.toInt().toString())} পরিশোধিত এবং স্বয়ংক্রিয়ভাবে মোট ব্যয়ের সাথে যুক্ত হয়েছে।"
+                        )
                     }
                 )
                 showPaySalaryStaff = null
@@ -2511,11 +2501,9 @@ fun MoreScreen(
             onConfirm = { staff, dayOfWeek, prayerName, roleTitle, notes ->
                 viewModel.addDutyRoster(staff, dayOfWeek, prayerName, roleTitle, notes)
                 showAddRosterDialog = false
-                android.widget.Toast.makeText(
-                    context,
-                    "${staff.nameBn}-এর দায়িত্ব রোস্টার সংরক্ষিত হয়েছে।",
-                    android.widget.Toast.LENGTH_SHORT
-                ).show()
+                MosqueToastController.success(
+                    "${staff.nameBn}-এর দায়িত্ব রোস্টার সংরক্ষিত হয়েছে।"
+                )
             }
         )
     }
@@ -2533,11 +2521,9 @@ fun MoreScreen(
             onConfirm = { dateStr, providerName, providerMobile, receiverName ->
                 viewModel.addFoodSchedule(dateStr, providerName, providerMobile, receiverName)
                 showAddFoodDialog = false
-                android.widget.Toast.makeText(
-                    context,
-                    "$providerName-এর খাবার শিডিউল সংরক্ষিত হয়েছে।",
-                    android.widget.Toast.LENGTH_SHORT
-                ).show()
+                MosqueToastController.success(
+                    "$providerName-এর খাবার শিডিউল সংরক্ষিত হয়েছে।"
+                )
             }
         )
     }
@@ -2567,7 +2553,7 @@ fun MoreScreen(
                         else ->
                             "নির্বাচিত তারিখগুলোতে ইতোমধ্যেই সব পালা নির্ধারিত রয়েছে।"
                     }
-                    android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_LONG).show()
+                    MosqueToastController.info(msg)
                 }
             }
         )
@@ -2580,11 +2566,9 @@ fun MoreScreen(
             onConfirm = { beneficiaryName, category, mobile, amount, remarks ->
                 viewModel.addWelfareCase(beneficiaryName, category, mobile, amount, remarks)
                 showAddWelfareDialog = false
-                android.widget.Toast.makeText(
-                    context,
-                    "$beneficiaryName-এর কল্যাণ সহায়তা রেকর্ড যুক্ত হয়েছে।",
-                    android.widget.Toast.LENGTH_SHORT
-                ).show()
+                MosqueToastController.success(
+                    "$beneficiaryName-এর কল্যাণ সহায়তা রেকর্ড যুক্ত হয়েছে।"
+                )
             }
         )
     }
@@ -2596,11 +2580,9 @@ fun MoreScreen(
             onConfirm = { title, dateStr, timeStr, speaker, venue, budget, lead ->
                 viewModel.addEvent(title, dateStr, timeStr, speaker, venue, budget, lead)
                 showAddEventDialog = false
-                android.widget.Toast.makeText(
-                    context,
-                    "\"$title\" দ্বীনি আয়োজন সংরক্ষিত হয়েছে।",
-                    android.widget.Toast.LENGTH_SHORT
-                ).show()
+                MosqueToastController.success(
+                    "\"$title\" দ্বীনি আয়োজন সংরক্ষিত হয়েছে।"
+                )
             }
         )
     }

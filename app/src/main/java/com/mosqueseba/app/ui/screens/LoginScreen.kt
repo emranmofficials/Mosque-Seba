@@ -13,6 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.automirrored.filled.Login
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -63,7 +64,6 @@ fun LoginScreen(
     var showHelpDialog by remember { mutableStateOf(false) }
 
     val isDark = LocalIsDarkTheme.current
-    val fieldColors = mosqueStandardFieldColors(isDark)
 
     Column(
         modifier = Modifier
@@ -249,104 +249,77 @@ fun LoginScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    OutlinedTextField(
+                    MosqueStandardTextField(
                         value = committeeId,
                         onValueChange = { committeeId = it; errorMessage = null },
-                        label = { Text("কমিটি আইডি *") },
-                        placeholder = { Text("কমিটি আইডি লিখুন") },
-                        leadingIcon = { Icon(Icons.Default.Badge, contentDescription = null, tint = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary) },
-                        singleLine = true,
-                        colors = fieldColors,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("login_committee_id_input"),
-                        shape = RoundedCornerShape(12.dp)
+                        label = "কমিটি আইডি *",
+                        placeholder = "কমিটি আইডি লিখুন",
+                        leadingIcon = { Icon(Icons.Default.Badge, contentDescription = null) },
+                        modifier = Modifier.testTag("login_committee_id_input")
                     )
 
                     Spacer(modifier = Modifier.height(10.dp))
 
                     if (selectedTab == 0) {
-                        OutlinedTextField(
+                        MosqueStandardTextField(
                             value = presidentEmail,
                             onValueChange = { presidentEmail = it; errorMessage = null },
-                            label = { Text("সভাপতির ইমেইল ঠিকানা *") },
-                            placeholder = { Text("সভাপতির ইমেইল ঠিকানা লিখুন") },
-                            leadingIcon = { Icon(Icons.Default.Email, contentDescription = null, tint = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary) },
+                            label = "সভাপতির ইমেইল ঠিকানা *",
+                            placeholder = "সভাপতির ইমেইল ঠিকানা লিখুন",
+                            leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                            singleLine = true,
-                            colors = fieldColors,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .testTag("login_president_email_input"),
-                            shape = RoundedCornerShape(12.dp)
+                            modifier = Modifier.testTag("login_president_email_input")
                         )
 
                         Spacer(modifier = Modifier.height(10.dp))
 
-                        OutlinedTextField(
+                        MosqueStandardTextField(
                             value = presidentPassword,
                             onValueChange = { presidentPassword = it; errorMessage = null },
-                            label = { Text("গোপন পাসওয়ার্ড *") },
-                            leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, tint = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary) },
+                            label = "গোপন পাসওয়ার্ড *",
+                            leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
                             trailingIcon = {
                                 IconButton(onClick = { passwordVisible = !passwordVisible }) {
                                     Icon(
                                         imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                                        contentDescription = "পাসওয়ার্ড দেখুন/লুকান",
-                                        tint = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
+                                        contentDescription = "পাসওয়ার্ড দেখুন/লুকান"
                                     )
                                 }
                             },
                             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                            singleLine = true,
-                            colors = fieldColors,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .testTag("login_president_password_input"),
-                            shape = RoundedCornerShape(12.dp)
+                            modifier = Modifier.testTag("login_president_password_input")
                         )
                     } else {
-                        OutlinedTextField(
+                        MosqueStandardTextField(
                             value = memberMobile,
                             onValueChange = { memberMobile = it; errorMessage = null },
-                            label = { Text("নিবন্ধিত মোবাইল নম্বর *") },
-                            placeholder = { Text("017XXXXXXXX") },
-                            leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null, tint = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary) },
+                            label = "নিবন্ধিত মোবাইল নম্বর *",
+                            placeholder = "017XXXXXXXX",
+                            leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null) },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                            singleLine = true,
-                            colors = fieldColors,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .testTag("login_member_mobile_input"),
-                            shape = RoundedCornerShape(12.dp)
+                            modifier = Modifier.testTag("login_member_mobile_input")
                         )
 
                         Spacer(modifier = Modifier.height(10.dp))
 
-                        OutlinedTextField(
+                        MosqueStandardTextField(
                             value = memberPassword,
                             onValueChange = { memberPassword = it; errorMessage = null },
-                            label = { Text("পাসওয়ার্ড *") },
-                            placeholder = { Text("পাসওয়ার্ড দিন") },
-                            leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, tint = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary) },
+                            label = "পাসওয়ার্ড *",
+                            placeholder = "পাসওয়ার্ড দিন",
+                            leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
                             trailingIcon = {
                                 IconButton(onClick = { passwordVisible = !passwordVisible }) {
                                     Icon(
                                         imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                                        contentDescription = "পাসওয়ার্ড দেখুন/লুকান",
-                                        tint = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
+                                        contentDescription = "পাসওয়ার্ড দেখুন/লুকান"
                                     )
                                 }
                             },
                             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
-                            singleLine = true,
-                            colors = fieldColors,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .testTag("login_member_password_input"),
-                            shape = RoundedCornerShape(12.dp)
+                            modifier = Modifier.testTag("login_member_password_input")
                         )
                     }
 
@@ -382,7 +355,7 @@ fun LoginScreen(
                                 .padding(horizontal = 8.dp)
                         ) {
                             Icon(
-                                imageVector = Icons.Default.HelpOutline,
+                                imageVector = Icons.AutoMirrored.Filled.HelpOutline,
                                 contentDescription = null,
                                 tint = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary,
                                 modifier = Modifier.size(16.dp)
@@ -569,7 +542,7 @@ fun LoginScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
-                                imageVector = Icons.Default.HelpOutline,
+                                imageVector = Icons.AutoMirrored.Filled.HelpOutline,
                                 contentDescription = null,
                                 tint = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary
                             )

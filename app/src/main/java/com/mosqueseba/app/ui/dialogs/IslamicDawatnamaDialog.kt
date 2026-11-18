@@ -31,6 +31,7 @@ import com.mosqueseba.app.ui.components.MehrabArchCard
 import com.mosqueseba.app.ui.components.MosqueToastController
 import com.mosqueseba.app.ui.components.toBengaliDigits
 import com.mosqueseba.app.ui.theme.*
+import com.mosqueseba.app.ui.viewmodel.AiDawatnamaUiState
 import com.mosqueseba.app.util.MosquePrintHelper
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -43,6 +44,9 @@ fun IslamicDawatnamaDialog(
     presidentSignatureUrl: String? = null,
     presidentStampUrl: String? = null,
     mosqueSealUrl: String? = null,
+    aiState: AiDawatnamaUiState,
+    onPolishWithAi: (eventType: String, title: String, chiefGuest: String, date: String, time: String, venue: String) -> Unit,
+    onClearAiState: () -> Unit,
     onPublishAsNotice: (title: String, content: String) -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -81,8 +85,23 @@ fun IslamicDawatnamaDialog(
 
     var selectedTab by remember { mutableIntStateOf(0) } // 0: Form, 1: Live Preview
 
+    // Apply the real Gemini-written description as soon as it arrives.
+    LaunchedEffect(aiState) {
+        if (aiState is AiDawatnamaUiState.Success) {
+            description = aiState.description
+            MosqueToastController.success(
+                "এআই দিয়ে দাওয়াতনামার বর্ণনা তৈরি হয়েছে।",
+                "এআই ড্রাফট প্রস্তুত"
+            )
+            onClearAiState()
+        }
+    }
+
     Dialog(
-        onDismissRequest = onDismiss,
+        onDismissRequest = {
+            onClearAiState()
+            onDismiss()
+        },
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
         MehrabArchCard(
@@ -236,29 +255,52 @@ fun IslamicDawatnamaDialog(
                                 }
                             }
 
-                            // AI Polish Button
+                            // AI Polish Button — real Firebase AI (Gemini) call
+                            val aiBusy = aiState is AiDawatnamaUiState.Loading
                             Surface(
                                 shape = RoundedCornerShape(10.dp),
                                 color = MosqueGoldLight.copy(alpha = if (isDark) 0.15f else 0.4f),
                                 border = BorderStroke(1.dp, MosqueGold),
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clickable {
-                                        description = "নাহমাদুহু ওয়া নুসাল্লি আলা রাসুলিহিল কারিম। পরম করুণাময় মহান আল্লাহর অশেষ মেহেরবানীতে $defaultMosqueName প্রাঙ্গণে $title অনুষ্ঠিত হতে যাচ্ছে। উক্ত বরকতময় মাহফিলে দেশবরেণ্য হক্কানি ওলামায়ে কেরাম কুরআন ও সুন্নাহর আলোকে হেদায়াতি বক্তব্য পেশ করবেন। আপনার সপরিবার উপস্থিতি একান্তভাবে কাম্য।"
-                                        MosqueToastController.success("এআই দিয়ে দাওয়াতনামা চমৎকারভাবে সাজানো হয়েছে।", "এআই ড্রাফট প্রস্তুত")
+                                    .clickable(enabled = !aiBusy) {
+                                        onPolishWithAi(selectedEventType, title, chiefGuest, dateStr, timeStr, venue)
                                     }
                             ) {
                                 Row(
                                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = MosqueGoldDeep, modifier = Modifier.size(18.dp))
+                                    if (aiBusy) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(18.dp),
+                                            strokeWidth = 2.dp,
+                                            color = MosqueGoldDeep
+                                        )
+                                    } else {
+                                        Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = MosqueGoldDeep, modifier = Modifier.size(18.dp))
+                                    }
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Column {
-                                        Text("✨ এআই দিয়ে দাওয়াতনামা পরিমার্জন করুন", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MosqueGoldDeep)
-                                        Text("কুরআনি শিষ্টাচার ও আন্তরিক ভাষায় স্বয়ংক্রিয় বর্ণনা লিখুন", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        Text(
+                                            if (aiBusy) "এআই বর্ণনা তৈরি হচ্ছে..." else "✨ এআই দিয়ে দাওয়াতনামা পরিমার্জন করুন",
+                                            fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MosqueGoldDeep
+                                        )
+                                        Text(
+                                            "কুরআনি শিষ্টাচার ও আন্তরিক ভাষায় স্বয়ংক্রিয় বর্ণনা লিখুন",
+                                            fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
                                     }
                                 }
+                            }
+                            if (aiState is AiDawatnamaUiState.Error) {
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = aiState.message,
+                                    fontSize = 10.sp,
+                                    color = MosqueUrgentRed,
+                                    modifier = Modifier.padding(horizontal = 4.dp)
+                                )
                             }
 
                             OutlinedTextField(

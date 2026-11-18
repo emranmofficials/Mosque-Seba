@@ -185,6 +185,11 @@ class SessionManager(context: Context) {
         prefs.edit().putBoolean(KEY_DARK_MODE_ENABLED, enabled).apply()
     }
 
+    /** Remove the explicit choice so the app follows the Android system theme again. */
+    fun clearDarkModePreference() {
+        prefs.edit().remove(KEY_DARK_MODE_ENABLED).apply()
+    }
+
     fun getHijriDayOffset(): Int = prefs.getInt(KEY_HIJRI_DAY_OFFSET, 0)
 
     fun setHijriDayOffset(offset: Int) {
