@@ -1316,8 +1316,8 @@ private fun AnnounceElectionDialog(
                             if (termTitle.isNotBlank() && commissioner.isNotBlank()) {
                                 onConfirm(
                                     termTitle,
-                                    startYear.toIntOrNull() ?: 2026,
-                                    endYear.toIntOrNull() ?: 2028,
+                                    toEnglishDigits(startYear).toIntOrNull() ?: 2026,
+                                    toEnglishDigits(endYear).toIntOrNull() ?: 2028,
                                     commissioner,
                                     commissionerMobile,
                                     scheduleDate,
@@ -1826,7 +1826,7 @@ private fun CandidateVoteDialog(
                     Spacer(modifier = Modifier.width(8.dp))
                     Button(
                         onClick = {
-                            val votes = votesStr.toIntOrNull() ?: 0
+                            val votes = toEnglishDigits(votesStr).toIntOrNull() ?: 0
                             onConfirm(votes, isElected)
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary)

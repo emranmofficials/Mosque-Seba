@@ -411,9 +411,10 @@ fun buildRoleNotificationItems(
 
     // 9. Personal Chanda Receipt Update (General Member)
     if (role == UserRole.GENERAL_MEMBER) {
+        // Only THIS member's receipts. The old `.ifEmpty { chandaPayments.take(1) }`
+        // fallback wrongly showed another member's receipt to members who had none.
         val personalReceipts = chandaPayments
             .filter { savedMemberId != null && it.memberId == savedMemberId }
-            .ifEmpty { chandaPayments.take(1) }
         personalReceipts.take(2).forEach { pay ->
             items.add(
                 RoleNotificationItem(

@@ -105,6 +105,12 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
     val sessionManager = SessionManager(application)
     private val syncInFlight = java.util.concurrent.atomic.AtomicBoolean(false)
     @Volatile private var lastRealtimeSyncMs = 0L
+    // If a Realtime event arrives while a sync is already running (or inside the
+    // short self-echo cooldown), remember it and replay it afterwards instead of
+    // dropping it. This is what caused "live update never appears, works after
+    // restart": the member's chanda event was silently discarded while a sync
+    // was in flight, and only the cold-start sync brought the data in.
+    private val realtimeSyncPending = java.util.concurrent.atomic.AtomicBoolean(false)
 
     private val repository: MosqueRepository
 
@@ -117,6 +123,41 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
         MosquePushNotificationHelper.initChannels(application)
         checkForAppUpdates(forceManual = false)
         startRealtimeSyncLoop()
+    }
+
+    /**
+     * When the cloud sync pulls in a NEW chanda receipt belonging to the signed-in
+     * member (recorded by the treasurer on another device), post a status-bar
+     * notification. This is the remote counterpart of recordChandaPayment()'s
+     * local notification — without it a member only saw the receipt after a
+     * manual app restart.
+     */
+    private fun observeRemoteChandaReceipts(db: MosqueDatabase) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val seen = java.util.Collections.newSetFromMap(
+                java.util.concurrent.ConcurrentHashMap<String, Boolean>()
+            )
+            var primed = false
+            db.chandaDao().getAllPayments().collect { payments ->
+                val savedId = sessionManager.getSavedMemberId()
+                if (!primed) {
+                    // Seed with existing receipts so we don't notify for old data
+                    // on app launch / first emission.
+                    payments.forEach { seen.add(it.id) }
+                    primed = true
+                } else if (!savedId.isNullOrBlank()) {
+                    payments.filter { it.memberId == savedId && it.id !in seen }
+                        .forEach { receipt ->
+                            seen.add(receipt.id)
+                            if (sessionManager.isNotificationsEnabled()) {
+                                MosquePushNotificationHelper.postChandaReceiptNotification(
+                                    getApplication(), receipt
+                                )
+                            }
+                        }
+                }
+            }
+        }
     }
 
     fun checkForAppUpdates(forceManual: Boolean = false, onResult: ((AppUpdateInfo?) -> Unit)? = null) {
@@ -209,20 +250,30 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
-    /** Runs a sync immediately, but ignores bursts of realtime events / self-echoes. */
+    /**
+     * Runs a sync promptly after a local write or a Realtime event.
+     * Bursts/self-echoes are COALESCED (replayed once afterwards), never dropped.
+     */
     fun triggerImmediateCloudSync(force: Boolean = false) {
+        // An event arriving during a cooldown/lock sets this flag; the running
+        // sync replays one more pass when it finishes so no change is lost.
+        if (!force) realtimeSyncPending.set(true)
         viewModelScope.launch(Dispatchers.IO) {
             ensureFreshAuthToken()
-            if (!force && System.currentTimeMillis() - lastRealtimeSyncMs < 5_000) return@launch
+            val tooSoon = !force && System.currentTimeMillis() - lastRealtimeSyncMs < 3_000
+            if (tooSoon) return@launch // flag guarantees a replay after the current sync
             if (!syncInFlight.compareAndSet(false, true)) return@launch
             try {
-                val db = MosqueDatabase.getDatabase(getApplication(), viewModelScope)
-                SupabaseSyncManager.performSync(getApplication(), db)
+                do {
+                    realtimeSyncPending.set(false)
+                    val db = MosqueDatabase.getDatabase(getApplication(), viewModelScope)
+                    SupabaseSyncManager.performSync(getApplication(), db)
+                } while (realtimeSyncPending.get())
             } catch (e: Exception) {
                 Log.w(TAG, "Immediate cloud sync skipped", e)
             } finally {
                 // Cooldown starts when the sync finishes, so our own upserts
-                // echoing back from Realtime cannot start a second sync.
+                // echoing back from Realtime cannot start an endless loop.
                 lastRealtimeSyncMs = System.currentTimeMillis()
                 syncInFlight.set(false)
             }
@@ -231,8 +282,16 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
 
     /** (Re)opens the Realtime channel with the current Auth JWT. Safe to call repeatedly. */
     private fun restartRealtime() {
-        SupabaseRealtimeClient.start(getApplication()) { _table ->
-            triggerImmediateCloudSync()
+        SupabaseRealtimeClient.start(getApplication()) { table ->
+            // A sync that is already running reads the LATEST cloud state, so any
+            // event arriving mid-sync is either the echo of our own upsert or a
+            // change that sync is about to pull. Ignoring it kills echo-driven
+            // sync loops; genuine later events still open a fresh sync.
+            if (syncInFlight.get()) return@start
+            // chanda_payments / transactions events carry money + receipt changes;
+            // bypass the cooldown so a member sees the update immediately.
+            val isMoneyEvent = table == "chanda_payments" || table == "transactions"
+            triggerImmediateCloudSync(force = isMoneyEvent)
         }
     }
 
@@ -247,6 +306,12 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
                 Log.w(TAG, "Initial Supabase sync skipped", e)
             }
             lastRealtimeSyncMs = System.currentTimeMillis()
+
+            // 1b. Start the remote-receipt observer ONLY after the initial sync has
+            // populated Room. If it ran from init(), the first (empty) Flow emission
+            // would prime nothing and every historical receipt pulled by the cold
+            // sync would fire a spurious status-bar notification.
+            observeRemoteChandaReceipts(db)
 
             // 2. True realtime: a WSS channel listens for postgres_changes and
             //    triggers an immediate sync whenever any synced table changes.
@@ -1231,6 +1296,7 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
             val approver = if (currentName != null) "${_currentUserRole.value.titleBn} ($currentName)" else _currentUserRole.value.titleBn
             val newStatus = if (approved) "approved" else "rejected"
             repository.updateTransactionStatus(transaction, newStatus, approver)
+            triggerImmediateCloudSync(force = true)
         }
     }
 
@@ -1281,6 +1347,10 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
                 paidAt = paidAtStr
             )
             repository.recordChandaPayment(payment)
+            // Push the chanda payment AND its auto-posted income transaction to the
+            // cloud immediately. Without this, no postgres_changes event is emitted,
+            // so no other device (including the member) ever sees a live update.
+            triggerImmediateCloudSync(force = true)
             if (sessionManager.isNotificationsEnabled()) {
                 MosquePushNotificationHelper.postChandaReceiptNotification(getApplication(), payment)
             }

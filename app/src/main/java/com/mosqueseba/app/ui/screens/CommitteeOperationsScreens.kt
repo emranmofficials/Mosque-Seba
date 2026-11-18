@@ -46,6 +46,7 @@ import com.mosqueseba.app.ui.components.StaggeredItemEntrance
 import com.mosqueseba.app.ui.components.mosqueStandardFieldColors
 import com.mosqueseba.app.ui.components.roleIcon
 import com.mosqueseba.app.ui.components.toBengaliDigits
+import com.mosqueseba.app.ui.components.toEnglishDigits
 import com.mosqueseba.app.ui.theme.*
 import com.mosqueseba.app.ui.viewmodel.MosqueViewModel
 import java.util.Locale
@@ -762,7 +763,7 @@ private fun OpenCashboxDialog(
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
                 value = amount,
-                onValueChange = { amount = it.filter { ch -> ch.isDigit() }; amountError = null },
+                onValueChange = { amount = toEnglishDigits(it).filter { ch -> ch.isDigit() }; amountError = null },
                 label = { Text("গণনাকৃত মোট টাকা (৳) *") },
                 isError = amountError != null,
                 supportingText = amountError?.let { err -> { Text(err, color = MosqueUrgentRed, fontSize = 11.sp) } },

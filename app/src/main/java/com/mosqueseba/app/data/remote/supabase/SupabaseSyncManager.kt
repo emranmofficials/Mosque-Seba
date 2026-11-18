@@ -37,6 +37,14 @@ object SupabaseSyncManager {
     private fun cloudTxnType(value: String): String =
         if (value.trim().equals("expense", ignoreCase = true)) "expense" else "income"
 
+    // Mirror of cloudTxnType: the cloud stores lowercase, but EVERY local query,
+    // total and filter expects uppercase INCOME/EXPENSE (see Daos.kt and
+    // FinanceScreen.kt). Normalizing on pull prevents a REPLACE sync from turning
+    // a newly-entered entry into a lowercase row that silently vanishes from the
+    // income/expense tabs — the main cause of "ডাটা এন্ট্রি হচ্ছে না".
+    private fun localTxnType(value: String): String =
+        if (value.trim().equals("expense", ignoreCase = true)) "EXPENSE" else "INCOME"
+
     private fun cloudNoticePriority(value: String): String = when (value.trim().lowercase()) {
         "urgent" -> "urgent"
         "important", "high", "immediate" -> "important"
@@ -271,11 +279,21 @@ object SupabaseSyncManager {
                     val tJson = cTxns.getJSONObject(i)
                     val tId = tJson.optString("id")
                     if (tId.isNotBlank()) {
+                        // Cloud stores category_id as a UUID while local Room keeps the
+                        // Bengali category name. Preserve an existing local name so a
+                        // REPLACE sync does not overwrite it with a raw UUID string.
+                        val localExisting = database.transactionDao().getTransactionById(tId)
+                        val pulledCategory = tJson.optString("category_id", "")
+                        val resolvedCategory = if (pulledCategory.isBlank() ||
+                            pulledCategory.matches(Regex("[0-9a-fA-F]{8}-[0-9a-fA-F-]{27,}"))) {
+                            localExisting?.categoryNameBn?.takeIf { it.isNotBlank() }
+                                ?: "সাধারণ দান"
+                        } else pulledCategory
                         val txn = TransactionEntity(
                             id = tId,
                             transactionCode = tJson.optString("transaction_code", "TX-001"),
-                            categoryNameBn = tJson.optString("category_id", "সাধারণ দান"),
-                            type = tJson.optString("type", "INCOME"),
+                            categoryNameBn = resolvedCategory,
+                            type = localTxnType(tJson.optString("type", "INCOME")),
                             amount = tJson.optDouble("amount", 0.0),
                             txnDate = tJson.optString("txn_date", ""),
                             description = tJson.optString("description", ""),
@@ -283,7 +301,14 @@ object SupabaseSyncManager {
                             sourceId = if (tJson.has("source_id") && !tJson.isNull("source_id")) tJson.optString("source_id") else null,
                             createdBy = tJson.optString("created_by", "ক্যাশিয়ার"),
                             approvedBy = if (tJson.has("approved_by") && !tJson.isNull("approved_by")) tJson.optString("approved_by") else null,
-                            approvalStatus = tJson.optString("approval_status", "approved"),
+                            // Never let a cloud "pending" default downgrade a locally
+                            // approved entry (e.g. chanda auto-post income) — that would
+                            // remove it from the fund balance on every sync.
+                            approvalStatus = if (localExisting?.approvalStatus == "approved") {
+                                "approved"
+                            } else {
+                                tJson.optString("approval_status", "approved")
+                            },
                             isReversal = tJson.optBoolean("is_reversal", false)
                         )
                         database.transactionDao().insertTransaction(txn)
@@ -443,7 +468,12 @@ object SupabaseSyncManager {
                     }
                 }
 
+                // NOTE: the live backend is a FLAT TEXT-ID schema (verified via
+                // PostgREST probing) — member_id, received_by, month and paid_at are
+                // all `text`, NOT UUID/date. The old UUID-only filter skipped every
+                // row, killing chanda sync and its realtime event entirely.
                 val localChanda = database.chandaDao().getAllPayments().first()
+                    .filter { it.amountPaid > 0 } // backend CHECK amount > 0
                 if (localChanda.isNotEmpty()) {
                     val chandaArray = JSONArray()
                     localChanda.forEach { c ->
@@ -454,10 +484,14 @@ object SupabaseSyncManager {
                             put("month", c.month)
                             put("amount_due", c.amountDue)
                             put("amount_paid", c.amountPaid)
-                            put("method", c.method)
-                            put("status", c.status)
-                            put("receipt_code", c.receiptCode)
-                            put("qr_verification_code", c.qrVerificationCode)
+                            put("method", c.method.trim().lowercase().let {
+                                if (it in setOf("cash", "mobile_banking", "online")) it else "cash"
+                            })
+                            put("status", c.status.trim().lowercase().let {
+                                if (it in setOf("pending", "paid", "partial", "verified")) it else "paid"
+                            })
+                            put("receipt_code", c.receiptCode.ifBlank { JSONObject.NULL })
+                            put("qr_verification_code", c.qrVerificationCode.ifBlank { JSONObject.NULL })
                             put("received_by", c.receivedBy)
                             put("paid_at", c.paidAt)
                         })

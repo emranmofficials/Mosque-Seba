@@ -1073,14 +1073,14 @@ private fun EditMosqueProfileDialog(
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 MosqueStandardTextField(
                     value = establishedYear,
-                    onValueChange = { establishedYear = it.filter { ch -> ch.isDigit() } },
+                    onValueChange = { establishedYear = toEnglishDigits(it).filter { ch -> ch.isDigit() } },
                     label = "প্রতিষ্ঠা সাল",
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.weight(1f)
                 )
                 MosqueStandardTextField(
                     value = capacity,
-                    onValueChange = { capacity = it.filter { ch -> ch.isDigit() } },
+                    onValueChange = { capacity = toEnglishDigits(it).filter { ch -> ch.isDigit() } },
                     label = "ধারণক্ষমতা",
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.weight(1f)
@@ -1090,14 +1090,14 @@ private fun EditMosqueProfileDialog(
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 MosqueStandardTextField(
                     value = startYear,
-                    onValueChange = { startYear = it.filter { ch -> ch.isDigit() } },
+                    onValueChange = { startYear = toEnglishDigits(it).filter { ch -> ch.isDigit() } },
                     label = "কমিটি শুরু সাল",
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.weight(1f)
                 )
                 MosqueStandardTextField(
                     value = endYear,
-                    onValueChange = { endYear = it.filter { ch -> ch.isDigit() } },
+                    onValueChange = { endYear = toEnglishDigits(it).filter { ch -> ch.isDigit() } },
                     label = "কমিটি শেষ সাল",
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.weight(1f)

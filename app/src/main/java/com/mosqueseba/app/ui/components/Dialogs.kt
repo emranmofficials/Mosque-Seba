@@ -520,7 +520,7 @@ fun AddMemberDialog(
                                 value = salaryAmount,
                                 onValueChange = {
                                     if (canEditRoleAndSalary) {
-                                        salaryAmount = it.filter { ch -> ch.isDigit() }
+                                        salaryAmount = toEnglishDigits(it).filter { ch -> ch.isDigit() }
                                         salaryError = null
                                     }
                                 },
@@ -612,7 +612,7 @@ fun AddMemberDialog(
                         } else {
                             OutlinedTextField(
                                 value = monthlyChanda,
-                                onValueChange = { monthlyChanda = it.filter { ch -> ch.isDigit() } },
+                                onValueChange = { monthlyChanda = toEnglishDigits(it).filter { ch -> ch.isDigit() } },
                                 label = { Text("মাসিক চাঁদার পরিমাণ (৳) — ঐচ্ছিক") },
                                 placeholder = { Text("যেমন: ৫০০ (ফাঁকা রাখলে ০৳)") },
                                 leadingIcon = { Icon(Icons.Default.Payments, contentDescription = null, tint = MosqueEmeraldPrimary) },
@@ -1318,11 +1318,12 @@ fun AddTransactionDialog(
                         }
                     }
 
-                    // Amount Field
+                    // Amount Field — normalize Bengali digits to ASCII on input so
+                    // toDoubleOrNull() below never fails on "১২০"-style entries.
                     OutlinedTextField(
                         value = amountText,
                         onValueChange = {
-                            amountText = it.filter { ch -> ch.isDigit() }
+                            amountText = toEnglishDigits(it).filter { ch -> ch.isDigit() }
                             amountError = null
                         },
                         label = { Text("টাকার পরিমাণ (৳) *") },
@@ -2152,7 +2153,7 @@ fun ReceiveChandaDialog(
                         OutlinedTextField(
                             value = amountText,
                             onValueChange = {
-                                amountText = it.filter { ch -> ch.isDigit() }
+                                amountText = toEnglishDigits(it).filter { ch -> ch.isDigit() }
                                 manualAmountOverride = true
                                 amountError = null
                             },

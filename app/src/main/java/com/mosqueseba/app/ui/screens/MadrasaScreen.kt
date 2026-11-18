@@ -44,6 +44,7 @@ import com.mosqueseba.app.ui.components.MoreFormSection
 import com.mosqueseba.app.ui.components.MosqueSearchBar
 import com.mosqueseba.app.ui.components.StaggeredItemEntrance
 import com.mosqueseba.app.ui.components.toBengaliDigits
+import com.mosqueseba.app.ui.components.toEnglishDigits
 import com.mosqueseba.app.ui.theme.*
 import com.mosqueseba.app.ui.viewmodel.MosqueViewModel
 import java.text.SimpleDateFormat
@@ -1080,7 +1081,7 @@ fun MadrasaScreen(viewModel: MosqueViewModel, initialTab: Int = 0) {
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
                     value = fee,
-                    onValueChange = { fee = it.filter { ch -> ch.isDigit() }; feeError = null },
+                    onValueChange = { fee = toEnglishDigits(it).filter { ch -> ch.isDigit() }; feeError = null },
                     label = { Text("মাসিক বেতন/ফি (৳) *") },
                     isError = feeError != null,
                     supportingText = feeError?.let { err -> { Text(err, color = MosqueUrgentRed, fontSize = 11.sp) } },
@@ -1269,7 +1270,7 @@ fun MadrasaScreen(viewModel: MosqueViewModel, initialTab: Int = 0) {
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
                     value = fee,
-                    onValueChange = { fee = it.filter { ch -> ch.isDigit() }; feeError = null },
+                    onValueChange = { fee = toEnglishDigits(it).filter { ch -> ch.isDigit() }; feeError = null },
                     label = { Text("মাসিক বেতন/ফি (৳) *") },
                     isError = feeError != null,
                     supportingText = feeError?.let { err -> { Text(err, color = MosqueUrgentRed, fontSize = 11.sp) } },
@@ -1364,7 +1365,7 @@ fun MadrasaScreen(viewModel: MosqueViewModel, initialTab: Int = 0) {
             MoreFormSection(title = "সবক ও পাঠের মান", icon = Icons.Default.BookmarkAdded) {
                 OutlinedTextField(
                     value = paraNumber,
-                    onValueChange = { paraNumber = it.filter { ch -> ch.isDigit() }; paraError = null },
+                    onValueChange = { paraNumber = toEnglishDigits(it).filter { ch -> ch.isDigit() }; paraError = null },
                     label = { Text("পারা নম্বর (১–৩০) *") },
                     isError = paraError != null,
                     supportingText = paraError?.let { err -> { Text(err, color = MosqueUrgentRed, fontSize = 11.sp) } },
@@ -1407,7 +1408,7 @@ fun MadrasaScreen(viewModel: MosqueViewModel, initialTab: Int = 0) {
                 }
                 OutlinedTextField(
                     value = mistakeCount,
-                    onValueChange = { mistakeCount = it.filter { ch -> ch.isDigit() } },
+                    onValueChange = { mistakeCount = toEnglishDigits(it).filter { ch -> ch.isDigit() } },
                     label = { Text("ভুলের সংখ্যা") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     shape = RoundedCornerShape(12.dp),
@@ -1516,7 +1517,7 @@ fun MadrasaScreen(viewModel: MosqueViewModel, initialTab: Int = 0) {
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
                     value = amount,
-                    onValueChange = { amount = it.filter { ch -> ch.isDigit() }; amountError = null },
+                    onValueChange = { amount = toEnglishDigits(it).filter { ch -> ch.isDigit() }; amountError = null },
                     label = { Text("পরিশোধিত টাকার পরিমাণ (৳) *") },
                     isError = amountError != null,
                     supportingText = amountError?.let { err -> { Text(err, color = MosqueUrgentRed, fontSize = 11.sp) } },

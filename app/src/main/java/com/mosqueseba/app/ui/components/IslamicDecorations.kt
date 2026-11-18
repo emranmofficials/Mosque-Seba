@@ -42,6 +42,21 @@ fun toBengaliDigits(input: String): String {
     return sb.toString()
 }
 
+/** Convert Bengali (or Arabic-Indic) digits to ASCII so toDoubleOrNull() works. */
+fun toEnglishDigits(input: String): String {
+    val sb = StringBuilder(input.length)
+    for (ch in input) {
+        val digit = ch.digitToIntOrNull()
+        if (digit != null && digit in 0..9) {
+            sb.append(('0'.code + digit).toChar())
+        } else when (ch) {
+            '৳', ' ', ',', '-' -> {} // ignore currency/separators
+            else -> sb.append(ch)
+        }
+    }
+    return sb.toString()
+}
+
 fun formatCurrentHijriDateBn(): String {
     val hijrah = HijrahDate.now()
     val day = hijrah.get(ChronoField.DAY_OF_MONTH)
