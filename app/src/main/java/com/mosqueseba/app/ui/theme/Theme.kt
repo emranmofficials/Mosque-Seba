@@ -34,11 +34,11 @@ private val MosqueLightColorScheme = lightColorScheme(
 
 private val MosqueDarkColorScheme = darkColorScheme(
     primary = MosqueGreenAccent,
-    onPrimary = MosqueEmeraldDark,
-    primaryContainer = MosqueEmeraldPrimary,
+    onPrimary = MosqueNightOnPrimary,
+    primaryContainer = MosqueNightPrimaryContainer,
     onPrimaryContainer = MosqueNightTextPrimary,
     secondary = MosqueGold,
-    onSecondary = MosqueEmeraldDark,
+    onSecondary = MosqueNightOnPrimary,
     secondaryContainer = MosqueNightSecondaryContainer,
     onSecondaryContainer = MosqueGoldLight,
     tertiary = MosqueGreenAccent,

@@ -32,14 +32,16 @@ val MosqueGoldSubtle = Color(0xFFFCE7F3)
 val MosqueTextPrimary = Color(0xFF273339)
 val MosqueTextDark = Color(0xFF202020)
 val MosqueTextSecondary = Color(0xFF505050)
-val MosqueTextMuted = Color(0xFF9A9A9A)
+val MosqueTextMuted = Color(0xFF8A8A8A) // WCAG 3.45:1 on white (placeholder/secondary)
 
 // ডার্ক মোড — গাঢ় রোজ-ব্ল্যাক ক্যানভাস, গোলাপি অ্যাকসেন্ট
 val MosqueNightBg = Color(0xFF150912)
 val MosqueNightSurface = Color(0xFF24101C)
 val MosqueNightSurfaceVariant = Color(0xFF321728)
 val MosqueNightBorder = Color(0xFF5A2440)
-val MosqueNightInputBorder = Color(0xFF9D3469) // ইনপুট বক্সের জন্য উজ্জ্বল বর্ডার
+val MosqueNightInputBorder = Color(0xFFC4578F) // ইনপুট বক্সের বর্ডার — 4.38:1 on dark surface
+val MosqueNightOnPrimary = Color(0xFF2A0A1A)   // ডার্ক থিমে pink বাটনের উপর টেক্সট — 6.85:1
+val MosqueNightPrimaryContainer = Color(0xFFD01060) // primaryContainer — 4.88:1 with #FFF1F6
 val MosqueNightTextPrimary = Color(0xFFFFF1F6)
 val MosqueNightTextSecondary = Color(0xFFFBCFE8)
 val MosqueNightTextMuted = Color(0xFFC99BB3)
