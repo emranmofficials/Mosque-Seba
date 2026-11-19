@@ -901,6 +901,7 @@ private fun ChandaMemberCard(
     val isActive = member.status == "active"
 
     val isDark = LocalIsDarkTheme.current
+    val context = LocalContext.current
     val softBadgeBg = if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft
     val goldBadgeBg = if (isDark) MosqueNightSurfaceVariant else MosqueGoldSoft
     val primaryColor = MaterialTheme.colorScheme.primary
@@ -1026,12 +1027,42 @@ private fun ChandaMemberCard(
                         }
                     }
 
-                    Icon(
-                        imageVector = Icons.Default.ChevronRight,
-                        contentDescription = "বিস্তারিত প্রোফাইল",
-                        tint = MosqueGoldDeep,
-                        modifier = Modifier.size(20.dp)
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        if (member.mobile.isNotBlank()) {
+                            Surface(
+                                onClick = {
+                                    val dialDigits = member.mobile.filter { it.isDigit() || it == '+' }
+                                    if (dialDigits.isNotEmpty()) {
+                                        val intent = android.content.Intent(android.content.Intent.ACTION_DIAL).apply {
+                                            data = android.net.Uri.parse("tel:$dialDigits")
+                                        }
+                                        context.startActivity(intent)
+                                    }
+                                },
+                                shape = CircleShape,
+                                color = softBadgeBg,
+                                modifier = Modifier.size(34.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                                    Icon(
+                                        imageVector = Icons.Default.Phone,
+                                        contentDescription = "সরাসরি কল করুন",
+                                        tint = primaryColor,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            }
+                        }
+                        Icon(
+                            imageVector = Icons.Default.ChevronRight,
+                            contentDescription = "বিস্তারিত প্রোফাইল",
+                            tint = MosqueGoldDeep,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(10.dp))
@@ -1171,6 +1202,7 @@ private fun SalariedMemberCard(
     val photoBitmap = remember(item.photoUrl) { loadLocalThumbnail(item.photoUrl, 160) }
 
     val isDark = LocalIsDarkTheme.current
+    val context = LocalContext.current
     val softBadgeBg = if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft
     val goldBadgeBg = if (isDark) MosqueNightSurfaceVariant else MosqueGoldSoft
     val primaryColor = MaterialTheme.colorScheme.primary
@@ -1239,12 +1271,42 @@ private fun SalariedMemberCard(
                         )
                     }
 
-                    Icon(
-                        imageVector = Icons.Default.ChevronRight,
-                        contentDescription = "বিস্তারিত প্রোফাইল",
-                        tint = MosqueGoldDeep,
-                        modifier = Modifier.size(20.dp)
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        if (item.mobile.isNotBlank()) {
+                            Surface(
+                                onClick = {
+                                    val dialDigits = item.mobile.filter { it.isDigit() || it == '+' }
+                                    if (dialDigits.isNotEmpty()) {
+                                        val intent = android.content.Intent(android.content.Intent.ACTION_DIAL).apply {
+                                            data = android.net.Uri.parse("tel:$dialDigits")
+                                        }
+                                        context.startActivity(intent)
+                                    }
+                                },
+                                shape = CircleShape,
+                                color = softBadgeBg,
+                                modifier = Modifier.size(34.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                                    Icon(
+                                        imageVector = Icons.Default.Phone,
+                                        contentDescription = "সরাসরি কল করুন",
+                                        tint = primaryColor,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            }
+                        }
+                        Icon(
+                            imageVector = Icons.Default.ChevronRight,
+                            contentDescription = "বিস্তারিত প্রোফাইল",
+                            tint = MosqueGoldDeep,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(10.dp))

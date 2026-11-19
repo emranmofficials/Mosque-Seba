@@ -1,35 +1,990 @@
-<!doctype html><html lang="bn"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Mosque Seba — bKash-style Islamic Fintech Home</title>
-<style>
-*{box-sizing:border-box}body{margin:0;background:#EBF2ED;font-family:Arial,"Noto Sans Bengali",sans-serif;color:#0F172A;display:flex;justify-content:center;padding:24px}
-.phone{width:390px;max-width:100%;background:#F8FAF8;border-radius:32px;box-shadow:0 18px 50px rgba(6,78,59,.22);overflow:hidden;border:8px solid #fff}
-.header{background:linear-gradient(135deg,#022C22,#064E3B,#047857);color:#fff;padding:20px 18px 26px;border-radius:0 0 20px 20px;border-bottom:2px solid #D97706}
-.hrow{display:flex;align-items:center;gap:10px}.logo{width:42px;height:42px;border-radius:10px;background:rgba(255,255,255,.15);object-fit:contain;border:1px solid rgba(245,158,11,.7)}
-.hello{font-size:15px;font-weight:700}.sub{font-size:11px;opacity:.95;color:#FEF3C7}
-.balance{margin:-14px 14px 14px;background:linear-gradient(135deg,#064E3B,#047857);color:#fff;border-radius:18px;padding:16px;box-shadow:0 6px 18px rgba(6,78,59,.35);border:1px solid rgba(245,158,11,.4)}
-.balance .lbl{font-size:12px;opacity:.95;color:#FEF3C7}.amt{font-size:30px;font-weight:800;margin:4px 0 12px;color:#fff}
-.chips{display:flex;gap:8px}.chip{flex:1;background:rgba(255,255,255,.15);border-radius:10px;padding:8px;font-size:10px}.chip b{display:block;font-size:12px;color:#FEF3C7}
-.sec{margin:0 14px 12px;background:#fff;border-radius:16px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,.04);border:1px solid #E2E8F0}
-.sec h3{margin:0 0 12px;font-size:13px;color:#064E3B;display:flex;align-items:center;gap:6px}
-.cards{display:flex;gap:10px;margin:0 14px 12px}.mini{flex:1;background:#fff;border-radius:14px;padding:12px;display:flex;align-items:center;gap:8px;box-shadow:0 2px 8px rgba(0,0,0,.04);border:1px solid #E2E8F0}
-.ic{width:34px;height:34px;border-radius:50%;background:#E6F4EA;color:#064E3B;display:flex;align-items:center;justify-content:center;font-weight:800}
-.mini b{display:block;font-size:12px;color:#0F172A}.mini span{font-size:10px;color:#64748B}
-.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.act{text-align:center;font-size:10px;color:#0F172A;font-weight:600}.circle{width:46px;height:46px;margin:0 auto 6px;border-radius:50%;background:#E6F4EA;color:#064E3B;display:flex;align-items:center;justify-content:center;font-size:18px;border:1px solid #C7E8D2}
-.txn{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #F1F5F9}.txn:last-child{border:0}.txn .ic{background:#E6F4EA;color:#064E3B}.txn .g{flex:1}.txn b{font-size:12px;color:#0F172A}.txn small{display:block;color:#64748B;font-size:10px}.cr{color:#047857;font-weight:700;font-size:12px}.db{color:#DC2626;font-weight:700;font-size:12px}
-.nav{display:flex;background:#fff;border-top:2px solid #064E3B;padding:8px 0 12px}.nav div{flex:1;text-align:center;font-size:10px;color:#64748B}.nav div.on{color:#064E3B;font-weight:800}.nav .ni{font-size:18px;display:block}
-.nav .center-qr{margin-top:-14px}.nav .qr-btn{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#D97706,#F59E0B);color:#fff;display:flex;align-items:center;justify-content:center;margin:0 auto;box-shadow:0 4px 12px rgba(217,119,6,.4);font-size:20px;border:2px solid #fff}
-</style></head><body><div class="phone">
-<div class="header"><div class="hrow"><img class="logo" src="data:image/png;base64,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"><div><div class="hello">আসসালামু আলাইকুম, সভাপতি</div><div class="sub">মসজিদ সেবা • বায়তুল মাল তহবিল</div></div></div></div>
-<div class="balance"><div class="lbl">বায়তুল মাল নিট স্থিতি</div><div class="amt">৳ ১,২৪,৫৬০</div><div class="chips"><div class="chip">মোট আয়<b>৳ ২,১০,০০০</b></div><div class="chip">মোট ব্যয়<b>৳ ৮৫,৪৪০</b></div><div class="chip">সদস্য<b>৪৮৬</b></div></div></div>
-<div class="cards"><div class="mini"><div class="ic">▦</div><div><b>চাঁদা QR</b><span>ডিজিটাল রসিদ</span></div></div><div class="mini"><div class="ic">◫</div><div><b>স্বচ্ছ হিসাব</b><span>আয়-ব্যয় অডিট</span></div></div></div>
-<div class="sec"><h3><span>❖</span> দ্রুত কাজ (কোর সার্ভিস)</h3><div class="grid">
-<div class="act"><div class="circle">৳</div>চাঁদা সংগ্রহ</div><div class="act"><div class="circle">↘</div>সাধারণ আয়</div><div class="act"><div class="circle">↗</div>ব্যয় ভাউচার</div><div class="act"><div class="circle">☺</div>নতুন সদস্য</div>
-<div class="act"><div class="circle">▣</div>ক্যাশবক্স</div><div class="act"><div class="circle">◈</div>মাদরাসা ফি</div><div class="act"><div class="circle">▤</div>কমিটি সভা</div><div class="act"><div class="circle">✦</div>ইভেন্ট</div>
-</div></div>
-<div class="sec"><h3><span>❖</span> সাম্প্রতিক লেনদেন</h3>
-<div class="txn"><div class="ic">↓</div><div class="g"><b>মাসিক চাঁদা</b><small>সেপ্টেম্বর • সদস্য রসিদ</small></div><div class="cr">+৳ ৫,০০০</div></div>
-<div class="txn"><div class="ic">↑</div><div class="g"><b>বিদ্যুৎ বিল</b><small>ব্যয় ভাউচার #৮২</small></div><div class="db">-৳ ১,২০০</div></div>
-<div class="txn"><div class="ic">↓</div><div class="g"><b>জুমা দান বক্স</b><small>ক্যাশবক্স গণনা জমা</small></div><div class="cr">+৳ ৩,৮০০</div></div>
-</div>
-<div class="nav"><div class="on"><span class="ni">⌂</span>হোম</div><div><span class="ni">◉</span>চাঁদা</div><div class="center-qr"><div class="qr-btn">▦</div></div><div><span class="ni">✉</span>নোটিশ</div><div><span class="ni">☺</span>হিসাব</div></div>
-</div></body></html>
+<!doctype html>
+<html lang="bn">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>মসজিদ সেবা — bKash-Inspired Islamic Fintech Suite</title>
+  <style>
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body {
+      margin: 0;
+      background: #E6ECE8;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans Bengali", sans-serif;
+      color: #0F172A;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px 8px 32px;
+      min-height: 100vh;
+    }
+    .top-controls {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+      background: #fff;
+      padding: 6px 10px;
+      border-radius: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .top-btn {
+      border: none;
+      background: #E6F4EA;
+      color: #064E3B;
+      padding: 6px 14px;
+      border-radius: 14px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .top-btn.active {
+      background: #064E3B;
+      color: #fff;
+    }
+    .phone {
+      width: 400px;
+      max-width: 100%;
+      height: 820px;
+      background: #F8FAF8;
+      border-radius: 36px;
+      box-shadow: 0 20px 60px rgba(6, 78, 59, 0.28);
+      overflow: hidden;
+      border: 8px solid #FFFFFF;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+    .header {
+      background: linear-gradient(135deg, #022C22 0%, #064E3B 60%, #047857 100%);
+      color: #fff;
+      padding: 18px 16px 20px;
+      border-radius: 0 0 24px 24px;
+      border-bottom: 2px solid #F59E0B;
+      flex-shrink: 0;
+    }
+    .hrow {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .logo {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.16);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      border: 1.5px solid #F59E0B;
+      color: #FEF3C7;
+    }
+    .hello { font-size: 15px; font-weight: 800; color: #fff; }
+    .sub { font-size: 11px; color: #FEF3C7; opacity: 0.95; }
+    .header-badge {
+      margin-left: auto;
+      background: rgba(245, 158, 11, 0.2);
+      border: 1px solid #F59E0B;
+      color: #FEF3C7;
+      padding: 3px 8px;
+      border-radius: 8px;
+      font-size: 10px;
+      font-weight: 700;
+    }
+    .scroll-content {
+      flex: 1;
+      overflow-y: auto;
+      padding-bottom: 24px;
+    }
+    .screen { display: none; }
+    .screen.active-screen { display: block; animation: fadeIn 0.25s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Interactive Balance Card */
+    .balance-card {
+      margin: -12px 14px 14px;
+      background: linear-gradient(135deg, #064E3B 0%, #047857 100%);
+      color: #fff;
+      border-radius: 20px;
+      padding: 16px;
+      box-shadow: 0 8px 24px rgba(6, 78, 59, 0.35);
+      border: 1px solid rgba(245, 158, 11, 0.5);
+    }
+    .bal-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .bal-lbl { font-size: 11px; color: #FEF3C7; }
+    .reveal-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.14);
+      border: 1px solid rgba(245, 158, 11, 0.6);
+      padding: 6px 14px;
+      border-radius: 18px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 800;
+      color: #fff;
+      user-select: none;
+      transition: all 0.2s ease;
+    }
+    .reveal-pill:hover { background: rgba(255, 255, 255, 0.22); }
+    .channel-row {
+      display: flex;
+      gap: 6px;
+      margin-top: 12px;
+    }
+    .channel-pill {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 6px 8px;
+      text-align: center;
+      border: 0.8px solid rgba(245, 158, 11, 0.3);
+    }
+    .channel-pill span { display: block; font-size: 9px; color: #E6F4EA; }
+    .channel-pill b { display: block; font-size: 11px; color: #FEF3C7; margin-top: 1px; }
+
+    /* Inflow Outflow bar */
+    .flow-strip {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      margin-top: 10px;
+      color: #E6F4EA;
+    }
+    .flow-bar {
+      height: 6px;
+      background: #DC2626;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+    .flow-in {
+      height: 100%;
+      width: 72%;
+      background: #10B981;
+    }
+
+    /* Section Cards */
+    .sec {
+      margin: 0 14px 14px;
+      background: #fff;
+      border-radius: 18px;
+      padding: 14px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+      border: 1px solid #E2E8F0;
+    }
+    .sec h3 {
+      margin: 0 0 12px;
+      font-size: 13px;
+      color: #064E3B;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 800;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+    .act {
+      text-align: center;
+      font-size: 10.5px;
+      color: #0F172A;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .circle {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 6px;
+      border-radius: 50%;
+      background: #E6F4EA;
+      color: #064E3B;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 19px;
+      border: 1px solid #C7E8D2;
+      transition: transform 0.15s ease;
+    }
+    .circle:hover { transform: scale(1.06); }
+    .circle.gold { background: #FEF3C7; color: #D97706; border-color: #FDE68A; }
+
+    /* Search & Filter Strip */
+    .search-box {
+      margin: 12px 14px 10px;
+      background: #fff;
+      border-radius: 14px;
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid #CBD5E1;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+    }
+    .search-box input {
+      border: none;
+      outline: none;
+      flex: 1;
+      font-size: 12px;
+      background: transparent;
+      color: #0F172A;
+    }
+    .chips-row {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding: 0 14px 10px;
+      scrollbar-width: none;
+    }
+    .chip-btn {
+      border: 1px solid #CBD5E1;
+      background: #fff;
+      color: #475569;
+      padding: 5px 11px;
+      border-radius: 16px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+    }
+    .chip-btn.active {
+      background: #064E3B;
+      color: #fff;
+      border-color: #064E3B;
+    }
+    .chip-btn.amber {
+      border-color: #F59E0B;
+      color: #B45309;
+      background: #FEF3C7;
+    }
+
+    /* Statement Item Card */
+    .statement-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 12px 14px;
+      margin: 0 14px 10px;
+      border: 1px solid #E2E8F0;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      transition: transform 0.15s ease;
+    }
+    .statement-card:hover { transform: translateY(-1px); }
+    .icon-44 {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .icon-in { background: #E6F4EA; color: #047857; border: 1px solid #A7F3D0; }
+    .icon-out { background: #FEE2E2; color: #DC2626; border: 1px solid #FECACA; }
+    .icon-pending { background: #FEF3C7; color: #D97706; border: 1px solid #FDE68A; }
+    .st-meta { flex: 1; min-width: 0; }
+    .st-title { font-size: 13px; font-weight: 700; color: #0F172A; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .st-sub { font-size: 10px; color: #64748B; margin-top: 2px; }
+    .st-badges { display: flex; gap: 4px; margin-top: 4px; }
+    .mini-pill {
+      font-size: 9px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+    .mini-pill.channel { background: #E6F4EA; color: #064E3B; }
+    .mini-pill.ok { background: #DCFCE7; color: #15803D; }
+    .mini-pill.pending { background: #FEF3C7; color: #B45309; }
+    .st-amt { text-align: right; }
+    .amt-in { color: #047857; font-size: 14px; font-weight: 800; }
+    .amt-out { color: #DC2626; font-size: 14px; font-weight: 800; }
+
+    /* Member Directory Card */
+    .member-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 12px 14px;
+      margin: 0 14px 10px;
+      border: 1px solid #E2E8F0;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    }
+    .mem-top {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .mem-avatar {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      background: #064E3B;
+      color: #FEF3C7;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 16px;
+      border: 2px solid #F59E0B;
+      flex-shrink: 0;
+    }
+    .mem-info { flex: 1; }
+    .mem-name { font-size: 13px; font-weight: 800; color: #0F172A; }
+    .mem-sub { font-size: 10.5px; color: #64748B; margin-top: 2px; }
+    .mem-role {
+      display: inline-block;
+      background: #FEF3C7;
+      color: #92400E;
+      font-size: 9.5px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 6px;
+      margin-left: 4px;
+    }
+    .call-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #E6F4EA;
+      color: #064E3B;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+    .mem-actions {
+      display: flex;
+      gap: 6px;
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px solid #F1F5F9;
+    }
+    .due-pill {
+      flex: 1;
+      background: #FEF2F2;
+      border: 1px solid #FECACA;
+      border-radius: 8px;
+      padding: 4px;
+      text-align: center;
+      font-size: 9px;
+      color: #991B1B;
+    }
+    .due-pill b { display: block; font-size: 11px; }
+    .paid-pill {
+      flex: 1;
+      background: #F0FDF4;
+      border: 1px solid #BBF7D0;
+      border-radius: 8px;
+      padding: 4px;
+      text-align: center;
+      font-size: 9px;
+      color: #166534;
+    }
+    .paid-pill b { display: block; font-size: 11px; }
+    .collect-btn {
+      flex: 1.2;
+      background: #064E3B;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    /* Bottom Navigation Bar */
+    .nav {
+      display: flex;
+      background: #fff;
+      border-top: 2px solid #064E3B;
+      padding: 6px 0 10px;
+      flex-shrink: 0;
+    }
+    .nav-item {
+      flex: 1;
+      text-align: center;
+      font-size: 10px;
+      color: #64748B;
+      cursor: pointer;
+      user-select: none;
+      transition: color 0.15s ease;
+    }
+    .nav-item.on {
+      color: #064E3B;
+      font-weight: 800;
+    }
+    .nav-item .ni {
+      font-size: 18px;
+      display: block;
+      margin-bottom: 2px;
+    }
+    .center-qr {
+      margin-top: -16px;
+    }
+    .qr-btn {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #D97706 0%, #F59E0B 100%);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto;
+      box-shadow: 0 4px 14px rgba(217, 119, 6, 0.45);
+      font-size: 22px;
+      border: 3px solid #fff;
+      cursor: pointer;
+      transition: transform 0.15s ease;
+    }
+    .qr-btn:hover { transform: scale(1.08); }
+
+    /* Modal Sheet */
+    .modal-overlay {
+      display: none;
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 100;
+      align-items: flex-end;
+    }
+    .modal-sheet {
+      width: 100%;
+      background: #fff;
+      border-radius: 24px 24px 0 0;
+      padding: 18px 18px 24px;
+      box-shadow: 0 -8px 24px rgba(0,0,0,0.15);
+      animation: slideUp 0.25s ease;
+    }
+    @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  </style>
+</head>
+<body>
+
+  <div class="top-controls">
+    <button class="top-btn active" onclick="switchTab(0)">হোম ড্যাশবোর্ড</button>
+    <button class="top-btn" onclick="switchTab(1)">আয়-ব্যয় বিবরণী</button>
+    <button class="top-btn" onclick="switchTab(3)">সদস্য পরিষদ</button>
+    <button class="top-btn" onclick="openQrModal()">QR কোড</button>
+  </div>
+
+  <div class="phone">
+
+    <!-- Islamic Header -->
+    <div class="header">
+      <div class="hrow">
+        <div class="logo">🕌</div>
+        <div>
+          <div class="hello">আসসালামু আলাইকুম, সভাপতি</div>
+          <div class="sub">মসজিদ সেবা • বায়তুলমাল হিসাব ব্যবস্থাপনা</div>
+        </div>
+        <div class="header-badge">ফিনটেক মোড</div>
+      </div>
+    </div>
+
+    <!-- Scrollable Screen Content -->
+    <div class="scroll-content">
+
+      <!-- SCREEN 0: HOME -->
+      <div id="screen-0" class="screen active-screen">
+        <!-- Interactive Balance Card -->
+        <div class="balance-card">
+          <div class="bal-top">
+            <span class="bal-lbl">মসজিদ কেন্দ্রীয় তহবিল স্থিতি</span>
+            <span style="font-size: 10px; color: #FEF3C7; font-weight: 700;">৳ লেনদেন: ৪৬২</span>
+          </div>
+          <div>
+            <div id="home-reveal" class="reveal-pill" onclick="toggleBalance()">
+              <span>👁</span>
+              <span id="bal-text">ব্যালেন্স দেখতে ট্যাপ করুন</span>
+            </div>
+          </div>
+          <div class="channel-row">
+            <div class="channel-pill">
+              <span>হাতে নগদ</span>
+              <b id="c-cash">৳ ••••</b>
+            </div>
+            <div class="channel-pill">
+              <span>বিকাশ/নগদ</span>
+              <b id="c-mfs">৳ ••••</b>
+            </div>
+            <div class="channel-pill">
+              <span>ব্যাংক তহবিল</span>
+              <b id="c-bank">৳ ••••</b>
+            </div>
+          </div>
+          <div class="flow-strip">
+            <span>মোট আয়: ৳ ২,১০,০০০</span>
+            <span>মোট ব্যয়: ৳ ৮৫,৪৪০</span>
+          </div>
+          <div class="flow-bar">
+            <div class="flow-in"></div>
+          </div>
+        </div>
+
+        <!-- Core Quick Services Grid -->
+        <div class="sec">
+          <h3><span>❖</span> দ্রুত কাজ (কোর সার্ভিস)</h3>
+          <div class="grid">
+            <div class="act" onclick="switchTab(3)"><div class="circle">৳</div>চাঁদা সংগ্রহ</div>
+            <div class="act" onclick="switchTab(1)"><div class="circle">↘</div>সাধারণ আয়</div>
+            <div class="act" onclick="switchTab(1)"><div class="circle">↗</div>ব্যয় ভাউচার</div>
+            <div class="act" onclick="switchTab(3)"><div class="circle">☺</div>নতুন সদস্য</div>
+            <div class="act" onclick="switchTab(1)"><div class="circle">▣</div>ক্যাশবক্স</div>
+            <div class="act" onclick="openQrModal()"><div class="circle gold">▦</div>চাঁদা QR</div>
+            <div class="act" onclick="switchTab(1)"><div class="circle">▤</div>অডিট রিপোর্ট</div>
+            <div class="act" onclick="switchTab(0)"><div class="circle">✦</div>জুমার দান</div>
+          </div>
+        </div>
+
+        <!-- Recent Statements -->
+        <div class="sec">
+          <h3><span>❖</span> সাম্প্রতিক লেনদেন বিবরণী</h3>
+          <div class="statement-card" onclick="switchTab(1)">
+            <div class="icon-44 icon-in">↓</div>
+            <div class="st-meta">
+              <div class="st-title">মাসিক সদস্য চাঁদা আদায়</div>
+              <div class="st-sub">ভাউচার: TR-1024 • ১৯ নভেম্বর ২০২৬</div>
+              <div class="st-badges">
+                <span class="mini-pill channel">বিকাশ/নগদ</span>
+                <span class="mini-pill ok">অনুমোদিত</span>
+              </div>
+            </div>
+            <div class="st-amt">
+              <div class="amt-in">+৳ ৫,০০০</div>
+            </div>
+          </div>
+          <div class="statement-card" onclick="switchTab(1)">
+            <div class="icon-44 icon-out">↑</div>
+            <div class="st-meta">
+              <div class="st-title">মসজিদ বিদ্যুৎ বিল পরিশোধ</div>
+              <div class="st-sub">ভাউচার: TR-1023 • ১৮ নভেম্বর ২০২৬</div>
+              <div class="st-badges">
+                <span class="mini-pill channel">ব্যাংক/অনলাইন</span>
+                <span class="mini-pill ok">অনুমোদিত</span>
+              </div>
+            </div>
+            <div class="st-amt">
+              <div class="amt-out">-৳ ৩,৪৫০</div>
+            </div>
+          </div>
+          <div class="statement-card" onclick="switchTab(1)">
+            <div class="icon-44 icon-pending">⏳</div>
+            <div class="st-meta">
+              <div class="st-title">মাইক মেরামত ও সাউন্ড সিস্টেম</div>
+              <div class="st-sub">ভাউচার: TR-1022 • ১৭ নভেম্বর ২০২৬</div>
+              <div class="st-badges">
+                <span class="mini-pill channel">নগদ</span>
+                <span class="mini-pill pending">অনুমোদন বাকি</span>
+              </div>
+            </div>
+            <div class="st-amt">
+              <div class="amt-out">-৳ ১,২০০</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCREEN 1: FINANCE / STATEMENT -->
+      <div id="screen-1" class="screen">
+        <div class="balance-card">
+          <div class="bal-top">
+            <span class="bal-lbl">বায়তুলমাল কেন্দ্রীয় তহবিল লেজার</span>
+            <span style="font-size: 10px; color: #FEF3C7; font-weight: 700;">নভেম্বর ২০২৬</span>
+          </div>
+          <div>
+            <div class="reveal-pill" onclick="toggleBalance()">
+              <span>👁</span>
+              <span id="bal-text-fin">ব্যালেন্স দেখতে ট্যাপ করুন</span>
+            </div>
+          </div>
+          <div class="channel-row">
+            <div class="channel-pill">
+              <span>নগদ ক্যাশ</span>
+              <b id="c-cash-2">৳ ••••</b>
+            </div>
+            <div class="channel-pill">
+              <span>বিকাশ/নগদ</span>
+              <b id="c-mfs-2">৳ ••••</b>
+            </div>
+            <div class="channel-pill">
+              <span>ব্যাংক ব্যালেন্স</span>
+              <b id="c-bank-2">৳ ••••</b>
+            </div>
+          </div>
+        </div>
+
+        <div class="search-box">
+          <span>🔍</span>
+          <input type="text" placeholder="ভাউচার নম্বর, খাত বা দাখিলকারী খুঁজুন...">
+        </div>
+
+        <div class="chips-row">
+          <button class="chip-btn active" onclick="filterTxn('all', this)">সমস্ত (৪৬২)</button>
+          <button class="chip-btn amber" onclick="filterTxn('pending', this)">অনুমোদন বাকি (৩)</button>
+          <button class="chip-btn" onclick="filterTxn('in', this)">আয়সমূহ (৩৪০)</button>
+          <button class="chip-btn" onclick="filterTxn('out', this)">ব্যয়সমূহ (১২২)</button>
+          <button class="chip-btn" onclick="filterTxn('jummah', this)">জুমার দান</button>
+        </div>
+
+        <div id="txn-list">
+          <div class="statement-card" data-type="in">
+            <div class="icon-44 icon-in">↓</div>
+            <div class="st-meta">
+              <div class="st-title">জুমার দান বাক্স কালেকশন</div>
+              <div class="st-sub">ভাউচার: TR-1025 • জুমার দিন • গণনা নং ০৮</div>
+              <div class="st-badges">
+                <span class="mini-pill channel">নগদ ক্যাশ</span>
+                <span class="mini-pill ok">যাচাইকৃত</span>
+              </div>
+            </div>
+            <div class="st-amt">
+              <div class="amt-in">+৳ ১২,৮০০</div>
+            </div>
+          </div>
+
+          <div class="statement-card" data-type="pending">
+            <div class="icon-44 icon-pending">⏳</div>
+            <div class="st-meta">
+              <div class="st-title">মিনার সংস্কার ও রঙ ক্রয়</div>
+              <div class="st-sub">ভাউচার: TR-1021 • দাখিলকারী: কোষাধ্যক্ষ</div>
+              <div class="st-badges">
+                <span class="mini-pill channel">নগদ</span>
+                <span class="mini-pill pending">অনুমোদন বাকি</span>
+              </div>
+            </div>
+            <div class="st-amt">
+              <div class="amt-out">-৳ ৪,৫০০</div>
+            </div>
+          </div>
+
+          <div class="statement-card" data-type="in">
+            <div class="icon-44 icon-in">↓</div>
+            <div class="st-meta">
+              <div class="st-title">আলহাজ্ব রফিকুল ইসলাম — বিশেষ অনুদান</div>
+              <div class="st-sub">ভাউচার: TR-1020 • এসি ফান্ড অনুদান</div>
+              <div class="st-badges">
+                <span class="mini-pill channel">বিকাশ/নগদ</span>
+                <span class="mini-pill ok">অনুমোদিত</span>
+              </div>
+            </div>
+            <div class="st-amt">
+              <div class="amt-in">+৳ ২০,০০০</div>
+            </div>
+          </div>
+
+          <div class="statement-card" data-type="out">
+            <div class="icon-44 icon-out">↑</div>
+            <div class="st-meta">
+              <div class="st-title">ইমাম সাহেবের মাসিক হাদিয়া ও বেতন</div>
+              <div class="st-sub">ভাউচার: TR-1019 • অক্টোবর ২০২৬</div>
+              <div class="st-badges">
+                <span class="mini-pill channel">ব্যাংক ট্রান্সফার</span>
+                <span class="mini-pill ok">অনুমোদিত</span>
+              </div>
+            </div>
+            <div class="st-amt">
+              <div class="amt-out">-৳ ১৮,০০০</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCREEN 3: MEMBERS DIRECTORY -->
+      <div id="screen-3" class="screen">
+        <div class="search-box">
+          <span>🔍</span>
+          <input type="text" id="member-search" oninput="searchMembers()" placeholder="সদস্য নাম, মোবাইল বা সদস্য আইডি...">
+        </div>
+
+        <div class="chips-row">
+          <button class="chip-btn active" onclick="filterMembers('all', this)">সকল সদস্য (৪৮৬)</button>
+          <button class="chip-btn amber" onclick="filterMembers('due', this)">বকেয়া সদস্য (২৮)</button>
+          <button class="chip-btn" onclick="filterMembers('comm', this)">কমিটি পরিষদ (২১)</button>
+          <button class="chip-btn" onclick="filterMembers('staff', this)">স্টাফ / খেদমত (৩)</button>
+        </div>
+
+        <div id="members-list">
+          <div class="member-card" data-role="comm" data-due="0">
+            <div class="mem-top">
+              <div class="mem-avatar">ম</div>
+              <div class="mem-info">
+                <div class="mem-name">মাওলানা আব্দুল্লাহ আল মামুন <span class="mem-role">ইমাম সাহেব</span></div>
+                <div class="mem-sub">আইডি: MS-001 • 01711-223344</div>
+              </div>
+              <button class="call-btn" onclick="alert('01711223344 নম্বরে ডায়াল হচ্ছে...')">📞</button>
+            </div>
+            <div class="mem-actions">
+              <div class="paid-pill">মাসিক বেতন<b>৳ ১৮,০০০</b></div>
+              <div class="paid-pill">অবস্থা<b>পরিশোধিত</b></div>
+              <button class="collect-btn" onclick="openChandaModal('মাওলানা আব্দুল্লাহ', 'MS-001')">বেতন বিবরণী</button>
+            </div>
+          </div>
+
+          <div class="member-card" data-role="comm" data-due="500">
+            <div class="mem-top">
+              <div class="mem-avatar">হ</div>
+              <div class="mem-info">
+                <div class="mem-name">হাজী নুরুল হক <span class="mem-role">সহ-সভাপতি</span></div>
+                <div class="mem-sub">আইডি: MS-104 • 01819-556677</div>
+              </div>
+              <button class="call-btn" onclick="alert('01819556677 নম্বরে ডায়াল হচ্ছে...')">📞</button>
+            </div>
+            <div class="mem-actions">
+              <div class="due-pill">বকেয়া চাঁদা<b>৳ ৫০০</b></div>
+              <div class="paid-pill">মোট জমা<b>৳ ৬,০০০</b></div>
+              <button class="collect-btn" onclick="openChandaModal('হাজী নুরুল হক', 'MS-104')">চাঁদা গ্রহণ</button>
+            </div>
+          </div>
+
+          <div class="member-card" data-role="general" data-due="0">
+            <div class="mem-top">
+              <div class="mem-avatar">ত</div>
+              <div class="mem-info">
+                <div class="mem-name">তারিকুল ইসলাম <span class="mem-role">স্থায়ী সদস্য</span></div>
+                <div class="mem-sub">আইডি: MS-218 • 01912-334455</div>
+              </div>
+              <button class="call-btn" onclick="alert('01912334455 নম্বরে ডায়াল হচ্ছে...')">📞</button>
+            </div>
+            <div class="mem-actions">
+              <div class="paid-pill">চলতি মাস<b>পরিশোধিত</b></div>
+              <div class="paid-pill">মোট জমা<b>৳ ৩,৫০০</b></div>
+              <button class="collect-btn" onclick="openChandaModal('তারিকুল ইসলাম', 'MS-218')">চাঁদা গ্রহণ</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCREEN 4: NOTICES -->
+      <div id="screen-4" class="screen">
+        <div class="sec">
+          <h3><span>📢</span> মসজিদ কেন্দ্রীয় নোটিশ বোর্ড</h3>
+          <div style="padding: 8px 0; border-bottom: 1px solid #E2E8F0;">
+            <b style="font-size: 13px; color: #064E3B;">আগামী শুক্রবার বিশেষ দোয়ার মজলিস</b>
+            <p style="font-size: 11px; color: #475569; margin: 4px 0;">বাদ জুমা বিশিষ্ট আলেমগণের উপস্থিতিতে বিশেষ দোয়া ও তাবাররুক বিতরণ করা হবে।</p>
+            <span style="font-size: 10px; color: #F59E0B; font-weight: 700;">১৯ নভেম্বর ২০২৬</span>
+          </div>
+          <div style="padding: 8px 0;">
+            <b style="font-size: 13px; color: #064E3B;">মাসিক কার্যনির্বাহী কমিটি সভা</b>
+            <p style="font-size: 11px; color: #475569; margin: 4px 0;">আগামী রবিবার বাদ মাগরিব মসজিদ কার্যালয়ে মাসিক অডিট পর্যালোচনা সভা অনুষ্ঠিত হবে।</p>
+            <span style="font-size: 10px; color: #F59E0B; font-weight: 700;">১৭ নভেম্বর ২০২৬</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Bottom Navigation Bar with Center Floating Gold QR -->
+    <div class="nav">
+      <div class="nav-item on" onclick="switchTab(0)">
+        <span class="ni">⌂</span>হোম
+      </div>
+      <div class="nav-item" onclick="switchTab(1)">
+        <span class="ni">◉</span>বিবরণী
+      </div>
+      <div class="nav-item center-qr" onclick="openQrModal()">
+        <div class="qr-btn">▦</div>
+      </div>
+      <div class="nav-item" onclick="switchTab(3)">
+        <span class="ni">☺</span>সদস্য
+      </div>
+      <div class="nav-item" onclick="switchTab(4)">
+        <span class="ni">✉</span>নোটিশ
+      </div>
+    </div>
+
+    <!-- Modal for Collect Chanda -->
+    <div id="chanda-modal" class="modal-overlay" onclick="closeModal(event, this)">
+      <div class="modal-sheet" onclick="event.stopPropagation()">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <b style="font-size:14px; color:#064E3B;">চাঁদা ও অনুদান গ্রহণ</b>
+          <button onclick="closeModalDirect('chanda-modal')" style="border:none; background:transparent; font-size:16px; cursor:pointer;">✕</button>
+        </div>
+        <div style="background:#E6F4EA; border-radius:12px; padding:10px; margin-bottom:12px;">
+          <div id="modal-member-name" style="font-size:13px; font-weight:800; color:#064E3B;">হাজী নুরুল হক</div>
+          <div id="modal-member-code" style="font-size:10px; color:#475569;">আইডি: MS-104</div>
+        </div>
+        <label style="font-size:11px; font-weight:700; color:#475569;">টাকার পরিমাণ (৳)</label>
+        <div style="display:flex; gap:8px; margin:6px 0 12px;">
+          <button class="top-btn" onclick="setAmt(200)">৳২০০</button>
+          <button class="top-btn active" onclick="setAmt(500)">৳৫০০</button>
+          <button class="top-btn" onclick="setAmt(1000)">৳১,০০০</button>
+          <button class="top-btn" onclick="setAmt(2000)">৳২,০০০</button>
+        </div>
+        <input type="number" id="amt-input" value="500" style="width:100%; padding:10px; border-radius:10px; border:1px solid #CBD5E1; font-size:14px; font-weight:700; margin-bottom:14px;">
+        <button style="width:100%; background:#064E3B; color:#fff; border:none; padding:12px; border-radius:12px; font-weight:800; font-size:13px; cursor:pointer;" onclick="submitPayment()">চাঁদা গ্রহণ ও রসিদ প্রস্তুত করুন</button>
+      </div>
+    </div>
+
+    <!-- Modal for Mosque QR Code -->
+    <div id="qr-modal" class="modal-overlay" onclick="closeModal(event, this)">
+      <div class="modal-sheet" style="text-align:center;" onclick="event.stopPropagation()">
+        <b style="font-size:14px; color:#064E3B;">মসজিদ সেবা — ডিজিটাল চাঁদা ও দান QR</b>
+        <p style="font-size:11px; color:#64748B; margin:4px 0 14px;">বিকাশ, নগদ বা যেকোনো ব্যাংক অ্যাপ দিয়ে স্ক্যান করে সরাসরি বায়তুলমালে দান জমা দিন।</p>
+        <div style="width:160px; height:160px; margin:0 auto 14px; background:#F8FAF8; border:2px dashed #064E3B; border-radius:16px; display:flex; align-items:center; justify-content:center; font-size:42px; color:#064E3B;">
+          ▦
+        </div>
+        <div style="font-size:12px; font-weight:800; color:#064E3B; margin-bottom:4px;">বায়তুল মোকাররম কেন্দ্রীয় জামে মসজিদ</div>
+        <div style="font-size:10px; color:#475569; margin-bottom:14px;">মার্চেন্ট আইডি: MS-DHAKA-01 • ১০০% নিরাপদ ও স্বচ্ছ</div>
+        <button onclick="closeModalDirect('qr-modal')" style="width:100%; background:#D97706; color:#fff; border:none; padding:10px; border-radius:10px; font-weight:700; font-size:12px; cursor:pointer;">বন্ধ করুন</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    let isRevealed = false;
+    let revealTimer = null;
+
+    function toggleBalance() {
+      isRevealed = !isRevealed;
+      const t1 = document.getElementById('bal-text');
+      const t2 = document.getElementById('bal-text-fin');
+      const cCash = document.getElementById('c-cash');
+      const cMfs = document.getElementById('c-mfs');
+      const cBank = document.getElementById('c-bank');
+      const cCash2 = document.getElementById('c-cash-2');
+      const cMfs2 = document.getElementById('c-mfs-2');
+      const cBank2 = document.getElementById('c-bank-2');
+
+      if (isRevealed) {
+        if (t1) t1.innerText = '৳ ১,২৪,৫৬০';
+        if (t2) t2.innerText = '৳ ১,২৪,৫৬০';
+        if (cCash) cCash.innerText = '৳ ৩৩,২০০';
+        if (cMfs) cMfs.innerText = '৳ ৪১,৩৪০';
+        if (cBank) cBank.innerText = '৳ ৫০,০২০';
+        if (cCash2) cCash2.innerText = '৳ ৩৩,২০০';
+        if (cMfs2) cMfs2.innerText = '৳ ৪১,৩৪০';
+        if (cBank2) cBank2.innerText = '৳ ৫০,০২০';
+
+        clearTimeout(revealTimer);
+        revealTimer = setTimeout(() => {
+          isRevealed = false;
+          resetBalanceUI();
+        }, 5000);
+      } else {
+        clearTimeout(revealTimer);
+        resetBalanceUI();
+      }
+    }
+
+    function resetBalanceUI() {
+      const t1 = document.getElementById('bal-text');
+      const t2 = document.getElementById('bal-text-fin');
+      if (t1) t1.innerText = 'ব্যালেন্স দেখতে ট্যাপ করুন';
+      if (t2) t2.innerText = 'ব্যালেন্স দেখতে ট্যাপ করুন';
+      const cCash = document.getElementById('c-cash');
+      const cMfs = document.getElementById('c-mfs');
+      const cBank = document.getElementById('c-bank');
+      const cCash2 = document.getElementById('c-cash-2');
+      const cMfs2 = document.getElementById('c-mfs-2');
+      const cBank2 = document.getElementById('c-bank-2');
+      if (cCash) cCash.innerText = '৳ ••••';
+      if (cMfs) cMfs.innerText = '৳ ••••';
+      if (cBank) cBank.innerText = '৳ ••••';
+      if (cCash2) cCash2.innerText = '৳ ••••';
+      if (cMfs2) cMfs2.innerText = '৳ ••••';
+      if (cBank2) cBank2.innerText = '৳ ••••';
+    }
+
+    function switchTab(index) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
+      const targetScreen = document.getElementById('screen-' + index);
+      if (targetScreen) targetScreen.classList.add('active-screen');
+
+      const navItems = document.querySelectorAll('.nav-item');
+      navItems.forEach((ni, i) => {
+        ni.classList.toggle('on', i === index);
+      });
+
+      const topBtns = document.querySelectorAll('.top-btn');
+      topBtns.forEach((tb, i) => {
+        tb.classList.toggle('active', i === (index === 3 ? 2 : index));
+      });
+    }
+
+    function openQrModal() {
+      document.getElementById('qr-modal').style.display = 'flex';
+    }
+
+    function openChandaModal(name, code) {
+      document.getElementById('modal-member-name').innerText = name;
+      document.getElementById('modal-member-code').innerText = 'আইডি: ' + code;
+      document.getElementById('chanda-modal').style.display = 'flex';
+    }
+
+    function closeModal(event, overlay) {
+      if (event.target === overlay) {
+        overlay.style.display = 'none';
+      }
+    }
+
+    function closeModalDirect(id) {
+      document.getElementById(id).style.display = 'none';
+    }
+
+    function setAmt(val) {
+      document.getElementById('amt-input').value = val;
+    }
+
+    function submitPayment() {
+      const amt = document.getElementById('amt-input').value;
+      const name = document.getElementById('modal-member-name').innerText;
+      alert(`সাফল্য! ${name}-এর নিকট হতে ৳${amt} চাঁদা সফলভাবে গৃহীত হয়েছে এবং কেন্দ্রীয় ফান্ডে যুক্ত হয়েছে।`);
+      closeModalDirect('chanda-modal');
+    }
+
+    function filterTxn(type, btn) {
+      btn.parentElement.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const cards = document.querySelectorAll('#txn-list .statement-card');
+      cards.forEach(c => {
+        if (type === 'all') {
+          c.style.display = 'flex';
+        } else {
+          c.style.display = c.dataset.type === type ? 'flex' : 'none';
+        }
+      });
+    }
+
+    function filterMembers(filter, btn) {
+      btn.parentElement.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const cards = document.querySelectorAll('#members-list .member-card');
+      cards.forEach(c => {
+        if (filter === 'all') c.style.display = 'block';
+        else if (filter === 'due') c.style.display = parseInt(c.dataset.due) > 0 ? 'block' : 'none';
+        else if (filter === 'comm') c.style.display = c.dataset.role === 'comm' ? 'block' : 'none';
+        else if (filter === 'staff') c.style.display = c.dataset.role === 'staff' ? 'block' : 'none';
+      });
+    }
+
+    function searchMembers() {
+      const q = document.getElementById('member-search').value.toLowerCase();
+      const cards = document.querySelectorAll('#members-list .member-card');
+      cards.forEach(c => {
+        const text = c.innerText.toLowerCase();
+        c.style.display = text.includes(q) ? 'block' : 'none';
+      });
+    }
+  </script>
+</body>
+</html>

@@ -199,6 +199,14 @@ fun FinanceScreen(
     var selectedMonthKey by rememberSaveable { mutableStateOf<String?>(null) }
     var selectedCategoryFilter by rememberSaveable { mutableStateOf<String?>(null) }
     var expandedJummahSchedule by rememberSaveable { mutableStateOf(false) }
+    var isBalanceRevealed by rememberSaveable { mutableStateOf(false) }
+
+    LaunchedEffect(isBalanceRevealed) {
+        if (isBalanceRevealed) {
+            kotlinx.coroutines.delay(5000L)
+            isBalanceRevealed = false
+        }
+    }
 
     var showCategoryBreakdown by rememberSaveable { mutableStateOf(true) }
     var breakdownType by rememberSaveable { mutableStateOf("INCOME") }
@@ -495,7 +503,7 @@ fun FinanceScreen(
                                 .padding(horizontal = 14.dp, vertical = 10.dp)
                         ) {
                             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                // Top Row: Net Balance + Transaction count
+                                // Top Row: Net Balance (Tap to Reveal) + Transaction count
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -503,17 +511,39 @@ fun FinanceScreen(
                                 ) {
                                     Column(modifier = Modifier.weight(1f)) {
                                         Text(
-                                            text = "মসজিদ ফান্ড নিট ব্যালেন্স",
+                                            text = "মসজিদ কেন্দ্রীয় ফান্ড ব্যালেন্স",
                                             style = MaterialTheme.typography.labelSmall,
                                             fontSize = 11.sp,
                                             color = Color.White.copy(alpha = 0.85f)
                                         )
-                                        Text(
-                                            text = formatCurrencyBn(netBalance),
-                                            style = MaterialTheme.typography.headlineMedium,
-                                            color = Color.White,
-                                            fontWeight = FontWeight.ExtraBold
-                                        )
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Surface(
+                                            onClick = { isBalanceRevealed = !isBalanceRevealed },
+                                            shape = RoundedCornerShape(14.dp),
+                                            color = Color.White.copy(alpha = 0.14f),
+                                            border = BorderStroke(1.dp, MosqueGold.copy(alpha = 0.5f))
+                                        ) {
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                modifier = Modifier
+                                                    .animateContentSize(spring(stiffness = Spring.StiffnessMediumLow))
+                                                    .padding(horizontal = 12.dp, vertical = 6.dp)
+                                            ) {
+                                                Icon(
+                                                    imageVector = if (isBalanceRevealed) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                                                    contentDescription = if (isBalanceRevealed) "ব্যালেন্স লুকান" else "ব্যালেন্স দেখুন",
+                                                    tint = MosqueGoldLight,
+                                                    modifier = Modifier.size(16.dp)
+                                                )
+                                                Spacer(modifier = Modifier.width(8.dp))
+                                                Text(
+                                                    text = if (isBalanceRevealed) formatCurrencyBn(netBalance) else "ব্যালেন্স দেখতে ট্যাপ করুন",
+                                                    style = if (isBalanceRevealed) MaterialTheme.typography.titleMedium else MaterialTheme.typography.labelMedium,
+                                                    color = Color.White,
+                                                    fontWeight = FontWeight.ExtraBold
+                                                )
+                                            }
+                                        }
                                     }
                                     Surface(
                                         shape = RoundedCornerShape(10.dp),
@@ -522,13 +552,13 @@ fun FinanceScreen(
                                     ) {
                                         Row(
                                             verticalAlignment = Alignment.CenterVertically,
-                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp)
                                         ) {
                                             Icon(
                                                 imageVector = Icons.Default.ReceiptLong,
                                                 contentDescription = null,
                                                 tint = MosqueGoldLight,
-                                                modifier = Modifier.size(12.dp)
+                                                modifier = Modifier.size(13.dp)
                                             )
                                             Spacer(modifier = Modifier.width(4.dp))
                                             Text(
@@ -537,6 +567,88 @@ fun FinanceScreen(
                                                 fontSize = 10.sp,
                                                 color = MosqueGoldLight,
                                                 fontWeight = FontWeight.Bold
+                                            )
+                                        }
+                                    }
+                                }
+
+                                // 3-Channel Approved Balances (Cash, Mobile Banking, Bank)
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    Surface(
+                                        shape = RoundedCornerShape(8.dp),
+                                        color = Color.White.copy(alpha = 0.09f),
+                                        border = BorderStroke(0.8.dp, MosqueGold.copy(alpha = 0.28f)),
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Column(
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp),
+                                            horizontalAlignment = Alignment.CenterHorizontally
+                                        ) {
+                                            Text(
+                                                text = "হাতে নগদ",
+                                                fontSize = 9.sp,
+                                                color = Color.White.copy(alpha = 0.8f),
+                                                maxLines = 1
+                                            )
+                                            Text(
+                                                text = if (isBalanceRevealed) formatCurrencyBn(channelBalances.first) else "৳ ••••",
+                                                fontSize = 10.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = MosqueGoldLight,
+                                                maxLines = 1
+                                            )
+                                        }
+                                    }
+                                    Surface(
+                                        shape = RoundedCornerShape(8.dp),
+                                        color = Color.White.copy(alpha = 0.09f),
+                                        border = BorderStroke(0.8.dp, MosqueGold.copy(alpha = 0.28f)),
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Column(
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp),
+                                            horizontalAlignment = Alignment.CenterHorizontally
+                                        ) {
+                                            Text(
+                                                text = "বিকাশ/নগদ",
+                                                fontSize = 9.sp,
+                                                color = Color.White.copy(alpha = 0.8f),
+                                                maxLines = 1
+                                            )
+                                            Text(
+                                                text = if (isBalanceRevealed) formatCurrencyBn(channelBalances.second) else "৳ ••••",
+                                                fontSize = 10.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = MosqueGoldLight,
+                                                maxLines = 1
+                                            )
+                                        }
+                                    }
+                                    Surface(
+                                        shape = RoundedCornerShape(8.dp),
+                                        color = Color.White.copy(alpha = 0.09f),
+                                        border = BorderStroke(0.8.dp, MosqueGold.copy(alpha = 0.28f)),
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Column(
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp),
+                                            horizontalAlignment = Alignment.CenterHorizontally
+                                        ) {
+                                            Text(
+                                                text = "ব্যাংক তহবিল",
+                                                fontSize = 9.sp,
+                                                color = Color.White.copy(alpha = 0.8f),
+                                                maxLines = 1
+                                            )
+                                            Text(
+                                                text = if (isBalanceRevealed) formatCurrencyBn(channelBalances.third) else "৳ ••••",
+                                                fontSize = 10.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = MosqueGoldLight,
+                                                maxLines = 1
                                             )
                                         }
                                     }
@@ -1734,20 +1846,46 @@ fun TransactionCardItem(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.weight(1f)
                 ) {
+                    val channelIcon = when (channelLabel) {
+                        "বিকাশ/নগদ" -> Icons.Default.PhoneAndroid
+                        "ব্যাংক/অনলাইন" -> Icons.Default.AccountBalance
+                        else -> Icons.Default.Payments
+                    }
+
                     Box(
                         modifier = Modifier
-                            .size(40.dp)
+                            .size(44.dp)
                             .clip(CircleShape)
                             .background(
-                                if (isIncome) MosqueSuccessGreen.copy(alpha = 0.14f)
-                                else MosqueUrgentRed.copy(alpha = 0.14f)
+                                when {
+                                    transaction.approvalStatus == "pending" -> MosqueGoldSoft
+                                    isIncome -> MosqueEmeraldSoft
+                                    else -> MosqueUrgentRed.copy(alpha = 0.12f)
+                                }
+                            )
+                            .border(
+                                width = 1.dp,
+                                color = when {
+                                    transaction.approvalStatus == "pending" -> MosqueGold.copy(alpha = 0.45f)
+                                    isIncome -> MosqueEmeraldPrimary.copy(alpha = 0.25f)
+                                    else -> MosqueUrgentRed.copy(alpha = 0.25f)
+                                },
+                                shape = CircleShape
                             ),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = if (isIncome) Icons.Default.ArrowDownward else Icons.Default.ArrowUpward,
+                            imageVector = when {
+                                transaction.approvalStatus == "pending" -> Icons.Default.HourglassTop
+                                isIncome -> Icons.Default.ArrowDownward
+                                else -> Icons.Default.ArrowUpward
+                            },
                             contentDescription = if (isIncome) "আয়" else "ব্যয়",
-                            tint = if (isIncome) MosqueSuccessGreen else MosqueUrgentRed,
+                            tint = when {
+                                transaction.approvalStatus == "pending" -> MosqueGoldDeep
+                                isIncome -> MosqueEmeraldPrimary
+                                else -> MosqueUrgentRed
+                            },
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -1757,19 +1895,29 @@ fun TransactionCardItem(
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = transaction.categoryNameBn,
-                            style = MaterialTheme.typography.titleSmall,
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
-                        Text(
-                            text = "ভাউচার: ${toBengaliDigits(transaction.transactionCode)} • ${toBengaliDigits(transaction.txnDate)}",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = secondaryTextColor,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Text(
+                                text = "ভাউচার: ${toBengaliDigits(transaction.transactionCode)}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = secondaryTextColor
+                            )
+                            Text("•", style = MaterialTheme.typography.labelSmall, color = secondaryTextColor)
+                            Text(
+                                text = toBengaliDigits(transaction.txnDate),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = secondaryTextColor
+                            )
+                        }
                     }
                 }
 
@@ -1790,18 +1938,34 @@ fun TransactionCardItem(
                     }
 
                     Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+                        val channelIcon = when (channelLabel) {
+                            "বিকাশ/নগদ" -> Icons.Default.PhoneAndroid
+                            "ব্যাংক/অনলাইন" -> Icons.Default.AccountBalance
+                            else -> Icons.Default.Payments
+                        }
                         Surface(
-                            shape = RoundedCornerShape(4.dp),
+                            shape = RoundedCornerShape(6.dp),
                             color = channelBadgeBg
                         ) {
-                            Text(
-                                text = channelLabel,
-                                style = MaterialTheme.typography.labelSmall,
-                                fontSize = 9.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = primaryColor,
-                                modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            ) {
+                                Icon(
+                                    imageVector = channelIcon,
+                                    contentDescription = null,
+                                    tint = primaryColor,
+                                    modifier = Modifier.size(10.dp)
+                                )
+                                Spacer(modifier = Modifier.width(3.dp))
+                                Text(
+                                    text = channelLabel,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontSize = 9.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = primaryColor
+                                )
+                            }
                         }
 
                         val badgeColor = when (transaction.approvalStatus) {
@@ -1815,19 +1979,33 @@ fun TransactionCardItem(
                             else -> "প্রত্যাখ্যাত"
                         }
 
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(4.dp))
-                                .background(badgeColor.copy(alpha = 0.14f))
-                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = badgeColor.copy(alpha = 0.12f)
                         ) {
-                            Text(
-                                text = badgeText,
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = badgeColor,
-                                fontSize = 9.sp
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            ) {
+                                Icon(
+                                    imageVector = when (transaction.approvalStatus) {
+                                        "approved" -> Icons.Default.CheckCircle
+                                        "pending" -> Icons.Default.Schedule
+                                        else -> Icons.Default.Cancel
+                                    },
+                                    contentDescription = null,
+                                    tint = badgeColor,
+                                    modifier = Modifier.size(10.dp)
+                                )
+                                Spacer(modifier = Modifier.width(3.dp))
+                                Text(
+                                    text = badgeText,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = badgeColor,
+                                    fontSize = 9.sp
+                                )
+                            }
                         }
                     }
                 }
