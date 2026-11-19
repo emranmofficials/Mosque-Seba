@@ -1,26 +1,28 @@
-# WCAG কনট্রাস্ট চেক — bKash-inspired theme
+# WCAG কনট্রাস্ট চেক — ইসলামিক ইমারল্ড / রয়্যাল গোল্ড থিম
 
 লাইট ও ডার্ক থিমের প্রধান foreground/background জোড়ার কনট্রাস্ট রেশিও (WCAG 2.1)।
+সব রেশিও বর্তমান `Color.kt` / `Theme.kt` টোকেন থেকে হিসাব করা (পুরনো pink-ভিত্তিক টেবিল বাতিল)।
 
 | জোড়া | রেশিও | ন্যূনতম | ফলাফল |
 |---|---:|---:|---|
-| সাদা টেক্সট / `#E2136E` বাটন | 4.61:1 | 4.5 | PASS |
-| `#273339` / `#F7F7F7` বডি | 12.11:1 | 4.5 | PASS |
-| `#505050` / `#FFFFFF` সেকেন্ডারি | 8.06:1 | 4.5 | PASS |
-| `#E2136E` / `#FDEFF4` আইকন | 4.14:1 | 3.0 | PASS |
-| `#8A8A8A` / `#FFFFFF` মিউটেড | 3.45:1 | 3.0 | PASS (পরিবর্তন: `#9A9A9A` → `#8A8A8A`) |
-| `#FFF1F6` / `#150912` ডার্ক বডি | 17.75:1 | 4.5 | PASS |
-| `#FBCFE8` / `#24101C` ডার্ক সেকেন্ডারি | 13.03:1 | 4.5 | PASS |
-| `#F472B6` / `#24101C` ডার্ক অ্যাকসেন্ট | 6.80:1 | 3.0 | PASS |
-| `#2A0A1A` / `#F472B6` ডার্ক বাটন টেক্সট | 6.85:1 | 4.5 | PASS (নতুন টোকেন `MosqueNightOnPrimary`) |
-| `#C4578F` / `#24101C` ডার্ক ইনপুট বর্ডার | 4.38:1 | 3.0 | PASS (পরিবর্তন: `#9D3469` → `#C4578F`) |
-| `#FFF1F6` / `#D01060` ডার্ক primaryContainer | 4.88:1 | 4.5 | PASS (নতুন টোকেন `MosqueNightPrimaryContainer`) |
-| `#FCE7F3` / `#4A1233` ডার্ক secondaryContainer | 12.53:1 | 4.5 | PASS |
+| সাদা টেক্সট / `#064E3B` প্রাইমারি বাটন | 9.72:1 | 4.5 | PASS |
+| `#0F172A` / `#F8FAF8` বডি | 17.02:1 | 4.5 | PASS |
+| `#475569` / `#FFFFFF` সেকেন্ডারি | 7.58:1 | 4.5 | PASS |
+| `#064E3B` / `#E6F4EA` আইকন | 8.56:1 | 3.0 | PASS |
+| `#64748B` / `#FFFFFF` মিউটেড | 4.76:1 | 4.5 | PASS |
+| `#ECFDF5` / `#071511` ডার্ক বডি | 17.73:1 | 4.5 | PASS |
+| `#CBD5E1` / `#0E231D` ডার্ক সেকেন্ডারি | 11.08:1 | 4.5 | PASS |
+| `#10B981` / `#0E231D` ডার্ক অ্যাকসেন্ট | 6.48:1 | 3.0 | PASS |
+| `#071511` / `#10B981` ডার্ক বাটন টেক্সট | 7.36:1 | 4.5 | PASS |
+| `#4A8F7B` / `#0E231D` ডার্ক ইনপুট বর্ডার | 4.31:1 | 3.0 | PASS |
+| `#ECFDF5` / `#047857` ডার্ক primaryContainer | 5.21:1 | 4.5 | PASS |
+| `#FEF3C7` / `#3A2D0B` ডার্ক secondaryContainer | 12.09:1 | 4.5 | PASS |
 
-## পরিবর্তিত টোকেন
-- `MosqueTextMuted`: `#9A9A9A` → `#8A8A8A`
-- `MosqueNightInputBorder`: `#9D3469` → `#C4578F`
-- নতুন: `MosqueNightOnPrimary = #2A0A1A`
-- নতুন: `MosqueNightPrimaryContainer = #D01060`
+## ডিজাইন-ইউনিফর্মিটি পাসে পরিবর্তিত টোকেন
+- `MosqueNightInputBorder`: `#387162` → `#4A8F7B` (Non-text contrast 3:1 পূরণ)
+- নতুন: `MosqueIncomeLight = #A7F3D0`, `MosqueExpenseLight = #FECACA` (গাঢ় হিরো কার্ডে আয়/ব্যয় লেবেল)
+- গ্লোবাল `Shapes` স্কেল: `MosqueRadius.Sm/Md/Lg/Xl` → সব Material3 কম্পোনেন্টে প্রয়োগ
 
-`Theme.kt`-র ডার্ক `colorScheme`-এ `onPrimary`, `onSecondary` এবং `primaryContainer` এই নতুন টোকেনগুলো ব্যবহার করে।
+## বাস্তবায়ন
+`Theme.kt`-র ডার্ক `colorScheme`-এ `onPrimary`, `onSecondary`, `primaryContainer` টোকেনগুলো ব্যবহার করে,
+এবং `MosqueCommitteeTheme` এখন `shapes = MosqueShapes` প্রদান করে — ফলে সব স্ক্রিনে একই রাউন্ডেড লুক বজায় থাকে।

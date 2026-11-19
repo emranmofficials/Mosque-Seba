@@ -39,7 +39,7 @@ val MosqueNightBg = Color(0xFF071511)
 val MosqueNightSurface = Color(0xFF0E231D)
 val MosqueNightSurfaceVariant = Color(0xFF143129)
 val MosqueNightBorder = Color(0xFF234E41)
-val MosqueNightInputBorder = Color(0xFF387162) // ইনপুট বক্সের বর্ডার — 4.38:1 on dark surface
+val MosqueNightInputBorder = Color(0xFF4A8F7B) // ইনপুট বক্সের বর্ডার — 4.31:1 on dark surface (WCAG 1.4.11)
 val MosqueNightOnPrimary = Color(0xFF071511)   // ডার্ক থিমে emerald বাটনের উপর টেক্সট
 val MosqueNightPrimaryContainer = Color(0xFF047857) // primaryContainer
 val MosqueNightTextPrimary = Color(0xFFECFDF5)
@@ -52,6 +52,10 @@ val MosqueUrgentRed = Color(0xFFDC2626)
 val MosqueWarningAmber = Color(0xFFF59E0B)
 val MosqueSuccessGreen = Color(0xFF047857)
 val MosqueInfoBlue = Color(0xFF0284C7)
+
+// গাঢ় ইমারল্ড হিরো কার্ডের উপর স্ট্যাটাস লেবেলের জন্য হালকা টোকেন
+val MosqueIncomeLight = Color(0xFFA7F3D0)
+val MosqueExpenseLight = Color(0xFFFECACA)
 
 // রোল-নির্দিষ্ট অ্যাকসেন্ট
 val RolePresidentAccent = Color(0xFF064E3B)

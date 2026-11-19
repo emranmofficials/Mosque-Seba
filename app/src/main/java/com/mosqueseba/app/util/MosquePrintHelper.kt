@@ -252,7 +252,7 @@ object MosquePrintHelper {
                     background: #fff;
                 }
                 .receipt-container {
-                    border: 3px double #0D5C3A;
+                    border: 3px double #064E3B;
                     border-radius: 12px;
                     padding: 24px 30px;
                     max-width: 650px;
@@ -262,7 +262,7 @@ object MosquePrintHelper {
                 .bismillah {
                     text-align: center;
                     font-size: 18px;
-                    color: #0D5C3A;
+                    color: #064E3B;
                     margin-bottom: 6px;
                 }
                 .header {
@@ -284,7 +284,7 @@ object MosquePrintHelper {
                 .mosque-title {
                     font-size: 22px;
                     font-weight: bold;
-                    color: #0D5C3A;
+                    color: #064E3B;
                     margin: 0;
                 }
                 .sub-title {
@@ -294,7 +294,7 @@ object MosquePrintHelper {
                 }
                 .badge-receipt {
                     display: inline-block;
-                    background: #0D5C3A;
+                    background: #064E3B;
                     color: #fff;
                     padding: 4px 16px;
                     border-radius: 20px;
@@ -323,7 +323,7 @@ object MosquePrintHelper {
                 }
                 .amount-box {
                     background: #f4fbf7;
-                    border: 1.5px solid #0D5C3A;
+                    border: 1.5px solid #064E3B;
                     border-radius: 8px;
                     padding: 12px 18px;
                     margin: 16px 0;
@@ -334,12 +334,12 @@ object MosquePrintHelper {
                 .amount-label {
                     font-size: 15px;
                     font-weight: bold;
-                    color: #0D5C3A;
+                    color: #064E3B;
                 }
                 .amount-val {
                     font-size: 22px;
                     font-weight: 900;
-                    color: #0D5C3A;
+                    color: #064E3B;
                 }
                 .signatures {
                     margin-top: 36px;
@@ -477,7 +477,7 @@ object MosquePrintHelper {
         val priorityColor = when (notice.priority) {
             "urgent" -> "#DC2626"
             "important" -> "#D97706"
-            else -> "#0D5C3A"
+            else -> "#064E3B"
         }
 
         val sealDataUri = fileToBase64DataUri(mosqueSealUrl)
@@ -505,7 +505,7 @@ object MosquePrintHelper {
                     line-height: 1.6;
                 }
                 .notice-container {
-                    border: 3px double #0D5C3A;
+                    border: 3px double #064E3B;
                     border-radius: 12px;
                     padding: 30px 36px;
                     max-width: 700px;
@@ -514,7 +514,7 @@ object MosquePrintHelper {
                 .bismillah {
                     text-align: center;
                     font-size: 20px;
-                    color: #0D5C3A;
+                    color: #064E3B;
                     margin-bottom: 8px;
                 }
                 .header {
@@ -536,7 +536,7 @@ object MosquePrintHelper {
                 .mosque-title {
                     font-size: 26px;
                     font-weight: bold;
-                    color: #0D5C3A;
+                    color: #064E3B;
                     margin: 0;
                 }
                 .sub-title {
@@ -589,7 +589,7 @@ object MosquePrintHelper {
                     font-size: 14px;
                     font-weight: bold;
                     width: 220px;
-                    color: #0D5C3A;
+                    color: #064E3B;
                 }
                 .sig-img {
                     max-height: 48px;
@@ -709,7 +709,7 @@ object MosquePrintHelper {
                     line-height: 1.5;
                 }
                 .report-container {
-                    border: 2px solid #0D5C3A;
+                    border: 2px solid #064E3B;
                     border-radius: 10px;
                     padding: 24px 30px;
                     max-width: 750px;
@@ -718,7 +718,7 @@ object MosquePrintHelper {
                 .bismillah {
                     text-align: center;
                     font-size: 18px;
-                    color: #0D5C3A;
+                    color: #064E3B;
                     margin-bottom: 6px;
                 }
                 .header {
@@ -740,7 +740,7 @@ object MosquePrintHelper {
                 .mosque-title {
                     font-size: 24px;
                     font-weight: bold;
-                    color: #0D5C3A;
+                    color: #064E3B;
                     margin: 0;
                 }
                 .sub-title {
@@ -776,8 +776,8 @@ object MosquePrintHelper {
                 .section-title {
                     font-size: 16px;
                     font-weight: bold;
-                    color: #0D5C3A;
-                    border-left: 4px solid #0D5C3A;
+                    color: #064E3B;
+                    border-left: 4px solid #064E3B;
                     padding-left: 8px;
                     margin: 18px 0 10px 0;
                 }
@@ -984,7 +984,7 @@ object MosquePrintHelper {
                     background: #fff;
                 }
                 .voucher-container {
-                    border: 2px solid #0D5C3A;
+                    border: 2px solid #064E3B;
                     border-radius: 12px;
                     padding: 24px 28px;
                     max-width: 680px;
@@ -993,7 +993,7 @@ object MosquePrintHelper {
                 .bismillah {
                     text-align: center;
                     font-size: 19px;
-                    color: #0D5C3A;
+                    color: #064E3B;
                     margin-bottom: 6px;
                 }
                 .header {
@@ -1005,7 +1005,7 @@ object MosquePrintHelper {
                 .mosque-title {
                     font-size: 24px;
                     font-weight: bold;
-                    color: #0D5C3A;
+                    color: #064E3B;
                     margin: 0;
                 }
                 .sub-title {
@@ -1015,7 +1015,7 @@ object MosquePrintHelper {
                 }
                 .badge-voucher {
                     display: inline-block;
-                    background: #0D5C3A;
+                    background: #064E3B;
                     color: #fff;
                     padding: 4px 16px;
                     border-radius: 20px;
@@ -1039,7 +1039,7 @@ object MosquePrintHelper {
                     margin-bottom: 16px;
                 }
                 th {
-                    background: #0D5C3A;
+                    background: #064E3B;
                     color: #fff;
                     padding: 8px 12px;
                     font-size: 13px;
@@ -1052,8 +1052,8 @@ object MosquePrintHelper {
                     background: #FAFAFA;
                 }
                 .total-box {
-                    background: #E8F5E9;
-                    border: 2px solid #0D5C3A;
+                    background: #E6F4EA;
+                    border: 2px solid #064E3B;
                     border-radius: 8px;
                     padding: 14px;
                     text-align: center;
@@ -1062,7 +1062,7 @@ object MosquePrintHelper {
                 .total-amount {
                     font-size: 28px;
                     font-weight: 900;
-                    color: #0D5C3A;
+                    color: #064E3B;
                 }
                 .witness-section {
                     margin-top: 30px;
@@ -1173,7 +1173,7 @@ object MosquePrintHelper {
                 """ else ""}
 
                 <div class="witness-section">
-                    <div style="font-size: 13px; font-weight: bold; color: #0D5C3A; margin-bottom: 4px;">
+                    <div style="font-size: 13px; font-weight: bold; color: #064E3B; margin-bottom: 4px;">
                         উপস্থিত ৩-জন সাক্ষীর প্রত্যয়ন ও স্বাক্ষর:
                     </div>
                     <div class="witness-grid">
@@ -1249,7 +1249,7 @@ object MosquePrintHelper {
                     line-height: 1.45;
                 }
                 .poster-container {
-                    border: 4px double #0D5C3A;
+                    border: 4px double #064E3B;
                     border-radius: 14px;
                     padding: 24px 26px;
                     max-width: 720px;
@@ -1260,7 +1260,7 @@ object MosquePrintHelper {
                 .bismillah {
                     text-align: center;
                     font-size: 22px;
-                    color: #0D5C3A;
+                    color: #064E3B;
                     margin-bottom: 4px;
                     font-weight: bold;
                 }
@@ -1272,7 +1272,7 @@ object MosquePrintHelper {
                 }
                 .mosque-header {
                     text-align: center;
-                    background: linear-gradient(135deg, #0D5C3A 0%, #15803D 100%);
+                    background: linear-gradient(135deg, #064E3B 0%, #15803D 100%);
                     color: #fff;
                     padding: 14px 18px;
                     border-radius: 10px;
@@ -1303,7 +1303,7 @@ object MosquePrintHelper {
                     text-align: center;
                     font-size: 23px;
                     font-weight: 900;
-                    color: #0D5C3A;
+                    color: #064E3B;
                     margin: 14px 0;
                     padding: 10px;
                     background: #F2F8F4;
@@ -1348,7 +1348,7 @@ object MosquePrintHelper {
                 .info-item-val {
                     font-size: 15px;
                     font-weight: 800;
-                    color: #0D5C3A;
+                    color: #064E3B;
                     margin-top: 2px;
                 }
                 .program-details {
@@ -1366,7 +1366,7 @@ object MosquePrintHelper {
                     text-align: center;
                     font-size: 14px;
                     font-weight: bold;
-                    color: #0D5C3A;
+                    color: #064E3B;
                     margin-bottom: 16px;
                     padding: 8px;
                     background: #FDFCF5;
@@ -1445,7 +1445,7 @@ object MosquePrintHelper {
                 """ else ""}
 
                 ${if (description.isNotBlank()) """
-                <div style="font-size: 12px; font-weight: bold; color: #0D5C3A; margin: 10px 0 4px 2px;">কর্মসূচি ও বিবরণ:</div>
+                <div style="font-size: 12px; font-weight: bold; color: #064E3B; margin: 10px 0 4px 2px;">কর্মসূচি ও বিবরণ:</div>
                 <div class="program-details">$description</div>
                 """ else ""}
 
@@ -1471,7 +1471,7 @@ object MosquePrintHelper {
                     ${if (president.isNotBlank() || presidentSigUri != null) """
                     <div style="text-align: center; border-top: 1px solid #D4AF37; padding-top: 4px; min-width: 160px;">
                         ${if (presidentSigUri != null) """<img src="$presidentSigUri" style="max-height: 42px; max-width: 130px; display: block; margin: 0 auto 2px auto;" />""" else """<div style="height: 32px;"></div>"""}
-                        <div style="font-weight: bold; font-size: 12px; color: #0D5C3A;">সভাপতি / আহ্বায়ক</div>
+                        <div style="font-weight: bold; font-size: 12px; color: #064E3B;">সভাপতি / আহ্বায়ক</div>
                         <div style="font-size: 11px; color: #555;">${president.ifBlank { "মসজিদ পরিচালনা কমিটি" }}</div>
                         ${if (presidentStampUri != null) """<img src="$presidentStampUri" style="max-height: 46px; max-width: 90px; display: block; margin: 2px auto 0 auto; opacity: 0.9;" />""" else ""}
                     </div>

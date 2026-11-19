@@ -88,10 +88,10 @@ fun SplashScreen(
             .background(
                 Brush.verticalGradient(
                     colors = listOf(
-                        Color(0xFF003822),
+                        MosqueEmeraldPrimary,
                         MosqueEmeraldDark,
-                        Color(0xFF022B1B),
-                        Color(0xFF011A10)
+                        MosqueEmeraldPrimary,
+                        MosqueNightBg
                     )
                 )
             ),
@@ -152,7 +152,7 @@ fun SplashScreen(
                     .border(
                         width = 2.5.dp,
                         brush = Brush.linearGradient(
-                            listOf(MosqueGold, Color(0xFFFFF2B2), MosqueGoldDeep)
+                            listOf(MosqueGold, MosqueGoldLight, MosqueGoldDeep)
                         ),
                         shape = RoundedCornerShape(32.dp)
                     )

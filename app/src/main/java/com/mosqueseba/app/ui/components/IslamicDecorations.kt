@@ -203,7 +203,7 @@ fun HijriDateBanner(
     gregorianDate: String = formatCurrentGregorianDateBn()
 ) {
     Surface(
-        color = Color(0xFF6B0235),
+        color = MosqueEmeraldDark,
         shape = RoundedCornerShape(16.dp),
         border = androidx.compose.foundation.BorderStroke(1.dp, MosqueGold.copy(alpha = 0.4f)),
         modifier = Modifier

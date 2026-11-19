@@ -139,14 +139,14 @@ private fun RoyalQuickActionCard(
                 Surface(
                     shape = RoundedCornerShape(14.dp),
                     color = if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft,
-                    border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else Color(0xFFFCE7F3)),
+                    border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else MosqueEmeraldSoft),
                     modifier = Modifier.size(44.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             imageVector = icon,
                             contentDescription = title,
-                            tint = if (isDark) Color(0xFF34D399) else MosqueEmeraldPrimary,
+                            tint = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary,
                             modifier = Modifier.size(22.dp)
                         )
                     }
@@ -232,14 +232,14 @@ fun RoyalMosqueSummaryKpiCard(
                     Surface(
                         shape = RoundedCornerShape(8.dp),
                         color = if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft,
-                        border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else Color(0xFFFCE7F3)),
+                        border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else MosqueEmeraldSoft),
                         modifier = Modifier.size(30.dp)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 imageVector = Icons.Default.BarChart,
                                 contentDescription = null,
-                                tint = if (isDark) Color(0xFF34D399) else MosqueEmeraldPrimary,
+                                tint = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary,
                                 modifier = Modifier.size(18.dp)
                             )
                         }
@@ -257,7 +257,7 @@ fun RoyalMosqueSummaryKpiCard(
                 Surface(
                     onClick = onViewDetailsClick,
                     shape = RoundedCornerShape(16.dp),
-                    color = if (isDark) MosqueNightSurfaceVariant else Color(0xFFF1F5F9)
+                    color = if (isDark) MosqueNightSurfaceVariant else MosqueCardBorderSubtle
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -267,14 +267,14 @@ fun RoyalMosqueSummaryKpiCard(
                             text = "বিস্তারিত দেখুন",
                             fontSize = 11.5.sp,
                             fontWeight = FontWeight.SemiBold,
-                            color = if (isDark) Color(0xFF34D399) else MosqueEmeraldLight
+                            color = if (isDark) MosqueGreenAccent else MosqueEmeraldLight
                         )
                         Spacer(modifier = Modifier.width(2.dp))
                         Text(
                             text = "›",
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Bold,
-                            color = if (isDark) Color(0xFF34D399) else MosqueEmeraldLight
+                            color = if (isDark) MosqueGreenAccent else MosqueEmeraldLight
                         )
                     }
                 }
@@ -312,7 +312,7 @@ fun RoyalMosqueSummaryKpiCard(
                     modifier = Modifier
                         .width(1.dp)
                         .height(30.dp)
-                        .background(if (isDark) MosqueNightBorder else Color(0xFFE2E8F0))
+                        .background(if (isDark) MosqueNightBorder else MosqueCardBorder)
                 )
 
                 // Column 2: পরিবার
@@ -340,7 +340,7 @@ fun RoyalMosqueSummaryKpiCard(
                     modifier = Modifier
                         .width(1.dp)
                         .height(30.dp)
-                        .background(if (isDark) MosqueNightBorder else Color(0xFFE2E8F0))
+                        .background(if (isDark) MosqueNightBorder else MosqueCardBorder)
                 )
 
                 // Column 3: চলতি তহবিল
@@ -352,7 +352,7 @@ fun RoyalMosqueSummaryKpiCard(
                         text = "৳ ${toBengaliDigits(String.format(Locale.getDefault(), "%,.0f", displayBalance))}",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
-                        color = if (isDark) Color(0xFF34D399) else MosqueEmeraldLight,
+                        color = if (isDark) MosqueGreenAccent else MosqueEmeraldLight,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -397,14 +397,14 @@ fun RoyalRecentActivitiesCard(
                 Surface(
                     shape = RoundedCornerShape(8.dp),
                     color = if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft,
-                    border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else Color(0xFFFCE7F3)),
+                    border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else MosqueEmeraldSoft),
                     modifier = Modifier.size(30.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             imageVector = Icons.Default.History,
                             contentDescription = null,
-                            tint = if (isDark) Color(0xFF34D399) else MosqueEmeraldPrimary,
+                            tint = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary,
                             modifier = Modifier.size(18.dp)
                         )
                     }
@@ -421,7 +421,7 @@ fun RoyalRecentActivitiesCard(
             Surface(
                 onClick = onViewAllClick,
                 shape = RoundedCornerShape(16.dp),
-                color = if (isDark) MosqueNightSurfaceVariant else Color(0xFFF1F5F9)
+                color = if (isDark) MosqueNightSurfaceVariant else MosqueCardBorderSubtle
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -431,14 +431,14 @@ fun RoyalRecentActivitiesCard(
                         text = "আরও দেখুন",
                         fontSize = 11.5.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = if (isDark) Color(0xFF34D399) else MosqueEmeraldLight
+                        color = if (isDark) MosqueGreenAccent else MosqueEmeraldLight
                     )
                     Spacer(modifier = Modifier.width(2.dp))
                     Text(
                         text = "›",
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Bold,
-                        color = if (isDark) Color(0xFF34D399) else MosqueEmeraldLight
+                        color = if (isDark) MosqueGreenAccent else MosqueEmeraldLight
                     )
                 }
             }
@@ -476,12 +476,12 @@ fun RoyalRecentActivitiesCard(
                         ActivityRowItem(
                             icon = Icons.Default.AccountBalanceWallet,
                             iconBg = if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft,
-                            iconTint = if (isDark) Color(0xFF34D399) else MosqueEmeraldPrimary,
+                            iconTint = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary,
                             title = txn.description.takeIf { it.isNotBlank() } ?: txn.categoryNameBn,
                             subtitle = "তারিখ: ${txn.txnDate}",
                             tagText = "৳ ${toBengaliDigits(txn.amount.toInt().toString())}",
                             tagBg = if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft,
-                            tagTextColor = if (isDark) Color(0xFF34D399) else MosqueEmeraldPrimary,
+                            tagTextColor = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary,
                             primaryText = primaryText,
                             secondaryText = secondaryText
                         )
@@ -495,13 +495,13 @@ fun RoyalRecentActivitiesCard(
                         )
                         ActivityRowItem(
                             icon = Icons.Default.Article,
-                            iconBg = if (isDark) Color(0xFF78350F).copy(alpha = 0.4f) else Color(0xFFFFFBEB),
-                            iconTint = if (isDark) Color(0xFFFBBF24) else Color(0xFFD97706),
+                            iconBg = if (isDark) MosqueGoldDark.copy(alpha = 0.4f) else Color(0xFFFFFBEB),
+                            iconTint = if (isDark) MosqueGold else MosqueGoldDeep,
                             title = meeting.title.takeIf { it.isNotBlank() } ?: "কমিটি সভা",
                             subtitle = "তারিখ: ${meeting.meetingDate}",
                             tagText = "সভা",
-                            tagBg = if (isDark) Color(0xFF78350F).copy(alpha = 0.4f) else Color(0xFFFFFBEB),
-                            tagTextColor = if (isDark) Color(0xFFFBBF24) else Color(0xFFB45309),
+                            tagBg = if (isDark) MosqueGoldDark.copy(alpha = 0.4f) else Color(0xFFFFFBEB),
+                            tagTextColor = if (isDark) MosqueGold else MosqueGoldDark,
                             primaryText = primaryText,
                             secondaryText = secondaryText
                         )
@@ -593,9 +593,9 @@ fun InspirationalIslamicQuoteBanner(
     quoteText: String = "মসজিদ হলো সমাজের শান্তি ও ঐক্যের কেন্দ্রবিন্দু"
 ) {
     val isDark = LocalIsDarkTheme.current
-    val surfaceColor = if (isDark) MosqueNightSurfaceVariant else Color(0xFFF0FDF4)
-    val borderColor = if (isDark) MosqueNightBorder else Color(0xFFDCFCE7)
-    val quoteColor = if (isDark) MosqueNightTextPrimary else Color(0xFF065F46)
+    val surfaceColor = if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft
+    val borderColor = if (isDark) MosqueNightBorder else MosqueCardBorder
+    val quoteColor = if (isDark) MosqueNightTextPrimary else MosqueEmeraldPrimary
 
     Surface(
         shape = RoundedCornerShape(18.dp),
@@ -639,7 +639,7 @@ fun InspirationalIslamicQuoteBanner(
                     .width(2.dp)
                     .height(30.dp)
                     .clip(RoundedCornerShape(1.dp))
-                    .background(if (isDark) Color(0xFF34D399) else Color(0xFF059669))
+                    .background(if (isDark) MosqueGreenAccent else MosqueEmeraldLight)
             )
 
             Spacer(modifier = Modifier.width(10.dp))

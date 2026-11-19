@@ -229,7 +229,7 @@ fun DashboardScreen(
                 Surface(
                     onClick = { showDutiesDialog = true },
                     shape = RoundedCornerShape(16.dp),
-                    color = if (isDark) MosqueNightSurfaceVariant else Color(0xFFF0FDF4),
+                    color = if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft,
                     border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else Color(0xFFBBF7D0)),
                     shadowElevation = 1.dp,
                     modifier = Modifier.fillMaxWidth()

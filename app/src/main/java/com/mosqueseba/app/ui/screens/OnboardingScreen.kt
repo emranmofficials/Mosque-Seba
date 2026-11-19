@@ -98,9 +98,9 @@ fun OnboardingScreen(
             .background(
                 Brush.verticalGradient(
                     colors = if (isDark) {
-                        listOf(Color(0xFF002214), Color(0xFF032D1B), Color(0xFF02190E))
+                        listOf(MosqueNightBg, MosqueNightSurface, MosqueNightSurfaceVariant)
                     } else {
-                        listOf(Color(0xFFF0FDF4), Color(0xFFE8F5E9), Color(0xFFDCEDC8).copy(alpha = 0.5f))
+                        listOf(MosqueEmeraldSoft, MosqueSurface, MosqueBgLight)
                     }
                 )
             )
@@ -215,7 +215,7 @@ fun OnboardingScreen(
                         text = slide.description,
                         fontSize = 13.5.sp,
                         lineHeight = 20.sp,
-                        color = if (isDark) Color.White.copy(alpha = 0.75f) else Color(0xFF4B5563),
+                        color = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.padding(horizontal = 12.dp)
                     )
@@ -265,7 +265,7 @@ fun OnboardingScreen(
                                     text = highlight,
                                     fontSize = 12.5.sp,
                                     fontWeight = FontWeight.Medium,
-                                    color = if (isDark) Color.White.copy(alpha = 0.9f) else Color(0xFF1F2937)
+                                    color = if (isDark) MosqueNightTextPrimary else MosqueTextPrimary
                                 )
                             }
                         }

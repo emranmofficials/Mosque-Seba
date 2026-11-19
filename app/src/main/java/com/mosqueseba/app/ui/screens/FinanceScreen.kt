@@ -752,7 +752,7 @@ fun FinanceScreen(
                                             text = "আয় ${toBengaliDigits(incomePct.toString())}%",
                                             fontSize = 10.sp,
                                             fontWeight = FontWeight.Bold,
-                                            color = Color(0xFF6EE7B7)
+                                            color = MosqueIncomeLight
                                         )
                                         Text(
                                             text = "আয়-ব্যয় অনুপাত",
@@ -763,7 +763,7 @@ fun FinanceScreen(
                                             text = "ব্যয় ${toBengaliDigits(expensePct.toString())}%",
                                             fontSize = 10.sp,
                                             fontWeight = FontWeight.Bold,
-                                            color = Color(0xFFFCA5A5)
+                                            color = MosqueExpenseLight
                                         )
                                     }
                                     Box(

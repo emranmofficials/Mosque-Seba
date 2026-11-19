@@ -1,7 +1,9 @@
 package com.mosqueseba.app.ui.theme
 
 import android.app.Activity
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Shapes
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
@@ -51,6 +53,15 @@ private val MosqueDarkColorScheme = darkColorScheme(
     outline = MosqueNightBorder
 )
 
+// সব স্ক্রিনে একই রাউন্ডেড লুক নিশ্চিত করতে গ্লোবাল শেপ স্কেল
+private val MosqueShapes = Shapes(
+    extraSmall = RoundedCornerShape(MosqueRadius.Sm),
+    small = RoundedCornerShape(MosqueRadius.Md),
+    medium = RoundedCornerShape(MosqueRadius.Lg),
+    large = RoundedCornerShape(MosqueRadius.Xl),
+    extraLarge = RoundedCornerShape(MosqueRadius.Xl)
+)
+
 @Composable
 fun MosqueCommitteeTheme(
     darkTheme: Boolean = false,
@@ -63,7 +74,7 @@ fun MosqueCommitteeTheme(
             val window = (view.context as? Activity)?.window
             if (window != null) {
                 val insetsController = WindowCompat.getInsetsController(window, view)
-                // অ্যাপের টপ বার bKash পিংক হওয়ায় সিস্টেম বার আইকন ও ঘড়ি/ব্যাটারি টেক্সট উজ্জ্বল সাদা (Light) হবে
+                // ইমারল্ড হেডারের উপর সিস্টেম বার আইকন ও ঘড়ি/ব্যাটারি টেক্সট উজ্জ্বল সাদা রাখা হয়
                 insetsController.isAppearanceLightStatusBars = false
                 insetsController.isAppearanceLightNavigationBars = !darkTheme
             }
@@ -73,6 +84,7 @@ fun MosqueCommitteeTheme(
         MaterialTheme(
             colorScheme = colorScheme,
             typography = MosqueTypography,
+            shapes = MosqueShapes,
             content = content
         )
     }

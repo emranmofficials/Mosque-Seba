@@ -42,6 +42,7 @@ import com.mosqueseba.app.ui.theme.MosqueCardBorderSubtle
 import com.mosqueseba.app.ui.theme.MosqueEmeraldLight
 import com.mosqueseba.app.ui.theme.MosqueEmeraldPrimary
 import com.mosqueseba.app.ui.theme.MosqueEmeraldSoft
+import com.mosqueseba.app.ui.theme.MosqueGreenAccent
 import com.mosqueseba.app.ui.theme.MosqueNightBorder
 import com.mosqueseba.app.ui.theme.MosqueNightSurface
 import com.mosqueseba.app.ui.theme.MosqueNightSurfaceVariant
@@ -203,7 +204,7 @@ fun RoleResponsibilityHeader(
     val borderColor = if (isDark) MosqueNightBorder else MosqueCardBorderSubtle
     val primaryText = if (isDark) MosqueNightTextPrimary else MosqueTextPrimary
     val secondaryText = if (isDark) MosqueNightTextSecondary else MosqueTextSecondary
-    val accentColor = if (isDark) Color(0xFF34D399) else MosqueEmeraldLight
+    val accentColor = if (isDark) MosqueGreenAccent else MosqueEmeraldLight
     val responsibilities = DashboardRolePolicy.responsibilitiesFor(role)
 
     Surface(
@@ -280,7 +281,7 @@ fun RoleResponsibilityHeader(
                     Surface(
                         shape = RoundedCornerShape(12.dp),
                         color = if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft,
-                        border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else Color(0xFFFCE7F3))
+                        border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else MosqueEmeraldSoft)
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -289,7 +290,7 @@ fun RoleResponsibilityHeader(
                             Icon(
                                 imageVector = responsibility.icon,
                                 contentDescription = null,
-                                tint = if (isDark) Color(0xFF34D399) else MosqueEmeraldPrimary,
+                                tint = if (isDark) MosqueGreenAccent else MosqueEmeraldPrimary,
                                 modifier = Modifier.size(13.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))

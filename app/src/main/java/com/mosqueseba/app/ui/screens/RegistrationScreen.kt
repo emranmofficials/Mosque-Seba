@@ -1667,7 +1667,7 @@ fun StepItem(number: Int, title: String, isActive: Boolean, isCurrent: Boolean) 
                     when {
                         isCurrent -> if (isDark) MosqueEmeraldLight else MosqueEmeraldPrimary
                         isActive -> MosqueSuccessGreen
-                        else -> if (isDark) MosqueNightSurfaceVariant else Color(0xFFE2E8F0)
+                        else -> if (isDark) MosqueNightSurfaceVariant else MosqueCardBorder
                     }
                 )
                 .then(
