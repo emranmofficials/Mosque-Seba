@@ -470,7 +470,7 @@ fun FinanceScreen(
                                     drawCircle(
                                         brush = Brush.radialGradient(
                                             colors = listOf(
-                                                Color(0xFFF59E0B).copy(alpha = 0.14f),
+                                                MosqueEmeraldLight.copy(alpha = 0.16f),
                                                 Color.Transparent
                                             ),
                                             center = Offset(size.width * 0.92f, size.height * 0.12f),
@@ -482,7 +482,7 @@ fun FinanceScreen(
                                     drawCircle(
                                         brush = Brush.radialGradient(
                                             colors = listOf(
-                                                Color(0xFF10B981).copy(alpha = 0.14f),
+                                                MosqueGold.copy(alpha = 0.16f),
                                                 Color.Transparent
                                             ),
                                             center = Offset(size.width * 0.08f, size.height * 0.88f),
@@ -511,7 +511,7 @@ fun FinanceScreen(
                                         Text(
                                             text = formatCurrencyBn(netBalance),
                                             style = MaterialTheme.typography.headlineMedium,
-                                            color = MosqueGold,
+                                            color = Color.White,
                                             fontWeight = FontWeight.ExtraBold
                                         )
                                     }
