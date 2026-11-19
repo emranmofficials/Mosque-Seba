@@ -117,8 +117,8 @@ fun MehrabArchCard(
             .shadow(
                 elevation = elevation,
                 shape = RoundedCornerShape(20.dp),
-                spotColor = Color(0xFF064E3B).copy(alpha = if (isDark) 0.3f else 0.06f),
-                ambientColor = Color(0xFF064E3B).copy(alpha = if (isDark) 0.2f else 0.04f)
+                spotColor = Color(0xFFAD054F).copy(alpha = if (isDark) 0.3f else 0.06f),
+                ambientColor = Color(0xFFAD054F).copy(alpha = if (isDark) 0.2f else 0.04f)
             ),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = backgroundColor),
@@ -203,7 +203,7 @@ fun HijriDateBanner(
     gregorianDate: String = formatCurrentGregorianDateBn()
 ) {
     Surface(
-        color = Color(0xFF022C22),
+        color = Color(0xFF6B0235),
         shape = RoundedCornerShape(16.dp),
         border = androidx.compose.foundation.BorderStroke(1.dp, MosqueGold.copy(alpha = 0.4f)),
         modifier = Modifier
@@ -214,7 +214,7 @@ fun HijriDateBanner(
             modifier = Modifier
                 .background(
                     Brush.verticalGradient(
-                        listOf(Color(0xFF011C15), Color(0xFF022C22), Color(0xFF064E3B))
+                        listOf(Color(0xFF4A0124), Color(0xFF6B0235), Color(0xFFAD054F))
                     )
                 )
                 .padding(horizontal = 16.dp, vertical = 12.dp),

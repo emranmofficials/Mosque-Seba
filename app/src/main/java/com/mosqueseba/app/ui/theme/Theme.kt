@@ -63,7 +63,7 @@ fun MosqueCommitteeTheme(
             val window = (view.context as? Activity)?.window
             if (window != null) {
                 val insetsController = WindowCompat.getInsetsController(window, view)
-                // অ্যাপের টপ বার ডার্ক এমারেল্ড গ্রীন হওয়ায় সিস্টেম বার আইকন ও ঘড়ি/ব্যাটারি টেক্সট উজ্জ্বল সাদা (Light) হবে
+                // অ্যাপের টপ বার bKash পিংক হওয়ায় সিস্টেম বার আইকন ও ঘড়ি/ব্যাটারি টেক্সট উজ্জ্বল সাদা (Light) হবে
                 insetsController.isAppearanceLightStatusBars = false
                 insetsController.isAppearanceLightNavigationBars = !darkTheme
             }

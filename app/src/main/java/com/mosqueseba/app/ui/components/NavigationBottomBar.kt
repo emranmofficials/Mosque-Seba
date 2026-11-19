@@ -155,13 +155,14 @@ fun NavigationBottomBar(
     val activeColor = MaterialTheme.colorScheme.primary
     val inactiveIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.68f)
     val inactiveTextColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.82f)
-    val indicatorColor = if (isDark) MosqueGreenAccent.copy(alpha = 0.18f) else activeColor.copy(alpha = 0.12f)
+    val indicatorColor = activeColor.copy(alpha = if (isDark) 0.24f else 0.14f)
+    // bKash-স্টাইল পিংক ট্রিম (আগের সোনালি ট্রিমের বদলে)
     val topLine = Brush.horizontalGradient(
         colors = listOf(
             Color.Transparent,
-            MosqueGold.copy(alpha = if (isDark) 0.55f else 0.45f),
-            MosqueGoldLight.copy(alpha = if (isDark) 0.35f else 0.25f),
-            MosqueGold.copy(alpha = if (isDark) 0.55f else 0.45f),
+            MosqueEmeraldPrimary.copy(alpha = if (isDark) 0.8f else 0.65f),
+            MosqueEmeraldLight.copy(alpha = if (isDark) 0.6f else 0.45f),
+            MosqueEmeraldPrimary.copy(alpha = if (isDark) 0.8f else 0.65f),
             Color.Transparent
         )
     )
@@ -234,7 +235,7 @@ fun MosqueNavigationRail(
     val activeColor = MaterialTheme.colorScheme.primary
     val inactiveIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.68f)
     val inactiveTextColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.82f)
-    val indicatorColor = if (isDark) MosqueGreenAccent.copy(alpha = 0.18f) else activeColor.copy(alpha = 0.12f)
+    val indicatorColor = activeColor.copy(alpha = if (isDark) 0.24f else 0.14f)
 
     Surface(
         color = surfaceColor,
@@ -250,8 +251,8 @@ fun MosqueNavigationRail(
                         Brush.verticalGradient(
                             colors = listOf(
                                 Color.Transparent,
-                                MosqueGold.copy(alpha = 0.5f),
-                                MosqueGold.copy(alpha = 0.5f),
+                                MosqueEmeraldPrimary.copy(alpha = 0.7f),
+                                MosqueEmeraldPrimary.copy(alpha = 0.7f),
                                 Color.Transparent
                             )
                         )

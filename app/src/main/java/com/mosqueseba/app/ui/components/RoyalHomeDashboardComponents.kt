@@ -139,7 +139,7 @@ private fun RoyalQuickActionCard(
                 Surface(
                     shape = RoundedCornerShape(14.dp),
                     color = if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft,
-                    border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else Color(0xFFD1FAE5)),
+                    border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else Color(0xFFFCE7F3)),
                     modifier = Modifier.size(44.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
@@ -232,7 +232,7 @@ fun RoyalMosqueSummaryKpiCard(
                     Surface(
                         shape = RoundedCornerShape(8.dp),
                         color = if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft,
-                        border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else Color(0xFFD1FAE5)),
+                        border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else Color(0xFFFCE7F3)),
                         modifier = Modifier.size(30.dp)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
@@ -397,7 +397,7 @@ fun RoyalRecentActivitiesCard(
                 Surface(
                     shape = RoundedCornerShape(8.dp),
                     color = if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft,
-                    border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else Color(0xFFD1FAE5)),
+                    border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else Color(0xFFFCE7F3)),
                     modifier = Modifier.size(30.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
@@ -475,12 +475,12 @@ fun RoyalRecentActivitiesCard(
                         }
                         ActivityRowItem(
                             icon = Icons.Default.AccountBalanceWallet,
-                            iconBg = if (isDark) Color(0xFF064E3B) else Color(0xFFE6F4EA),
+                            iconBg = if (isDark) Color(0xFFAD054F) else Color(0xFFFDEFF4),
                             iconTint = if (isDark) Color(0xFF34D399) else Color(0xFF047857),
                             title = txn.description.takeIf { it.isNotBlank() } ?: txn.categoryNameBn,
                             subtitle = "তারিখ: ${txn.txnDate}",
                             tagText = "৳ ${toBengaliDigits(txn.amount.toInt().toString())}",
-                            tagBg = if (isDark) Color(0xFF064E3B) else Color(0xFFE6F4EA),
+                            tagBg = if (isDark) Color(0xFFAD054F) else Color(0xFFFDEFF4),
                             tagTextColor = if (isDark) Color(0xFF34D399) else Color(0xFF047857),
                             primaryText = primaryText,
                             secondaryText = secondaryText

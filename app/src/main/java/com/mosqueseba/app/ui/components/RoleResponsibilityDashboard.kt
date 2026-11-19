@@ -280,7 +280,7 @@ fun RoleResponsibilityHeader(
                     Surface(
                         shape = RoundedCornerShape(12.dp),
                         color = if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft,
-                        border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else Color(0xFFD1FAE5))
+                        border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else Color(0xFFFCE7F3))
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,

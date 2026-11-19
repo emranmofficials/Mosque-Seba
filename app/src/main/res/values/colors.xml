@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="mosque_emerald_primary">#0D5C3A</color>
-    <color name="mosque_emerald_dark">#083D26</color>
-    <color name="mosque_gold">#D4AF37</color>
-    <color name="splash_background">#003822</color>
+    <color name="mosque_emerald_primary">#E2136E</color>
+    <color name="mosque_emerald_dark">#AD054F</color>
+    <color name="mosque_gold">#F472B6</color>
+    <color name="splash_background">#E2136E</color>
 </resources>

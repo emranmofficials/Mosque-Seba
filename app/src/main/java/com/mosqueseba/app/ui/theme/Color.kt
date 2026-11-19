@@ -3,130 +3,131 @@ package com.mosqueseba.app.ui.theme
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 
-// Islamic Modern Design System Palette (মেহরাব ও অ্যারাবেস্ক কালার প্যালেট)
-val MosqueEmeraldPrimary = Color(0xFF064E3B) // Rich Islamic Emerald
-val MosqueEmeraldDark = Color(0xFF022C22)    // Deep Sanctuary Green
-val MosqueEmeraldLight = Color(0xFF047857)   // Vibrant Prayer Green
-val MosqueEmeraldSoft = Color(0xFFE6F4EA)    // Soft Tinted Emerald
-val MosqueGreenAccent = Color(0xFF10B981)
+// bKash-অনুপ্রাণিত ডিজাইন সিস্টেম (আসল bKash অ্যাপের SVG এসেট থেকে নেওয়া প্যালেট)
+// ব্র্যান্ড pink #E2136E, গাঢ় #AD054F, হালকা #EE2A7B, সফট #FDEFF4
+val MosqueEmeraldPrimary = Color(0xFFE2136E) // bKash Brand Pink
+val MosqueEmeraldDark = Color(0xFFAD054F)   // Deep bKash Pink (header / dark surface)
+val MosqueEmeraldLight = Color(0xFFEE2A7B)  // Vibrant Pink
+val MosqueEmeraldSoft = Color(0xFFFDEFF4)   // Soft Pink Tint
+val MosqueGreenAccent = Color(0xFFF472B6)   // Rose Pink Accent (dark theme primary)
 
-// Royal Islamic Gold Leaf & Bronze Accents
-val MosqueGold = Color(0xFFF59E0B)           // Radiant Dome Gold
-val MosqueGoldDeep = Color(0xFFD97706)       // Antique Bronze / Minaret Gold
-val MosqueGoldDark = Color(0xFFB45309)       // Deep Royal Ochre
-val MosqueGoldLight = Color(0xFFFEF3C7)      // Warm Gold Shimmer
-val MosqueGoldSoft = Color(0xFFFFFBEB)       // Soft Creamy Ivory Gold
+// Rose-gold accents — আগের সোনালি অ্যাকসেন্টের জায়গায় bKash-এর হালকা গোলাপি
+val MosqueGold = Color(0xFFF472B6)           // Rose Accent
+val MosqueGoldDeep = Color(0xFFDB2777)       // Deep Rose
+val MosqueGoldDark = Color(0xFFBE185D)       // Dark Rose
+val MosqueGoldLight = Color(0xFFFCE7F3)      // Light Pink Shimmer
+val MosqueGoldSoft = Color(0xFFFFF1F6)       // Soft Pink Ivory
 
-// Islamic Clean Surfaces & Warm Modern Canvas
-val MosqueBgLight = Color(0xFFF8FAF8)        // Crisp, ultra-clean modern Islamic canvas
+// ক্লিন হোয়াইট/গ্রে ক্যানভাস (bKash-এরcarte-স্টাইল)
+val MosqueBgLight = Color(0xFFF7F7F7)
 val MosqueSurface = Color(0xFFFFFFFF)
 val MosqueCardBg = Color(0xFFFFFFFF)
-val MosqueCardBorder = Color(0xFFE2E8F0)
-val MosqueCardBorderSubtle = Color(0xFFEEF2F6)
-val MosqueCardBorderGold = Color(0xFFF3E8D0)
-val MosqueBorderGold = Color(0xFFF3E8D0)
-val MosqueGoldSubtle = Color(0xFFF3E8D0)
+val MosqueCardBorder = Color(0xFFEBEBEB)
+val MosqueCardBorderSubtle = Color(0xFFF3F4F6)
+val MosqueCardBorderGold = Color(0xFFFCE7F3)
+val MosqueBorderGold = Color(0xFFFCE7F3)
+val MosqueGoldSubtle = Color(0xFFFCE7F3)
 
-// Typography & Ink Colors
-val MosqueTextPrimary = Color(0xFF0F172A)
-val MosqueTextDark = Color(0xFF0F172A)
-val MosqueTextSecondary = Color(0xFF475569)
-val MosqueTextMuted = Color(0xFF94A3B8)
+// টাইপোগ্রাফি ও ইঙ্ক (bKash UI-র #273339 / #505050)
+val MosqueTextPrimary = Color(0xFF273339)
+val MosqueTextDark = Color(0xFF202020)
+val MosqueTextSecondary = Color(0xFF505050)
+val MosqueTextMuted = Color(0xFF9A9A9A)
 
-// Eye-Comfort Night / Dark Theme Palette (ফজর ও এশার উপযোগী নাইট মোড)
-val MosqueNightBg = Color(0xFF071511)
-val MosqueNightSurface = Color(0xFF0E231D)
-val MosqueNightSurfaceVariant = Color(0xFF143129)
-val MosqueNightBorder = Color(0xFF234E41)
-val MosqueNightInputBorder = Color(0xFF387162) // Crisp, accessible input box border in Dark Mode
-val MosqueNightTextPrimary = Color(0xFFECFDF5)
-val MosqueNightTextSecondary = Color(0xFFCBD5E1)
-val MosqueNightTextMuted = Color(0xFF94A3B8)
-val MosqueNightSecondaryContainer = Color(0xFF3A2D0B) // Dark amber container for gold accents
+// ডার্ক মোড — গাঢ় রোজ-ব্ল্যাক ক্যানভাস, গোলাপি অ্যাকসেন্ট
+val MosqueNightBg = Color(0xFF150912)
+val MosqueNightSurface = Color(0xFF24101C)
+val MosqueNightSurfaceVariant = Color(0xFF321728)
+val MosqueNightBorder = Color(0xFF5A2440)
+val MosqueNightInputBorder = Color(0xFF9D3469) // ইনপুট বক্সের জন্য উজ্জ্বল বর্ডার
+val MosqueNightTextPrimary = Color(0xFFFFF1F6)
+val MosqueNightTextSecondary = Color(0xFFFBCFE8)
+val MosqueNightTextMuted = Color(0xFFC99BB3)
+val MosqueNightSecondaryContainer = Color(0xFF4A1233)
 
-// Status & Alert Colors
-val MosqueUrgentRed = Color(0xFFDC2626)
-val MosqueWarningAmber = Color(0xFFD97706)
-val MosqueSuccessGreen = Color(0xFF16A34A)
+// স্ট্যাটাস কালার (bKash SVG প্যালেট অনুযায়ী)
+val MosqueUrgentRed = Color(0xFFD0021B)
+val MosqueWarningAmber = Color(0xFFFFAB00)
+val MosqueSuccessGreen = Color(0xFF01846C)
 val MosqueInfoBlue = Color(0xFF0284C7)
 
-// Role-Specific Identity Accent Palettes
-val RolePresidentAccent = Color(0xFFD97706)     // Royal Executive Gold
-val RoleTreasurerAccent = Color(0xFF059669)     // Treasury Ledger Emerald
-val RoleSecretaryAccent = Color(0xFF2563EB)     // Secretariat Sapphire Blue
-val RoleImamAccent = Color(0xFF047857)          // Sanctuary Mihrab Green
-val RoleMusalliAccent = Color(0xFF0D9488)       // Devotional Teal
-val RolePublicityAccent = Color(0xFF7C3AED)     // Editorial & Publicity Violet
-val RoleOfficeAccent = Color(0xFF0369A1)        // Office Registry Deep Sky
-val RoleWelfareEduAccent = Color(0xFF15803D)    // Welfare & Madrasa Forest Green
-val RoleAdvisoryAccent = Color(0xFFB45309)      // Advisory Bronze Ochre
+// রোল-নির্দিষ্ট অ্যাকসেন্ট (bKash-স্টাইলে প্রেসিডেন্ট pink, বাকিরা আলাদা চিন্ন)
+val RolePresidentAccent = Color(0xFFE2136E)
+val RoleTreasurerAccent = Color(0xFF01846C)
+val RoleSecretaryAccent = Color(0xFF2563EB)
+val RoleImamAccent = Color(0xFFAD054F)
+val RoleMusalliAccent = Color(0xFF0D9488)
+val RolePublicityAccent = Color(0xFF7C3AED)
+val RoleOfficeAccent = Color(0xFF0369A1)
+val RoleWelfareEduAccent = Color(0xFF15803D)
+val RoleAdvisoryAccent = Color(0xFFBE185D)
 
-// Premium Islamic Mehrab & Minaret Gradients
+// প্রধান ব্র্যান্ড গ্রেডিয়েন্ট
 val MosqueEmeraldGradient = Brush.linearGradient(
     colors = listOf(
-        Color(0xFF022C22),
-        Color(0xFF064E3B),
-        Color(0xFF047857)
+        Color(0xFFAD054F),
+        Color(0xFFE2136E),
+        Color(0xFFEE2A7B)
     )
 )
 
 val MosqueEmeraldDarkGradient = Brush.verticalGradient(
     colors = listOf(
-        Color(0xFF011C15),
-        Color(0xFF022C22),
-        Color(0xFF064E3B)
+        Color(0xFF6B0235),
+        Color(0xFFAD054F),
+        Color(0xFFE2136E)
     )
 )
 
 val MosqueGoldGradient = Brush.linearGradient(
     colors = listOf(
-        Color(0xFFFDE68A),
-        Color(0xFFF59E0B),
-        Color(0xFFD97706)
+        Color(0xFFFCE7F3),
+        Color(0xFFF472B6),
+        Color(0xFFDB2777)
     )
 )
 
 val IslamicMehrabHeaderGradient = Brush.verticalGradient(
     colors = listOf(
-        Color(0xFF011812),
-        Color(0xFF022C22),
-        Color(0xFF064E3B)
+        Color(0xFF5C0230),
+        Color(0xFFAD054F),
+        Color(0xFFE2136E)
     )
 )
 
 val IslamicGoldTrimGradient = Brush.horizontalGradient(
     colors = listOf(
         Color.Transparent,
-        Color(0xFFF59E0B).copy(alpha = 0.8f),
-        Color(0xFFFDE68A),
-        Color(0xFFF59E0B).copy(alpha = 0.8f),
+        Color(0xFFF472B6).copy(alpha = 0.8f),
+        Color(0xFFFBCFE8),
+        Color(0xFFF472B6).copy(alpha = 0.8f),
         Color.Transparent
     )
 )
 
-// Royal Metallic Gold Shimmer Gradient (রাজকীয় স্বর্ণালী মেটালিক শিমার)
+// রোজ-গোল্ড শিমার
 val RoyalGoldShimmerGradient = Brush.linearGradient(
     colors = listOf(
-        Color(0xFFBF953F),
-        Color(0xFFFCF6BA),
-        Color(0xFFB38728),
-        Color(0xFFFBF5B7),
-        Color(0xFFAA771C)
+        Color(0xFFBE185D),
+        Color(0xFFFBCFE8),
+        Color(0xFFDB2777),
+        Color(0xFFFCE7F3),
+        Color(0xFFAD054F)
     )
 )
 
-// Royal Emerald Shimmer Gradient (রাজকীয় পান্না ও মেহরাব শিমার)
+// ব্র্যান্ড পিংক শিমার
 val RoyalEmeraldShimmerGradient = Brush.linearGradient(
     colors = listOf(
-        Color(0xFF022C22),
-        Color(0xFF065F46),
-        Color(0xFF047857),
-        Color(0xFF10B981),
-        Color(0xFF064E3B)
+        Color(0xFF6B0235),
+        Color(0xFFAD054F),
+        Color(0xFFE2136E),
+        Color(0xFFF472B6),
+        Color(0xFFE2136E)
     )
 )
 
-// Dynamic Waqt Sky Ambient Lighting (ওয়াক্তভিত্তিক জীবন্ত আকাশ আবহ)
+// ওয়াক্তভিত্তিক আকাশ অ্যাম্বিয়েন্ট (নামাজের সময় বোঝায় — অপরিবর্তিত রাখা হয়েছে)
 val WaqtFajrSkyGradient = Brush.verticalGradient(
     colors = listOf(
         Color(0xFF0A1128),
@@ -139,10 +140,10 @@ val WaqtFajrSkyGradient = Brush.verticalGradient(
 
 val WaqtDhuhrSkyGradient = Brush.verticalGradient(
     colors = listOf(
-        Color(0xFF022C22),
-        Color(0xFF064E3B),
-        Color(0xFF0F766E),
-        Color(0xFF0284C7).copy(alpha = 0.75f)
+        Color(0xFF4A0124),
+        Color(0xFFAD054F),
+        Color(0xFFE2136E),
+        Color(0xFFF472B6)
     )
 )
 
@@ -184,4 +185,3 @@ fun getPrayerSkyGradient(prayerNameBn: String): Brush = when {
     prayerNameBn.contains("ইশা", ignoreCase = true) -> WaqtIshaSkyGradient
     else -> MosqueEmeraldDarkGradient
 }
-

@@ -551,7 +551,7 @@ fun MosqueAppShell(
                     label = "MainTabTransition"
                 ) { destination ->
                     when (destination) {
-                        "dashboard" -> DashboardScreen(
+                        "dashboard" -> BkashStyleHomeScreen(
                             viewModel = viewModel,
                             onNavigateToTab = { tabIndex ->
                                 if (tabIndex in currentNavItems.indices) {
@@ -895,7 +895,7 @@ fun MosqueAppShell(
                     onOpenReceiveChanda = { showReceiveChandaDialog = true },
                     onOpenScheduleMeeting = { showScheduleMeetingDialog = true }
                 )
-                else -> DashboardScreen(
+                else -> BkashStyleHomeScreen(
                     viewModel = viewModel,
                     onNavigateToTab = { currentTabIndex = 0 },
                     onOpenDialog = {}
