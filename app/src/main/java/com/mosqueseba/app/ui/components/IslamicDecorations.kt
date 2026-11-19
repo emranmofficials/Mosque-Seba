@@ -117,8 +117,8 @@ fun MehrabArchCard(
             .shadow(
                 elevation = elevation,
                 shape = RoundedCornerShape(20.dp),
-                spotColor = Color(0xFFAD054F).copy(alpha = if (isDark) 0.3f else 0.06f),
-                ambientColor = Color(0xFFAD054F).copy(alpha = if (isDark) 0.2f else 0.04f)
+                spotColor = MosqueEmeraldPrimary.copy(alpha = if (isDark) 0.3f else 0.06f),
+                ambientColor = MosqueEmeraldDark.copy(alpha = if (isDark) 0.2f else 0.04f)
             ),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = backgroundColor),
@@ -214,7 +214,7 @@ fun HijriDateBanner(
             modifier = Modifier
                 .background(
                     Brush.verticalGradient(
-                        listOf(Color(0xFF4A0124), Color(0xFF6B0235), Color(0xFFAD054F))
+                        listOf(MosqueEmeraldDark, MosqueEmeraldPrimary, MosqueEmeraldLight)
                     )
                 )
                 .padding(horizontal = 16.dp, vertical = 12.dp),

@@ -1,5 +1,10 @@
 package com.mosqueseba.app.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -10,9 +15,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -22,9 +25,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mosqueseba.app.data.model.UserRole
 import com.mosqueseba.app.ui.components.toBengaliDigits
-import com.mosqueseba.app.ui.theme.MosqueEmeraldSoft
-import com.mosqueseba.app.ui.theme.MosqueGoldLight
+import com.mosqueseba.app.ui.theme.*
 import com.mosqueseba.app.ui.viewmodel.MosqueViewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 /**
  * bKash-অনুপ্রাণিত হোম স্ক্রিন।
@@ -50,6 +54,8 @@ fun BkashStyleHomeScreen(
     val allEvents by viewModel.allEvents.collectAsState()
     val currentRole by viewModel.currentUserRole.collectAsState()
     val isDark = com.mosqueseba.app.ui.theme.LocalIsDarkTheme.current
+    var isBalanceRevealed by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
 
     val memberName = viewModel.sessionManager.getSavedMemberName()
         .ifBlank { currentRole.titleBn }
@@ -83,43 +89,115 @@ fun BkashStyleHomeScreen(
             )
         }
 
-        // bKash-স্টাইল ব্যালেন্স কার্ড → বায়তুল মাল ব্যালেন্স
+        // bKash-স্টাইল ইন্টারঅ্যাক্টিভ ব্যালেন্স কার্ড → বায়তুল মাল নিট স্থিতি
         item {
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(18.dp),
-                color = MaterialTheme.colorScheme.primary,
-                shadowElevation = 6.dp
+                shape = RoundedCornerShape(20.dp),
+                color = MosqueEmeraldDark,
+                shadowElevation = 6.dp,
+                border = BorderStroke(1.dp, MosqueGold.copy(alpha = 0.35f))
             ) {
-                Column(modifier = Modifier.padding(18.dp)) {
-                    Text(
-                        text = "বায়তুল মাল ব্যালেন্স",
-                        color = Color.White.copy(alpha = 0.88f),
-                        fontSize = 13.sp
-                    )
-                    Text(
-                        text = "৳ ${toBengaliDigits(netBalance.toLong().toString())}",
-                        color = Color.White,
-                        fontSize = 30.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(Modifier.height(14.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        BalanceChip(
-                            label = "মোট আয়",
-                            value = "৳ ${toBengaliDigits(totalIncome.toLong().toString())}",
-                            modifier = Modifier.weight(1f)
-                        )
-                        BalanceChip(
-                            label = "মোট ব্যয়",
-                            value = "৳ ${toBengaliDigits(totalExpense.toLong().toString())}",
-                            modifier = Modifier.weight(1f)
-                        )
-                        BalanceChip(
-                            label = "সদস্য",
-                            value = toBengaliDigits(memberCount.toString()),
-                            modifier = Modifier.weight(1f)
-                        )
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(MosqueEmeraldGradient)
+                        .padding(18.dp)
+                ) {
+                    Column {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "বায়তুল মাল তহবিল স্থিতি",
+                                color = MosqueGoldLight,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = Color.White.copy(alpha = 0.15f)
+                            ) {
+                                Text(
+                                    text = mosque?.nameBn ?: "মসজিদ সেবা",
+                                    color = Color.White,
+                                    fontSize = 11.sp,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                )
+                            }
+                        }
+
+                        Spacer(Modifier.height(10.dp))
+
+                        // bKash-স্টাইল ট্যাপ-টু-রিভিল ব্যালেন্স বাটন (Interactive Tap-to-Reveal Pill)
+                        Surface(
+                            shape = RoundedCornerShape(24.dp),
+                            color = Color.White.copy(alpha = 0.16f),
+                            border = BorderStroke(1.dp, MosqueGold.copy(alpha = 0.55f)),
+                            modifier = Modifier
+                                .clickable {
+                                    if (!isBalanceRevealed) {
+                                        coroutineScope.launch {
+                                            isBalanceRevealed = true
+                                            delay(5000)
+                                            isBalanceRevealed = false
+                                        }
+                                    } else {
+                                        isBalanceRevealed = false
+                                    }
+                                }
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .padding(horizontal = 14.dp, vertical = 7.dp)
+                                    .animateContentSize()
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.AccountBalanceWallet,
+                                    contentDescription = null,
+                                    tint = MosqueGold,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(Modifier.width(8.dp))
+                                if (isBalanceRevealed) {
+                                    Text(
+                                        text = "৳ ${toBengaliDigits(netBalance.toLong().toString())}",
+                                        color = Color.White,
+                                        fontSize = 18.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                } else {
+                                    Text(
+                                        text = "ব্যালেন্স জানতে ট্যাপ করুন",
+                                        color = Color.White.copy(alpha = 0.95f),
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(Modifier.height(14.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            BalanceChip(
+                                label = "মোট আয়",
+                                value = "৳ ${toBengaliDigits(totalIncome.toLong().toString())}",
+                                modifier = Modifier.weight(1f)
+                            )
+                            BalanceChip(
+                                label = "মোট ব্যয়",
+                                value = "৳ ${toBengaliDigits(totalExpense.toLong().toString())}",
+                                modifier = Modifier.weight(1f)
+                            )
+                            BalanceChip(
+                                label = "সদস্য",
+                                value = toBengaliDigits(memberCount.toString()),
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
                     }
                 }
             }

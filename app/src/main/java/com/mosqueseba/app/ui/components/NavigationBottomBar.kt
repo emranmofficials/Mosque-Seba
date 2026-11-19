@@ -156,13 +156,13 @@ fun NavigationBottomBar(
     val inactiveIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.68f)
     val inactiveTextColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.82f)
     val indicatorColor = activeColor.copy(alpha = if (isDark) 0.24f else 0.14f)
-    // bKash-স্টাইল পিংক ট্রিম (আগের সোনালি ট্রিমের বদলে)
+    // Islamic Gold & Emerald Accent Trim
     val topLine = Brush.horizontalGradient(
         colors = listOf(
             Color.Transparent,
-            MosqueEmeraldPrimary.copy(alpha = if (isDark) 0.8f else 0.65f),
-            MosqueEmeraldLight.copy(alpha = if (isDark) 0.6f else 0.45f),
-            MosqueEmeraldPrimary.copy(alpha = if (isDark) 0.8f else 0.65f),
+            MosqueGold.copy(alpha = if (isDark) 0.8f else 0.65f),
+            MosqueGoldLight.copy(alpha = if (isDark) 0.6f else 0.45f),
+            MosqueGold.copy(alpha = if (isDark) 0.8f else 0.65f),
             Color.Transparent
         )
     )
@@ -177,7 +177,7 @@ fun NavigationBottomBar(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(1.5.dp)
+                    .height(2.dp)
                     .background(topLine)
             )
             NavigationBar(
@@ -188,15 +188,34 @@ fun NavigationBottomBar(
             ) {
                 items.forEachIndexed { index, item ->
                     val isSelected = currentTabIndex == index
+                    val isCenter = index == 2
                     NavigationBarItem(
                         selected = isSelected,
                         onClick = { onTabSelected(index) },
                         icon = {
-                            Icon(
-                                imageVector = if (isSelected) item.selectedIcon else item.unselectedIcon,
-                                contentDescription = item.titleBn,
-                                modifier = Modifier.size(if (isSelected) 23.dp else 21.dp)
-                            )
+                            if (isCenter) {
+                                Surface(
+                                    shape = androidx.compose.foundation.shape.CircleShape,
+                                    color = if (isSelected) MosqueGold else (if (isDark) MaterialTheme.colorScheme.primaryContainer else MosqueEmeraldSoft),
+                                    shadowElevation = if (isSelected) 4.dp else 1.dp,
+                                    modifier = Modifier.size(34.dp)
+                                ) {
+                                    Box(contentAlignment = androidx.compose.ui.Alignment.Center) {
+                                        Icon(
+                                            imageVector = if (isSelected) item.selectedIcon else item.unselectedIcon,
+                                            contentDescription = item.titleBn,
+                                            tint = if (isSelected) Color.White else MosqueEmeraldPrimary,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
+                                }
+                            } else {
+                                Icon(
+                                    imageVector = if (isSelected) item.selectedIcon else item.unselectedIcon,
+                                    contentDescription = item.titleBn,
+                                    modifier = Modifier.size(if (isSelected) 23.dp else 21.dp)
+                                )
+                            }
                         },
                         label = {
                             Text(

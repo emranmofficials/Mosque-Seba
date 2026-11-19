@@ -475,13 +475,13 @@ fun RoyalRecentActivitiesCard(
                         }
                         ActivityRowItem(
                             icon = Icons.Default.AccountBalanceWallet,
-                            iconBg = if (isDark) Color(0xFFAD054F) else Color(0xFFFDEFF4),
-                            iconTint = if (isDark) Color(0xFF34D399) else Color(0xFF047857),
+                            iconBg = if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft,
+                            iconTint = if (isDark) Color(0xFF34D399) else MosqueEmeraldPrimary,
                             title = txn.description.takeIf { it.isNotBlank() } ?: txn.categoryNameBn,
                             subtitle = "তারিখ: ${txn.txnDate}",
                             tagText = "৳ ${toBengaliDigits(txn.amount.toInt().toString())}",
-                            tagBg = if (isDark) Color(0xFFAD054F) else Color(0xFFFDEFF4),
-                            tagTextColor = if (isDark) Color(0xFF34D399) else Color(0xFF047857),
+                            tagBg = if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft,
+                            tagTextColor = if (isDark) Color(0xFF34D399) else MosqueEmeraldPrimary,
                             primaryText = primaryText,
                             secondaryText = secondaryText
                         )

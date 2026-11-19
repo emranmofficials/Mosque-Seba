@@ -53,9 +53,9 @@ enum class MosqueToastType(
         iconTint = MosqueGold,
         bgBrush = Brush.linearGradient(
             listOf(
-                Color(0xFFAD054F),
-                Color(0xFFBE185D),
-                Color(0xFF9D174D)
+                MosqueEmeraldDark,
+                MosqueEmeraldPrimary,
+                MosqueEmeraldLight
             )
         ),
         borderColor = MosqueGold.copy(alpha = 0.65f)
