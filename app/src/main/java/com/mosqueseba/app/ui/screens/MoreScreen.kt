@@ -434,12 +434,14 @@ fun MoreScreen(
                 val isGeneralMember = currentRole == UserRole.GENERAL_MEMBER
                 val canReceiveChanda = currentRole.canManageFinance()
                 val savedMemberId = viewModel.sessionManager.getSavedMemberId()
-                val currentMemberProfile = remember(allMembers, savedMemberId, currentRole) {
-                    allMembers.firstOrNull { it.id == savedMemberId }
-                        ?: allMembers.firstOrNull { it.roleCode.equals(currentRole.code, ignoreCase = true) }
+                // শুধু নিজের memberId — অন্য সদস্যের হার বা রসিদ কখনো দেখানো হয় না।
+                val currentMemberProfile = remember(allMembers, savedMemberId) {
+                    if (savedMemberId.isNullOrBlank()) null
+                    else allMembers.firstOrNull { it.id == savedMemberId }
                 }
                 val displayedPayments = if (isGeneralMember) {
-                    chandaPayments.filter { it.memberId == savedMemberId }.ifEmpty { chandaPayments.take(2) }
+                    if (savedMemberId.isNullOrBlank()) emptyList()
+                    else chandaPayments.filter { it.memberId == savedMemberId }
                 } else chandaPayments
                 val myPaidTotal = displayedPayments.sumOf { it.amountPaid }
 

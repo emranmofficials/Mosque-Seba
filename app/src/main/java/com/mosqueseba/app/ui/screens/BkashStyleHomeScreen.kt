@@ -24,6 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mosqueseba.app.data.model.UserRole
+import com.mosqueseba.app.ui.components.DashboardRolePolicy
 import com.mosqueseba.app.ui.components.toBengaliDigits
 import com.mosqueseba.app.ui.theme.*
 import com.mosqueseba.app.ui.viewmodel.MosqueViewModel
@@ -204,14 +205,21 @@ fun BkashStyleHomeScreen(
         }
 
         // bKash-এর QR / সার্ভিস কার্ড → মসজিদের QR রসিদ ও স্বচ্ছ হিসাব
+        // কোষাধ্যক্ষ/অডমিন → আদায়; সাধারণ সদস্য → নিজের চাঁদা ও রসিদ।
         item {
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 FeatureCard(
-                    title = "চাঁদা QR",
+                    title = when {
+                        currentRole.canManageFinance() -> "চাঁদা আদায়"
+                        currentRole == UserRole.GENERAL_MEMBER -> "আমার চাঁদা"
+                        else -> "চাঁদা রেজিস্টার"
+                    },
                     subtitle = "ডিজিটাল রসিদ",
                     icon = Icons.Filled.QrCode2,
                     modifier = Modifier.weight(1f),
-                    onClick = { onOpenDialog("my_chanda") }
+                    onClick = {
+                        onOpenDialog(if (currentRole.canManageFinance()) "receive_chanda" else "my_chanda")
+                    }
                 )
                 FeatureCard(
                     title = "স্বচ্ছ হিসাব",
@@ -239,17 +247,11 @@ fun BkashStyleHomeScreen(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(Modifier.height(10.dp))
-                    val chandaKey = if (currentRole.canManageFinance()) "receive_chanda" else "my_chanda"
-                    val actions = listOf(
-                        QuickAction("চাঁদা", Icons.Filled.Payments, chandaKey),
-                        QuickAction("আয়", Icons.Filled.AccountBalanceWallet, "add_income"),
-                        QuickAction("ব্যয়", Icons.Filled.ReceiptLong, "add_expense"),
-                        QuickAction("সদস্য", Icons.Filled.People, "members"),
-                        QuickAction("ক্যাশবক্স", Icons.Filled.Inventory2, "cashbox"),
-                        QuickAction("মাদরাসা", Icons.Filled.School, "madrasa"),
-                        QuickAction("সভা", Icons.Filled.EventAvailable, "meetings"),
-                        QuickAction("ইভেন্ট", Icons.Filled.Celebration, "events")
-                    )
+                    // দায়িত্ব-ভিত্তিক কুইক অ্যাকশন: প্রতিটি পদবি শুধু নিজের প্রয়োজনীয় কাজ দেখে।
+                    // সাধারণ সদস্য এখন কমিটির আয়-ব্যয়/সদস্য তালিকা দেখতে পাবে না।
+                    val actions = DashboardRolePolicy.quickActionsFor(currentRole).map {
+                        QuickAction(it.labelBn, it.icon, it.dialogKey)
+                    }
                     actions.chunked(4).forEach { row ->
                         Row(
                             modifier = Modifier.fillMaxWidth(),

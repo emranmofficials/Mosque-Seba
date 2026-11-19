@@ -488,6 +488,13 @@ fun MosqueAppShell(
                         }
                     }
                 )
+            } else if (overlaySubModule == "chanda" && currentRole == UserRole.GENERAL_MEMBER) {
+                // সাধারণ সদস্যের জন্য overlay-ও self-only 'আমার চাঁদা' স্ক্রিন।
+                MyChandaScreen(
+                    viewModel = viewModel,
+                    onOpenReceipt = { chandaReceiptPreview = it },
+                    onBack = { overlaySubModule = null }
+                )
             } else if (overlaySubModule != null) {
                 MoreScreen(
                     viewModel = viewModel,
@@ -877,11 +884,9 @@ fun MosqueAppShell(
                         )
                     }
                 }
-                "my_chanda" -> MoreScreen(
+                "my_chanda" -> MyChandaScreen(
                     viewModel = viewModel,
-                    initialSubModule = "chanda",
-                    onOpenReceiveChanda = { showReceiveChandaDialog = true },
-                    onOpenScheduleMeeting = { showScheduleMeetingDialog = true }
+                    onOpenReceipt = { chandaReceiptPreview = it }
                 )
                 "welfare" -> MoreScreen(
                     viewModel = viewModel,

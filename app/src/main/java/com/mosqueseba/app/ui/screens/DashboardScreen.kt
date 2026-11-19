@@ -90,7 +90,8 @@ fun DashboardScreen(
     val (_, nextPrayerSummary) = computeTodayPrayerSchedule()
     val nextMeeting = allMeetings.firstOrNull { it.status == "upcoming" } ?: allMeetings.firstOrNull()
     val savedMemberId = viewModel.sessionManager.getSavedMemberId()
-    val memberChandaPayments = allChandaPayments.filter { it.memberId == savedMemberId }.ifEmpty { allChandaPayments.take(1) }
+    val memberChandaPayments = if (savedMemberId.isNullOrBlank()) emptyList()
+    else allChandaPayments.filter { it.memberId == savedMemberId }
     val myChandaPaid = memberChandaPayments.firstOrNull()?.amountPaid ?: 0.0
     val myChandaSub = memberChandaPayments.firstOrNull()?.let { "পরিশোধিত • ${it.month}" } ?: "চলতি মাস"
     val unverifiedCashboxes = allCashboxRecords.filter { !it.witnessVerified }
