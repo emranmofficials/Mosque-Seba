@@ -2,7 +2,7 @@ package com.mosqueseba.app.ui.components
 
 import android.widget.Toast
 import androidx.compose.animation.*
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -483,6 +484,370 @@ fun ExecutiveMosqueHeroCard(
                             .padding(horizontal = 4.dp, vertical = 2.dp)
                     } else Modifier
                 )
+            }
+        }
+    }
+}
+
+/**
+ * Combined Mosque & Daily Prayer Times Hero Card.
+ * Unifies Executive Mosque overview (Identity, Committee ID, Duties) with daily prayer times
+ * into an ultra-compact, space-saving Mehrab Arch Card.
+ */
+@Composable
+fun CombinedMosquePrayerHeroCard(
+    mosque: MosqueEntity?,
+    currentRole: UserRole = UserRole.PRESIDENT,
+    showHijriDate: Boolean = true,
+    onDutiesClick: () -> Unit,
+    onMosqueProfileClick: (() -> Unit)? = null,
+    onViewFullScheduleClick: () -> Unit = {}
+) {
+    val context = LocalContext.current
+    @Suppress("DEPRECATION")
+    val clipboardManager = LocalClipboardManager.current
+
+    val nameBn = mosque?.nameBn ?: "মসজিদ সেবা"
+    val baseAddress = mosque?.address ?: "ঠিকানা যুক্ত করা হয়নি"
+    val fullAddress = remember(baseAddress, mosque?.upazila, mosque?.district) {
+        val extra = listOf(mosque?.upazila.orEmpty(), mosque?.district.orEmpty())
+            .filter { it.isNotBlank() && !baseAddress.contains(it, ignoreCase = true) }
+        if (extra.isNotEmpty()) "$baseAddress (${extra.joinToString(", ")})" else baseAddress
+    }
+    val committeeId = mosque?.committeeId ?: "কমিটি আইডি"
+    val hijriDate = remember { formatCurrentHijriDateBn() }
+    val mosqueLogoBitmap = remember(mosque?.logoUrl) { loadLocalThumbnail(mosque?.logoUrl, 256) }
+    val (prayers, nextPrayerSummary) = remember { computeTodayPrayerSchedule() }
+    val skyGradient = remember(nextPrayerSummary.nameBn) { getPrayerSkyGradient(nextPrayerSummary.nameBn) }
+
+    var copied by remember { mutableStateOf(false) }
+    LaunchedEffect(copied) {
+        if (copied) {
+            kotlinx.coroutines.delay(1600)
+            copied = false
+        }
+    }
+
+    val infiniteTransition = rememberInfiniteTransition(label = "HeroPrayerPulse")
+    val pulseAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.45f,
+        targetValue = 1.0f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1100, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "heroPulseAlpha"
+    )
+
+    MehrabArchCard(
+        modifier = Modifier.fillMaxWidth(),
+        backgroundColor = Color.Transparent,
+        borderColor = MosqueGold.copy(alpha = 0.45f),
+        elevation = 3.dp
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(skyGradient)
+                .padding(horizontal = 12.dp, vertical = 10.dp)
+        ) {
+            // Row 1: Slim Header - Hijri Date & Bismillah + Committee ID Copy Chip
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (showHijriDate) {
+                    Surface(
+                        color = Color.Black.copy(alpha = 0.25f),
+                        shape = RoundedCornerShape(6.dp),
+                        border = BorderStroke(0.7.dp, MosqueGold.copy(alpha = 0.45f))
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp)
+                        ) {
+                            ArabesqueStarMotif(size = 10.dp, color = MosqueGoldLight)
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = hijriDate,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MosqueGoldLight
+                            )
+                        }
+                    }
+                } else {
+                    Text(
+                        text = "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ",
+                        fontSize = 11.5.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MosqueGoldLight
+                    )
+                }
+
+                // Copyable Committee ID
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = Color.Black.copy(alpha = 0.25f),
+                    border = BorderStroke(0.7.dp, MosqueGold.copy(alpha = 0.4f)),
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(6.dp))
+                        .clickable {
+                            clipboardManager.setText(AnnotatedString(committeeId))
+                            copied = true
+                            Toast.makeText(context, "কমিটি আইডি ($committeeId) কপি করা হয়েছে", Toast.LENGTH_SHORT).show()
+                        }
+                        .testTag("hero_copy_committee_id_button")
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                    ) {
+                        AnimatedContent(
+                            targetState = copied,
+                            transitionSpec = {
+                                (fadeIn(tween(180)) + scaleIn(initialScale = 0.85f)) togetherWith
+                                    (fadeOut(tween(140)) + scaleOut(targetScale = 0.85f))
+                            },
+                            label = "CopyIdAnim"
+                        ) { isCopied ->
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = if (isCopied) Icons.Default.CheckCircle else Icons.Default.ContentCopy,
+                                    contentDescription = "কপি করুন",
+                                    tint = if (isCopied) MosqueGreenAccent else MosqueGold,
+                                    modifier = Modifier.size(11.dp)
+                                )
+                                Spacer(modifier = Modifier.width(3.dp))
+                                Text(
+                                    text = if (isCopied) "কপি হয়েছে" else "আইডি: $committeeId",
+                                    fontSize = 10.sp,
+                                    color = if (isCopied) MosqueGreenAccent else MosqueGoldLight,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(7.dp))
+
+            // Row 2: Official Mosque Logo + Name + Address + Role Duties Button
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(10.dp))
+                        .then(
+                            if (onMosqueProfileClick != null) {
+                                Modifier.clickable(onClick = onMosqueProfileClick)
+                            } else Modifier
+                        ),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(42.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .border(1.2.dp, MosqueGoldGradient, RoundedCornerShape(10.dp))
+                            .background(MosqueEmeraldDark)
+                            .padding(2.dp)
+                            .testTag("hero_mosque_logo"),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (mosqueLogoBitmap != null) {
+                            Image(
+                                bitmap = mosqueLogoBitmap,
+                                contentDescription = "মসজিদের অফিসিয়াল লোগো",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .clip(RoundedCornerShape(8.dp))
+                            )
+                        } else {
+                            Image(
+                                painter = painterResource(id = R.drawable.app_logo),
+                                contentDescription = "মসজিদের অফিসিয়াল লোগো",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .clip(RoundedCornerShape(8.dp))
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.width(10.dp))
+
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = nameBn,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = Color.White,
+                            fontWeight = FontWeight.ExtraBold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Spacer(modifier = Modifier.height(1.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.LocationOn,
+                                contentDescription = null,
+                                tint = MosqueGold,
+                                modifier = Modifier.size(11.dp)
+                            )
+                            Spacer(modifier = Modifier.width(3.dp))
+                            Text(
+                                text = fullAddress,
+                                fontSize = 10.5.sp,
+                                color = Color.White.copy(alpha = 0.88f),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(6.dp))
+
+                // Compact Duties Button
+                Surface(
+                    onClick = onDutiesClick,
+                    shape = RoundedCornerShape(8.dp),
+                    color = MosqueGold,
+                    modifier = Modifier.testTag("president_duties_strip_button")
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 7.dp, vertical = 5.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.VerifiedUser,
+                            contentDescription = "দায়িত্ব তালিকা",
+                            tint = MosqueEmeraldDark,
+                            modifier = Modifier.size(12.dp)
+                        )
+                        Spacer(modifier = Modifier.width(3.dp))
+                        Text(
+                            text = "দায়িত্ব",
+                            fontSize = 10.5.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = MosqueEmeraldDark
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Row 3: Next Jamat Countdown Pill & "পূর্ণ সূচি" Button
+            Surface(
+                shape = RoundedCornerShape(8.dp),
+                color = Color.Black.copy(alpha = 0.22f),
+                border = BorderStroke(0.8.dp, MosqueGold.copy(alpha = 0.35f)),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable(onClick = onViewFullScheduleClick)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp, vertical = 5.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(6.dp)
+                                .clip(CircleShape)
+                                .background(MosqueGoldLight.copy(alpha = pulseAlpha))
+                        )
+                        Spacer(modifier = Modifier.width(5.dp))
+                        Text(
+                            text = "পরবর্তী জামাত: ${nextPrayerSummary.nameBn} ${nextPrayerSummary.iqamahTimeBn} • বাকি ${nextPrayerSummary.remainingTextBn}",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MosqueGoldLight,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(start = 4.dp)
+                    ) {
+                        Text(
+                            text = "পূর্ণ সূচি",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MosqueGold
+                        )
+                        Spacer(modifier = Modifier.width(2.dp))
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                            contentDescription = null,
+                            tint = MosqueGold,
+                            modifier = Modifier.size(10.dp)
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(7.dp))
+
+            // Row 4: 5 Prayers Compact Horizontal Row
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable(onClick = onViewFullScheduleClick),
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                prayers.forEach { item ->
+                    val isNext = item.isNext
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(
+                                if (isNext) MosqueEmeraldDark.copy(alpha = 0.85f)
+                                else Color.Black.copy(alpha = 0.28f)
+                            )
+                            .border(
+                                width = if (isNext) 1.2.dp else 0.6.dp,
+                                color = if (isNext) MosqueGold else Color.White.copy(alpha = 0.15f),
+                                shape = RoundedCornerShape(8.dp)
+                            )
+                            .padding(vertical = 5.dp, horizontal = 2.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = item.nameBn,
+                                fontSize = 10.sp,
+                                fontWeight = if (isNext) FontWeight.ExtraBold else FontWeight.Medium,
+                                color = if (isNext) MosqueGoldLight else Color.White.copy(alpha = 0.8f)
+                            )
+                            Spacer(modifier = Modifier.height(1.dp))
+                            Text(
+                                text = item.iqamahTime,
+                                fontSize = 11.sp,
+                                fontWeight = if (isNext) FontWeight.ExtraBold else FontWeight.SemiBold,
+                                color = if (isNext) Color.White else Color.White.copy(alpha = 0.95f)
+                            )
+                        }
+                    }
+                }
             }
         }
     }

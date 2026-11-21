@@ -176,34 +176,29 @@ fun DashboardScreen(
             }
         }
 
-        // 1. Mosque Overview Card (Photo, Location, Established Date & Active Status)
-        item(key = "role_hero") {
-            ExecutiveMosqueHeroCard(
+        // 1. Combined Mosque Overview & Daily Prayer Times Hero Card (Compact Devotional Hero)
+        item(key = "combined_mosque_prayer_hero") {
+            CombinedMosquePrayerHeroCard(
                 mosque = mosque,
                 currentRole = currentRole,
                 showHijriDate = showHijriBanner,
                 onDutiesClick = { showDutiesDialog = true },
-                onMosqueProfileClick = { onOpenDialog("mosque_profile") }
+                onMosqueProfileClick = { onOpenDialog("mosque_profile") },
+                onViewFullScheduleClick = { onOpenDialog("view_prayers") }
             )
         }
 
-        // 2. Dynamic Smart Digital Board (Hijri Calendar, Ramadan Hub, Notices & Wall Quotes)
-        item(key = "global_top_smart_board") {
-            SmartBoardCard(
+        // 2. Dynamic Smart Digital Board Marquee Ticker (Single-line scrolling announcements)
+        item(key = "global_top_smart_board_ticker") {
+            SmartBoardTickerCard(
                 quotes = allSmartBoardQuotes,
                 notices = allNotices,
                 hijriDayOffset = hijriDayOffset,
-                includeDateAndPrayerSlides = true,
                 onOpenIslamicCalendar = { onOpenDialog("islamic_calendar") },
                 onOpenRamadanHub = { onOpenDialog("ramadan_hub") },
                 onOpenPrayerSchedule = { onOpenDialog("view_prayers") },
                 onOpenNotices = { onOpenDialog("notices") }
             )
-        }
-
-        // 3. Daily Prayer Schedule & Jamat Times (Prime Devotional Utility)
-        item(key = "global_top_prayer_card") {
-            PrayerCard(onViewFullScheduleClick = { onOpenDialog("view_prayers") })
         }
 
         // 4. Actionable Priority Alerts (Conditionally shown ONLY when user action is required)

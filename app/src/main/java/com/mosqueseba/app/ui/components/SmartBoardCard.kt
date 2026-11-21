@@ -2,7 +2,9 @@ package com.mosqueseba.app.ui.components
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -485,6 +487,152 @@ fun SmartBoardCard(
                     }
                 }
             }
+        }
+    }
+}
+
+/**
+ * Compact Single-Line Marquee Ticker for Announcements, Notices & Hadith.
+ * Streams continuous text horizontally without occupying vertical screen real estate.
+ */
+@Composable
+fun SmartBoardTickerCard(
+    quotes: List<SmartBoardQuoteEntity> = emptyList(),
+    notices: List<NoticeEntity> = emptyList(),
+    hijriDayOffset: Int = 0,
+    onOpenIslamicCalendar: () -> Unit = {},
+    onOpenRamadanHub: () -> Unit = {},
+    onOpenPrayerSchedule: () -> Unit = {},
+    onOpenNotices: () -> Unit = {},
+    modifier: Modifier = Modifier
+) {
+    val isDark = LocalIsDarkTheme.current
+
+    // 1. Upcoming Islamic Event Calculation
+    val nextEventCountdown = remember(hijriDayOffset) {
+        IslamicCalendarEngine.getNextUpcomingMajorEvent(hijriDayOffset)
+    }
+
+    // 2. Ramadan Status Calculation
+    val ramadanStatus = remember(hijriDayOffset) {
+        RamadanEngine.getTodayStatus(RamadanEngine.bangladeshDistricts.first(), hijriDayOffset)
+    }
+
+    // 3. Pinned / Latest Published Notices
+    val activeNotices = remember(notices) {
+        notices.filter { it.status == "published" }
+    }
+
+    // 4. Pinned / Active Quotes
+    val pinnedQuotes = remember(quotes) {
+        quotes.filter { it.isPinned }.ifEmpty { quotes.take(2) }
+    }
+
+    // Assemble marquee segments
+    val marqueeText = remember(activeNotices, pinnedQuotes, nextEventCountdown, ramadanStatus) {
+        val segments = mutableListOf<String>()
+
+        if (activeNotices.isNotEmpty()) {
+            activeNotices.forEach { n ->
+                val prefix = if (n.priority.equals("urgent", ignoreCase = true)) "🚨 [জরুরি নোটিশ]" else "📢 [মসজিদ নোটিশ]"
+                segments.add("$prefix ${n.title}: ${n.content.replace('\n', ' ').trim()}")
+            }
+        }
+
+        if (ramadanStatus.isRamadanNow) {
+            segments.add("🌙 মাহে রমজান • সেহরি শেষ: ${toBengaliDigits(ramadanStatus.todaySehri)} • ইফতার: ${toBengaliDigits(ramadanStatus.todayIftar)}")
+        } else if (ramadanStatus.daysUntilRamadan in 1..10) {
+            segments.add("🌙 আসন্ন মাহে রমজান: আর মাত্র ${toBengaliDigits(ramadanStatus.daysUntilRamadan.toString())} দিন বাকি")
+        }
+
+        if (nextEventCountdown.isToday || nextEventCountdown.isOngoing || nextEventCountdown.daysRemaining in 1..15) {
+            segments.add("🗓️ ${nextEventCountdown.event.titleBn} (${nextEventCountdown.statusTextBn})")
+        }
+
+        if (pinnedQuotes.isNotEmpty()) {
+            pinnedQuotes.forEach { q ->
+                segments.add("🕊️ ${q.title}: \"${q.message.replace('\n', ' ').trim()}\"")
+            }
+        } else {
+            segments.add("🕊️ হাদিস: \"যে ব্যক্তি আল্লাহর সন্তুষ্টির জন্য মসজিদ নির্মাণ করে, আল্লাহ তার জন্য জান্নাতে একটি ঘর নির্মাণ করবেন।\" (বুখারি)")
+        }
+
+        segments.joinToString("    ✦    ")
+    }
+
+    Surface(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(10.dp))
+            .border(
+                0.8.dp,
+                if (isDark) MosqueNightBorder else MosqueCardBorderSubtle,
+                RoundedCornerShape(10.dp)
+            )
+            .clickable(onClick = onOpenNotices),
+        color = if (isDark) MosqueNightSurfaceVariant else MosqueBgLight,
+        shape = RoundedCornerShape(10.dp),
+        shadowElevation = 1.dp
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 10.dp, vertical = 7.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Left Badge with Icon
+            Surface(
+                color = if (isDark) MosqueGold.copy(alpha = 0.2f) else MosqueEmeraldPrimary.copy(alpha = 0.12f),
+                shape = RoundedCornerShape(6.dp),
+                border = BorderStroke(0.6.dp, if (isDark) MosqueGold.copy(alpha = 0.5f) else MosqueEmeraldPrimary.copy(alpha = 0.3f))
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Campaign,
+                        contentDescription = "ঘোষণা",
+                        tint = if (isDark) MosqueGoldLight else MosqueEmeraldPrimary,
+                        modifier = Modifier.size(13.dp)
+                    )
+                    Spacer(modifier = Modifier.width(3.dp))
+                    Text(
+                        text = "ঘোষণা",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isDark) MosqueGoldLight else MosqueEmeraldPrimary
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            // Marquee text
+            Text(
+                text = marqueeText,
+                fontSize = 11.5.sp,
+                fontWeight = FontWeight.Medium,
+                color = if (isDark) MosqueNightTextPrimary else MosqueTextPrimary,
+                maxLines = 1,
+                modifier = Modifier
+                    .weight(1f)
+                    .basicMarquee(
+                        iterations = Int.MAX_VALUE,
+                        delayMillis = 1200,
+                        initialDelayMillis = 600,
+                        velocity = 35.dp
+                    )
+            )
+
+            Spacer(modifier = Modifier.width(4.dp))
+
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                contentDescription = "সকল নোটিশ",
+                tint = if (isDark) MosqueGoldLight.copy(alpha = 0.7f) else MosqueEmeraldPrimary.copy(alpha = 0.7f),
+                modifier = Modifier.size(13.dp)
+            )
         }
     }
 }
