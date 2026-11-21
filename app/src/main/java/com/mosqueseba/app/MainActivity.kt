@@ -407,9 +407,9 @@ fun MosqueAppShell(
                     },
                     onAvatarClick = {
                         overlayUserProfile = null
-                        overlaySubModule = null
+                        showAccountHub = false
                         showNotificationsPage = false
-                        showAccountHub = true
+                        overlaySubModule = "about"
                     },
                     onLogout = onLogout
                 )
@@ -894,6 +894,21 @@ fun MosqueAppShell(
                     initialSubModule = destination,
                     onOpenReceiveChanda = { showReceiveChandaDialog = true },
                     onOpenScheduleMeeting = { showScheduleMeetingDialog = true }
+                )
+                "profile" -> AccountHubScreen(
+                    viewModel = viewModel,
+                    mosque = mosque,
+                    onBack = { currentTabIndex = 0 },
+                    onOpenMosqueProfile = {
+                        overlaySubModule = "about"
+                    },
+                    onOpenMyProfile = {
+                        currentUserProfileTarget?.let { overlayUserProfile = it }
+                    },
+                    onOpenOnboarding = {
+                        onOpenOnboarding()
+                    },
+                    onLogout = onLogout
                 )
                 else -> DashboardScreen(
                     viewModel = viewModel,

@@ -30,112 +30,112 @@ fun getNavItemsForRole(role: com.mosqueseba.app.data.model.UserRole): List<NavIt
         NavItem("সদস্য", Icons.Filled.People, Icons.Outlined.People, "members"),
         NavItem("আয়-ব্যয়", Icons.Filled.AccountBalanceWallet, Icons.Outlined.AccountBalanceWallet, "finance"),
         NavItem("নোটিশ", Icons.Filled.Campaign, Icons.Outlined.Campaign, "notices"),
-        NavItem("আরও", Icons.Filled.Menu, Icons.Outlined.Menu, "more")
+        NavItem("প্রোফাইল", Icons.Filled.Person, Icons.Outlined.Person, "profile")
     )
     com.mosqueseba.app.data.model.UserRole.VICE_PRESIDENT -> listOf(
         NavItem("ড্যাশবোর্ড", Icons.Filled.Dashboard, Icons.Outlined.Dashboard, "dashboard"),
         NavItem("আয়-ব্যয়", Icons.Filled.AccountBalanceWallet, Icons.Outlined.AccountBalanceWallet, "finance"),
         NavItem("সদস্য", Icons.Filled.People, Icons.Outlined.People, "members"),
         NavItem("সভা", Icons.Filled.EventAvailable, Icons.Outlined.EventAvailable, "secretary_meetings"),
-        NavItem("আরও", Icons.Filled.Menu, Icons.Outlined.Menu, "more")
+        NavItem("প্রোফাইল", Icons.Filled.Person, Icons.Outlined.Person, "profile")
     )
     com.mosqueseba.app.data.model.UserRole.TREASURER -> listOf(
         NavItem("ড্যাশবোর্ড", Icons.Filled.Dashboard, Icons.Outlined.Dashboard, "dashboard"),
         NavItem("আয়-ব্যয়", Icons.Filled.AccountBalanceWallet, Icons.Outlined.AccountBalanceWallet, "finance"),
         NavItem("ক্যাশবক্স", Icons.Filled.Inventory2, Icons.Outlined.Inventory2, "cashbox"),
         NavItem("চাঁদা", Icons.Filled.Payments, Icons.Outlined.Payments, "treasurer_chanda"),
-        NavItem("আরও", Icons.Filled.Menu, Icons.Outlined.Menu, "more")
+        NavItem("প্রোফাইল", Icons.Filled.Person, Icons.Outlined.Person, "profile")
     )
     com.mosqueseba.app.data.model.UserRole.ASSISTANT_TREASURER -> listOf(
         NavItem("ড্যাশবোর্ড", Icons.Filled.Dashboard, Icons.Outlined.Dashboard, "dashboard"),
         NavItem("আয়-ব্যয়", Icons.Filled.AccountBalanceWallet, Icons.Outlined.AccountBalanceWallet, "finance"),
         NavItem("ক্যাশবক্স", Icons.Filled.Inventory2, Icons.Outlined.Inventory2, "cashbox"),
         NavItem("চাঁদা", Icons.Filled.Payments, Icons.Outlined.Payments, "treasurer_chanda"),
-        NavItem("আরও", Icons.Filled.Menu, Icons.Outlined.Menu, "more")
+        NavItem("প্রোফাইল", Icons.Filled.Person, Icons.Outlined.Person, "profile")
     )
     com.mosqueseba.app.data.model.UserRole.GENERAL_SECRETARY -> listOf(
         NavItem("ড্যাশবোর্ড", Icons.Filled.Dashboard, Icons.Outlined.Dashboard, "dashboard"),
         NavItem("সদস্য", Icons.Filled.People, Icons.Outlined.People, "members"),
         NavItem("সভা", Icons.Filled.EventAvailable, Icons.Outlined.EventAvailable, "secretary_meetings"),
         NavItem("নথি", Icons.Filled.FolderShared, Icons.Outlined.FolderShared, "office_docs"),
-        NavItem("আরও", Icons.Filled.Menu, Icons.Outlined.Menu, "more")
+        NavItem("প্রোফাইল", Icons.Filled.Person, Icons.Outlined.Person, "profile")
     )
     com.mosqueseba.app.data.model.UserRole.ASSISTANT_SECRETARY -> listOf(
         NavItem("ড্যাশবোর্ড", Icons.Filled.Dashboard, Icons.Outlined.Dashboard, "dashboard"),
         NavItem("সদস্য", Icons.Filled.People, Icons.Outlined.People, "members"),
         NavItem("নোটিশ", Icons.Filled.Campaign, Icons.Outlined.Campaign, "notices"),
         NavItem("নথি", Icons.Filled.FolderShared, Icons.Outlined.FolderShared, "office_docs"),
-        NavItem("আরও", Icons.Filled.Menu, Icons.Outlined.Menu, "more")
+        NavItem("প্রোফাইল", Icons.Filled.Person, Icons.Outlined.Person, "profile")
     )
     com.mosqueseba.app.data.model.UserRole.ORGANIZING_SECRETARY -> listOf(
         NavItem("ড্যাশবোর্ড", Icons.Filled.Dashboard, Icons.Outlined.Dashboard, "dashboard"),
         NavItem("সদস্য", Icons.Filled.People, Icons.Outlined.People, "members"),
         NavItem("ইভেন্ট", Icons.Filled.Celebration, Icons.Outlined.Celebration, "events"),
         NavItem("সভা", Icons.Filled.EventAvailable, Icons.Outlined.EventAvailable, "secretary_meetings"),
-        NavItem("আরও", Icons.Filled.Menu, Icons.Outlined.Menu, "more")
+        NavItem("প্রোফাইল", Icons.Filled.Person, Icons.Outlined.Person, "profile")
     )
     com.mosqueseba.app.data.model.UserRole.PUBLICITY_SECRETARY -> listOf(
         NavItem("ড্যাশবোর্ড", Icons.Filled.Dashboard, Icons.Outlined.Dashboard, "dashboard"),
         NavItem("প্রচারণা", Icons.Filled.ViewCarousel, Icons.Outlined.ViewCarousel, "publicity"),
         NavItem("নোটিশ", Icons.Filled.Campaign, Icons.Outlined.Campaign, "notices"),
         NavItem("ইভেন্ট", Icons.Filled.Celebration, Icons.Outlined.Celebration, "events"),
-        NavItem("আরও", Icons.Filled.Menu, Icons.Outlined.Menu, "more")
+        NavItem("প্রোফাইল", Icons.Filled.Person, Icons.Outlined.Person, "profile")
     )
     com.mosqueseba.app.data.model.UserRole.OFFICE_SECRETARY -> listOf(
         NavItem("ড্যাশবোর্ড", Icons.Filled.Dashboard, Icons.Outlined.Dashboard, "dashboard"),
         NavItem("দপ্তর", Icons.Filled.FolderShared, Icons.Outlined.FolderShared, "office_docs"),
         NavItem("সভা", Icons.Filled.EventAvailable, Icons.Outlined.EventAvailable, "secretary_meetings"),
         NavItem("নোটিশ", Icons.Filled.Campaign, Icons.Outlined.Campaign, "notices"),
-        NavItem("আরও", Icons.Filled.Menu, Icons.Outlined.Menu, "more")
+        NavItem("প্রোফাইল", Icons.Filled.Person, Icons.Outlined.Person, "profile")
     )
     com.mosqueseba.app.data.model.UserRole.WELFARE_EDUCATION_SECRETARY -> listOf(
         NavItem("ড্যাশবোর্ড", Icons.Filled.Dashboard, Icons.Outlined.Dashboard, "dashboard"),
         NavItem("কল্যাণ", Icons.Filled.VolunteerActivism, Icons.Outlined.VolunteerActivism, "secretary_welfare"),
         NavItem("মাদরাসা", Icons.Filled.School, Icons.Outlined.School, "madrasa"),
         NavItem("নোটিশ", Icons.Filled.Campaign, Icons.Outlined.Campaign, "notices"),
-        NavItem("আরও", Icons.Filled.Menu, Icons.Outlined.Menu, "more")
+        NavItem("প্রোফাইল", Icons.Filled.Person, Icons.Outlined.Person, "profile")
     )
     com.mosqueseba.app.data.model.UserRole.EXECUTIVE_MEMBER -> listOf(
         NavItem("ড্যাশবোর্ড", Icons.Filled.Dashboard, Icons.Outlined.Dashboard, "dashboard"),
-        NavItem("সাক্ষী", Icons.Filled.Verified, Icons.Outlined.Verified, "cashbox"),
-        NavItem("সভা", Icons.Filled.EventAvailable, Icons.Outlined.EventAvailable, "secretary_meetings"),
         NavItem("সদস্য", Icons.Filled.People, Icons.Outlined.People, "committee"),
-        NavItem("আরও", Icons.Filled.Menu, Icons.Outlined.Menu, "more")
+        NavItem("সভা", Icons.Filled.EventAvailable, Icons.Outlined.EventAvailable, "secretary_meetings"),
+        NavItem("নোটিশ", Icons.Filled.Campaign, Icons.Outlined.Campaign, "notices"),
+        NavItem("প্রোফাইল", Icons.Filled.Person, Icons.Outlined.Person, "profile")
     )
     com.mosqueseba.app.data.model.UserRole.ADVISORY_BOARD -> listOf(
         NavItem("ড্যাশবোর্ড", Icons.Filled.Dashboard, Icons.Outlined.Dashboard, "dashboard"),
         NavItem("উপদেষ্টা", Icons.Filled.AccountBalance, Icons.Outlined.AccountBalance, "sharia_advisory"),
         NavItem("হিসাব", Icons.Filled.Assessment, Icons.Outlined.Assessment, "transparency"),
         NavItem("সনদ", Icons.Filled.VerifiedUser, Icons.Outlined.VerifiedUser, "charter"),
-        NavItem("আরও", Icons.Filled.Menu, Icons.Outlined.Menu, "more")
+        NavItem("প্রোফাইল", Icons.Filled.Person, Icons.Outlined.Person, "profile")
     )
     com.mosqueseba.app.data.model.UserRole.IMAM -> listOf(
         NavItem("ড্যাশবোর্ড", Icons.Filled.Dashboard, Icons.Outlined.Dashboard, "dashboard"),
+        NavItem("নামাজ", Icons.Filled.AccessTime, Icons.Outlined.AccessTime, "prayer"),
         NavItem("শরিয়াহ", Icons.Filled.MenuBook, Icons.Outlined.MenuBook, "sharia_advisory"),
         NavItem("রোস্টার", Icons.Filled.DateRange, Icons.Outlined.DateRange, "roster"),
-        NavItem("মাদরাসা", Icons.Filled.School, Icons.Outlined.School, "madrasa"),
-        NavItem("আরও", Icons.Filled.Menu, Icons.Outlined.Menu, "more")
+        NavItem("প্রোফাইল", Icons.Filled.Person, Icons.Outlined.Person, "profile")
     )
     com.mosqueseba.app.data.model.UserRole.MUAZZIN -> listOf(
         NavItem("ড্যাশবোর্ড", Icons.Filled.Dashboard, Icons.Outlined.Dashboard, "dashboard"),
         NavItem("নামাজ", Icons.Filled.AccessTime, Icons.Outlined.AccessTime, "prayer"),
         NavItem("রোস্টার", Icons.Filled.DateRange, Icons.Outlined.DateRange, "roster"),
         NavItem("খাবার", Icons.Filled.Restaurant, Icons.Outlined.Restaurant, "food"),
-        NavItem("প্রোফাইল", Icons.Filled.Badge, Icons.Outlined.Badge, "staff_profile")
+        NavItem("প্রোফাইল", Icons.Filled.Person, Icons.Outlined.Person, "profile")
     )
     com.mosqueseba.app.data.model.UserRole.KHADEM -> listOf(
         NavItem("ড্যাশবোর্ড", Icons.Filled.Dashboard, Icons.Outlined.Dashboard, "dashboard"),
         NavItem("খাবার", Icons.Filled.Restaurant, Icons.Outlined.Restaurant, "food"),
         NavItem("রোস্টার", Icons.Filled.DateRange, Icons.Outlined.DateRange, "roster"),
         NavItem("নোটিশ", Icons.Filled.Campaign, Icons.Outlined.Campaign, "notices"),
-        NavItem("প্রোফাইল", Icons.Filled.Badge, Icons.Outlined.Badge, "staff_profile")
+        NavItem("প্রোফাইল", Icons.Filled.Person, Icons.Outlined.Person, "profile")
     )
     com.mosqueseba.app.data.model.UserRole.GENERAL_MEMBER -> listOf(
         NavItem("হোম", Icons.Filled.Dashboard, Icons.Outlined.Dashboard, "dashboard"),
-        NavItem("চাঁদা", Icons.Filled.ReceiptLong, Icons.Outlined.ReceiptLong, "my_chanda"),
-        NavItem("হিসাব", Icons.Filled.Assessment, Icons.Outlined.Assessment, "transparency"),
+        NavItem("নামাজ", Icons.Filled.AccessTime, Icons.Outlined.AccessTime, "prayer"),
+        NavItem("আমার চাঁদা", Icons.Filled.ReceiptLong, Icons.Outlined.ReceiptLong, "my_chanda"),
         NavItem("নোটিশ", Icons.Filled.Campaign, Icons.Outlined.Campaign, "notices"),
-        NavItem("আরও", Icons.Filled.Menu, Icons.Outlined.Menu, "more")
+        NavItem("প্রোফাইল", Icons.Filled.Person, Icons.Outlined.Person, "profile")
     )
 }
 
