@@ -1351,7 +1351,8 @@ class MosqueViewModel(application: Application) : AndroidViewModel(application) 
             // cloud immediately. Without this, no postgres_changes event is emitted,
             // so no other device (including the member) ever sees a live update.
             triggerImmediateCloudSync(force = true)
-            if (sessionManager.isNotificationsEnabled()) {
+            val myMemberId = sessionManager.getSavedMemberId()
+            if (sessionManager.isNotificationsEnabled() && !myMemberId.isNullOrBlank() && payment.memberId == myMemberId) {
                 MosquePushNotificationHelper.postChandaReceiptNotification(getApplication(), payment)
             }
             onRecorded?.invoke(payment)

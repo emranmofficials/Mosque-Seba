@@ -409,18 +409,16 @@ fun buildRoleNotificationItems(
         }
     }
 
-    // 9. Personal Chanda Receipt Update (General Member)
-    if (role == UserRole.GENERAL_MEMBER) {
-        // Only THIS member's receipts. The old `.ifEmpty { chandaPayments.take(1) }`
-        // fallback wrongly showed another member's receipt to members who had none.
+    // 9. Personal Chanda Receipt Update (Strictly for the member who donated)
+    if (!savedMemberId.isNullOrBlank()) {
         val personalReceipts = chandaPayments
-            .filter { savedMemberId != null && it.memberId == savedMemberId }
-        personalReceipts.take(2).forEach { pay ->
+            .filter { it.memberId == savedMemberId }
+        personalReceipts.take(3).forEach { pay ->
             items.add(
                 RoleNotificationItem(
                     id = "chanda_${pay.id}",
                     title = "চাঁদা রসিদ সংগৃহীত (${pay.month})",
-                    summary = "পরিশোধিত ৳${toBengaliDigits(String.format(Locale.getDefault(), "%,.0f", pay.amountPaid))} • রসিদ: ${toBengaliDigits(pay.receiptCode)}",
+                    summary = "পরিশোধিত ৳${toBengaliDigits(String.format(Locale.getDefault(), "%,.0f", pay.amountPaid))} • রসিদ: ${pay.receiptCode}",
                     metaLine = toBengaliDigits(pay.paidAt),
                     badgeText = "ডিজিটাল রসিদ",
                     isUrgent = false,

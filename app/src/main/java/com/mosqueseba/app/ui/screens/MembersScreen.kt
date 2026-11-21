@@ -977,7 +977,7 @@ private fun ChandaMemberCard(
                         Spacer(modifier = Modifier.height(3.dp))
 
                         Text(
-                            text = "আইডি: ${toBengaliDigits(member.memberCode)} • ${toBengaliDigits(member.mobile)}",
+                            text = "আইডি: ${member.memberCode} • ${member.mobile}",
                             style = MaterialTheme.typography.bodySmall,
                             color = secondaryColor,
                             fontSize = 12.sp

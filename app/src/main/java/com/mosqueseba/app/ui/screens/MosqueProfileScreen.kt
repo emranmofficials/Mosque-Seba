@@ -389,46 +389,6 @@ fun MosqueProfileScreen(
                                     Spacer(modifier = Modifier.width(6.dp))
                                     Text("তথ্য সম্পাদনা", fontWeight = FontWeight.Bold)
                                 }
-                            } else if (onOpenMyProfile != null) {
-                                Button(
-                                    onClick = onOpenMyProfile,
-                                    shape = RoundedCornerShape(12.dp),
-                                    colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary),
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .heightIn(min = 48.dp)
-                                        .testTag("mosque_to_my_profile_button")
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.AccountCircle,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text("আমার প্রোফাইল", fontWeight = FontWeight.Bold)
-                                }
-                            }
-                        }
-
-                        if (canEditMosque && onOpenMyProfile != null) {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            OutlinedButton(
-                                onClick = onOpenMyProfile,
-                                shape = RoundedCornerShape(12.dp),
-                                border = BorderStroke(1.dp, MosqueGoldDeep.copy(alpha = 0.6f)),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .heightIn(min = 48.dp)
-                                    .testTag("mosque_to_my_profile_button")
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.AccountCircle,
-                                    contentDescription = null,
-                                    tint = if (isDark) MosqueGoldLight else MosqueEmeraldDark,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text("আমার নিজস্ব প্রোফাইল দেখুন", color = if (isDark) MosqueGoldLight else MosqueEmeraldDark, fontWeight = FontWeight.Bold)
                             }
                         }
                     }

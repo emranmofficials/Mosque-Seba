@@ -290,22 +290,9 @@ fun MemberProfileScreen(
                                 color = MaterialTheme.colorScheme.primary
                             )
                             Text(
-                                text = "আইডি: ${toBengaliDigits(displayCode)}",
+                                text = "আইডি: $displayCode",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-
-                    if ((canManageMembers || isOwnProfile) && (resolvedMember != null || resolvedStaff != null)) {
-                        IconButton(
-                            onClick = { showEditMemberDialog = true },
-                            modifier = Modifier.testTag("profile_edit_button")
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Edit,
-                                contentDescription = "তথ্য সম্পাদনা",
-                                tint = MaterialTheme.colorScheme.primary
                             )
                         }
                     }
@@ -680,10 +667,10 @@ fun MemberProfileScreen(
                     borderColor = MosqueCardBorderGold
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        ProfileInfoRow("সদস্য / স্টাফ কোড", toBengaliDigits(displayCode))
+                        ProfileInfoRow("সদস্য / স্টাফ কোড", displayCode)
                         ProfileInfoRow("পদবি", displayDesignation)
                         ProfileInfoRow("কমিটির স্তর", displayRole.tier.titleBn)
-                        ProfileInfoRow("মোবাইল নম্বর", toBengaliDigits(displayMobile.ifBlank { "প্রযোজ্য নয়" }))
+                        ProfileInfoRow("মোবাইল নম্বর", displayMobile.ifBlank { "প্রযোজ্য নয়" })
                         if (isOwnProfile) {
                             if (isSalaried) {
                                 val salaryVal = resolvedStaff?.salaryAmount ?: 0.0

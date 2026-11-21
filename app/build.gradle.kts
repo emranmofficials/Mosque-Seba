@@ -14,8 +14,8 @@ android {
         applicationId = "com.mosqueseba.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 58
-        versionName = "1.2.1"
+        versionCode = 59
+        versionName = "1.2.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

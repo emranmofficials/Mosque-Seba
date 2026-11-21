@@ -149,7 +149,7 @@ fun AccountHubScreen(
                         Spacer(modifier = Modifier.width(8.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "অ্যাকাউন্ট, প্রোফাইল ও সেটিংস",
+                                text = "আমার প্রোফাইল ও সেটিংস",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface,
@@ -157,7 +157,7 @@ fun AccountHubScreen(
                                 overflow = TextOverflow.Ellipsis
                             )
                             Text(
-                                text = "ব্যক্তিগত ও মসজিদ প্রোফাইল, নিরাপত্তা ও সহায়তা কেন্দ্র",
+                                text = "ব্যক্তিগত তথ্য, নিরাপত্তা ও অ্যাপ নিয়ন্ত্রণ",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 maxLines = 1,
@@ -311,131 +311,6 @@ fun AccountHubScreen(
                             )
                             Text(
                                 text = "সম্পূর্ণ প্রোফাইল দেখুন ›",
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                    }
-                }
-            }
-
-            // 1.2: মসজিদের প্রোফাইল (Mosque Sanctuary Profile Card)
-            item(key = "mosque_profile_card") {
-                Surface(
-                    shape = RoundedCornerShape(14.dp),
-                    color = MaterialTheme.colorScheme.surface,
-                    border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else MosqueCardBorderSubtle),
-                    shadowElevation = 0.5.dp,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable(onClick = onOpenMosqueProfile)
-                        .testTag("account_hub_mosque_profile_card")
-                ) {
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(14.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            // Mosque Logo
-                            Box(
-                                modifier = Modifier
-                                    .size(58.dp)
-                                    .clip(RoundedCornerShape(14.dp))
-                                    .background(if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft)
-                                    .border(1.dp, if (isDark) MosqueNightBorder else MosqueCardBorderSubtle, RoundedCornerShape(14.dp)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                if (mosqueLogoBitmap != null) {
-                                    Image(
-                                        bitmap = mosqueLogoBitmap,
-                                        contentDescription = mosqueNameBn,
-                                        contentScale = ContentScale.Crop,
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .clip(RoundedCornerShape(14.dp))
-                                    )
-                                } else {
-                                    Image(
-                                        painter = painterResource(id = R.drawable.app_logo),
-                                        contentDescription = mosqueNameBn,
-                                        contentScale = ContentScale.Crop,
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .clip(RoundedCornerShape(14.dp))
-                                    )
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.width(14.dp))
-
-                            Column(modifier = Modifier.weight(1f)) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Surface(
-                                        color = if (isDark) MosqueNightSurfaceVariant else MosqueEmeraldSoft,
-                                        shape = RoundedCornerShape(6.dp)
-                                    ) {
-                                        Text(
-                                            text = "মসজিদ প্রোফাইল",
-                                            fontSize = 10.sp,
-                                            fontWeight = FontWeight.ExtraBold,
-                                            color = MaterialTheme.colorScheme.primary,
-                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                        )
-                                    }
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text(
-                                        text = mosqueCommitteeId,
-                                        fontSize = 10.sp,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = mosqueNameBn,
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                                Spacer(modifier = Modifier.height(2.dp))
-                                Text(
-                                    text = "$mosqueAddress • স্থাপিত $mosqueEstBn",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
-
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                                contentDescription = "মসজিদের প্রোফাইল দেখুন",
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-
-                        // Bottom strip
-                        HorizontalDivider(color = if (isDark) MosqueNightBorder else MosqueCardBorderSubtle)
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(if (isDark) MosqueNightSurfaceVariant.copy(alpha = 0.5f) else MosqueEmeraldSoft.copy(alpha = 0.35f))
-                                .padding(horizontal = 14.dp, vertical = 8.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "মসজিদের সাধারণ তথ্য, ব্যাংক হিসাব ও কমিটি",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Text(
-                                text = "মসজিদ পরিচিতি খুলুন ›",
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.primary

@@ -187,15 +187,26 @@ fun DashboardScreen(
             )
         }
 
-        // 1.1 Duty-based personal header: role, responsibility areas, duties and quick actions
-        item(key = "role_responsibility_header") {
-            RoleResponsibilityHeader(
-                role = currentRole,
-                onViewAllDuties = { showDutiesDialog = true }
+        // 2. Dynamic Smart Digital Board (Hijri Calendar, Ramadan Hub, Notices & Wall Quotes)
+        item(key = "global_top_smart_board") {
+            SmartBoardCard(
+                quotes = allSmartBoardQuotes,
+                notices = allNotices,
+                hijriDayOffset = hijriDayOffset,
+                includeDateAndPrayerSlides = true,
+                onOpenIslamicCalendar = { onOpenDialog("islamic_calendar") },
+                onOpenRamadanHub = { onOpenDialog("ramadan_hub") },
+                onOpenPrayerSchedule = { onOpenDialog("view_prayers") },
+                onOpenNotices = { onOpenDialog("notices") }
             )
         }
 
-        // 2. Actionable Priority Alerts (Conditionally shown ONLY when user action is required)
+        // 3. Daily Prayer Schedule & Jamat Times (Prime Devotional Utility)
+        item(key = "global_top_prayer_card") {
+            PrayerCard(onViewFullScheduleClick = { onOpenDialog("view_prayers") })
+        }
+
+        // 4. Actionable Priority Alerts (Conditionally shown ONLY when user action is required)
         if ((currentRole == UserRole.PRESIDENT || currentRole == UserRole.VICE_PRESIDENT || currentRole == UserRole.TREASURER) && pendingTransactions.isNotEmpty()) {
             item(key = "priority_pending_vouchers") {
                 PresidentPendingVouchersCard(
@@ -267,12 +278,7 @@ fun DashboardScreen(
             }
         }
 
-        // 3. Daily Prayer Schedule & Jamat Times (Prime Devotional Utility)
-        item(key = "global_top_prayer_card") {
-            PrayerCard(onViewFullScheduleClick = { onOpenDialog("view_prayers") })
-        }
-
-        // 4. Quick Actions Grid — role-specific 6 tiles aligned with the role's duties
+        // 5. Quick Actions Grid — role-specific 6 tiles aligned with the role's duties
         item(key = "royal_home_quick_actions") {
             QuickActionsGrid(
                 role = currentRole,
@@ -280,7 +286,7 @@ fun DashboardScreen(
             )
         }
 
-        // 5. Mosque Summary KPI Card ("মসজিদের সংক্ষিপ্ত তথ্য" - মুসল্লী, পরিবার, চলতি তহবিল)
+        // 6. Mosque Summary KPI Card ("মসজিদের সংক্ষিপ্ত তথ্য" - মুসল্লী, পরিবার, চলতি তহবিল)
         item(key = "royal_home_summary_kpi") {
             RoyalMosqueSummaryKpiCard(
                 totalMembers = totalMembers,
@@ -289,21 +295,21 @@ fun DashboardScreen(
             )
         }
 
-        // 6. Dynamic Smart Digital Board (Hijri Calendar, Ramadan Hub, Notices & Wall Quotes)
-        item(key = "global_top_smart_board") {
-            SmartBoardCard(
-                quotes = allSmartBoardQuotes,
-                notices = allNotices,
-                hijriDayOffset = hijriDayOffset,
-                includeDateAndPrayerSlides = true,
-                onOpenIslamicCalendar = { onOpenDialog("islamic_calendar") },
-                onOpenRamadanHub = { onOpenDialog("ramadan_hub") },
-                onOpenPrayerSchedule = { onOpenDialog("view_prayers") },
-                onOpenNotices = { onOpenDialog("notices") }
-            )
+        // 7. Personal Chanda Tracking Card for committee leaders / non-general members
+        if (currentRole != UserRole.GENERAL_MEMBER && (myChandaPaid > 0 || myChandaSub.isNotBlank())) {
+            item(key = "leader_personal_chanda_tracking") {
+                StaggeredDashboardItem(index = 2, modifier = Modifier.animateItem()) {
+                    LeaderPersonalChandaCard(
+                        myChandaPaid = myChandaPaid,
+                        myChandaSub = myChandaSub,
+                        onViewReceipt = { onOpenDialog("view_receipt") },
+                        onMakeDonation = { onOpenDialog("my_chanda") }
+                    )
+                }
+            }
         }
 
-        // 7. Recent Activities Feed ("সাম্প্রতিক কার্যক্রম")
+        // 8. Recent Activities Feed ("সাম্প্রতিক কার্যক্রম")
         item(key = "royal_home_recent_activities") {
             RoyalRecentActivitiesCard(
                 transactions = allTransactions.filter { it.approvalStatus != "pending" }.take(3),
@@ -312,7 +318,7 @@ fun DashboardScreen(
             )
         }
 
-        // 8. Inspirational Islamic Quote Banner
+        // 9. Inspirational Islamic Quote Banner
         item(key = "royal_home_quote_banner") {
             InspirationalIslamicQuoteBanner(
                 quoteText = allSmartBoardQuotes.firstOrNull()?.message ?: "মসজিদ হলো সমাজের শান্তি ও ঐক্যের কেন্দ্রবিন্দু"
@@ -2813,6 +2819,129 @@ fun KhademFacilityChecklistCard(
                     Icon(Icons.Default.Schedule, contentDescription = null, modifier = Modifier.size(15.dp))
                     Spacer(modifier = Modifier.width(4.dp))
                     Text("ডিউটি রোস্টার ও লগ", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun LeaderPersonalChandaCard(
+    myChandaPaid: Double,
+    myChandaSub: String,
+    onViewReceipt: () -> Unit,
+    onMakeDonation: () -> Unit
+) {
+    val isDark = LocalIsDarkTheme.current
+    Surface(
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(1.dp, if (isDark) MosqueNightBorder else MosqueCardBorderSubtle),
+        shadowElevation = 1.dp,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(34.dp)
+                            .clip(CircleShape)
+                            .background(MosqueEmeraldPrimary.copy(alpha = 0.12f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ReceiptLong,
+                            contentDescription = null,
+                            tint = MosqueEmeraldPrimary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column {
+                        Text(
+                            text = "আমার ব্যক্তিগত চাঁদা ও আমানত",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = if (myChandaSub.isNotBlank()) myChandaSub else "চলতি অর্থবছরের চাঁদা ট্র্যাকিং",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = MosqueEmeraldSoft
+                ) {
+                    Text(
+                        text = "৳${toBengaliDigits(String.format("%,.0f", myChandaPaid))}",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = MosqueEmeraldPrimary,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+            HorizontalDivider(
+                color = if (isDark) MosqueNightBorder else MosqueCardBorderSubtle,
+                thickness = 0.8.dp
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedButton(
+                    onClick = onViewReceipt,
+                    modifier = Modifier.weight(1f).heightIn(min = 38.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    border = BorderStroke(1.dp, MosqueGoldDeep.copy(alpha = 0.6f)),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Receipt,
+                        contentDescription = null,
+                        modifier = Modifier.size(15.dp),
+                        tint = MosqueGoldDeep
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "রসিদ দেখুন",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MosqueGoldDeep
+                    )
+                }
+                Button(
+                    onClick = onMakeDonation,
+                    modifier = Modifier.weight(1f).heightIn(min = 38.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MosqueEmeraldPrimary),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.AddCard,
+                        contentDescription = null,
+                        modifier = Modifier.size(15.dp),
+                        tint = Color.White
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "চাঁদা প্রদান",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
                 }
             }
         }
