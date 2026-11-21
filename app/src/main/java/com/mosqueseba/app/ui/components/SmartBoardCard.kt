@@ -619,8 +619,8 @@ fun SmartBoardTickerCard(
                     .weight(1f)
                     .basicMarquee(
                         iterations = Int.MAX_VALUE,
-                        delayMillis = 1200,
                         initialDelayMillis = 600,
+                        repeatDelayMillis = 1200,
                         velocity = 35.dp
                     )
             )
