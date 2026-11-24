@@ -1,0 +1,78 @@
+name: mosqueseba
+description: "Mosque Seba (মসজিদ সেবা) — Complete Feature-Parity Rebuild for Android & iOS"
+publish_to: "none"
+version: 1.2.5+10
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State Management & Dependency Injection
+  flutter_riverpod: ^2.5.1
+  riverpod_annotation: ^2.3.5
+
+  # Declarative Navigation & RBAC Guards
+  go_router: ^14.2.0
+
+  # Cloud Backend, Auth, Storage & Realtime
+  supabase_flutter: ^2.6.0
+
+  # Offline-First Relational SQLite Local Database
+  drift: ^2.20.0
+  sqlite3_flutter_libs: ^0.5.24
+  path_provider: ^2.1.4
+  path: ^1.9.0
+
+  # Encrypted Token Storage & Preferences
+  flutter_secure_storage: ^9.2.2
+  shared_preferences: ^2.3.2
+  crypto: ^3.0.3
+
+  # Formatting, Dates & Business Sequences
+  intl: ^0.19.0
+  uuid: ^4.4.2
+
+  # Document Generation, Touch Signature & Printing
+  qr_flutter: ^4.1.0
+  pdf: ^3.11.1
+  printing: ^5.13.2
+  signature: ^5.4.1
+  url_launcher: ^6.3.0
+  share_plus: ^10.0.2
+
+  # Google Gemini AI Integration
+  google_generative_ai: ^0.4.6
+
+  # Icons
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  drift_dev: ^2.20.0
+  build_runner: ^2.4.9
+  riverpod_generator: ^2.4.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/icons/
+    - assets/fonts/
+
+  fonts:
+    - family: HindSiliguri
+      fonts:
+        - asset: assets/fonts/hind_siliguri.ttf
+          weight: 400
+        - asset: assets/fonts/hind_siliguri.ttf
+          weight: 500
+        - asset: assets/fonts/hind_siliguri.ttf
+          weight: 600
+        - asset: assets/fonts/hind_siliguri.ttf
+          weight: 700

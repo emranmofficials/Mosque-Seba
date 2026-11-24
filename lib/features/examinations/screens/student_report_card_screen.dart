@@ -1,0 +1,220 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_dimens.dart';
+import '../../../../core/utils/bengali_number_formatter.dart';
+import '../../../../shared/widgets/card_shell.dart';
+import '../models/exam_model.dart';
+import '../providers/exam_provider.dart';
+
+/// Screen presenting a comprehensive 360-degree Student Report Card
+class StudentReportCardScreen extends ConsumerWidget {
+  final String studentId;
+  final String studentNameBn;
+  final String examTitle;
+
+  const StudentReportCardScreen({
+    super.key,
+    required this.studentId,
+    required this.studentNameBn,
+    required this.examTitle,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final resultsAsync = ref.watch(studentReportCardProvider(studentId));
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('শিক্ষার্থীর ফলাফল পত্র'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.print_outlined),
+            tooltip: 'রিপোর্ট কার্ড প্রিন্ট / PDF',
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('অফিসিয়াল সিল ও স্বাক্ষরসহ ফলাফল পত্র প্রিন্টের জন্য প্রস্তুত হচ্ছে...'),
+                  backgroundColor: AppColors.emeraldPrimary,
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+      body: resultsAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator(color: AppColors.emeraldPrimary)),
+        error: (err, _) => Center(child: Text('ত্রুটি: $err')),
+        data: (results) {
+          final totalObtained = results.fold<double>(0.0, (acc, r) => acc + r.marksObtained);
+          final maxTotal = results.fold<double>(0.0, (acc, r) => acc + r.totalMarks);
+          final avgPercentage = maxTotal > 0 ? (totalObtained / maxTotal) * 100 : 0.0;
+          final overallGrade = ExamResultModel.calculateIslamicGrade(totalObtained, maxTotal);
+
+          return ListView(
+            padding: const EdgeInsets.all(AppDimens.spacing16),
+            children: [
+              // Header Card
+              CardShell(
+                padding: const EdgeInsets.all(AppDimens.spacing16),
+                child: Column(
+                  children: [
+                    const Text(
+                      'মসজিদ সেবা মাদরাসা ও মক্তব',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.emeraldPrimary),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      examTitle,
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 12),
+                    const Divider(height: 1),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('শিক্ষার্থী: $studentNameBn', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                            const SizedBox(height: 2),
+                            const Text('শ্রেণী: হিফজুল কুরআন বিভাগ', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                          ],
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: AppColors.emeraldPrimary.withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            overallGrade,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.emeraldPrimary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Subject Wise Marks Table Card
+              CardShell(
+                padding: const EdgeInsets.all(AppDimens.spacing14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('বিষয়ভিত্তিক পরীক্ষার ফলাফল', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 12),
+                    Table(
+                      border: TableBorder.all(color: Colors.grey.shade300, width: 1, borderRadius: BorderRadius.circular(6)),
+                      columnWidths: const {
+                        0: FlexColumnWidth(3),
+                        1: FlexColumnWidth(1.5),
+                        2: FlexColumnWidth(2),
+                      },
+                      children: [
+                        TableRow(
+                          decoration: BoxDecoration(color: Colors.grey.withOpacity(0.1)),
+                          children: const [
+                            Padding(
+                              padding: EdgeInsets.all(8.0),
+                              child: Text('বিষয়', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.all(8.0),
+                              child: Text('প্রাপ্ত নম্বর', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12), textAlign: TextAlign.center),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.all(8.0),
+                              child: Text('গ্রেড / মান', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12), textAlign: TextAlign.center),
+                            ),
+                          ],
+                        ),
+                        ...results.map((r) {
+                          return TableRow(
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Text(r.subjectName, style: const TextStyle(fontSize: 12)),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Text(
+                                  BengaliNumberFormatter.toBengali(r.marksObtained.toInt().toString()),
+                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Text(
+                                  r.grade,
+                                  style: const TextStyle(fontSize: 11, color: AppColors.emeraldPrimary, fontWeight: FontWeight.w600),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ],
+                          );
+                        }),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+
+                    // Total & Average
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'মোট প্রাপ্ত নম্বর: ${BengaliNumberFormatter.toBengali(totalObtained.toInt().toString())} / ${BengaliNumberFormatter.toBengali(maxTotal.toInt().toString())}',
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                        ),
+                        Text(
+                          'শতকরা: ${BengaliNumberFormatter.toBengali(avgPercentage.toInt().toString())}%',
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.emeraldPrimary),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Teacher & Principal Signatures Section
+              CardShell(
+                padding: const EdgeInsets.all(AppDimens.spacing16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      children: [
+                        const SizedBox(height: 30),
+                        Container(width: 100, height: 1, color: Colors.grey),
+                        const SizedBox(height: 4),
+                        const Text('শ্রেণী শিক্ষক', style: TextStyle(fontSize: 12)),
+                      ],
+                    ),
+                    Column(
+                      children: [
+                        const SizedBox(height: 30),
+                        Container(width: 100, height: 1, color: Colors.grey),
+                        const SizedBox(height: 4),
+                        const Text('মুহতামিম / প্রধান শিক্ষক', style: TextStyle(fontSize: 12)),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}

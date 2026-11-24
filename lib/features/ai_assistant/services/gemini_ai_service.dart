@@ -1,0 +1,85 @@
+import '../models/khutbah_topic_model.dart';
+
+/// Gemini AI Service for Islamic Khutbah Ideas, Official Bengali Notice Drafting and Financial Summaries
+class GeminiAiService {
+  /// Generate Khutbah Topic Outline with authentic Quranic & Hadith citations
+  Future<KhutbahTopicModel> generateKhutbahOutline({
+    required String topicPrompt,
+    String category = 'character',
+  }) async {
+    // Generative AI response simulation / client fallback
+    await Future.delayed(const Duration(milliseconds: 600));
+
+    if (category == 'halal_earnings') {
+      return const KhutbahTopicModel(
+        id: 'khutbah-halal',
+        title: 'হালাল জীবিকা ও ব্যবসায় সততার গুরুত্ব',
+        category: 'halal_earnings',
+        quranicAyat: '“হে মুমিনগণ, তোমরা নিজেদের মধ্যে একে অন্যের ধন-সম্পদ অন্যায়ভাবে গ্রাস করো না...” — (সূরা আন-নিসা: ২৯)',
+        hadithReference: '“সত্যবাদী ও আমানতদার ব্যবসায়ী কিয়ামতের দিন নবী, সত্যবাদী ও শহীদগণের সঙ্গে থাকবেন।” — (তিরমিযী: ১২০৯)',
+        mainPoints: [
+          '১. হালাল রুজির বরকত ও ইবাদত কবুলের পূর্বশর্ত',
+          '২. ওজনে কম দেওয়া ও খাদ্যে ভেজালের পরিণাম',
+          '৩. কর্মচারীদের প্রাপ্য পারিশ্রমিক যথাসময়ে পরিশোধের তাগিদ',
+          '৪. সুদমুক্ত লেনদেন ও সমাজে ইনসাফ প্রতিষ্ঠা',
+        ],
+        practicalGuidance: 'ব্যবসায়ীদের প্রতি আহ্বান: মুনাফা অর্জনের চেয়ে বরকত ও মানুষের কল্যাণকে প্রাধান্য দিন। কর্মচারীদের ঘাম শুকানোর পূর্বেই মজুরি দিন।',
+      );
+    }
+
+    if (category == 'charity') {
+      return const KhutbahTopicModel(
+        id: 'khutbah-charity',
+        title: 'আল্লাহর পথে ব্যয় ও যাকাতের সামাজিক তাৎপর্য',
+        category: 'charity',
+        quranicAyat: '“যারা নিজেদের ধন-সম্পদ আল্লাহর পথে ব্যয় করে, তাদের উপমা একটি শস্যবীজ...” — (সূরা আল-বাক্বারা: ২৬১)',
+        hadithReference: '“দানশীল ব্যক্তি আল্লাহর নিকটবর্তী, জান্নাতের নিকটবর্তী এবং জাহান্নাম থেকে দূরবর্তী।” — (তিরমিযী: ১৯৬১)',
+        mainPoints: [
+          '১. যাকাত কোনো অনুকম্পা নয়, বরং দুস্থের ন্যায্য অধিকার',
+          '২. গোপনীয় ও প্রকাশ্য সদকার ফযিলত',
+          '৩. কৃপণতার ভয়াবহ পরিণতি ও সম্পদের পবিত্রতা',
+          '৪. সমাজের দরিদ্র ও এতিমদের পুনর্বাসনে মসজিদের ভূমিকা',
+        ],
+        practicalGuidance: 'প্রতিটি স্বচ্ছল মুসলিমের উচিত হিসাব করে পূর্ণ যাকাত আদায় করা এবং প্রতিবেশীদের খোঁজখবর রাখা।',
+      );
+    }
+
+    // Default Topic
+    return KhutbahTopicModel(
+      id: 'khutbah-default',
+      title: topicPrompt.isNotEmpty ? topicPrompt : 'উত্তম চরিত্র ও সুন্দর ব্যবহারের মর্যাদা',
+      category: category,
+      quranicAyat: '“নিশ্চয়ই আপনি মহান চরিত্রের ওপর অধিষ্ঠিত।” — (সূরা আল-কলম: ৪)',
+      hadithReference: '“তোমাদের মধ্যে সর্বোত্তম ব্যক্তি সে, যার চরিত্র সবচেয়ে সুন্দর।” — (সহীহ বুখারী: ৬০২৯)',
+      mainPoints: [
+        '১. ইসলামের দৃষ্টিতে আখলাক বা চরিত্রের অনন্য মর্যাদা',
+        '২. পিতা-মাতা, প্রতিবেশী ও আত্মীয়দের সাথে সদাচরণ',
+        '৩. ক্রোধ নিয়ন্ত্রণ ও ক্ষমা প্রদর্শনের মহত্ত্ব',
+        '৪. ভাষা ও বাক্যালাপে শালীনতা বজায় রাখা',
+      ],
+      practicalGuidance: 'প্রতিদিনের জীবনে ছোটদের স্নেহ, বড়দের শ্রদ্ধা এবং মানুষের সাথে হাসিমুখে কথা বলে সুন্নাহর প্রতিফলন ঘটানো।',
+    );
+  }
+
+  /// Draft formal administrative notice in elegant Bengali
+  Future<String> draftAdministrativeNotice({
+    required String topic,
+    required String audience, // 'সাধারণ মুসল্লিবৃন্দ', 'কমিটি সদস্যবৃন্দ'
+    required String mosqueName,
+  }) async {
+    await Future.delayed(const Duration(milliseconds: 600));
+
+    return '''
+সম্মানিত $audience,
+আসসালামু আলাইকুম ওয়া রাহমাতুল্লাহ।
+
+$mosqueName পরিচালনা কমিটির পক্ষ থেকে জানানো যাচ্ছে যে, $topic। 
+
+উক্ত বিষয়ে সকলের সার্বিক সহযোগিতা ও দোয়া কামনা করছি। আল্লাহ সুবহানাহু ওয়া তাআলা আমাদের সকল নেক প্রচেষ্টা কবুল করুন।
+
+বিনীত,
+সাধারণ সম্পাদক ও সভাপতি
+$mosqueName পরিচালনা কমিটি
+''';
+  }
+}
