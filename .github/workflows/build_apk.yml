@@ -41,9 +41,25 @@ jobs:
       - name: Build Release APK
         run: flutter build apk --release
 
-      - name: Upload Release APK
+      - name: Upload Release APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: MosqueSeba-v1.2.5-release
           path: build/app/outputs/flutter-apk/app-release.apk
           retention-days: 30
+
+      - name: Publish Direct APK Release
+        uses: softprops/action-gh-release@v2
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        with:
+          tag_name: v1.2.5
+          name: Mosque Seba v1.2.5 (Release APK)
+          body: |
+            ## 🕌 Mosque Seba (মসজিদ সেবা) v1.2.5
+            - Complete 1:1 Flutter rebuild with 37 modules
+            - Offline-first SQLite database
+            - Full multi-role authorization and real-time prayer schedule
+            
+            **Download the APK file below directly to your phone:**
+          files: build/app/outputs/flutter-apk/app-release.apk
+        continue-on-error: true
