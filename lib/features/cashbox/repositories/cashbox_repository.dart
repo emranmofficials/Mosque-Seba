@@ -9,7 +9,7 @@ class CashboxRepository {
   CashboxRepository({SupabaseService? supabaseService})
       : _supabaseService = supabaseService ?? SupabaseService();
 
-  SupabaseClient get _client => _supabaseService.client;
+  SupabaseClient get _client => SupabaseService.client;
 
   /// Fetch all Friday cashbox counting records
   Future<List<CashboxRecordModel>> fetchRecords({required String mosqueId}) async {

@@ -9,7 +9,7 @@ class MadrasaRepository {
   MadrasaRepository({SupabaseService? supabaseService})
       : _supabaseService = supabaseService ?? SupabaseService();
 
-  SupabaseClient get _client => _supabaseService.client;
+  SupabaseClient get _client => SupabaseService.client;
 
   /// Default demo students for instant local preview and offline fallback
   static final List<StudentModel> _mockStudents = [

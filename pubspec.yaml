@@ -34,6 +34,7 @@ dependencies:
   # Formatting, Dates & Business Sequences
   intl: ^0.19.0
   uuid: ^4.4.2
+  equatable: ^2.0.5
 
   # Document Generation, Touch Signature & Printing
   qr_flutter: ^4.1.0

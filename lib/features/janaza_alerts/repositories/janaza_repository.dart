@@ -9,7 +9,7 @@ class JanazaRepository {
   JanazaRepository({SupabaseService? supabaseService})
       : _supabaseService = supabaseService ?? SupabaseService();
 
-  SupabaseClient get _client => _supabaseService.client;
+  SupabaseClient get _client => SupabaseService.client;
 
   /// Fetch active and historical Janaza notices
   Future<List<JanazaAlertModel>> fetchJanazaAlerts({required String mosqueId}) async {

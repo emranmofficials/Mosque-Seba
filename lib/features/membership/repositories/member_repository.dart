@@ -9,7 +9,7 @@ class MemberRepository {
   MemberRepository({SupabaseService? supabaseService})
       : _supabaseService = supabaseService ?? SupabaseService();
 
-  SupabaseClient get _client => _supabaseService.client;
+  SupabaseClient get _client => SupabaseService.client;
 
   /// Fetch all members for the given mosque
   Future<List<MemberModel>> fetchMembers({

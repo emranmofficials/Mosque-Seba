@@ -9,7 +9,7 @@ class MealScheduleRepository {
   MealScheduleRepository({SupabaseService? supabaseService})
       : _supabaseService = supabaseService ?? SupabaseService();
 
-  SupabaseClient get _client => _supabaseService.client;
+  SupabaseClient get _client => SupabaseService.client;
 
   /// Fetch meal schedules for a specific date or date range
   Future<List<MealScheduleItem>> fetchSchedules({

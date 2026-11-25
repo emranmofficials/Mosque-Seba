@@ -10,7 +10,7 @@ class ElectionRepository {
   ElectionRepository({SupabaseService? supabaseService})
       : _supabaseService = supabaseService ?? SupabaseService();
 
-  SupabaseClient get _client => _supabaseService.client;
+  SupabaseClient get _client => SupabaseService.client;
 
   /// Fetch active and historical election schedules
   Future<List<ElectionScheduleModel>> fetchSchedules({required String mosqueId}) async {

@@ -10,7 +10,7 @@ class StaffRepository {
   StaffRepository({SupabaseService? supabaseService})
       : _supabaseService = supabaseService ?? SupabaseService();
 
-  SupabaseClient get _client => _supabaseService.client;
+  SupabaseClient get _client => SupabaseService.client;
 
   /// Fetch all active staff members
   Future<List<StaffModel>> fetchStaff({required String mosqueId}) async {

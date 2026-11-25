@@ -9,7 +9,7 @@ class MadrasaAttendanceRepository {
   MadrasaAttendanceRepository({SupabaseService? supabaseService})
       : _supabaseService = supabaseService ?? SupabaseService();
 
-  SupabaseClient get _client => _supabaseService.client;
+  SupabaseClient get _client => SupabaseService.client;
 
   /// In-memory attendance cache for offline and instant UI response
   final Map<String, List<MadrasaAttendanceModel>> _localCache = {};

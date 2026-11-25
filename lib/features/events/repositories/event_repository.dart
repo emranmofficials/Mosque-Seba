@@ -9,7 +9,7 @@ class EventRepository {
   EventRepository({SupabaseService? supabaseService})
       : _supabaseService = supabaseService ?? SupabaseService();
 
-  SupabaseClient get _client => _supabaseService.client;
+  SupabaseClient get _client => SupabaseService.client;
 
   static final List<MosqueEventModel> _mockEvents = [
     MosqueEventModel(

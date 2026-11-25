@@ -9,7 +9,7 @@ class HifzRepository {
   HifzRepository({SupabaseService? supabaseService})
       : _supabaseService = supabaseService ?? SupabaseService();
 
-  SupabaseClient get _client => _supabaseService.client;
+  SupabaseClient get _client => SupabaseService.client;
 
   static final List<HifzRecordModel> _mockRecords = [
     HifzRecordModel(

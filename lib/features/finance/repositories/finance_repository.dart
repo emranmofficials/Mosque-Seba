@@ -37,7 +37,7 @@ class FinanceRepository {
   FinanceRepository({SupabaseService? supabaseService})
       : _supabaseService = supabaseService ?? SupabaseService();
 
-  SupabaseClient get _client => _supabaseService.client;
+  SupabaseClient get _client => SupabaseService.client;
 
   /// Fetch all transactions for a mosque
   Future<List<FinanceTransactionModel>> fetchTransactions({

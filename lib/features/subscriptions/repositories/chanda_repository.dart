@@ -9,7 +9,7 @@ class ChandaRepository {
   ChandaRepository({SupabaseService? supabaseService})
       : _supabaseService = supabaseService ?? SupabaseService();
 
-  SupabaseClient get _client => _supabaseService.client;
+  SupabaseClient get _client => SupabaseService.client;
 
   /// Fetch all chanda payments for a mosque
   Future<List<ChandaPaymentModel>> fetchPayments({

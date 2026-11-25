@@ -9,7 +9,7 @@ class WaqfRepository {
   WaqfRepository({SupabaseService? supabaseService})
       : _supabaseService = supabaseService ?? SupabaseService();
 
-  SupabaseClient get _client => _supabaseService.client;
+  SupabaseClient get _client => SupabaseService.client;
 
   /// Fetch all waqf properties for a mosque
   Future<List<WaqfAssetModel>> fetchProperties({

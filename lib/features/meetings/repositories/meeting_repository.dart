@@ -9,7 +9,7 @@ class MeetingRepository {
   MeetingRepository({SupabaseService? supabaseService})
       : _supabaseService = supabaseService ?? SupabaseService();
 
-  SupabaseClient get _client => _supabaseService.client;
+  SupabaseClient get _client => SupabaseService.client;
 
   /// Fetch all meetings for a mosque
   Future<List<MeetingModel>> fetchMeetings({

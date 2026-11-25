@@ -9,7 +9,7 @@ class NotificationRepository {
   NotificationRepository({SupabaseService? supabaseService})
       : _supabaseService = supabaseService ?? SupabaseService();
 
-  SupabaseClient get _client => _supabaseService.client;
+  SupabaseClient get _client => SupabaseService.client;
 
   /// Fetch notifications for a mosque
   Future<List<AppNotificationModel>> fetchNotifications({required String mosqueId}) async {

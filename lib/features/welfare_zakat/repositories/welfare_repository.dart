@@ -9,7 +9,7 @@ class WelfareRepository {
   WelfareRepository({SupabaseService? supabaseService})
       : _supabaseService = supabaseService ?? SupabaseService();
 
-  SupabaseClient get _client => _supabaseService.client;
+  SupabaseClient get _client => SupabaseService.client;
 
   static final List<WelfareCaseModel> _mockCases = [
     WelfareCaseModel(

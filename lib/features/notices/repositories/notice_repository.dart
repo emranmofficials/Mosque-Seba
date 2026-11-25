@@ -9,7 +9,7 @@ class NoticeRepository {
   NoticeRepository({SupabaseService? supabaseService})
       : _supabaseService = supabaseService ?? SupabaseService();
 
-  SupabaseClient get _client => _supabaseService.client;
+  SupabaseClient get _client => SupabaseService.client;
 
   /// Fetch all notices for a mosque with optional priority filter
   Future<List<NoticeModel>> fetchNotices({

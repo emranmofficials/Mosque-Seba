@@ -27,7 +27,7 @@ class SupabaseSyncService {
   })  : _supabaseService = supabaseService ?? SupabaseService(),
         _queueManager = queueManager ?? OfflineQueueManager();
 
-  SupabaseClient get _client => _supabaseService.client;
+  SupabaseClient get _client => SupabaseService.client;
 
   /// Perform full synchronization: Flush outbox then refresh tables
   Future<SyncResult> performFullSync() async {
