@@ -93,12 +93,12 @@ class _ImagePickerFieldState extends State<ImagePickerField> {
               ),
               const SizedBox(height: MosqueSpace.sm),
               ListTile(
-                leading: const Icon(Icons.photo_library_outlined, color: AppColors.primaryGreen),
+                leading: const Icon(Icons.photo_library_outlined, color: AppColors.primary),
                 title: const Text('গ্যালারি থেকে বেছে নিন'),
                 onTap: () => _pickImage(ImageSource.gallery),
               ),
               ListTile(
-                leading: const Icon(Icons.camera_alt_outlined, color: AppColors.primaryGreen),
+                leading: const Icon(Icons.camera_alt_outlined, color: AppColors.primary),
                 title: const Text('ক্যামেরা দিয়ে ছবি তুলুন'),
                 onTap: () => _pickImage(ImageSource.camera),
               ),
@@ -122,7 +122,7 @@ class _ImagePickerFieldState extends State<ImagePickerField> {
   Widget _buildImageWidget() {
     if (_isUploading) {
       return const Center(
-        child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primaryGreen),
+        child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
       );
     }
 
@@ -159,14 +159,14 @@ class _ImagePickerFieldState extends State<ImagePickerField> {
         Icon(
           widget.isCircle ? Icons.add_a_photo_outlined : Icons.add_photo_alternate_outlined,
           size: widget.isCircle ? 28 : 34,
-          color: AppColors.primaryGreen,
+          color: AppColors.primary,
         ),
         const SizedBox(height: 4),
         Text(
           'ছবি যুক্ত করুন',
           style: TextStyle(
             fontSize: 11,
-            color: AppColors.neutralDark.withOpacity(0.7),
+            color: AppColors.textSecondary.withOpacity(0.7),
           ),
         ),
       ],
@@ -189,13 +189,13 @@ class _ImagePickerFieldState extends State<ImagePickerField> {
                   width: width,
                   height: size,
                   decoration: BoxDecoration(
-                    color: AppColors.primaryGreen.withOpacity(0.06),
+                    color: AppColors.primary.withOpacity(0.06),
                     shape: widget.isCircle ? BoxShape.circle : BoxShape.rectangle,
                     borderRadius: widget.isCircle
                         ? null
                         : BorderRadius.circular(MosqueRadius.medium),
                     border: Border.all(
-                      color: AppColors.primaryGreen.withOpacity(0.3),
+                      color: AppColors.primary.withOpacity(0.3),
                       width: 1.5,
                     ),
                   ),
@@ -208,7 +208,7 @@ class _ImagePickerFieldState extends State<ImagePickerField> {
                   child: Container(
                     padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
-                      color: AppColors.primaryGreen,
+                      color: AppColors.primary,
                       shape: BoxShape.circle,
                       border: Border.all(color: Colors.white, width: 2),
                     ),
@@ -231,7 +231,7 @@ class _ImagePickerFieldState extends State<ImagePickerField> {
             const SizedBox(height: 2),
             Text(
               widget.subtitle!,
-              style: TextStyle(fontSize: 11, color: AppColors.neutralDark.withOpacity(0.6)),
+              style: TextStyle(fontSize: 11, color: AppColors.textSecondary.withOpacity(0.6)),
             ),
           ],
         ],

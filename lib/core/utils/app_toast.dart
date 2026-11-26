@@ -33,7 +33,7 @@ class AppToast {
         icon = Icons.warning_amber_rounded;
         break;
       case ToastType.info:
-        bgColor = AppColors.primaryContainerDark;
+        bgColor = AppColors.infoBlue;
         icon = Icons.info_outline;
         break;
     }
