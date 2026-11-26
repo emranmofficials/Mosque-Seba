@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_dimens.dart';
-import '../../../../core/utils/bengali_number_formatter.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_dimens.dart';
+import '../../../core/utils/bengali_number_formatter.dart';
 import '../models/welfare_case_model.dart';
 
 /// Modal dialog for submitting a new Welfare or Zakat aid application

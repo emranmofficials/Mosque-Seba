@@ -50,6 +50,7 @@ class SyncNotifier extends StateNotifier<SyncState> {
 
   Future<void> checkPendingCount() async {
     final queue = await _queueManager.getPendingQueue();
+    if (!mounted) return;
     state = state.copyWith(pendingOutboxCount: queue.length);
   }
 
@@ -57,10 +58,12 @@ class SyncNotifier extends StateNotifier<SyncState> {
     state = state.copyWith(isSyncing: true, errorMessage: null);
 
     final result = await _syncService.performFullSync();
+    final remaining = await _queueManager.getPendingQueue();
+    if (!mounted) return result.isSuccess;
 
     state = state.copyWith(
       isSyncing: false,
-      pendingOutboxCount: 0,
+      pendingOutboxCount: remaining.length,
       lastSyncedAt: result.syncedAt,
       errorMessage: result.isSuccess ? null : result.errorMessage,
     );

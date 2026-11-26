@@ -14,27 +14,53 @@ class AdaptiveNavigationDestination {
   });
 }
 
-/// Adaptive Scaffold supporting Mobile BottomBar and Tablet NavigationRail (600dp+ breakpoint)
+/// Adaptive Scaffold supporting Mobile BottomBar, Tablet NavigationRail (600dp+),
+/// and standard detail screens with an AppBar title/actions
 class AdaptiveScaffold extends StatelessWidget {
-  final int currentIndex;
-  final ValueChanged<int> onNavigationIndexChanged;
-  final List<AdaptiveNavigationDestination> destinations;
+  final int? currentIndex;
+  final ValueChanged<int>? onNavigationIndexChanged;
+  final List<AdaptiveNavigationDestination>? destinations;
   final Widget body;
   final PreferredSizeWidget? appBar;
+  final String? title;
+  final List<Widget>? actions;
   final Widget? floatingActionButton;
 
   const AdaptiveScaffold({
     super.key,
-    required this.currentIndex,
-    required this.onNavigationIndexChanged,
-    required this.destinations,
+    this.currentIndex,
+    this.onNavigationIndexChanged,
+    this.destinations,
     required this.body,
     this.appBar,
+    this.title,
+    this.actions,
     this.floatingActionButton,
   });
 
   @override
   Widget build(BuildContext context) {
+    final navDestinations = destinations;
+    final selectedIndex = currentIndex;
+    final onNavChanged = onNavigationIndexChanged;
+
+    if (navDestinations == null ||
+        navDestinations.isEmpty ||
+        selectedIndex == null ||
+        onNavChanged == null) {
+      return Scaffold(
+        appBar: appBar ??
+            (title != null
+                ? AppBar(
+                    title: Text(title!),
+                    actions: actions,
+                  )
+                : null),
+        body: body,
+        floatingActionButton: floatingActionButton,
+      );
+    }
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final isTablet = constraints.maxWidth >= AppConstants.tabletBreakpoint;
@@ -48,8 +74,8 @@ class AdaptiveScaffold extends StatelessWidget {
             body: Row(
               children: [
                 NavigationRail(
-                  selectedIndex: currentIndex,
-                  onDestinationSelected: onNavigationIndexChanged,
+                  selectedIndex: selectedIndex,
+                  onDestinationSelected: onNavChanged,
                   labelType: NavigationRailLabelType.all,
                   backgroundColor: isDark ? AppColors.nightSurface : AppColors.surface,
                   selectedIconTheme: const IconThemeData(color: AppColors.emeraldPrimary),
@@ -62,7 +88,7 @@ class AdaptiveScaffold extends StatelessWidget {
                     color: isDark ? AppColors.nightTextMuted : AppColors.textMuted,
                     fontSize: 11,
                   ),
-                  destinations: destinations
+                  destinations: navDestinations
                       .map(
                         (d) => NavigationRailDestination(
                           icon: Icon(d.icon),
@@ -84,13 +110,13 @@ class AdaptiveScaffold extends StatelessWidget {
           body: body,
           floatingActionButton: floatingActionButton,
           bottomNavigationBar: NavigationBar(
-            selectedIndex: currentIndex,
-            onDestinationSelected: onNavigationIndexChanged,
+            selectedIndex: selectedIndex,
+            onDestinationSelected: onNavChanged,
             backgroundColor: isDark ? AppColors.nightSurface : AppColors.surface,
             indicatorColor: isDark
                 ? AppColors.nightSecondaryContainer
                 : AppColors.emeraldSoft,
-            destinations: destinations
+            destinations: navDestinations
                 .map(
                   (d) => NavigationDestination(
                     icon: Icon(d.icon),

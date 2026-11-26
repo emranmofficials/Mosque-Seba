@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../authentication/providers/auth_provider.dart';
 import '../../madrasa/models/student_model.dart';
 import '../../madrasa/providers/madrasa_provider.dart';
 import '../models/madrasa_attendance_model.dart';
@@ -36,9 +37,10 @@ class AttendanceState {
 
 class AttendanceNotifier extends StateNotifier<AttendanceState> {
   final MadrasaAttendanceRepository _repository;
+  final String _mosqueId;
   final Ref _ref;
 
-  AttendanceNotifier(this._repository, this._ref)
+  AttendanceNotifier(this._repository, this._mosqueId, this._ref)
       : super(AttendanceState(date: _formatDate(DateTime.now()))) {
     loadAttendance();
   }
@@ -56,9 +58,11 @@ class AttendanceNotifier extends StateNotifier<AttendanceState> {
 
     try {
       final existingRecords = await _repository.fetchAttendance(
+        mosqueId: _mosqueId,
         date: dateStr,
         className: classFilter,
       );
+      if (!mounted) return;
 
       // If no attendance exists for this date, build default from students list
       final studentsAsync = _ref.read(studentListProvider);
@@ -94,6 +98,7 @@ class AttendanceNotifier extends StateNotifier<AttendanceState> {
         records: merged,
       );
     } catch (e) {
+      if (!mounted) return;
       state = AttendanceState(
         isLoading: false,
         date: dateStr,
@@ -133,7 +138,11 @@ class AttendanceNotifier extends StateNotifier<AttendanceState> {
       records: state.records,
     );
 
-    final success = await _repository.saveAttendanceBatch(state.records);
+    final success = await _repository.saveAttendanceBatch(
+      mosqueId: _mosqueId,
+      records: state.records,
+    );
+    if (!mounted) return success;
 
     state = AttendanceState(
       isLoading: false,
@@ -147,5 +156,7 @@ class AttendanceNotifier extends StateNotifier<AttendanceState> {
 final attendanceNotifierProvider =
     StateNotifierProvider<AttendanceNotifier, AttendanceState>((ref) {
   final repo = ref.watch(madrasaAttendanceRepositoryProvider);
-  return AttendanceNotifier(repo, ref);
+  final authState = ref.watch(authNotifierProvider);
+  final mosqueId = authState.valueOrNull?.mosqueId ?? 'mosque-default';
+  return AttendanceNotifier(repo, mosqueId, ref);
 });

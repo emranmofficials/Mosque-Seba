@@ -31,8 +31,10 @@ class FinanceStateNotifier extends StateNotifier<AsyncValue<List<FinanceTransact
         typeFilter: type,
         statusFilter: status,
       );
+      if (!mounted) return;
       state = AsyncValue.data(list);
     } catch (e, st) {
+      if (!mounted) return;
       state = AsyncValue.error(e, st);
     }
   }
@@ -85,8 +87,8 @@ class FinanceStateNotifier extends StateNotifier<AsyncValue<List<FinanceTransact
 
 final financeListProvider = StateNotifierProvider<FinanceStateNotifier, AsyncValue<List<FinanceTransactionModel>>>((ref) {
   final repo = ref.watch(financeRepositoryProvider);
-  final authState = ref.watch(authProvider);
-  final mosqueId = authState.user?.mosqueId ?? 'mosque-default';
+  final authState = ref.watch(authNotifierProvider);
+  final mosqueId = authState.valueOrNull?.mosqueId ?? 'mosque-default';
   return FinanceStateNotifier(repo, mosqueId, ref);
 });
 

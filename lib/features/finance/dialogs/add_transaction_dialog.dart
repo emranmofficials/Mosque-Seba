@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_dimens.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../shared/widgets/app_button.dart';
-import '../../../../shared/widgets/app_text_field.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_dimens.dart';
+import '../../../core/theme/app_typography.dart';
+import '../../../shared/widgets/app_button.dart';
+import '../../../shared/widgets/app_text_field.dart';
 
 /// Modal dialog to record a new Income or Expense voucher
 class AddTransactionDialog extends StatefulWidget {
@@ -231,7 +231,7 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
                     children: [
                       Expanded(
                         child: AppButton(
-                          text: 'বাতিল',
+                          label: 'বাতিল',
                           variant: AppButtonVariant.outline,
                           onPressed: () => Navigator.of(context).pop(),
                         ),
@@ -239,7 +239,7 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
                       const SizedBox(width: AppDimens.spacing12),
                       Expanded(
                         child: AppButton(
-                          text: 'ভাউচার দাখিল করুন',
+                          label: 'ভাউচার দাখিল করুন',
                           isLoading: _isLoading,
                           onPressed: _handleSave,
                         ),

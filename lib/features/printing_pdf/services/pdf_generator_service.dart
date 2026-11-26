@@ -1,9 +1,25 @@
 import 'dart:typed_data';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 /// PDF Generator for Mosque Receipts, Vouchers, and Salary Slips
 class PdfGeneratorService {
+  pw.ThemeData? _cachedTheme;
+
+  Future<pw.ThemeData> _getBengaliTheme() async {
+    if (_cachedTheme != null) return _cachedTheme!;
+    final fontData = await rootBundle.load('assets/fonts/hind_siliguri.ttf');
+    final ttf = pw.Font.ttf(fontData);
+    _cachedTheme = pw.ThemeData.withFont(
+      base: ttf,
+      bold: ttf,
+      italic: ttf,
+      boldItalic: ttf,
+    );
+    return _cachedTheme!;
+  }
+
   /// Generate a formal donation / Chanda receipt PDF
   Future<Uint8List> generateReceiptPdf({
     required String receiptNo,
@@ -15,7 +31,8 @@ class PdfGeneratorService {
     required String date,
     String mosqueName = 'বায়তুল মুকাররম মডেল জামে মসজিদ',
   }) async {
-    final pdf = pw.Document();
+    final theme = await _getBengaliTheme();
+    final pdf = pw.Document(theme: theme);
 
     pdf.addPage(
       pw.Page(
@@ -109,7 +126,8 @@ class PdfGeneratorService {
     required String date,
     String mosqueName = 'বায়তুল মুকাররম মডেল জামে মসজিদ',
   }) async {
-    final pdf = pw.Document();
+    final theme = await _getBengaliTheme();
+    final pdf = pw.Document(theme: theme);
 
     pdf.addPage(
       pw.Page(

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_dimens.dart';
-import '../../../../shared/components/empty_state_view.dart';
-import '../../../../shared/components/error_state_view.dart';
-import '../../../../shared/widgets/adaptive_scaffold.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_dimens.dart';
+import '../../../shared/components/empty_state_view.dart';
+import '../../../shared/components/error_state_view.dart';
+import '../../../shared/widgets/adaptive_scaffold.dart';
 import '../../authentication/providers/auth_provider.dart';
 import '../dialogs/broadcast_janaza_dialog.dart';
 import '../providers/janaza_provider.dart';
@@ -15,8 +15,8 @@ class JanazaAlertScreen extends ConsumerWidget {
   const JanazaAlertScreen({super.key});
 
   void _showBroadcastDialog(BuildContext context, WidgetRef ref) {
-    final authState = ref.read(authProvider);
-    final author = authState.user?.nameBn ?? 'পেশ ইমাম';
+    final authState = ref.read(authNotifierProvider);
+    final author = authState.valueOrNull?.memberName ?? 'পেশ ইমাম';
 
     showDialog(
       context: context,

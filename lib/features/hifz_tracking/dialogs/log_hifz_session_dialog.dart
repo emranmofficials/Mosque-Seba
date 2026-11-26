@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_dimens.dart';
-import '../../../../core/utils/bengali_number_formatter.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_dimens.dart';
+import '../../../core/utils/bengali_number_formatter.dart';
 import '../../madrasa/models/student_model.dart';
 import '../../madrasa/providers/madrasa_provider.dart';
 import '../models/hifz_record_model.dart';

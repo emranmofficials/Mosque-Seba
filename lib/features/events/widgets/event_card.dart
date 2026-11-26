@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_dimens.dart';
-import '../../../../core/utils/bengali_number_formatter.dart';
-import '../../../../shared/widgets/card_shell.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_dimens.dart';
+import '../../../core/utils/bengali_number_formatter.dart';
+import '../../../shared/widgets/card_shell.dart';
 import '../models/mosque_event_model.dart';
 
 /// Card component presenting a Mosque Event or Waz Mahfil

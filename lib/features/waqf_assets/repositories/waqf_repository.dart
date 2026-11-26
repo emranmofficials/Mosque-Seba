@@ -1,14 +1,9 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../../core/network/supabase_service.dart';
+import '../../../core/network/supabase_service.dart';
 import '../models/waqf_asset_model.dart';
 
 /// Repository for Waqf Properties (ওয়াকফ সম্পত্তি রিপোজিটরি)
 class WaqfRepository {
-  final SupabaseService _supabaseService;
-
-  WaqfRepository({SupabaseService? supabaseService})
-      : _supabaseService = supabaseService ?? SupabaseService();
-
   SupabaseClient get _client => SupabaseService.client;
 
   /// Fetch all waqf properties for a mosque
@@ -17,7 +12,7 @@ class WaqfRepository {
     String? categoryFilter,
   }) async {
     try {
-      var query = _client.from('mosque_properties').select();
+      var query = _client.from('mosque_properties').select().eq('mosque_id', mosqueId);
 
       if (categoryFilter != null && categoryFilter.isNotEmpty && categoryFilter != 'সকল') {
         query = query.eq('category', categoryFilter);
@@ -35,9 +30,13 @@ class WaqfRepository {
   }
 
   /// Create a new waqf property
-  Future<WaqfAssetModel?> createProperty(WaqfAssetModel property) async {
+  Future<WaqfAssetModel?> createProperty({
+    required String mosqueId,
+    required WaqfAssetModel property,
+  }) async {
     try {
       final payload = property.toJson();
+      payload['mosque_id'] = mosqueId;
       if (payload['id'] == null || (payload['id'] as String).isEmpty) {
         payload['id'] = 'prop-${DateTime.now().millisecondsSinceEpoch}';
       }

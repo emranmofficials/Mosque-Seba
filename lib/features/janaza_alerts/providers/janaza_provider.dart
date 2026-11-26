@@ -21,8 +21,10 @@ class JanazaListNotifier extends StateNotifier<AsyncValue<List<JanazaAlertModel>
     state = const AsyncValue.loading();
     try {
       final list = await _repository.fetchJanazaAlerts(mosqueId: _mosqueId);
+      if (!mounted) return;
       state = AsyncValue.data(list);
     } catch (e, st) {
+      if (!mounted) return;
       state = AsyncValue.error(e, st);
     }
   }
@@ -44,8 +46,8 @@ class JanazaListNotifier extends StateNotifier<AsyncValue<List<JanazaAlertModel>
 
 final janazaListProvider = StateNotifierProvider<JanazaListNotifier, AsyncValue<List<JanazaAlertModel>>>((ref) {
   final repo = ref.watch(janazaRepositoryProvider);
-  final authState = ref.watch(authProvider);
-  final mosqueId = authState.user?.mosqueId ?? 'mosque-default';
+  final authState = ref.watch(authNotifierProvider);
+  final mosqueId = authState.valueOrNull?.mosqueId ?? 'mosque-default';
   final mosqueName = 'মসজিদ সেবা জামে মসজিদ';
   return JanazaListNotifier(repo, mosqueId, mosqueName);
 });

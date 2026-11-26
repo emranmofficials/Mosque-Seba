@@ -29,14 +29,19 @@ class MealScheduleNotifier extends StateNotifier<AsyncValue<List<MealScheduleIte
         mosqueId: _mosqueId,
         dateStr: date,
       );
+      if (!mounted) return;
       state = AsyncValue.data(list);
     } catch (e, st) {
+      if (!mounted) return;
       state = AsyncValue.error(e, st);
     }
   }
 
   Future<bool> addSchedule(MealScheduleItem item) async {
-    final result = await _repository.addSchedule(item);
+    final result = await _repository.addSchedule(
+      mosqueId: _mosqueId,
+      item: item,
+    );
     if (result != null) {
       await loadSchedules();
       return true;
@@ -56,7 +61,7 @@ class MealScheduleNotifier extends StateNotifier<AsyncValue<List<MealScheduleIte
 
 final mealScheduleListProvider = StateNotifierProvider<MealScheduleNotifier, AsyncValue<List<MealScheduleItem>>>((ref) {
   final repo = ref.watch(mealScheduleRepositoryProvider);
-  final authState = ref.watch(authProvider);
-  final mosqueId = authState.user?.mosqueId ?? 'mosque-default';
+  final authState = ref.watch(authNotifierProvider);
+  final mosqueId = authState.valueOrNull?.mosqueId ?? 'mosque-default';
   return MealScheduleNotifier(repo, mosqueId, ref);
 });

@@ -48,3 +48,24 @@ class MosqueContentPadding {
   static const double cardInternal = 16.0;
   static const double cardCompact = 12.0;
 }
+
+/// Semantic spacing and radius aliases mapped to the core design tokens
+class AppDimens {
+  static const double spacing6 = 6.0;
+  static const double spacing8 = MosqueSpace.sm;
+  static const double spacing10 = 10.0;
+  static const double spacing12 = MosqueSpace.md;
+  static const double spacing14 = 14.0;
+  static const double spacing16 = MosqueSpace.lg;
+  static const double spacing20 = 20.0;
+  static const double spacing24 = MosqueSpace.xl;
+
+  static const double radiusXs = MosqueRadius.xs;
+  static const double radiusSm = MosqueRadius.sm;
+  static const double radiusSmall = MosqueRadius.sm;
+  static const double radiusMd = MosqueRadius.md;
+  static const double radiusLg = MosqueRadius.lg;
+  static const double radiusCard = MosqueRadius.card;
+  static const double radiusButton = MosqueRadius.medium;
+  static const double radiusXl = MosqueRadius.xl;
+}

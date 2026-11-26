@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_dimens.dart';
-import '../../../../core/utils/bengali_number_formatter.dart';
-import '../../../../shared/widgets/card_shell.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_dimens.dart';
+import '../../../core/utils/bengali_number_formatter.dart';
+import '../../../shared/widgets/card_shell.dart';
+import '../../cashbox/providers/cashbox_provider.dart';
+import '../../finance/providers/finance_provider.dart';
+import '../../madrasa/providers/madrasa_provider.dart';
+import '../../membership/providers/member_provider.dart';
+import '../../notices/providers/notice_provider.dart';
+import '../../subscriptions/providers/chanda_provider.dart';
+import '../../waqf_assets/providers/waqf_provider.dart';
 import '../providers/sync_status_provider.dart';
 
 /// Screen presenting Supabase Cloud Synchronization & Offline Data Vault Status
@@ -13,15 +20,26 @@ class CloudSyncScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final syncState = ref.watch(syncNotifierProvider);
+    final membersCount = ref.watch(memberListProvider).valueOrNull?.length ?? 0;
+    final txnsCount = ref.watch(financeListProvider).valueOrNull?.length ?? 0;
+    final chandaCount = ref.watch(chandaListProvider).valueOrNull?.length ?? 0;
+    final cashboxCount = ref.watch(cashboxListProvider).valueOrNull?.length ?? 0;
+    final studentsCount = ref.watch(studentListProvider).valueOrNull?.length ?? 0;
+    final waqfCount = ref.watch(waqfListProvider).valueOrNull?.length ?? 0;
+    final noticesCount = ref.watch(noticeListProvider).valueOrNull?.length ?? 0;
+
+    final pendingLabel = syncState.pendingOutboxCount > 0
+        ? '${BengaliNumberFormatter.toBengali(syncState.pendingOutboxCount)} টি পেন্ডিং'
+        : 'সিঙ্কড';
 
     final tables = [
-      {'name': 'সদস্য তালিকা (Members)', 'count': '১২৫ জন', 'status': 'সিঙ্কড'},
-      {'name': 'আয় ও ব্যয় লেজার (Transactions)', 'count': '৩৪৮ টি', 'status': 'সিঙ্কড'},
-      {'name': 'চাঁদা আদায় রেকর্ড (Chanda)', 'count': '৯২০ টি', 'status': 'সিঙ্কড'},
-      {'name': 'জুমার দানবাক্স (Cashbox)', 'count': '৫২ টি', 'status': 'সিঙ্কড'},
-      {'name': 'মাদরাসা ও হিফজ (Students & Hifz)', 'count': '৫ জন', 'status': 'সিঙ্কড'},
-      {'name': 'ওয়াকফ সম্পত্তি (Properties)', 'count': '৮ টি', 'status': 'সিঙ্কড'},
-      {'name': 'বিজ্ঞপ্তি ও সভা (Notices & Meetings)', 'count': '১৫ টি', 'status': 'সিঙ্কড'},
+      {'name': 'সদস্য তালিকা (Members)', 'count': '${BengaliNumberFormatter.toBengali(membersCount)} জন', 'status': pendingLabel},
+      {'name': 'আয় ও ব্যয় লেজার (Transactions)', 'count': '${BengaliNumberFormatter.toBengali(txnsCount)} টি', 'status': pendingLabel},
+      {'name': 'চাঁদা আদায় রেকর্ড (Chanda)', 'count': '${BengaliNumberFormatter.toBengali(chandaCount)} টি', 'status': pendingLabel},
+      {'name': 'জুমার দানবাক্স (Cashbox)', 'count': '${BengaliNumberFormatter.toBengali(cashboxCount)} টি', 'status': pendingLabel},
+      {'name': 'মাদরাসা শিক্ষার্থী (Students)', 'count': '${BengaliNumberFormatter.toBengali(studentsCount)} জন', 'status': pendingLabel},
+      {'name': 'ওয়াকফ সম্পত্তি (Properties)', 'count': '${BengaliNumberFormatter.toBengali(waqfCount)} টি', 'status': pendingLabel},
+      {'name': 'বিজ্ঞপ্তি (Notices)', 'count': '${BengaliNumberFormatter.toBengali(noticesCount)} টি', 'status': pendingLabel},
     ];
 
     return Scaffold(
@@ -63,9 +81,16 @@ class CloudSyncScreen extends ConsumerWidget {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            'সর্বশেষ সিঙ্ক: ${syncState.lastSyncedAt != null ? BengaliNumberFormatter.toBengali('${syncState.lastSyncedAt!.hour}:${syncState.lastSyncedAt!.minute.toString().padLeft(2, '0')}') : 'এখনই'}',
+                            'সর্বশেষ সিঙ্ক: ${syncState.lastSyncedAt != null ? BengaliNumberFormatter.toBengali('${syncState.lastSyncedAt!.hour}:${syncState.lastSyncedAt!.minute.toString().padLeft(2, '0')}') : 'এখনই'} • অপেক্ষমাণ: ${BengaliNumberFormatter.toBengali(syncState.pendingOutboxCount)} টি',
                             style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
                           ),
+                          if (syncState.errorMessage != null && syncState.errorMessage!.isNotEmpty) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              syncState.errorMessage!,
+                              style: const TextStyle(fontSize: 11, color: AppColors.urgentRed),
+                            ),
+                          ],
                         ],
                       ),
                     ),

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_dimens.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../core/utils/bengali_number_formatter.dart';
-import '../../../../shared/widgets/card_shell.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_dimens.dart';
+import '../../../core/theme/app_typography.dart';
+import '../../../core/utils/bengali_number_formatter.dart';
+import '../../../shared/widgets/card_shell.dart';
 import '../models/janaza_alert_model.dart';
 
 /// Card component presenting an emergency Janaza alert with Islamic styling

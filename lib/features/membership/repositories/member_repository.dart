@@ -1,14 +1,9 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../../core/network/supabase_service.dart';
+import '../../../core/network/supabase_service.dart';
 import '../models/member_model.dart';
 
 /// Repository for Member CRUD and Search (মসজিদ সদস্য রিপোজিটরি)
 class MemberRepository {
-  final SupabaseService _supabaseService;
-
-  MemberRepository({SupabaseService? supabaseService})
-      : _supabaseService = supabaseService ?? SupabaseService();
-
   SupabaseClient get _client => SupabaseService.client;
 
   /// Fetch all members for the given mosque

@@ -20,8 +20,10 @@ class NotificationNotifier extends StateNotifier<AsyncValue<List<AppNotification
     state = const AsyncValue.loading();
     try {
       final list = await _repository.fetchNotifications(mosqueId: _mosqueId);
+      if (!mounted) return;
       state = AsyncValue.data(list);
     } catch (e, st) {
+      if (!mounted) return;
       state = AsyncValue.error(e, st);
     }
   }
@@ -39,8 +41,8 @@ class NotificationNotifier extends StateNotifier<AsyncValue<List<AppNotification
 
 final notificationListProvider = StateNotifierProvider<NotificationNotifier, AsyncValue<List<AppNotificationModel>>>((ref) {
   final repo = ref.watch(notificationRepositoryProvider);
-  final authState = ref.watch(authProvider);
-  final mosqueId = authState.user?.mosqueId ?? 'mosque-default';
+  final authState = ref.watch(authNotifierProvider);
+  final mosqueId = authState.valueOrNull?.mosqueId ?? 'mosque-default';
   return NotificationNotifier(repo, mosqueId);
 });
 

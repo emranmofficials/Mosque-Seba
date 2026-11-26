@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:qr_flutter/qr_flutter.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_dimens.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../core/utils/bengali_number_formatter.dart';
-import '../../../../shared/widgets/adaptive_scaffold.dart';
-import '../../../../shared/widgets/app_button.dart';
-import '../../../../shared/widgets/card_shell.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_dimens.dart';
+import '../../../core/theme/app_typography.dart';
+import '../../../core/utils/bengali_number_formatter.dart';
+import '../../../shared/widgets/adaptive_scaffold.dart';
+import '../../../shared/widgets/app_button.dart';
+import '../../../shared/widgets/card_shell.dart';
 import '../models/member_model.dart';
 
 /// Screen displaying full member profile and QR verification badge
@@ -110,7 +110,7 @@ class MemberProfileScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: AppDimens.spacing16),
                   AppButton(
-                    text: 'চাঁদা গ্রহণ ও রসিদ তৈরি',
+                    label: 'চাঁদা গ্রহণ ও রসিদ তৈরি',
                     icon: Icons.receipt_long,
                     onPressed: () {
                       context.push('/chanda-ledger', extra: member);

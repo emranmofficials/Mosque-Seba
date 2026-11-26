@@ -85,7 +85,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
               ScaleTransition(
                 scale: _scaleAnimation,
                 child: FadeTransition(
-                  fade: _fadeAnimation,
+                  opacity: _fadeAnimation,
                   child: Container(
                     width: 130,
                     height: 130,
@@ -125,7 +125,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
               // App Name & Tagline
               FadeTransition(
-                fade: _fadeAnimation,
+                opacity: _fadeAnimation,
                 child: Column(
                   children: [
                     const Text(

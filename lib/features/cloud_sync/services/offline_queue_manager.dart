@@ -27,6 +27,15 @@ class OutboxItem {
         'retry_count': retryCount,
       };
 
+  OutboxItem copyWith({int? retryCount}) => OutboxItem(
+        id: id,
+        tableName: tableName,
+        operation: operation,
+        payload: payload,
+        timestamp: timestamp,
+        retryCount: retryCount ?? this.retryCount,
+      );
+
   factory OutboxItem.fromJson(Map<String, dynamic> json) => OutboxItem(
         id: json['id'] as String? ?? '',
         tableName: json['table_name'] as String? ?? '',
@@ -67,6 +76,16 @@ class OfflineQueueManager {
     queue.add(newItem);
 
     final encodedList = queue.map((i) => jsonEncode(i.toJson())).toList();
+    await prefs.setStringList(_outboxKey, encodedList);
+  }
+
+  Future<void> replaceQueue(List<OutboxItem> items) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (items.isEmpty) {
+      await prefs.remove(_outboxKey);
+      return;
+    }
+    final encodedList = items.map((i) => jsonEncode(i.toJson())).toList();
     await prefs.setStringList(_outboxKey, encodedList);
   }
 

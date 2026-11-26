@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_dimens.dart';
-import '../../../../core/utils/bengali_number_formatter.dart';
-import '../../../../shared/widgets/card_shell.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_dimens.dart';
+import '../../../core/utils/bengali_number_formatter.dart';
+import '../../../shared/widgets/card_shell.dart';
 import '../models/student_model.dart';
 
 /// Card Component displaying a Madrasa Student Summary

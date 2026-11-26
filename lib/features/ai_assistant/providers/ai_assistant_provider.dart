@@ -32,8 +32,10 @@ class KhutbahNotifier extends StateNotifier<KhutbahState> {
         topicPrompt: prompt,
         category: category,
       );
+      if (!mounted) return;
       state = KhutbahState(isLoading: false, topic: res);
     } catch (e) {
+      if (!mounted) return;
       state = KhutbahState(isLoading: false, error: e.toString());
     }
   }

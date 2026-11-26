@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_dimens.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../core/utils/bengali_number_formatter.dart';
-import '../../../../shared/widgets/card_shell.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_dimens.dart';
+import '../../../core/theme/app_typography.dart';
+import '../../../core/utils/bengali_number_formatter.dart';
+import '../../../shared/widgets/card_shell.dart';
 import '../models/chanda_payment_model.dart';
 
 /// Digital Verified Mosque Receipt Card (ডিজিটাল চাঁদা রসিদ)

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_dimens.dart';
-import '../../../../shared/widgets/card_shell.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_dimens.dart';
+import '../../../shared/widgets/card_shell.dart';
 import '../services/security_check_service.dart';
 
 /// Screen presenting Device Security, Encryption, and RBAC Audit Status
@@ -26,6 +26,7 @@ class _SecurityDashboardScreenState extends State<SecurityDashboardScreen> {
   Future<void> _runCheck() async {
     setState(() => _isLoading = true);
     final result = await _securityService.runSecurityScan();
+    if (!mounted) return;
     setState(() {
       _assessment = result;
       _isLoading = false;

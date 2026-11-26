@@ -1,14 +1,9 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../../core/network/supabase_service.dart';
+import '../../../core/network/supabase_service.dart';
 import '../models/chanda_payment_model.dart';
 
 /// Repository for Chanda Payments & Collection (চাঁদা কালেকশন রিপোজিটরি)
 class ChandaRepository {
-  final SupabaseService _supabaseService;
-
-  ChandaRepository({SupabaseService? supabaseService})
-      : _supabaseService = supabaseService ?? SupabaseService();
-
   SupabaseClient get _client => SupabaseService.client;
 
   /// Fetch all chanda payments for a mosque

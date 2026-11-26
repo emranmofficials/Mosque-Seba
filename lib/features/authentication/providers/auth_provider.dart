@@ -22,11 +22,13 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthUser?>> {
   Future<void> checkSession() async {
     try {
       final user = await _authService.restoreSession();
+      if (!mounted) return;
       if (user != null) {
         _ref.read(currentRoleProvider.notifier).state = CommitteeRole.fromCode(user.roleCode);
       }
       state = AsyncValue.data(user);
     } catch (e, st) {
+      if (!mounted) return;
       state = AsyncValue.error(e, st);
     }
   }
@@ -35,9 +37,11 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthUser?>> {
     state = const AsyncValue.loading();
     try {
       final user = await _authService.loginWithEmail(email: email, password: password);
+      if (!mounted) return;
       _ref.read(currentRoleProvider.notifier).state = CommitteeRole.fromCode(user.roleCode);
       state = AsyncValue.data(user);
     } catch (e, st) {
+      if (!mounted) return;
       state = AsyncValue.error(e, st);
       rethrow;
     }
@@ -51,9 +55,11 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthUser?>> {
         mobile: mobile,
         password: password,
       );
+      if (!mounted) return;
       _ref.read(currentRoleProvider.notifier).state = CommitteeRole.fromCode(user.roleCode);
       state = AsyncValue.data(user);
     } catch (e, st) {
+      if (!mounted) return;
       state = AsyncValue.error(e, st);
       rethrow;
     }
@@ -62,6 +68,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthUser?>> {
   Future<void> logout() async {
     state = const AsyncValue.loading();
     await _authService.logout();
+    if (!mounted) return;
     _ref.read(currentRoleProvider.notifier).state = CommitteeRole.generalMember;
     state = const AsyncValue.data(null);
   }

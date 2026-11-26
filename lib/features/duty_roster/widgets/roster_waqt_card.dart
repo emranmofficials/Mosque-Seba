@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_dimens.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../shared/widgets/card_shell.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_dimens.dart';
+import '../../../core/theme/app_typography.dart';
+import '../../../shared/widgets/card_shell.dart';
 import '../models/duty_roster_item.dart';
 
 /// Card showing assigned duty for a specific waqt (ফজর, যোহর, আসর, মাগরিব, ইশা, জুমা)

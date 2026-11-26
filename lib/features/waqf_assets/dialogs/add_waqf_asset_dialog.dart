@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_dimens.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../shared/widgets/app_button.dart';
-import '../../../../shared/widgets/app_text_field.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_dimens.dart';
+import '../../../core/theme/app_typography.dart';
+import '../../../shared/widgets/app_button.dart';
+import '../../../shared/widgets/app_text_field.dart';
 import '../models/waqf_asset_model.dart';
 
 /// Dialog to record a new Waqf Property (ওয়াকফ সম্পত্তি নিবন্ধন)
@@ -221,7 +221,7 @@ class _AddWaqfAssetDialogState extends State<AddWaqfAssetDialog> {
                     children: [
                       Expanded(
                         child: AppButton(
-                          text: 'বাতিল',
+                          label: 'বাতিল',
                           variant: AppButtonVariant.outline,
                           onPressed: () => Navigator.of(context).pop(),
                         ),
@@ -229,7 +229,7 @@ class _AddWaqfAssetDialogState extends State<AddWaqfAssetDialog> {
                       const SizedBox(width: AppDimens.spacing12),
                       Expanded(
                         child: AppButton(
-                          text: 'নিবন্ধন করুন',
+                          label: 'নিবন্ধন করুন',
                           isLoading: _isLoading,
                           onPressed: _handleSave,
                         ),

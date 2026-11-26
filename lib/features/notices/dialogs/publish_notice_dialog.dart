@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_dimens.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../shared/widgets/app_button.dart';
-import '../../../../shared/widgets/app_text_field.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_dimens.dart';
+import '../../../core/theme/app_typography.dart';
+import '../../../shared/widgets/app_button.dart';
+import '../../../shared/widgets/app_text_field.dart';
 import '../models/notice_model.dart';
 
 /// Modal dialog to draft and publish a new official mosque notice
@@ -151,7 +151,7 @@ class _PublishNoticeDialogState extends State<PublishNoticeDialog> {
                     children: [
                       Expanded(
                         child: AppButton(
-                          text: 'বাতিল',
+                          label: 'বাতিল',
                           variant: AppButtonVariant.outline,
                           onPressed: () => Navigator.of(context).pop(),
                         ),
@@ -159,7 +159,7 @@ class _PublishNoticeDialogState extends State<PublishNoticeDialog> {
                       const SizedBox(width: AppDimens.spacing12),
                       Expanded(
                         child: AppButton(
-                          text: 'প্রকাশ করুন',
+                          label: 'প্রকাশ করুন',
                           isLoading: _isLoading,
                           onPressed: _handlePublish,
                         ),

@@ -1,14 +1,9 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../../core/network/supabase_service.dart';
+import '../../../core/network/supabase_service.dart';
 import '../models/duty_roster_item.dart';
 
 /// Repository for Weekly Duty Roster (দায়িত্ব রোস্টার রিপোজিটরি)
 class DutyRosterRepository {
-  final SupabaseService _supabaseService;
-
-  DutyRosterRepository({SupabaseService? supabaseService})
-      : _supabaseService = supabaseService ?? SupabaseService();
-
   SupabaseClient get _client => SupabaseService.client;
 
   /// Fetch duty roster items, optionally filtered by day of week
@@ -17,7 +12,7 @@ class DutyRosterRepository {
     String? dayOfWeek,
   }) async {
     try {
-      var query = _client.from('duty_roster').select();
+      var query = _client.from('duty_roster').select().eq('mosque_id', mosqueId);
       if (dayOfWeek != null && dayOfWeek.isNotEmpty && dayOfWeek != 'সকল') {
         query = query.eq('day_of_week', dayOfWeek);
       }
@@ -34,9 +29,13 @@ class DutyRosterRepository {
   }
 
   /// Assign or update duty roster slot
-  Future<DutyRosterItem?> assignDuty(DutyRosterItem item) async {
+  Future<DutyRosterItem?> assignDuty({
+    required String mosqueId,
+    required DutyRosterItem item,
+  }) async {
     try {
       final payload = item.toJson();
+      payload['mosque_id'] = mosqueId;
       if (payload['id'] == null || (payload['id'] as String).isEmpty) {
         payload['id'] = 'ros-${DateTime.now().millisecondsSinceEpoch}';
       }

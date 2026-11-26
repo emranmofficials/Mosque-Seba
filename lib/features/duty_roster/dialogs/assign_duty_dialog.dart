@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_dimens.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../shared/widgets/app_button.dart';
-import '../../../../shared/widgets/app_text_field.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_dimens.dart';
+import '../../../core/theme/app_typography.dart';
+import '../../../shared/widgets/app_button.dart';
+import '../../../shared/widgets/app_text_field.dart';
 import '../../staff/models/staff_model.dart';
 import '../models/duty_roster_item.dart';
 
@@ -185,7 +185,7 @@ class _AssignDutyDialogState extends State<AssignDutyDialog> {
                     children: [
                       Expanded(
                         child: AppButton(
-                          text: 'বাতিল',
+                          label: 'বাতিল',
                           variant: AppButtonVariant.outline,
                           onPressed: () => Navigator.of(context).pop(),
                         ),
@@ -193,7 +193,7 @@ class _AssignDutyDialogState extends State<AssignDutyDialog> {
                       const SizedBox(width: AppDimens.spacing12),
                       Expanded(
                         child: AppButton(
-                          text: 'বরাদ্দ নিশ্চিত করুন',
+                          label: 'বরাদ্দ নিশ্চিত করুন',
                           isLoading: _isLoading,
                           onPressed: _handleSave,
                         ),

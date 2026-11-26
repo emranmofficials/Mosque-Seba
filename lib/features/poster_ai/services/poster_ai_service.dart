@@ -1,7 +1,16 @@
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
+import 'package:google_generative_ai/google_generative_ai.dart';
+import '../../../core/config/app_config.dart';
 import '../models/poster_design_model.dart';
 
 /// Service for generating authentic Bengali Islamic Poster Copy with Gemini AI
 class PosterAiService {
+  final String _apiKey;
+
+  PosterAiService({String? apiKey})
+      : _apiKey = apiKey ?? AppConfig.geminiApiKey;
+
   /// Generate or optimize authentic Islamic Dawat poster copy
   Future<PosterDesignModel> generatePosterCopy({
     required String prompt,
@@ -9,8 +18,51 @@ class PosterAiService {
     String? venue,
     String? date,
   }) async {
-    // Simulating prompt-based AI synthesis using Gemini 3.8 Flash template
-    await Future.delayed(const Duration(milliseconds: 600));
+    if (_apiKey.isNotEmpty) {
+      try {
+        final model = GenerativeModel(
+          model: AppConfig.geminiModel,
+          apiKey: _apiKey,
+        );
+        final aiPrompt = '''
+বাংলা ভাষায় ইসলামিক দাওয়াতনামা/মাহফিল পোস্টারের জন্য মার্জিত কপি JSON ফরম্যাটে তৈরি করুন।
+অনুষ্ঠানের ধরন: ${eventType ?? 'waz_mahfil'}
+মূল বিষয়: ${prompt.isNotEmpty ? prompt : 'তাফসিরুল কুরআন ও দোয়া মাহফিল'}
+স্থান: ${venue ?? 'মসজিদ প্রাঙ্গণ'}
+তারিখ: ${date ?? 'আসন্ন তারিখ'}
+
+শুধুমাত্র নিচের JSON ফরম্যাট দিন:
+{
+  "quranAyat": "সংক্ষিপ্ত কুরআন/হাদিস উদ্ধৃতি",
+  "eventTitle": "পোস্টারের শিরোনাম",
+  "subtitle": "উপ-শিরোনাম",
+  "eventTime": "সময়",
+  "venue": "স্থান",
+  "themeStyle": "emerald_gold"
+}
+''';
+        final response = await model.generateContent([Content.text(aiPrompt)]);
+        var raw = (response.text ?? '').trim();
+        if (raw.startsWith('```')) {
+          raw = raw.replaceFirst(RegExp(r'^```(?:json)?\s*'), '');
+          raw = raw.replaceFirst(RegExp(r'\s*```$'), '');
+        }
+        if (raw.isNotEmpty) {
+          final parsed = jsonDecode(raw) as Map<String, dynamic>;
+          return PosterDesignModel(
+            quranAyat: parsed['quranAyat'] as String? ?? '“তোমরা সৎকাজে পরস্পরকে সাহায্য করো...” — (সূরা মায়িদাহ: ২)',
+            eventTitle: parsed['eventTitle'] as String? ?? (prompt.isNotEmpty ? prompt : 'তাফসিরুল কুরআন ও দোয়া মাহফিল'),
+            subtitle: parsed['subtitle'] as String? ?? 'ইসলাম, শান্তি ও মানবতার কল্যাণে বিশেষ আয়োজন',
+            eventDate: date ?? 'আসন্ন তারিখ',
+            eventTime: parsed['eventTime'] as String? ?? 'বাদ আসর হতে',
+            venue: venue ?? (parsed['venue'] as String? ?? 'মসজিদ প্রাঙ্গণ'),
+            themeStyle: parsed['themeStyle'] as String? ?? 'emerald_gold',
+          );
+        }
+      } catch (e) {
+        debugPrint('Gemini poster copy fallback: $e');
+      }
+    }
 
     if (eventType == 'iftar_party') {
       return PosterDesignModel(

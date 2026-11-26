@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_colors.dart';
 
 /// Interactive Star Rating Bar (1 to 5 Stars)
 class StarRatingBar extends StatelessWidget {

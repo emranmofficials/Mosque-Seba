@@ -1,22 +1,18 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../../core/network/supabase_service.dart';
+import '../../../core/network/supabase_service.dart';
 import '../models/cashbox_record_model.dart';
 
 /// Repository for Jumu'ah Cashbox Records (জুমার দানবাক্স রিপোজিটরি)
 class CashboxRepository {
-  final SupabaseService _supabaseService;
-
-  CashboxRepository({SupabaseService? supabaseService})
-      : _supabaseService = supabaseService ?? SupabaseService();
-
   SupabaseClient get _client => SupabaseService.client;
 
-  /// Fetch all Friday cashbox counting records
+  /// Fetch all Friday cashbox counting records for a mosque
   Future<List<CashboxRecordModel>> fetchRecords({required String mosqueId}) async {
     try {
       final response = await _client
           .from('cashbox_records')
           .select()
+          .eq('mosque_id', mosqueId)
           .order('counted_at', ascending: false);
 
       final List<dynamic> data = response as List<dynamic>;
@@ -36,6 +32,7 @@ class CashboxRepository {
     try {
       final voucherCode = 'BOX-${DateTime.now().year}-${DateTime.now().millisecondsSinceEpoch % 100000}';
       final payload = record.toJson();
+      payload['mosque_id'] = mosqueId;
       if (payload['id'] == null || (payload['id'] as String).isEmpty) {
         payload['id'] = 'cb-${DateTime.now().millisecondsSinceEpoch}';
       }

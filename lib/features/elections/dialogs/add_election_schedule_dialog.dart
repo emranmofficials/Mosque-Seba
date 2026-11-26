@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_dimens.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../shared/widgets/app_button.dart';
-import '../../../../shared/widgets/app_text_field.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_dimens.dart';
+import '../../../core/theme/app_typography.dart';
+import '../../../shared/widgets/app_button.dart';
+import '../../../shared/widgets/app_text_field.dart';
 import '../models/election_schedule_model.dart';
 
 /// Modal dialog to announce a new committee election schedule
@@ -143,7 +143,7 @@ class _AddElectionScheduleDialogState extends State<AddElectionScheduleDialog> {
                     children: [
                       Expanded(
                         child: AppButton(
-                          text: 'বাতিল',
+                          label: 'বাতিল',
                           variant: AppButtonVariant.outline,
                           onPressed: () => Navigator.of(context).pop(),
                         ),
@@ -151,7 +151,7 @@ class _AddElectionScheduleDialogState extends State<AddElectionScheduleDialog> {
                       const SizedBox(width: AppDimens.spacing12),
                       Expanded(
                         child: AppButton(
-                          text: 'তফসিল ঘোষণা করুন',
+                          label: 'তফসিল ঘোষণা করুন',
                           isLoading: _isLoading,
                           onPressed: _handleSave,
                         ),

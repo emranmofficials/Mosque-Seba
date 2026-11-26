@@ -21,14 +21,19 @@ class ElectionNotifier extends StateNotifier<AsyncValue<List<ElectionScheduleMod
     state = const AsyncValue.loading();
     try {
       final list = await _repository.fetchSchedules(mosqueId: _mosqueId);
+      if (!mounted) return;
       state = AsyncValue.data(list);
     } catch (e, st) {
+      if (!mounted) return;
       state = AsyncValue.error(e, st);
     }
   }
 
   Future<bool> createSchedule(ElectionScheduleModel schedule) async {
-    final result = await _repository.createSchedule(schedule);
+    final result = await _repository.createSchedule(
+      mosqueId: _mosqueId,
+      schedule: schedule,
+    );
     if (result != null) {
       await loadSchedules();
       return true;
@@ -39,8 +44,8 @@ class ElectionNotifier extends StateNotifier<AsyncValue<List<ElectionScheduleMod
 
 final electionSchedulesProvider = StateNotifierProvider<ElectionNotifier, AsyncValue<List<ElectionScheduleModel>>>((ref) {
   final repo = ref.watch(electionRepositoryProvider);
-  final authState = ref.watch(authProvider);
-  final mosqueId = authState.user?.mosqueId ?? 'mosque-default';
+  final authState = ref.watch(authNotifierProvider);
+  final mosqueId = authState.valueOrNull?.mosqueId ?? 'mosque-default';
   return ElectionNotifier(repo, mosqueId);
 });
 
@@ -66,8 +71,10 @@ class CandidateListNotifier extends StateNotifier<AsyncValue<List<ElectionCandid
     state = const AsyncValue.loading();
     try {
       final list = await _repository.fetchCandidates(_scheduleId);
+      if (!mounted) return;
       state = AsyncValue.data(list);
     } catch (e, st) {
+      if (!mounted) return;
       state = AsyncValue.error(e, st);
     }
   }

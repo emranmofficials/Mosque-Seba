@@ -1,5 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../../core/network/supabase_service.dart';
+import '../../../core/network/supabase_service.dart';
 import 'offline_queue_manager.dart';
 
 class SyncResult {
@@ -18,22 +18,21 @@ class SyncResult {
 
 /// Bidirectional Supabase Cloud Synchronization Service
 class SupabaseSyncService {
-  final SupabaseService _supabaseService;
   final OfflineQueueManager _queueManager;
 
   SupabaseSyncService({
-    SupabaseService? supabaseService,
     OfflineQueueManager? queueManager,
-  })  : _supabaseService = supabaseService ?? SupabaseService(),
-        _queueManager = queueManager ?? OfflineQueueManager();
+  }) : _queueManager = queueManager ?? OfflineQueueManager();
 
   SupabaseClient get _client => SupabaseService.client;
 
-  /// Perform full synchronization: Flush outbox then refresh tables
+  /// Perform full synchronization: Flush outbox while retaining failed items
   Future<SyncResult> performFullSync() async {
     try {
       final pendingItems = await _queueManager.getPendingQueue();
       int successCount = 0;
+      final remainingItems = <OutboxItem>[];
+      String? lastError;
 
       // 1. Process Outbox Queue (Upload offline changes)
       for (final item in pendingItems) {
@@ -46,24 +45,32 @@ class SupabaseSyncService {
             if (id != null) {
               await _client.from(item.tableName).update(item.payload).eq('id', id);
               successCount++;
+            } else {
+              remainingItems.add(item.copyWith(retryCount: item.retryCount + 1));
             }
           } else if (item.operation == 'delete') {
             final id = item.payload['id'];
             if (id != null) {
               await _client.from(item.tableName).delete().eq('id', id);
               successCount++;
+            } else {
+              remainingItems.add(item.copyWith(retryCount: item.retryCount + 1));
             }
           }
-        } catch (_) {
-          // Keep item in queue if server error
+        } catch (e) {
+          lastError = e.toString();
+          remainingItems.add(item.copyWith(retryCount: item.retryCount + 1));
         }
       }
 
-      await _queueManager.clearQueue();
+      await _queueManager.replaceQueue(remainingItems);
 
       return SyncResult(
-        isSuccess: true,
+        isSuccess: remainingItems.isEmpty,
         syncedItemsCount: successCount,
+        errorMessage: remainingItems.isNotEmpty
+            ? '${remainingItems.length} টি আইটেম সিঙ্ক ব্যর্থ হয়েছে: ${lastError ?? ''}'
+            : null,
         syncedAt: DateTime.now(),
       );
     } catch (e) {

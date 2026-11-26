@@ -1,7 +1,9 @@
+import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_dimens.dart';
-import '../../../../shared/widgets/card_shell.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_dimens.dart';
+import '../../../shared/widgets/card_shell.dart';
 import '../dialogs/signature_pad_dialog.dart';
 import '../services/signature_storage_service.dart';
 
@@ -15,21 +17,45 @@ class SealSignatureManagementScreen extends StatefulWidget {
 
 class _SealSignatureManagementScreenState extends State<SealSignatureManagementScreen> {
   final _service = SignatureStorageService();
-  bool _hasPresidentSign = true;
-  bool _hasTreasurerSign = true;
+  bool _hasPresidentSign = false;
+  bool _hasTreasurerSign = false;
   bool _hasSecretarySign = false;
 
-  void _openSignDialog(String title, String role) {
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedSignatures();
+  }
+
+  Future<void> _loadSavedSignatures() async {
+    final pres = await _service.getSignature('president');
+    final sec = await _service.getSignature('general_secretary');
+    final treas = await _service.getSignature('treasurer');
+    if (!mounted) return;
+    setState(() {
+      _hasPresidentSign = pres != null && pres.isNotEmpty;
+      _hasSecretarySign = sec != null && sec.isNotEmpty;
+      _hasTreasurerSign = treas != null && treas.isNotEmpty;
+    });
+  }
+
+  void _openSignDialog(String title, String role, String roleCode) {
     showDialog(
       context: context,
       builder: (ctx) => SignaturePadDialog(
         title: title,
         signatoryRole: role,
-        onSave: (points) {
+        onSave: (points) async {
+          final serialized = points
+              .map((p) => p == null ? null : {'dx': p.dx, 'dy': p.dy})
+              .toList();
+          final bytes = Uint8List.fromList(utf8.encode(jsonEncode(serialized)));
+          await _service.saveSignature(roleCode: roleCode, signatureBytes: bytes);
+          if (!mounted) return;
           setState(() {
-            if (role.contains('সভাপতি')) _hasPresidentSign = true;
-            if (role.contains('কোষাধ্যক্ষ')) _hasTreasurerSign = true;
-            if (role.contains('সম্পাদক')) _hasSecretarySign = true;
+            if (roleCode == 'president') _hasPresidentSign = true;
+            if (roleCode == 'treasurer') _hasTreasurerSign = true;
+            if (roleCode == 'general_secretary') _hasSecretarySign = true;
           });
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -115,7 +141,7 @@ class _SealSignatureManagementScreenState extends State<SealSignatureManagementS
             title: 'সভাপতি মহোদয়ের স্বাক্ষর',
             role: 'মুহতারাম সভাপতি',
             isConfigured: _hasPresidentSign,
-            onTap: () => _openSignDialog('সভাপতির স্বাক্ষর', 'মুহতারাম সভাপতি'),
+            onTap: () => _openSignDialog('সভাপতির স্বাক্ষর', 'মুহতারাম সভাপতি', 'president'),
           ),
           const SizedBox(height: 10),
 
@@ -123,7 +149,7 @@ class _SealSignatureManagementScreenState extends State<SealSignatureManagementS
             title: 'সাধারণ সম্পাদকের স্বাক্ষর',
             role: 'সাধারণ সম্পাদক',
             isConfigured: _hasSecretarySign,
-            onTap: () => _openSignDialog('সাধারণ সম্পাদকের স্বাক্ষর', 'সাধারণ সম্পাদক'),
+            onTap: () => _openSignDialog('সাধারণ সম্পাদকের স্বাক্ষর', 'সাধারণ সম্পাদক', 'general_secretary'),
           ),
           const SizedBox(height: 10),
 
@@ -131,7 +157,7 @@ class _SealSignatureManagementScreenState extends State<SealSignatureManagementS
             title: 'কোষাধ্যক্ষের স্বাক্ষর',
             role: 'অর্থ সম্পাদক / কোষাধ্যক্ষ',
             isConfigured: _hasTreasurerSign,
-            onTap: () => _openSignDialog('কোষাধ্যক্ষের স্বাক্ষর', 'কোষাধ্যক্ষ'),
+            onTap: () => _openSignDialog('কোষাধ্যক্ষের স্বাক্ষর', 'কোষাধ্যক্ষ', 'treasurer'),
           ),
         ],
       ),

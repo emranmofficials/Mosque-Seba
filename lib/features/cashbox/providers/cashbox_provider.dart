@@ -20,8 +20,10 @@ class CashboxListNotifier extends StateNotifier<AsyncValue<List<CashboxRecordMod
     state = const AsyncValue.loading();
     try {
       final list = await _repository.fetchRecords(mosqueId: _mosqueId);
+      if (!mounted) return;
       state = AsyncValue.data(list);
     } catch (e, st) {
+      if (!mounted) return;
       state = AsyncValue.error(e, st);
     }
   }
@@ -40,7 +42,7 @@ class CashboxListNotifier extends StateNotifier<AsyncValue<List<CashboxRecordMod
 
 final cashboxListProvider = StateNotifierProvider<CashboxListNotifier, AsyncValue<List<CashboxRecordModel>>>((ref) {
   final repo = ref.watch(cashboxRepositoryProvider);
-  final authState = ref.watch(authProvider);
-  final mosqueId = authState.user?.mosqueId ?? 'mosque-default';
+  final authState = ref.watch(authNotifierProvider);
+  final mosqueId = authState.valueOrNull?.mosqueId ?? 'mosque-default';
   return CashboxListNotifier(repo, mosqueId);
 });

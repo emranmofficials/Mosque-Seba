@@ -1,14 +1,9 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../../core/network/supabase_service.dart';
+import '../../../core/network/supabase_service.dart';
 import '../models/meal_schedule_item.dart';
 
 /// Repository for Mosque Meal Schedule (খাবার সূচি রিপোজিটরি)
 class MealScheduleRepository {
-  final SupabaseService _supabaseService;
-
-  MealScheduleRepository({SupabaseService? supabaseService})
-      : _supabaseService = supabaseService ?? SupabaseService();
-
   SupabaseClient get _client => SupabaseService.client;
 
   /// Fetch meal schedules for a specific date or date range
@@ -17,7 +12,7 @@ class MealScheduleRepository {
     String? dateStr,
   }) async {
     try {
-      var query = _client.from('food_schedules').select();
+      var query = _client.from('food_schedules').select().eq('mosque_id', mosqueId);
       if (dateStr != null && dateStr.isNotEmpty) {
         query = query.eq('date_str', dateStr);
       }
@@ -34,9 +29,13 @@ class MealScheduleRepository {
   }
 
   /// Create a new meal schedule slot
-  Future<MealScheduleItem?> addSchedule(MealScheduleItem item) async {
+  Future<MealScheduleItem?> addSchedule({
+    required String mosqueId,
+    required MealScheduleItem item,
+  }) async {
     try {
       final payload = item.toJson();
+      payload['mosque_id'] = mosqueId;
       if (payload['id'] == null || (payload['id'] as String).isEmpty) {
         payload['id'] = 'meal-${DateTime.now().millisecondsSinceEpoch}';
       }

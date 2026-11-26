@@ -22,6 +22,14 @@ if (flutterVersionName == null) {
     flutterVersionName = "1.2.5"
 }
 
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file("key.properties")
+if (keystorePropertiesFile.exists()) {
+    keystorePropertiesFile.withReader("UTF-8") { reader ->
+        keystoreProperties.load(reader)
+    }
+}
+
 android {
     namespace "com.mosqueseba.app"
     compileSdk 34
@@ -46,9 +54,22 @@ android {
         multiDexEnabled true
     }
 
+    signingConfigs {
+        if (keystorePropertiesFile.exists()) {
+            release {
+                keyAlias keystoreProperties.getProperty("keyAlias")
+                keyPassword keystoreProperties.getProperty("keyPassword")
+                storeFile file(keystoreProperties.getProperty("storeFile"))
+                storePassword keystoreProperties.getProperty("storePassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            signingConfig signingConfigs.debug
+            signingConfig keystorePropertiesFile.exists()
+                ? signingConfigs.release
+                : signingConfigs.debug
             minifyEnabled false
             shrinkResources false
             proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"

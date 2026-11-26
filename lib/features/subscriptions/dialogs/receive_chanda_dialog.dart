@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_dimens.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../shared/widgets/app_button.dart';
-import '../../../../shared/widgets/app_text_field.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_dimens.dart';
+import '../../../core/theme/app_typography.dart';
+import '../../../shared/widgets/app_button.dart';
+import '../../../shared/widgets/app_text_field.dart';
 import '../../membership/models/member_model.dart';
 import '../models/chanda_payment_model.dart';
 
@@ -251,7 +251,7 @@ class _ReceiveChandaDialogState extends State<ReceiveChandaDialog> {
                     children: [
                       Expanded(
                         child: AppButton(
-                          text: 'বাতিল',
+                          label: 'বাতিল',
                           variant: AppButtonVariant.outline,
                           onPressed: () => Navigator.of(context).pop(),
                         ),
@@ -259,7 +259,7 @@ class _ReceiveChandaDialogState extends State<ReceiveChandaDialog> {
                       const SizedBox(width: AppDimens.spacing12),
                       Expanded(
                         child: AppButton(
-                          text: 'জমা নিন ও রসিদ দিন',
+                          label: 'জমা নিন ও রসিদ দিন',
                           isLoading: _isLoading,
                           onPressed: _handleCollect,
                         ),

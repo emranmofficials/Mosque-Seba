@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_dimens.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../shared/widgets/app_button.dart';
-import '../../../../shared/widgets/app_text_field.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_dimens.dart';
+import '../../../core/theme/app_typography.dart';
+import '../../../shared/widgets/app_button.dart';
+import '../../../shared/widgets/app_text_field.dart';
 import '../models/meeting_model.dart';
 
 /// Modal dialog to schedule a new executive committee meeting
@@ -139,7 +139,7 @@ class _ScheduleMeetingDialogState extends State<ScheduleMeetingDialog> {
                     children: [
                       Expanded(
                         child: AppButton(
-                          text: 'বাতিল',
+                          label: 'বাতিল',
                           variant: AppButtonVariant.outline,
                           onPressed: () => Navigator.of(context).pop(),
                         ),
@@ -147,7 +147,7 @@ class _ScheduleMeetingDialogState extends State<ScheduleMeetingDialog> {
                       const SizedBox(width: AppDimens.spacing12),
                       Expanded(
                         child: AppButton(
-                          text: 'সভা নির্ধারণ করুন',
+                          label: 'সভা নির্ধারণ করুন',
                           isLoading: _isLoading,
                           onPressed: _handleSave,
                         ),

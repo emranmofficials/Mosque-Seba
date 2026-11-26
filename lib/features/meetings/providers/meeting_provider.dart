@@ -27,14 +27,19 @@ class MeetingListNotifier extends StateNotifier<AsyncValue<List<MeetingModel>>> 
         mosqueId: _mosqueId,
         statusFilter: filter,
       );
+      if (!mounted) return;
       state = AsyncValue.data(list);
     } catch (e, st) {
+      if (!mounted) return;
       state = AsyncValue.error(e, st);
     }
   }
 
   Future<bool> scheduleMeeting(MeetingModel meeting) async {
-    final result = await _repository.scheduleMeeting(meeting);
+    final result = await _repository.scheduleMeeting(
+      mosqueId: _mosqueId,
+      meeting: meeting,
+    );
     if (result != null) {
       await loadMeetings();
       return true;
@@ -54,7 +59,7 @@ class MeetingListNotifier extends StateNotifier<AsyncValue<List<MeetingModel>>> 
 
 final meetingListProvider = StateNotifierProvider<MeetingListNotifier, AsyncValue<List<MeetingModel>>>((ref) {
   final repo = ref.watch(meetingRepositoryProvider);
-  final authState = ref.watch(authProvider);
-  final mosqueId = authState.user?.mosqueId ?? 'mosque-default';
+  final authState = ref.watch(authNotifierProvider);
+  final mosqueId = authState.valueOrNull?.mosqueId ?? 'mosque-default';
   return MeetingListNotifier(repo, mosqueId, ref);
 });

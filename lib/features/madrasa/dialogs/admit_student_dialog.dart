@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_dimens.dart';
-import '../../../../core/utils/bengali_number_formatter.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_dimens.dart';
+import '../../../core/utils/bengali_number_formatter.dart';
 import '../models/student_model.dart';
 
 /// Modal Dialog for Admitting a New Madrasa Student (শিক্ষার্থী ভর্তি ফরম)
@@ -242,6 +242,7 @@ class _AdmitStudentDialogState extends State<AdmitStudentDialog> {
                               firstDate: DateTime(2020),
                               lastDate: DateTime(2030),
                             );
+                            if (!mounted) return;
                             if (picked != null) {
                               setState(() => _admissionDate = picked);
                             }

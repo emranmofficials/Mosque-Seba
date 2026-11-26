@@ -1,14 +1,9 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../../core/network/supabase_service.dart';
+import '../../../core/network/supabase_service.dart';
 import '../models/notice_model.dart';
 
 /// Repository for Official Mosque Notices (মসজিদ নোটিশ রিপোজিটরি)
 class NoticeRepository {
-  final SupabaseService _supabaseService;
-
-  NoticeRepository({SupabaseService? supabaseService})
-      : _supabaseService = supabaseService ?? SupabaseService();
-
   SupabaseClient get _client => SupabaseService.client;
 
   /// Fetch all notices for a mosque with optional priority filter

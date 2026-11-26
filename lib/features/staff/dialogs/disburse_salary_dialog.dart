@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_dimens.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../core/utils/bengali_number_formatter.dart';
-import '../../../../shared/widgets/app_button.dart';
-import '../../../../shared/widgets/app_text_field.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_dimens.dart';
+import '../../../core/theme/app_typography.dart';
+import '../../../core/utils/bengali_number_formatter.dart';
+import '../../../shared/widgets/app_button.dart';
+import '../../../shared/widgets/app_text_field.dart';
 import '../models/staff_model.dart';
 import '../models/staff_payroll_model.dart';
 
@@ -241,7 +241,7 @@ class _DisburseSalaryDialogState extends State<DisburseSalaryDialog> {
                     children: [
                       Expanded(
                         child: AppButton(
-                          text: 'বাতিল',
+                          label: 'বাতিল',
                           variant: AppButtonVariant.outline,
                           onPressed: () => Navigator.of(context).pop(),
                         ),
@@ -249,7 +249,7 @@ class _DisburseSalaryDialogState extends State<DisburseSalaryDialog> {
                       const SizedBox(width: AppDimens.spacing12),
                       Expanded(
                         child: AppButton(
-                          text: 'বেতন পরিশোধ নিশ্চিত করুন',
+                          label: 'বেতন পরিশোধ নিশ্চিত করুন',
                           isLoading: _isLoading,
                           onPressed: _handleDisburse,
                         ),

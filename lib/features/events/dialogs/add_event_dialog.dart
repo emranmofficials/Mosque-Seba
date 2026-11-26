@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_dimens.dart';
-import '../../../../core/utils/bengali_number_formatter.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_dimens.dart';
+import '../../../core/utils/bengali_number_formatter.dart';
 import '../models/mosque_event_model.dart';
 
 /// Modal dialog for scheduling a new Mosque Event or Mahfil
@@ -162,6 +162,7 @@ class _AddEventDialogState extends State<AddEventDialog> {
                                     firstDate: DateTime.now(),
                                     lastDate: DateTime(2030),
                                   );
+                                  if (!mounted) return;
                                   if (picked != null) {
                                     setState(() => _eventDate = picked);
                                   }

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_dimens.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../shared/components/empty_state_view.dart';
-import '../../../../shared/components/error_state_view.dart';
-import '../../../../shared/widgets/adaptive_scaffold.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_dimens.dart';
+import '../../../core/theme/app_typography.dart';
+import '../../../shared/components/empty_state_view.dart';
+import '../../../shared/components/error_state_view.dart';
+import '../../../shared/widgets/adaptive_scaffold.dart';
 import '../../authentication/providers/auth_provider.dart';
 import '../dialogs/publish_notice_dialog.dart';
 import '../models/notice_model.dart';
@@ -25,8 +25,8 @@ class NoticeListScreen extends ConsumerWidget {
   ];
 
   void _showPublishDialog(BuildContext context, WidgetRef ref) {
-    final authState = ref.read(authProvider);
-    final author = authState.user?.nameBn ?? 'সাধারণ সম্পাদক';
+    final authState = ref.read(authNotifierProvider);
+    final author = authState.valueOrNull?.memberName ?? 'সাধারণ সম্পাদক';
 
     showDialog(
       context: context,

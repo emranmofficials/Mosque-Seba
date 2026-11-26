@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
@@ -7,6 +8,7 @@ import '../core/database/app_database.dart';
 import '../core/network/supabase_service.dart';
 import '../core/router/app_router.dart';
 import '../core/storage/session_storage_service.dart';
+import '../features/authentication/models/auth_user.dart';
 import '../features/authentication/providers/auth_provider.dart';
 
 // Foundation Providers (Overridden during Bootstrap)
@@ -39,8 +41,26 @@ final isDarkModeProvider = StateProvider<bool>((ref) {
   return storage.isDarkMode;
 });
 
+class _RouterRefreshNotifier extends ChangeNotifier {
+  void trigger() => notifyListeners();
+}
+
 final routerProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authNotifierProvider);
-  final user = authState.valueOrNull;
-  return AppRouter.createRouter(authUser: user);
+  final refreshNotifier = _RouterRefreshNotifier();
+  ref.listen<AsyncValue<AuthUser?>>(
+    authNotifierProvider,
+    (_, __) => refreshNotifier.trigger(),
+  );
+
+  final router = AppRouter.createRouter(
+    getAuthUser: () => ref.read(authNotifierProvider).valueOrNull,
+    refreshListenable: refreshNotifier,
+  );
+
+  ref.onDispose(() {
+    router.dispose();
+    refreshNotifier.dispose();
+  });
+
+  return router;
 });

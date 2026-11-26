@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_dimens.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../shared/widgets/app_button.dart';
-import '../../../../shared/widgets/app_text_field.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_dimens.dart';
+import '../../../core/theme/app_typography.dart';
+import '../../../shared/widgets/app_button.dart';
+import '../../../shared/widgets/app_text_field.dart';
 import '../models/staff_model.dart';
 
 /// Modal dialog to recruit or register a new mosque staff member
@@ -173,7 +173,7 @@ class _AddStaffDialogState extends State<AddStaffDialog> {
                     children: [
                       Expanded(
                         child: AppButton(
-                          text: 'বাতিল',
+                          label: 'বাতিল',
                           variant: AppButtonVariant.outline,
                           onPressed: () => Navigator.of(context).pop(),
                         ),
@@ -181,7 +181,7 @@ class _AddStaffDialogState extends State<AddStaffDialog> {
                       const SizedBox(width: AppDimens.spacing12),
                       Expanded(
                         child: AppButton(
-                          text: 'নিয়োগ সংরক্ষণ',
+                          label: 'নিয়োগ সংরক্ষণ',
                           isLoading: _isLoading,
                           onPressed: _handleSave,
                         ),

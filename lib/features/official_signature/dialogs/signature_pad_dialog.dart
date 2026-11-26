@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_dimens.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_dimens.dart';
 
 /// Interactive Touchscreen Signature Canvas Pad Dialog
 class SignaturePadDialog extends StatefulWidget {
@@ -88,12 +88,9 @@ class _SignaturePadDialogState extends State<SignaturePadDialog> {
                       ),
                       GestureDetector(
                         onPanUpdate: (details) {
-                          final renderBox = context.findRenderObject() as RenderBox?;
-                          if (renderBox != null) {
-                            setState(() {
-                              _points.add(details.localPosition);
-                            });
-                          }
+                          setState(() {
+                            _points.add(details.localPosition);
+                          });
                         },
                         onPanEnd: (_) => setState(() => _points.add(null)),
                         child: CustomPaint(

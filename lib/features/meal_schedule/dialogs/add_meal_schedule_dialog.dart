@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_dimens.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../shared/widgets/app_button.dart';
-import '../../../../shared/widgets/app_text_field.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_dimens.dart';
+import '../../../core/theme/app_typography.dart';
+import '../../../shared/widgets/app_button.dart';
+import '../../../shared/widgets/app_text_field.dart';
 import '../../membership/models/member_model.dart';
 import '../models/meal_schedule_item.dart';
 
@@ -203,7 +203,7 @@ class _AddMealScheduleDialogState extends State<AddMealScheduleDialog> {
                     children: [
                       Expanded(
                         child: AppButton(
-                          text: 'বাতিল',
+                          label: 'বাতিল',
                           variant: AppButtonVariant.outline,
                           onPressed: () => Navigator.of(context).pop(),
                         ),
@@ -211,7 +211,7 @@ class _AddMealScheduleDialogState extends State<AddMealScheduleDialog> {
                       const SizedBox(width: AppDimens.spacing12),
                       Expanded(
                         child: AppButton(
-                          text: 'সূচি নিশ্চিত করুন',
+                          label: 'সূচি নিশ্চিত করুন',
                           isLoading: _isLoading,
                           onPressed: _handleSave,
                         ),

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_dimens.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../shared/widgets/app_button.dart';
-import '../../../../shared/widgets/app_text_field.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_dimens.dart';
+import '../../../core/theme/app_typography.dart';
+import '../../../shared/widgets/app_button.dart';
+import '../../../shared/widgets/app_text_field.dart';
 import '../models/meeting_model.dart';
 
 /// Modal dialog to record official resolutions and meeting decisions (কার্যবিবরণী ও সিদ্ধান্ত লিপিবদ্ধ)
@@ -119,7 +119,7 @@ class _RecordResolutionDialogState extends State<RecordResolutionDialog> {
                     children: [
                       Expanded(
                         child: AppButton(
-                          text: 'বাতিল',
+                          label: 'বাতিল',
                           variant: AppButtonVariant.outline,
                           onPressed: () => Navigator.of(context).pop(),
                         ),
@@ -127,7 +127,7 @@ class _RecordResolutionDialogState extends State<RecordResolutionDialog> {
                       const SizedBox(width: AppDimens.spacing12),
                       Expanded(
                         child: AppButton(
-                          text: 'সংরক্ষণ ও সম্পন্ন করুন',
+                          label: 'সংরক্ষণ ও সম্পন্ন করুন',
                           isLoading: _isLoading,
                           onPressed: _handleSave,
                         ),

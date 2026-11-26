@@ -123,6 +123,7 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
         committeeEndYear: int.tryParse(_committeeEndYearController.text) ?? 2028,
         bankAccountInfo: _bankInfoController.text.trim(),
       );
+      await ref.read(authNotifierProvider.notifier).checkSession();
 
       if (mounted) {
         setState(() {

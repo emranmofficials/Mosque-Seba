@@ -21,8 +21,10 @@ class StaffListNotifier extends StateNotifier<AsyncValue<List<StaffModel>>> {
     state = const AsyncValue.loading();
     try {
       final list = await _repository.fetchStaff(mosqueId: _mosqueId);
+      if (!mounted) return;
       state = AsyncValue.data(list);
     } catch (e, st) {
+      if (!mounted) return;
       state = AsyncValue.error(e, st);
     }
   }
@@ -42,8 +44,8 @@ class StaffListNotifier extends StateNotifier<AsyncValue<List<StaffModel>>> {
 
 final staffListProvider = StateNotifierProvider<StaffListNotifier, AsyncValue<List<StaffModel>>>((ref) {
   final repo = ref.watch(staffRepositoryProvider);
-  final authState = ref.watch(authProvider);
-  final mosqueId = authState.user?.mosqueId ?? 'mosque-default';
+  final authState = ref.watch(authNotifierProvider);
+  final mosqueId = authState.valueOrNull?.mosqueId ?? 'mosque-default';
   return StaffListNotifier(repo, mosqueId);
 });
 
@@ -60,8 +62,10 @@ class PayrollHistoryNotifier extends StateNotifier<AsyncValue<List<StaffPayrollM
     state = const AsyncValue.loading();
     try {
       final list = await _repository.fetchPayrollHistory(mosqueId: _mosqueId);
+      if (!mounted) return;
       state = AsyncValue.data(list);
     } catch (e, st) {
+      if (!mounted) return;
       state = AsyncValue.error(e, st);
     }
   }
@@ -92,7 +96,7 @@ class PayrollHistoryNotifier extends StateNotifier<AsyncValue<List<StaffPayrollM
 
 final payrollHistoryProvider = StateNotifierProvider<PayrollHistoryNotifier, AsyncValue<List<StaffPayrollModel>>>((ref) {
   final repo = ref.watch(staffRepositoryProvider);
-  final authState = ref.watch(authProvider);
-  final mosqueId = authState.user?.mosqueId ?? 'mosque-default';
+  final authState = ref.watch(authNotifierProvider);
+  final mosqueId = authState.valueOrNull?.mosqueId ?? 'mosque-default';
   return PayrollHistoryNotifier(repo, mosqueId);
 });

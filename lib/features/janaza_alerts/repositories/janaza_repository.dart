@@ -1,14 +1,9 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../../core/network/supabase_service.dart';
+import '../../../core/network/supabase_service.dart';
 import '../models/janaza_alert_model.dart';
 
 /// Repository for Emergency Janaza Alerts (জরুরি জানাজা সম্প্রচার রিপোজিটরি)
 class JanazaRepository {
-  final SupabaseService _supabaseService;
-
-  JanazaRepository({SupabaseService? supabaseService})
-      : _supabaseService = supabaseService ?? SupabaseService();
-
   SupabaseClient get _client => SupabaseService.client;
 
   /// Fetch active and historical Janaza notices

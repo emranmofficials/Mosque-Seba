@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_dimens.dart';
-import '../../../../core/theme/app_typography.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_dimens.dart';
+import '../../../core/theme/app_typography.dart';
 
 /// Status badge showing payment standing (পরিশোধিত, বকেয়া, আংশিক)
 class ChandaStatusBadge extends StatelessWidget {

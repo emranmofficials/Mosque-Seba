@@ -32,10 +32,16 @@ class SecureTokenManager {
     await _storage.write(key: _keyCommitteePinHash, value: hash);
   }
 
+  /// Check whether a Committee App PIN has been configured
+  Future<bool> hasCommitteePin() async {
+    final storedHash = await _storage.read(key: _keyCommitteePinHash);
+    return storedHash != null && storedHash.isNotEmpty;
+  }
+
   /// Verify Committee PIN
   Future<bool> verifyCommitteePin(String enteredPin) async {
     final storedHash = await _storage.read(key: _keyCommitteePinHash);
-    if (storedHash == null) return true; // first time setup
+    if (storedHash == null || storedHash.isEmpty) return false;
     return storedHash == EncryptionHelper.hashSha256(enteredPin);
   }
 }

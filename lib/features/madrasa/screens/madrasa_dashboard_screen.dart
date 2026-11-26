@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/router/app_router.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_dimens.dart';
-import '../../../../core/utils/bengali_number_formatter.dart';
-import '../../../../shared/widgets/card_shell.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_dimens.dart';
+import '../../../core/utils/bengali_number_formatter.dart';
+import '../../../shared/widgets/card_shell.dart';
+import '../../madrasa_attendance/providers/madrasa_attendance_provider.dart';
 import '../dialogs/admit_student_dialog.dart';
 import '../providers/madrasa_provider.dart';
 
@@ -17,6 +17,10 @@ class MadrasaDashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final studentsAsync = ref.watch(studentListProvider);
     final students = studentsAsync.valueOrNull ?? [];
+    final attendanceState = ref.watch(attendanceNotifierProvider);
+    final attendancePct = attendanceState.totalCount > 0
+        ? '${BengaliNumberFormatter.toBengali(attendanceState.attendancePercentage.round().toString())}%'
+        : '—';
 
     final hifzCount = students.where((s) => s.className.contains('হিফজ')).length;
     final totalFees = students.fold<double>(0.0, (acc, s) => acc + s.monthlyFee);
@@ -73,7 +77,7 @@ class MadrasaDashboardScreen extends ConsumerWidget {
                 Expanded(
                   child: _buildKpiCard(
                     title: 'আজকের হাজিরা',
-                    value: '৯৪%',
+                    value: attendancePct,
                     icon: Icons.how_to_reg,
                     color: Colors.blue.shade700,
                   ),

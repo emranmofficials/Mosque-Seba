@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../authentication/providers/auth_provider.dart';
 import '../models/welfare_case_model.dart';
 import '../repositories/welfare_repository.dart';
 
@@ -11,24 +12,32 @@ final welfareStatusFilterProvider = StateProvider<String>((ref) => 'all');
 
 class WelfareListNotifier extends StateNotifier<AsyncValue<List<WelfareCaseModel>>> {
   final WelfareRepository _repository;
+  final String _mosqueId;
 
-  WelfareListNotifier(this._repository) : super(const AsyncValue.loading()) {
+  WelfareListNotifier(this._repository, this._mosqueId)
+      : super(const AsyncValue.loading()) {
     loadCases();
   }
 
   Future<void> loadCases() async {
     try {
       state = const AsyncValue.loading();
-      final cases = await _repository.fetchCases();
+      final cases = await _repository.fetchCases(mosqueId: _mosqueId);
+      if (!mounted) return;
       state = AsyncValue.data(cases);
     } catch (e, st) {
+      if (!mounted) return;
       state = AsyncValue.error(e, st);
     }
   }
 
   Future<bool> submitCase(WelfareCaseModel welfareCase) async {
     try {
-      final created = await _repository.submitCase(welfareCase);
+      final created = await _repository.submitCase(
+        mosqueId: _mosqueId,
+        welfareCase: welfareCase,
+      );
+      if (!mounted) return created != null;
       if (created != null) {
         final current = state.valueOrNull ?? [];
         state = AsyncValue.data([created, ...current]);
@@ -48,11 +57,13 @@ class WelfareListNotifier extends StateNotifier<AsyncValue<List<WelfareCaseModel
   }) async {
     try {
       final success = await _repository.approveAndDisburse(
+        mosqueId: _mosqueId,
         caseId: caseId,
         approvedAmount: approvedAmount,
         approverName: approverName,
         disburseNow: disburseNow,
       );
+      if (!mounted) return success;
 
       if (success) {
         final current = state.valueOrNull ?? [];
@@ -80,7 +91,9 @@ class WelfareListNotifier extends StateNotifier<AsyncValue<List<WelfareCaseModel
 final welfareListProvider =
     StateNotifierProvider<WelfareListNotifier, AsyncValue<List<WelfareCaseModel>>>((ref) {
   final repo = ref.watch(welfareRepositoryProvider);
-  return WelfareListNotifier(repo);
+  final authState = ref.watch(authNotifierProvider);
+  final mosqueId = authState.valueOrNull?.mosqueId ?? 'mosque-default';
+  return WelfareListNotifier(repo, mosqueId);
 });
 
 final filteredWelfareCasesProvider = Provider<List<WelfareCaseModel>>((ref) {

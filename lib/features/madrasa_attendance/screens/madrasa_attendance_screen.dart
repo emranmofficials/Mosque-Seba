@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_dimens.dart';
-import '../../../../core/utils/bengali_number_formatter.dart';
-import '../../../../shared/components/empty_state_view.dart';
-import '../../../../shared/widgets/card_shell.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_dimens.dart';
+import '../../../core/utils/bengali_number_formatter.dart';
+import '../../../shared/components/empty_state_view.dart';
+import '../../../shared/widgets/card_shell.dart';
 import '../models/madrasa_attendance_model.dart';
 import '../providers/madrasa_attendance_provider.dart';
 import '../widgets/attendance_toggle_row.dart';
@@ -52,6 +52,7 @@ class MadrasaAttendanceScreen extends ConsumerWidget {
                             firstDate: DateTime(2025),
                             lastDate: DateTime(2030),
                           );
+                          if (!context.mounted) return;
                           if (picked != null) {
                             ref.read(selectedAttendanceDateProvider.notifier).state = picked;
                             ref.read(attendanceNotifierProvider.notifier).loadAttendance();

@@ -1,14 +1,9 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../../core/network/supabase_service.dart';
+import '../../../core/network/supabase_service.dart';
 import '../models/app_notification_model.dart';
 
 /// Repository for Notifications Center (নোটিফিকেশন সেন্টার রিপোজিটরি)
 class NotificationRepository {
-  final SupabaseService _supabaseService;
-
-  NotificationRepository({SupabaseService? supabaseService})
-      : _supabaseService = supabaseService ?? SupabaseService();
-
   SupabaseClient get _client => SupabaseService.client;
 
   /// Fetch notifications for a mosque

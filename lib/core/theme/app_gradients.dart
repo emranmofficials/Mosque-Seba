@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'app_colors.dart';
 
 /// Premium Islamic Mehrab & Minaret Gradients
 /// Preserves exact parity with Kotlin Color.kt

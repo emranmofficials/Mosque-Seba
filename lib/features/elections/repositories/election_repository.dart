@@ -1,15 +1,10 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../../core/network/supabase_service.dart';
+import '../../../core/network/supabase_service.dart';
 import '../models/election_candidate_model.dart';
 import '../models/election_schedule_model.dart';
 
 /// Repository for Mosque Committee Elections & Gazette (নির্বাচন ও গেজেট রিপোজিটরি)
 class ElectionRepository {
-  final SupabaseService _supabaseService;
-
-  ElectionRepository({SupabaseService? supabaseService})
-      : _supabaseService = supabaseService ?? SupabaseService();
-
   SupabaseClient get _client => SupabaseService.client;
 
   /// Fetch active and historical election schedules
@@ -18,6 +13,7 @@ class ElectionRepository {
       final response = await _client
           .from('election_schedules')
           .select()
+          .eq('mosque_id', mosqueId)
           .order('created_at', ascending: false);
 
       final List<dynamic> data = response as List<dynamic>;
@@ -30,9 +26,13 @@ class ElectionRepository {
   }
 
   /// Announce a new election schedule
-  Future<ElectionScheduleModel?> createSchedule(ElectionScheduleModel schedule) async {
+  Future<ElectionScheduleModel?> createSchedule({
+    required String mosqueId,
+    required ElectionScheduleModel schedule,
+  }) async {
     try {
       final payload = schedule.toJson();
+      payload['mosque_id'] = mosqueId;
       if (payload['id'] == null || (payload['id'] as String).isEmpty) {
         payload['id'] = 'elec-${DateTime.now().millisecondsSinceEpoch}';
       }

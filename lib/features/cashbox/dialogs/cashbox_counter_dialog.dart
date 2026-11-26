@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_dimens.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../core/utils/bengali_number_formatter.dart';
-import '../../../../shared/widgets/app_button.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_dimens.dart';
+import '../../../core/theme/app_typography.dart';
+import '../../../core/utils/bengali_number_formatter.dart';
+import '../../../shared/widgets/app_button.dart';
 import '../models/cashbox_record_model.dart';
 import '../widgets/denomination_counter_row.dart';
 import '../widgets/witness_signature_panel.dart';
@@ -216,7 +216,7 @@ class _CashboxCounterDialogState extends State<CashboxCounterDialog> {
                   children: [
                     Expanded(
                       child: AppButton(
-                        text: 'বাতিল',
+                        label: 'বাতিল',
                         variant: AppButtonVariant.outline,
                         onPressed: () => Navigator.of(context).pop(),
                       ),
@@ -224,7 +224,7 @@ class _CashboxCounterDialogState extends State<CashboxCounterDialog> {
                     const SizedBox(width: AppDimens.spacing12),
                     Expanded(
                       child: AppButton(
-                        text: 'নিশ্চিত ও জমা করুন',
+                        label: 'নিশ্চিত ও জমা করুন',
                         isLoading: _isLoading,
                         onPressed: _handleConfirm,
                       ),

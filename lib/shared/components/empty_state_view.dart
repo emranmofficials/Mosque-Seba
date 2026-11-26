@@ -1,26 +1,41 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_dimens.dart';
+import '../widgets/app_button.dart';
 
 /// Clean Islamic Empty State Placeholder
 class EmptyStateView extends StatelessWidget {
   final String title;
   final String? subtitle;
+  final String? message;
   final IconData icon;
   final Widget? action;
+  final String? actionLabel;
+  final VoidCallback? onAction;
 
   const EmptyStateView({
     super.key,
     required this.title,
     this.subtitle,
+    this.message,
     this.icon = Icons.inbox_outlined,
     this.action,
+    this.actionLabel,
+    this.onAction,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final effectiveSubtitle = message ?? subtitle;
+    final effectiveAction = action ??
+        (actionLabel != null && onAction != null
+            ? AppButton(
+                label: actionLabel!,
+                onPressed: onAction,
+              )
+            : null);
 
     return Center(
       child: Padding(
@@ -52,10 +67,10 @@ class EmptyStateView extends StatelessWidget {
               ),
               textAlign: TextAlign.center,
             ),
-            if (subtitle != null) ...[
+            if (effectiveSubtitle != null) ...[
               const SizedBox(height: MosqueSpace.xs),
               Text(
-                subtitle!,
+                effectiveSubtitle,
                 style: TextStyle(
                   fontSize: 13,
                   color: isDark ? AppColors.nightTextMuted : AppColors.textMuted,
@@ -63,9 +78,9 @@ class EmptyStateView extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
             ],
-            if (action != null) ...[
+            if (effectiveAction != null) ...[
               const SizedBox(height: MosqueSpace.lg),
-              action!,
+              effectiveAction,
             ],
           ],
         ),

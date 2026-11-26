@@ -36,7 +36,11 @@ import '../../features/membership/screens/member_profile_screen.dart';
 import '../../features/notices/screens/notice_list_screen.dart';
 import '../../features/notifications/screens/notification_center_screen.dart';
 import '../../features/prayer_times/screens/prayer_schedule_screen.dart';
+import '../../features/profile/screens/mosque_profile_screen.dart';
 import '../../features/ramadan/screens/ramadan_hub_screen.dart';
+import '../../features/role_permissions/models/committee_role.dart';
+import '../../features/role_permissions/models/permission_catalog.dart';
+import '../../features/role_permissions/services/permission_engine.dart';
 import '../../features/staff/screens/payroll_history_screen.dart';
 import '../../features/staff/screens/staff_list_screen.dart';
 import '../../features/subscriptions/screens/chanda_ledger_screen.dart';
@@ -90,14 +94,36 @@ class AppRouter {
   static final GlobalKey<NavigatorState> rootNavigatorKey =
       GlobalKey<NavigatorState>(debugLabel: 'root');
 
+  static bool _isRouteAuthorized(CommitteeRole role, String location) {
+    if (role == CommitteeRole.president) return true;
+
+    switch (location) {
+      case appSecurity:
+      case cloudSync:
+        return role.canEditMosqueProfile();
+      case sealSignature:
+        return role.canManageOfficeDocs() || role == CommitteeRole.treasurer;
+      case staffPayroll:
+        return PermissionEngine.hasPermission(role, PermissionCatalog.staffSalaryView);
+      case cashbox:
+        return PermissionEngine.hasPermission(role, PermissionCatalog.cashboxManage) ||
+            PermissionEngine.hasPermission(role, PermissionCatalog.cashboxWitness);
+      default:
+        return true;
+    }
+  }
+
   static GoRouter createRouter({
-    required AuthUser? authUser,
+    required AuthUser? Function() getAuthUser,
+    Listenable? refreshListenable,
     String initialLocation = splash,
   }) {
     return GoRouter(
       navigatorKey: rootNavigatorKey,
       initialLocation: initialLocation,
+      refreshListenable: refreshListenable,
       redirect: (context, state) {
+        final authUser = getAuthUser();
         final isAuth = authUser != null && authUser.isAuthenticated;
         final isAuthRoute = state.matchedLocation == login || state.matchedLocation == register;
         final isSplash = state.matchedLocation == splash;
@@ -110,6 +136,13 @@ class AppRouter {
 
         if (isAuth && isAuthRoute) {
           return dashboard;
+        }
+
+        if (isAuth) {
+          final role = CommitteeRole.fromCode(authUser.roleCode);
+          if (!_isRouteAuthorized(role, state.matchedLocation)) {
+            return dashboard;
+          }
         }
 
         return null;
@@ -159,7 +192,8 @@ class AppRouter {
           path: memberProfile,
           name: 'memberProfile',
           builder: (context, state) {
-            final member = state.extra as MemberModel;
+            final member = state.extra as MemberModel?;
+            if (member == null) return const MemberListScreen();
             return MemberProfileScreen(member: member);
           },
         ),
@@ -172,7 +206,8 @@ class AppRouter {
           path: waqfAssetsDetail,
           name: 'waqfAssetsDetail',
           builder: (context, state) {
-            final asset = state.extra as WaqfAssetModel;
+            final asset = state.extra as WaqfAssetModel?;
+            if (asset == null) return const WaqfAssetListScreen();
             return WaqfAssetDetailScreen(asset: asset);
           },
         ),
@@ -325,10 +360,7 @@ class AppRouter {
         GoRoute(
           path: profile,
           name: 'profile',
-          builder: (context, state) => Scaffold(
-            appBar: AppBar(title: const Text('মসজিদ প্রোফাইল')),
-            body: const Center(child: Text('মসজিদ পরিচিতি')),
-          ),
+          builder: (context, state) => const MosqueProfileScreen(),
         ),
       ],
     );

@@ -15,10 +15,10 @@ class KpiSummaryGrid extends StatelessWidget {
 
   const KpiSummaryGrid({
     super.key,
-    this.totalMembers = 125,
-    this.cashBalance = 45200.0,
-    this.bankBalance = 185000.0,
-    this.pendingApprovals = 2,
+    this.totalMembers = 0,
+    this.cashBalance = 0.0,
+    this.bankBalance = 0.0,
+    this.pendingApprovals = 0,
     this.onFinanceTap,
     this.onMembersTap,
   });

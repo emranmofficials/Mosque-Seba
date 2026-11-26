@@ -35,8 +35,10 @@ class MemberListNotifier extends StateNotifier<AsyncValue<List<MemberModel>>> {
         roleFilter: role,
         mealVolunteerOnly: mealOnly,
       );
+      if (!mounted) return;
       state = AsyncValue.data(result);
     } catch (e, st) {
+      if (!mounted) return;
       state = AsyncValue.error(e, st);
     }
   }
@@ -65,7 +67,7 @@ class MemberListNotifier extends StateNotifier<AsyncValue<List<MemberModel>>> {
 
 final memberListProvider = StateNotifierProvider<MemberListNotifier, AsyncValue<List<MemberModel>>>((ref) {
   final repo = ref.watch(memberRepositoryProvider);
-  final authState = ref.watch(authProvider);
-  final mosqueId = authState.user?.mosqueId ?? 'mosque-default';
+  final authState = ref.watch(authNotifierProvider);
+  final mosqueId = authState.valueOrNull?.mosqueId ?? 'mosque-default';
   return MemberListNotifier(repo, mosqueId, ref);
 });

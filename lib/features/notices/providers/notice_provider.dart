@@ -33,6 +33,7 @@ class NoticeListNotifier extends StateNotifier<AsyncValue<List<NoticeModel>>> {
         priorityFilter: priority,
         pinnedOnly: pinnedOnly,
       );
+      if (!mounted) return;
 
       if (search.isNotEmpty) {
         list = list.where((n) {
@@ -44,6 +45,7 @@ class NoticeListNotifier extends StateNotifier<AsyncValue<List<NoticeModel>>> {
 
       state = AsyncValue.data(list);
     } catch (e, st) {
+      if (!mounted) return;
       state = AsyncValue.error(e, st);
     }
   }
@@ -81,7 +83,7 @@ class NoticeListNotifier extends StateNotifier<AsyncValue<List<NoticeModel>>> {
 
 final noticeListProvider = StateNotifierProvider<NoticeListNotifier, AsyncValue<List<NoticeModel>>>((ref) {
   final repo = ref.watch(noticeRepositoryProvider);
-  final authState = ref.watch(authProvider);
-  final mosqueId = authState.user?.mosqueId ?? 'mosque-default';
+  final authState = ref.watch(authNotifierProvider);
+  final mosqueId = authState.valueOrNull?.mosqueId ?? 'mosque-default';
   return NoticeListNotifier(repo, mosqueId, ref);
 });

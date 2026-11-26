@@ -27,8 +27,10 @@ class ChandaListNotifier extends StateNotifier<AsyncValue<List<ChandaPaymentMode
         mosqueId: _mosqueId,
         monthFilter: month.isEmpty ? null : month,
       );
+      if (!mounted) return;
       state = AsyncValue.data(list);
     } catch (e, st) {
+      if (!mounted) return;
       state = AsyncValue.error(e, st);
     }
   }
@@ -59,7 +61,7 @@ class ChandaListNotifier extends StateNotifier<AsyncValue<List<ChandaPaymentMode
 
 final chandaListProvider = StateNotifierProvider<ChandaListNotifier, AsyncValue<List<ChandaPaymentModel>>>((ref) {
   final repo = ref.watch(chandaRepositoryProvider);
-  final authState = ref.watch(authProvider);
-  final mosqueId = authState.user?.mosqueId ?? 'mosque-default';
+  final authState = ref.watch(authNotifierProvider);
+  final mosqueId = authState.valueOrNull?.mosqueId ?? 'mosque-default';
   return ChandaListNotifier(repo, mosqueId, ref);
 });

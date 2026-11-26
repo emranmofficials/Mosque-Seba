@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_dimens.dart';
-import '../../../../core/utils/bengali_number_formatter.dart';
-import '../../../../shared/components/empty_state_view.dart';
-import '../../../../shared/widgets/card_shell.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_dimens.dart';
+import '../../../core/utils/bengali_number_formatter.dart';
+import '../../../shared/components/empty_state_view.dart';
+import '../../../shared/widgets/card_shell.dart';
 import '../models/exam_model.dart';
 import '../providers/exam_provider.dart';
 import 'student_report_card_screen.dart';
@@ -14,62 +14,10 @@ class ExamListScreen extends ConsumerWidget {
   const ExamListScreen({super.key});
 
   void _showCreateExamDialog(BuildContext context, WidgetRef ref) {
-    final titleController = TextEditingController();
-    String selectedType = 'annual';
-
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('নতুন পরীক্ষা শিডিউল করুন'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: titleController,
-              decoration: const InputDecoration(
-                labelText: 'পরীক্ষার নাম *',
-                hintText: 'যেমন: বার্ষিক পরীক্ষা ২০২৬',
-              ),
-            ),
-            const SizedBox(height: 12),
-            DropdownButtonFormField<String>(
-              value: selectedType,
-              items: const [
-                DropdownMenuItem(value: 'quarterly', child: Text('১ম সাময়িক পরীক্ষা')),
-                DropdownMenuItem(value: 'half_yearly', child: Text('অর্ধবার্ষিক পরীক্ষা')),
-                DropdownMenuItem(value: 'annual', child: Text('বার্ষিক পরীক্ষা')),
-                DropdownMenuItem(value: 'hifz_eval', child: Text('হিফজ বিশেষ মূল্যায়ন')),
-              ],
-              onChanged: (v) {
-                if (v != null) selectedType = v;
-              },
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('বাতিল'),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.emeraldPrimary),
-            onPressed: () {
-              if (titleController.text.trim().isEmpty) return;
-              final exam = ExamModel(
-                id: 'ex-${DateTime.now().millisecondsSinceEpoch}',
-                examNameBn: titleController.text.trim(),
-                examType: selectedType,
-                academicYear: '২০২৬',
-                startDate: '2026-11-25',
-                status: 'published',
-                createdAt: DateTime.now().millisecondsSinceEpoch,
-              );
-              ref.read(examListProvider.notifier).createExam(exam);
-              Navigator.of(ctx).pop();
-            },
-            child: const Text('সংরক্ষণ করুন', style: TextStyle(color: Colors.white)),
-          ),
-        ],
+      builder: (ctx) => _CreateExamDialog(
+        onSave: (exam) => ref.read(examListProvider.notifier).createExam(exam),
       ),
     );
   }
@@ -178,6 +126,82 @@ class ExamListScreen extends ConsumerWidget {
           );
         },
       ),
+    );
+  }
+}
+
+class _CreateExamDialog extends StatefulWidget {
+  final ValueChanged<ExamModel> onSave;
+
+  const _CreateExamDialog({required this.onSave});
+
+  @override
+  State<_CreateExamDialog> createState() => _CreateExamDialogState();
+}
+
+class _CreateExamDialogState extends State<_CreateExamDialog> {
+  final _titleController = TextEditingController();
+  String _selectedType = 'annual';
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('নতুন পরীক্ষা শিডিউল করুন'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: _titleController,
+            decoration: const InputDecoration(
+              labelText: 'পরীক্ষার নাম *',
+              hintText: 'যেমন: বার্ষিক পরীক্ষা ২০২৬',
+            ),
+          ),
+          const SizedBox(height: 12),
+          DropdownButtonFormField<String>(
+            value: _selectedType,
+            items: const [
+              DropdownMenuItem(value: 'quarterly', child: Text('১ম সাময়িক পরীক্ষা')),
+              DropdownMenuItem(value: 'half_yearly', child: Text('অর্ধবার্ষিক পরীক্ষা')),
+              DropdownMenuItem(value: 'annual', child: Text('বার্ষিক পরীক্ষা')),
+              DropdownMenuItem(value: 'hifz_eval', child: Text('হিফজ বিশেষ মূল্যায়ন')),
+            ],
+            onChanged: (v) {
+              if (v != null) setState(() => _selectedType = v);
+            },
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('বাতিল'),
+        ),
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(backgroundColor: AppColors.emeraldPrimary),
+          onPressed: () {
+            if (_titleController.text.trim().isEmpty) return;
+            final exam = ExamModel(
+              id: 'ex-${DateTime.now().millisecondsSinceEpoch}',
+              examNameBn: _titleController.text.trim(),
+              examType: _selectedType,
+              academicYear: '২০২৬',
+              startDate: DateTime.now().toIso8601String().split('T').first,
+              status: 'published',
+              createdAt: DateTime.now().millisecondsSinceEpoch,
+            );
+            widget.onSave(exam);
+            Navigator.of(context).pop();
+          },
+          child: const Text('সংরক্ষণ করুন', style: TextStyle(color: Colors.white)),
+        ),
+      ],
     );
   }
 }

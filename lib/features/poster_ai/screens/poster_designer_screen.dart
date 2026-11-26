@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_dimens.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_dimens.dart';
 import '../../events/models/mosque_event_model.dart';
+import '../models/poster_design_model.dart';
 import '../providers/poster_provider.dart';
 import '../widgets/poster_preview_canvas.dart';
 
@@ -37,73 +38,16 @@ class _PosterDesignerScreenState extends ConsumerState<PosterDesignerScreen> {
 
   void _showEditSheet() {
     final design = ref.read(posterNotifierProvider).design;
-    final titleController = TextEditingController(text: design.eventTitle);
-    final guestController = TextEditingController(text: design.chiefGuest);
-    final dateController = TextEditingController(text: design.eventDate);
-    final venueController = TextEditingController(text: design.venue);
-
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (ctx) => Padding(
-        padding: EdgeInsets.only(
-          left: 20,
-          right: 20,
-          top: 20,
-          bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
-        ),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Text('পোস্টারের লেখা সম্পাদনা করুন', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 14),
-              TextField(
-                controller: titleController,
-                decoration: const InputDecoration(labelText: 'অনুষ্ঠানের শিরোনাম'),
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: guestController,
-                decoration: const InputDecoration(labelText: 'প্রধান বক্তা / মেহমান'),
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: dateController,
-                decoration: const InputDecoration(labelText: 'তারিখ ও সময়'),
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: venueController,
-                decoration: const InputDecoration(labelText: 'স্থান / ভেন্যু'),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.emeraldPrimary,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                ),
-                onPressed: () {
-                  ref.read(posterNotifierProvider.notifier).updateDesign(
-                        design.copyWith(
-                          eventTitle: titleController.text.trim(),
-                          chiefGuest: guestController.text.trim(),
-                          eventDate: dateController.text.trim(),
-                          venue: venueController.text.trim(),
-                        ),
-                      );
-                  Navigator.of(ctx).pop();
-                },
-                child: const Text('পরিবর্তন সংরক্ষণ করুন'),
-              ),
-            ],
-          ),
-        ),
+      builder: (ctx) => _EditPosterSheet(
+        design: design,
+        onSave: (updated) =>
+            ref.read(posterNotifierProvider.notifier).updateDesign(updated),
       ),
     );
   }
@@ -274,6 +218,105 @@ class _PosterDesignerScreenState extends ConsumerState<PosterDesignerScreen> {
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
             color: isSelected ? Colors.white : Colors.black87,
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _EditPosterSheet extends StatefulWidget {
+  final PosterDesignModel design;
+  final ValueChanged<PosterDesignModel> onSave;
+
+  const _EditPosterSheet({
+    required this.design,
+    required this.onSave,
+  });
+
+  @override
+  State<_EditPosterSheet> createState() => _EditPosterSheetState();
+}
+
+class _EditPosterSheetState extends State<_EditPosterSheet> {
+  late final TextEditingController _titleController;
+  late final TextEditingController _guestController;
+  late final TextEditingController _dateController;
+  late final TextEditingController _venueController;
+
+  @override
+  void initState() {
+    super.initState();
+    _titleController = TextEditingController(text: widget.design.eventTitle);
+    _guestController = TextEditingController(text: widget.design.chiefGuest);
+    _dateController = TextEditingController(text: widget.design.eventDate);
+    _venueController = TextEditingController(text: widget.design.venue);
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _guestController.dispose();
+    _dateController.dispose();
+    _venueController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 20,
+        right: 20,
+        top: 20,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text('পোস্টারের লেখা সম্পাদনা করুন', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 14),
+            TextField(
+              controller: _titleController,
+              decoration: const InputDecoration(labelText: 'অনুষ্ঠানের শিরোনাম'),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: _guestController,
+              decoration: const InputDecoration(labelText: 'প্রধান বক্তা / মেহমান'),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: _dateController,
+              decoration: const InputDecoration(labelText: 'তারিখ ও সময়'),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: _venueController,
+              decoration: const InputDecoration(labelText: 'স্থান / ভেন্যু'),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.emeraldPrimary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+              onPressed: () {
+                widget.onSave(
+                  widget.design.copyWith(
+                    eventTitle: _titleController.text.trim(),
+                    chiefGuest: _guestController.text.trim(),
+                    eventDate: _dateController.text.trim(),
+                    venue: _venueController.text.trim(),
+                  ),
+                );
+                Navigator.of(context).pop();
+              },
+              child: const Text('পরিবর্তন সংরক্ষণ করুন'),
+            ),
+          ],
         ),
       ),
     );

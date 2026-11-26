@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_dimens.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../shared/widgets/app_text_field.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_dimens.dart';
+import '../../../core/theme/app_typography.dart';
+import '../../../shared/widgets/app_text_field.dart';
 
 /// Panel holding inputs for the 3 distinct executive witnesses required for Friday cashbox opening
 class WitnessSignaturePanel extends StatelessWidget {

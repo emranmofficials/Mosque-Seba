@@ -1,14 +1,9 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../../core/network/supabase_service.dart';
+import '../../../core/network/supabase_service.dart';
 import '../models/meeting_model.dart';
 
 /// Repository for Mosque Meetings & Resolutions (কমিটির সভা ও সিদ্ধান্ত রিপোজিটরি)
 class MeetingRepository {
-  final SupabaseService _supabaseService;
-
-  MeetingRepository({SupabaseService? supabaseService})
-      : _supabaseService = supabaseService ?? SupabaseService();
-
   SupabaseClient get _client => SupabaseService.client;
 
   /// Fetch all meetings for a mosque
@@ -17,7 +12,7 @@ class MeetingRepository {
     String? statusFilter,
   }) async {
     try {
-      var query = _client.from('meetings').select();
+      var query = _client.from('meetings').select().eq('mosque_id', mosqueId);
       if (statusFilter != null && statusFilter.isNotEmpty && statusFilter != 'all') {
         query = query.eq('status', statusFilter);
       }
@@ -34,9 +29,13 @@ class MeetingRepository {
   }
 
   /// Schedule a new meeting
-  Future<MeetingModel?> scheduleMeeting(MeetingModel meeting) async {
+  Future<MeetingModel?> scheduleMeeting({
+    required String mosqueId,
+    required MeetingModel meeting,
+  }) async {
     try {
       final payload = meeting.toJson();
+      payload['mosque_id'] = mosqueId;
       if (payload['id'] == null || (payload['id'] as String).isEmpty) {
         payload['id'] = 'meet-${DateTime.now().millisecondsSinceEpoch}';
       }

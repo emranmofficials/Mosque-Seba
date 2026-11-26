@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_dimens.dart';
-import '../../../../shared/widgets/card_shell.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_dimens.dart';
+import '../../../shared/widgets/card_shell.dart';
 import '../models/khutbah_topic_model.dart';
 import '../providers/ai_assistant_provider.dart';
 
@@ -255,7 +256,19 @@ class _KhutbahIdeasScreenState extends ConsumerState<KhutbahIdeasScreen> {
           Align(
             alignment: Alignment.centerRight,
             child: TextButton.icon(
-              onPressed: () {
+              onPressed: () async {
+                final text = [
+                  topic.title,
+                  '',
+                  topic.quranicAyat,
+                  topic.hadithReference,
+                  '',
+                  ...topic.mainPoints,
+                  '',
+                  topic.practicalGuidance,
+                ].join('\n');
+                await Clipboard.setData(ClipboardData(text: text));
+                if (!context.mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('খুতবার আউটলাইন ক্লিপবোর্ডে কপি করা হয়েছে'),

@@ -38,6 +38,9 @@ class BengaliNumberFormatter {
     return buffer.toString();
   }
 
+  /// Shorthand alias for [toBengaliDigits]
+  static String toBengali(dynamic input) => toBengaliDigits(input);
+
   /// Converts Bengali digit characters to English digits (for parsing numeric inputs)
   static String toEnglishDigits(dynamic input) {
     if (input == null) return '';

@@ -1,5 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../../core/network/supabase_service.dart';
+import '../../../core/network/supabase_service.dart';
 import '../models/finance_transaction_model.dart';
 
 /// Financial Summary metrics (মোট হিসাবের সারাংশ)
@@ -32,11 +32,6 @@ class FinancialSummary {
 
 /// Repository for Financial Ledger and Approvals (আর্থিক খতিয়ান ও অনুমোদন রিপোজিটরি)
 class FinanceRepository {
-  final SupabaseService _supabaseService;
-
-  FinanceRepository({SupabaseService? supabaseService})
-      : _supabaseService = supabaseService ?? SupabaseService();
-
   SupabaseClient get _client => SupabaseService.client;
 
   /// Fetch all transactions for a mosque
@@ -182,7 +177,11 @@ class FinanceRepository {
   }) async {
     try {
       // 1. Mark original as reversed
-      await _client.from('transactions').update({'is_reversal': true}).eq('id', originalTxn.id);
+      await _client
+          .from('transactions')
+          .update({'is_reversal': true})
+          .eq('id', originalTxn.id)
+          .eq('mosque_id', mosqueId);
 
       // 2. Insert offsetting reversal entry
       final reversalType = originalTxn.isIncome ? 'expense' : 'income';

@@ -2,13 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/router/app_router.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimens.dart';
 import '../../../shared/widgets/adaptive_scaffold.dart';
 import '../../../shared/widgets/app_header.dart';
+import '../../../shared/widgets/card_shell.dart';
 import '../../authentication/providers/auth_provider.dart';
+import '../../finance/providers/finance_provider.dart';
 import '../../hadith/widgets/hadith_board_widget.dart';
+import '../../membership/providers/member_provider.dart';
+import '../../notifications/providers/notification_provider.dart';
 import '../../prayer_times/widgets/prayer_countdown_card.dart';
-import '../../role_permissions/models/committee_role.dart';
 import '../../role_permissions/providers/role_permissions_provider.dart';
 import '../widgets/dashboard_hero_card.dart';
 import '../widgets/kpi_summary_grid.dart';
@@ -31,6 +35,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final authState = ref.watch(authNotifierProvider);
     final user = authState.valueOrNull;
     final currentRole = ref.watch(currentRoleProvider);
+    final unreadCount = ref.watch(unreadNotificationCountProvider);
+    final financeSummary = ref.watch(financeSummaryProvider);
+    final totalMembers = ref.watch(memberListProvider).valueOrNull?.length ?? 0;
 
     // 5 Primary Navigation Destinations based on UI-01 & UI-02 profiles
     final destinations = [
@@ -64,23 +71,31 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     return AdaptiveScaffold(
       currentIndex: _navIndex,
       onNavigationIndexChanged: (index) {
-        setState(() => _navIndex = index);
-        if (index == 1) context.go(AppRouter.members);
-        if (index == 2) context.go(AppRouter.finance);
-        if (index == 3) context.go(AppRouter.notices);
-        if (index == 4) context.go(AppRouter.more);
+        if (index == 0) {
+          setState(() => _navIndex = 0);
+          return;
+        }
+        if (index == 1) context.push(AppRouter.members);
+        if (index == 2) context.push(AppRouter.finance);
+        if (index == 3) context.push(AppRouter.notices);
+        if (index == 4) context.push(AppRouter.more);
       },
       destinations: destinations,
       appBar: AppHeader(
         userName: user?.memberName ?? 'মুহতারাম সভাপতি',
         designation: currentRole.titleBn,
-        unreadNotifications: 3,
-        onNotificationTap: () => context.go(AppRouter.notices),
-        onProfileTap: () => context.go(AppRouter.profile),
+        unreadNotifications: unreadCount,
+        onNotificationTap: () => context.push(AppRouter.notifications),
+        onProfileTap: () => context.push(AppRouter.profile),
       ),
       body: RefreshIndicator(
         onRefresh: () async {
-          await ref.read(authNotifierProvider.notifier).checkSession();
+          await Future.wait([
+            ref.read(authNotifierProvider.notifier).checkSession(),
+            ref.read(financeListProvider.notifier).loadTransactions(),
+            ref.read(memberListProvider.notifier).loadMembers(),
+            ref.read(notificationListProvider.notifier).loadNotifications(),
+          ]);
         },
         child: ListView(
           padding: const EdgeInsets.all(MosqueContentPadding.screenHorizontal),
@@ -89,35 +104,31 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             DashboardHeroCard(
               mosqueNameBn: user?.mosqueNameBn.isNotEmpty == true
                   ? user!.mosqueNameBn
-                  : 'বায়তুল মুকাররম মডেল জামে মসজিদ',
-              address: 'মিরপুর, ঢাকা',
-              committeeId: user?.committeeId ?? 'MS-2026',
-              onProfileTap: () => context.go(AppRouter.profile),
+                  : 'মসজিদ সেবা পোর্টাল',
+              address: currentRole.titleBn,
+              committeeId: user?.committeeId.isNotEmpty == true ? user!.committeeId : '—',
+              onProfileTap: () => context.push(AppRouter.profile),
             ),
             const SizedBox(height: MosqueSpace.md),
 
             // 2. Prayer Times Live Countdown Card
             PrayerCountdownCard(
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const Scaffold(body: Center(child: Text('নামাজের বিস্তারিত')))),
-                );
-              },
+              onTap: () => context.push(AppRouter.prayerTimes),
             ),
             const SizedBox(height: MosqueSpace.md),
 
             // 3. Smart Information Board (Quotes & Reminders)
             SmartBoardCard(
-              onTap: () => context.go(AppRouter.notices),
+              onTap: () => context.push(AppRouter.notices),
             ),
             const SizedBox(height: MosqueSpace.md),
 
             // 4. Quick Actions Panel (4 Administrative Launchers)
             QuickActionsGrid(
-              onReceiveChanda: () => context.go(AppRouter.finance),
-              onAddTransaction: () => context.go(AppRouter.finance),
-              onCashboxCounter: () => context.go(AppRouter.cashbox),
-              onPublishNotice: () => context.go(AppRouter.notices),
+              onReceiveChanda: () => context.push(AppRouter.chandaLedger),
+              onAddTransaction: () => context.push(AppRouter.finance),
+              onCashboxCounter: () => context.push(AppRouter.cashbox),
+              onPublishNotice: () => context.push(AppRouter.notices),
             ),
             const SizedBox(height: MosqueSpace.md),
 
@@ -127,8 +138,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
             // 6. Financial & Membership KPI Cards
             KpiSummaryGrid(
-              onFinanceTap: () => context.go(AppRouter.finance),
-              onMembersTap: () => context.go(AppRouter.members),
+              totalMembers: totalMembers,
+              cashBalance: financeSummary.cashInHand,
+              bankBalance: financeSummary.bankBalance,
+              pendingApprovals: financeSummary.pendingVouchersCount,
+              onFinanceTap: () => context.push(AppRouter.finance),
+              onMembersTap: () => context.push(AppRouter.members),
             ),
             const SizedBox(height: MosqueSpace.md),
 

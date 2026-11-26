@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_dimens.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../shared/widgets/adaptive_scaffold.dart';
-import '../../../../shared/widgets/card_shell.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_dimens.dart';
+import '../../../core/theme/app_typography.dart';
+import '../../../shared/widgets/adaptive_scaffold.dart';
+import '../../../shared/widgets/card_shell.dart';
 import '../models/waqf_asset_model.dart';
 
 /// Screen displaying detailed view of a Waqf Property and its deed/registration info

@@ -27,14 +27,19 @@ class WaqfListNotifier extends StateNotifier<AsyncValue<List<WaqfAssetModel>>> {
         mosqueId: _mosqueId,
         categoryFilter: category,
       );
+      if (!mounted) return;
       state = AsyncValue.data(list);
     } catch (e, st) {
+      if (!mounted) return;
       state = AsyncValue.error(e, st);
     }
   }
 
   Future<bool> addProperty(WaqfAssetModel property) async {
-    final created = await _repository.createProperty(property);
+    final created = await _repository.createProperty(
+      mosqueId: _mosqueId,
+      property: property,
+    );
     if (created != null) {
       await loadProperties();
       return true;
@@ -45,7 +50,7 @@ class WaqfListNotifier extends StateNotifier<AsyncValue<List<WaqfAssetModel>>> {
 
 final waqfListProvider = StateNotifierProvider<WaqfListNotifier, AsyncValue<List<WaqfAssetModel>>>((ref) {
   final repo = ref.watch(waqfRepositoryProvider);
-  final authState = ref.watch(authProvider);
-  final mosqueId = authState.user?.mosqueId ?? 'mosque-default';
+  final authState = ref.watch(authNotifierProvider);
+  final mosqueId = authState.valueOrNull?.mosqueId ?? 'mosque-default';
   return WaqfListNotifier(repo, mosqueId, ref);
 });

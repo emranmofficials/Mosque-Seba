@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_dimens.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../shared/widgets/app_button.dart';
-import '../../../../shared/widgets/app_text_field.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_dimens.dart';
+import '../../../core/theme/app_typography.dart';
+import '../../../shared/widgets/app_button.dart';
+import '../../../shared/widgets/app_text_field.dart';
 import '../models/election_candidate_model.dart';
 
 /// Modal dialog to record vote count and victory declaration for a candidate
@@ -121,7 +121,7 @@ class _RecordVoteDialogState extends State<RecordVoteDialog> {
                   children: [
                     Expanded(
                       child: AppButton(
-                        text: 'বাতিল',
+                        label: 'বাতিল',
                         variant: AppButtonVariant.outline,
                         onPressed: () => Navigator.of(context).pop(),
                       ),
@@ -129,7 +129,7 @@ class _RecordVoteDialogState extends State<RecordVoteDialog> {
                     const SizedBox(width: AppDimens.spacing12),
                     Expanded(
                       child: AppButton(
-                        text: 'ফলাফল সংরক্ষণ',
+                        label: 'ফলাফল সংরক্ষণ',
                         isLoading: _isLoading,
                         onPressed: _handleSave,
                       ),

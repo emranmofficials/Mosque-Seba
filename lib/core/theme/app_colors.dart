@@ -47,6 +47,16 @@ class AppColors {
   static const Color successGreen = Color(0xFF16A34A);
   static const Color infoBlue = Color(0xFF0284C7);
 
+  // Semantic Theme Aliases
+  static const Color primary = emeraldPrimary;
+  static const Color onPrimary = surface;
+  static const Color primaryContainer = emeraldSoft;
+  static const Color outline = cardBorder;
+  static const Color background = bgLight;
+  static const Color success = successGreen;
+  static const Color error = urgentRed;
+  static const Color warning = warningAmber;
+
   // Role-Specific Identity Accents
   static const Color rolePresident = Color(0xFFD97706);     // Royal Gold
   static const Color roleTreasurer = Color(0xFF059669);     // Ledger Emerald

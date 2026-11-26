@@ -1,15 +1,81 @@
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
+import 'package:google_generative_ai/google_generative_ai.dart';
+import '../../../core/config/app_config.dart';
 import '../models/khutbah_topic_model.dart';
 
-/// Gemini AI Service for Islamic Khutbah Ideas, Official Bengali Notice Drafting and Financial Summaries
+/// Gemini AI Service for Islamic Khutbah Ideas and Official Bengali Notice Drafting
 class GeminiAiService {
-  /// Generate Khutbah Topic Outline with authentic Quranic & Hadith citations
+  final String _apiKey;
+
+  GeminiAiService({String? apiKey})
+      : _apiKey = apiKey ?? AppConfig.geminiApiKey;
+
+  /// Generate Khutbah Topic Outline with Quranic & Hadith citations
   Future<KhutbahTopicModel> generateKhutbahOutline({
     required String topicPrompt,
     String category = 'character',
   }) async {
-    // Generative AI response simulation / client fallback
-    await Future.delayed(const Duration(milliseconds: 600));
+    if (_apiKey.isNotEmpty) {
+      try {
+        final model = GenerativeModel(
+          model: AppConfig.geminiModel,
+          apiKey: _apiKey,
+        );
+        final prompt = '''
+বাংলা ভাষায় জুমার খুতবার জন্য একটি সংক্ষিপ্ত ও প্রামাণ্য রূপরেখা JSON ফরম্যাটে লিখুন।
+ক্যাটাগরি: $category
+বিষয়/নির্দেশনা: ${topicPrompt.isNotEmpty ? topicPrompt : category}
 
+শুধুমাত্র নিচের JSON কীগুলো ব্যবহার করুন:
+{
+  "title": "খুতবার শিরোনাম",
+  "quranicAyat": "সংশ্লিষ্ট কুরআনের আয়াত ও সূরার রেফারেন্স",
+  "hadithReference": "সংশ্লিষ্ট সহীহ হাদিস ও কিতাবের রেফারেন্স",
+  "mainPoints": ["১. পয়েন্ট", "২. পয়েন্ট", "৩. পয়েন্ট", "৪. পয়েন্ট"],
+  "practicalGuidance": "মুসল্লিদের জন্য বাস্তব করণীয়"
+}
+''';
+        final response = await model.generateContent([Content.text(prompt)]);
+        final rawText = response.text?.trim() ?? '';
+        final cleaned = _stripJsonFences(rawText);
+        if (cleaned.isNotEmpty) {
+          final parsed = jsonDecode(cleaned) as Map<String, dynamic>;
+          final pointsRaw = parsed['mainPoints'] as List<dynamic>? ?? [];
+          return KhutbahTopicModel(
+            id: 'khutbah-${DateTime.now().millisecondsSinceEpoch}',
+            title: parsed['title'] as String? ?? topicPrompt,
+            category: category,
+            quranicAyat: parsed['quranicAyat'] as String? ?? '',
+            hadithReference: parsed['hadithReference'] as String? ?? '',
+            mainPoints: pointsRaw.map((e) => e.toString()).toList(),
+            practicalGuidance: parsed['practicalGuidance'] as String? ?? '',
+          );
+        }
+      } catch (e) {
+        debugPrint('Gemini khutbah generation fallback: $e');
+      }
+    }
+
+    return _fallbackKhutbahOutline(
+      topicPrompt: topicPrompt,
+      category: category,
+    );
+  }
+
+  String _stripJsonFences(String text) {
+    var trimmed = text.trim();
+    if (trimmed.startsWith('```')) {
+      trimmed = trimmed.replaceFirst(RegExp(r'^```(?:json)?\s*'), '');
+      trimmed = trimmed.replaceFirst(RegExp(r'\s*```$'), '');
+    }
+    return trimmed.trim();
+  }
+
+  KhutbahTopicModel _fallbackKhutbahOutline({
+    required String topicPrompt,
+    required String category,
+  }) {
     if (category == 'halal_earnings') {
       return const KhutbahTopicModel(
         id: 'khutbah-halal',
@@ -67,7 +133,23 @@ class GeminiAiService {
     required String audience, // 'সাধারণ মুসল্লিবৃন্দ', 'কমিটি সদস্যবৃন্দ'
     required String mosqueName,
   }) async {
-    await Future.delayed(const Duration(milliseconds: 600));
+    if (_apiKey.isNotEmpty) {
+      try {
+        final model = GenerativeModel(
+          model: AppConfig.geminiModel,
+          apiKey: _apiKey,
+        );
+        final prompt =
+            '$mosqueName পরিচালনা কমিটির পক্ষ থেকে "$audience"-এর উদ্দেশ্যে "$topic" বিষয়ে একটি সংক্ষিপ্ত, মার্জিত ও আনুষ্ঠানিক বাংলা নোটিশ খসড়া করুন।';
+        final response = await model.generateContent([Content.text(prompt)]);
+        final text = response.text?.trim();
+        if (text != null && text.isNotEmpty) {
+          return text;
+        }
+      } catch (e) {
+        debugPrint('Gemini notice drafting fallback: $e');
+      }
+    }
 
     return '''
 সম্মানিত $audience,

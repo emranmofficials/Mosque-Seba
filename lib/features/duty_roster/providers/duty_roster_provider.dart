@@ -27,14 +27,19 @@ class DutyRosterNotifier extends StateNotifier<AsyncValue<List<DutyRosterItem>>>
         mosqueId: _mosqueId,
         dayOfWeek: day,
       );
+      if (!mounted) return;
       state = AsyncValue.data(list);
     } catch (e, st) {
+      if (!mounted) return;
       state = AsyncValue.error(e, st);
     }
   }
 
   Future<bool> assignDuty(DutyRosterItem item) async {
-    final result = await _repository.assignDuty(item);
+    final result = await _repository.assignDuty(
+      mosqueId: _mosqueId,
+      item: item,
+    );
     if (result != null) {
       await loadRoster();
       return true;
@@ -54,7 +59,7 @@ class DutyRosterNotifier extends StateNotifier<AsyncValue<List<DutyRosterItem>>>
 
 final dutyRosterListProvider = StateNotifierProvider<DutyRosterNotifier, AsyncValue<List<DutyRosterItem>>>((ref) {
   final repo = ref.watch(dutyRosterRepositoryProvider);
-  final authState = ref.watch(authProvider);
-  final mosqueId = authState.user?.mosqueId ?? 'mosque-default';
+  final authState = ref.watch(authNotifierProvider);
+  final mosqueId = authState.valueOrNull?.mosqueId ?? 'mosque-default';
   return DutyRosterNotifier(repo, mosqueId, ref);
 });

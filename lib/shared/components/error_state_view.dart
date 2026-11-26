@@ -5,12 +5,16 @@ import '../widgets/app_button.dart';
 
 /// Error State Placeholder with Retry Action
 class ErrorStateView extends StatelessWidget {
-  final String errorMessage;
+  final String title;
+  final String? errorMessage;
+  final String? message;
   final VoidCallback? onRetry;
 
   const ErrorStateView({
     super.key,
-    required this.errorMessage,
+    this.title = 'একটি ত্রুটি ঘটেছে',
+    this.errorMessage,
+    this.message,
     this.onRetry,
   });
 
@@ -18,6 +22,7 @@ class ErrorStateView extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final displayMessage = message ?? errorMessage ?? '';
 
     return Center(
       child: Padding(
@@ -39,7 +44,7 @@ class ErrorStateView extends StatelessWidget {
             ),
             const SizedBox(height: MosqueSpace.md),
             Text(
-              'একটি ত্রুটি ঘটেছে',
+              title,
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -48,7 +53,7 @@ class ErrorStateView extends StatelessWidget {
             ),
             const SizedBox(height: MosqueSpace.xs),
             Text(
-              errorMessage,
+              displayMessage,
               style: TextStyle(
                 fontSize: 13,
                 color: isDark ? AppColors.nightTextMuted : AppColors.textMuted,

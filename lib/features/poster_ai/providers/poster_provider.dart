@@ -80,8 +80,10 @@ class PosterNotifier extends StateNotifier<PosterState> {
         venue: venue,
         date: date,
       );
+      if (!mounted) return;
       state = state.copyWith(isGenerating: false, design: generated);
     } catch (e) {
+      if (!mounted) return;
       state = state.copyWith(isGenerating: false, errorMessage: e.toString());
     }
   }

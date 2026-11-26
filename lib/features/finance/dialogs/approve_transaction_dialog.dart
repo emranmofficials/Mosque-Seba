@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_dimens.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../core/utils/bengali_number_formatter.dart';
-import '../../../../shared/widgets/app_button.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_dimens.dart';
+import '../../../core/theme/app_typography.dart';
+import '../../../core/utils/bengali_number_formatter.dart';
+import '../../../shared/widgets/app_button.dart';
 import '../models/finance_transaction_model.dart';
 
 /// Dialog to approve or reject a pending transaction voucher
@@ -136,7 +136,7 @@ class _ApproveTransactionDialogState extends State<ApproveTransactionDialog> {
                 children: [
                   Expanded(
                     child: AppButton(
-                      text: 'বাতিল (Reject)',
+                      label: 'বাতিল (Reject)',
                       variant: AppButtonVariant.outline,
                       isLoading: _isLoading,
                       onPressed: _isSelfApproval ? null : () => _handleDecision(false),
@@ -145,7 +145,7 @@ class _ApproveTransactionDialogState extends State<ApproveTransactionDialog> {
                   const SizedBox(width: AppDimens.spacing12),
                   Expanded(
                     child: AppButton(
-                      text: 'অনুমোদন (Approve)',
+                      label: 'অনুমোদন (Approve)',
                       isLoading: _isLoading,
                       onPressed: _isSelfApproval ? null : () => _handleDecision(true),
                     ),

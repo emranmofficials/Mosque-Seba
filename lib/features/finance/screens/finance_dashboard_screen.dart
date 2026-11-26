@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_dimens.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../shared/components/error_state_view.dart';
-import '../../../../shared/widgets/adaptive_scaffold.dart';
-import '../../../../shared/widgets/card_shell.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_dimens.dart';
+import '../../../core/theme/app_typography.dart';
+import '../../../shared/components/error_state_view.dart';
+import '../../../shared/widgets/adaptive_scaffold.dart';
+import '../../../shared/widgets/card_shell.dart';
 import '../../authentication/providers/auth_provider.dart';
 import '../dialogs/add_transaction_dialog.dart';
 import '../dialogs/approve_transaction_dialog.dart';
@@ -21,9 +21,9 @@ class FinanceDashboardScreen extends ConsumerWidget {
   const FinanceDashboardScreen({super.key});
 
   void _showAddVoucherDialog(BuildContext context, WidgetRef ref, String defaultType) {
-    final authState = ref.read(authProvider);
-    final userName = authState.user?.nameBn ?? 'কোষাধ্যক্ষ';
-    final userRole = authState.user?.roleCode ?? 'treasurer';
+    final authState = ref.read(authNotifierProvider);
+    final userName = authState.valueOrNull?.memberName ?? 'কোষাধ্যক্ষ';
+    final userRole = authState.valueOrNull?.roleCode ?? 'treasurer';
 
     showDialog(
       context: context,
@@ -50,8 +50,8 @@ class FinanceDashboardScreen extends ConsumerWidget {
   }
 
   void _showApproveDialog(BuildContext context, WidgetRef ref, FinanceTransactionModel txn) {
-    final authState = ref.read(authProvider);
-    final userName = authState.user?.nameBn ?? 'সভাপতি';
+    final authState = ref.read(authNotifierProvider);
+    final userName = authState.valueOrNull?.memberName ?? 'সভাপতি';
 
     showDialog(
       context: context,

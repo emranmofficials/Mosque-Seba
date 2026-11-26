@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_dimens.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../shared/widgets/app_button.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_dimens.dart';
+import '../../../core/theme/app_typography.dart';
+import '../../../shared/widgets/app_button.dart';
 
 /// Bottom sheet for filtering members by role and volunteer status
 class MemberFilterSheet extends StatefulWidget {
@@ -113,7 +113,7 @@ class _MemberFilterSheetState extends State<MemberFilterSheet> {
             children: [
               Expanded(
                 child: AppButton(
-                  text: 'রিসেট',
+                  label: 'রিসেট',
                   variant: AppButtonVariant.outline,
                   onPressed: () {
                     setState(() {
@@ -126,7 +126,7 @@ class _MemberFilterSheetState extends State<MemberFilterSheet> {
               const SizedBox(width: AppDimens.spacing12),
               Expanded(
                 child: AppButton(
-                  text: 'প্রয়োগ করুন',
+                  label: 'প্রয়োগ করুন',
                   onPressed: () {
                     widget.onApply(_selectedRole, _mealVolunteer);
                     Navigator.of(context).pop();

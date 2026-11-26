@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
@@ -41,86 +42,67 @@ class AuthService {
   }) async {
     final cleanEmail = email.trim().toLowerCase();
 
-    // 1. Attempt Supabase Auth login if online
-    if (SupabaseService.isInitialized) {
-      try {
-        final res = await SupabaseService.client.auth.signInWithPassword(
-          email: cleanEmail,
-          password: password,
-        );
-
-        final user = res.user;
-        if (user != null) {
-          final session = res.session;
-          if (session != null) {
-            await _storage.saveAuthTokens(
-              accessToken: session.accessToken,
-              refreshToken: session.refreshToken ?? '',
-            );
-          }
-
-          // Fetch linked profile & mosque
-          final profileRes = await SupabaseService.client
-              .from('profiles')
-              .select('id, mosque_id, full_name_bn')
-              .eq('id', user.id)
-              .maybeSingle();
-
-          final mosqueId = profileRes?['mosque_id']?.toString() ?? '';
-          final memberName = profileRes?['full_name_bn']?.toString() ?? 'সভাপতি';
-
-          await _storage.saveSession(
-            roleCode: 'president',
-            memberId: user.id,
-            memberName: memberName,
-            committeeId: '',
-            mosqueId: mosqueId,
-          );
-
-          return AuthUser(
-            uid: user.id,
-            email: cleanEmail,
-            mobile: user.phone ?? '',
-            memberId: user.id,
-            memberName: memberName,
-            committeeId: '',
-            roleCode: 'president',
-            mosqueId: mosqueId,
-            mosqueNameBn: '',
-          );
-        }
-      } catch (e) {
-        debugPrint('Supabase cloud login fallback: $e');
-      }
+    if (!SupabaseService.isInitialized) {
+      throw Exception('ক্লাউড সার্ভারের সাথে সংযোগ স্থাপন করা যায়নি। ইন্টারনেট সংযোগ পরীক্ষা করুন।');
     }
 
-    // 2. Offline / Local fallback validation
-    if (password.length >= 6) {
-      const fallbackMosqueId = 'demo_mosque_id';
-      const memberName = 'সভাপতি সাহেব';
+    try {
+      final res = await SupabaseService.client.auth.signInWithPassword(
+        email: cleanEmail,
+        password: password,
+      );
+
+      final user = res.user;
+      if (user == null) {
+        throw Exception('ভুল ইমেইল অথবা পাসওয়ার্ড প্রদান করা হয়েছে।');
+      }
+
+      final session = res.session;
+      if (session != null) {
+        await _storage.saveAuthTokens(
+          accessToken: session.accessToken,
+          refreshToken: session.refreshToken ?? '',
+        );
+      }
+
+      // Fetch linked profile & mosque
+      final profileRes = await SupabaseService.client
+          .from('profiles')
+          .select('id, mosque_id, full_name_bn')
+          .eq('id', user.id)
+          .maybeSingle();
+
+      final mosqueId = profileRes?['mosque_id']?.toString() ?? '';
+      if (mosqueId.isEmpty) {
+        throw Exception('এই অ্যাকাউন্টের সাথে কোনো মসজিদ প্রোফাইল যুক্ত নেই।');
+      }
+      final memberName = profileRes?['full_name_bn']?.toString() ?? 'সভাপতি';
 
       await _storage.saveSession(
         roleCode: 'president',
-        memberId: 'pres_001',
+        memberId: user.id,
         memberName: memberName,
-        committeeId: 'MS-2026',
-        mosqueId: fallbackMosqueId,
+        committeeId: '',
+        mosqueId: mosqueId,
       );
 
-      return const AuthUser(
-        uid: 'local_president_uid',
-        email: 'president@mosqueseba.com',
-        mobile: '',
-        memberId: 'pres_001',
+      return AuthUser(
+        uid: user.id,
+        email: cleanEmail,
+        mobile: user.phone ?? '',
+        memberId: user.id,
         memberName: memberName,
-        committeeId: 'MS-2026',
+        committeeId: '',
         roleCode: 'president',
-        mosqueId: fallbackMosqueId,
-        mosqueNameBn: 'বায়তুল মুকাররম মডেল মসজিদ',
+        mosqueId: mosqueId,
+        mosqueNameBn: '',
       );
+    } on AuthException {
+      throw Exception('ভুল ইমেইল অথবা পাসওয়ার্ড প্রদান করা হয়েছে।');
+    } catch (e) {
+      debugPrint('Supabase email login error: $e');
+      rethrow;
     }
-
-    throw Exception('ভুল ইমেইল অথবা পাসওয়ার্ড প্রদান করা হয়েছে।');
   }
 
   /// General Musalli / Committee Member Login with Mobile
@@ -136,85 +118,70 @@ class AuthService {
       throw Exception('সঠিক ১১ ডিজিটের মোবাইল নম্বর দিন।');
     }
 
+    if (!SupabaseService.isInitialized) {
+      throw Exception('ক্লাউড সার্ভারের সাথে সংযোগ স্থাপন করা যায়নি। ইন্টারনেট সংযোগ পরীক্ষা করুন।');
+    }
+
     // Derived synthetic email for mobile authentication
     final syntheticEmail = 'm$cleanMobile@mosqueseba.app';
 
-    if (SupabaseService.isInitialized) {
-      try {
-        final res = await SupabaseService.client.auth.signInWithPassword(
-          email: syntheticEmail,
-          password: password,
-        );
+    try {
+      final res = await SupabaseService.client.auth.signInWithPassword(
+        email: syntheticEmail,
+        password: password,
+      );
 
-        final user = res.user;
-        if (user != null) {
-          final session = res.session;
-          if (session != null) {
-            await _storage.saveAuthTokens(
-              accessToken: session.accessToken,
-              refreshToken: session.refreshToken ?? '',
-            );
-          }
-
-          final memberRes = await SupabaseService.client
-              .from('members')
-              .select('id, name_bn, role_code, mosque_id')
-              .eq('mobile', cleanMobile)
-              .maybeSingle();
-
-          final roleCode = memberRes?['role_code']?.toString() ?? 'general_member';
-          final memberName = memberRes?['name_bn']?.toString() ?? 'সম্মানিত মুসল্লি';
-          final mosqueId = memberRes?['mosque_id']?.toString() ?? '';
-
-          await _storage.saveSession(
-            roleCode: roleCode,
-            memberId: user.id,
-            memberName: memberName,
-            committeeId: cleanCommitteeId,
-            mosqueId: mosqueId,
-          );
-
-          return AuthUser(
-            uid: user.id,
-            email: syntheticEmail,
-            mobile: cleanMobile,
-            memberId: user.id,
-            memberName: memberName,
-            committeeId: cleanCommitteeId,
-            roleCode: roleCode,
-            mosqueId: mosqueId,
-            mosqueNameBn: '',
-          );
-        }
-      } catch (e) {
-        debugPrint('Mobile cloud login fallback: $e');
+      final user = res.user;
+      if (user == null) {
+        throw Exception('মোবাইল নম্বর অথবা পাসওয়ার্ড সঠিক নয়।');
       }
-    }
 
-    // Local / Offline fallback
-    if (password.isNotEmpty) {
+      final session = res.session;
+      if (session != null) {
+        await _storage.saveAuthTokens(
+          accessToken: session.accessToken,
+          refreshToken: session.refreshToken ?? '',
+        );
+      }
+
+      final memberRes = await SupabaseService.client
+          .from('members')
+          .select('id, name_bn, role_code, mosque_id')
+          .eq('mobile', cleanMobile)
+          .maybeSingle();
+
+      final roleCode = memberRes?['role_code']?.toString() ?? 'general_member';
+      final memberName = memberRes?['name_bn']?.toString() ?? 'সম্মানিত মুসল্লি';
+      final mosqueId = memberRes?['mosque_id']?.toString() ?? '';
+      if (mosqueId.isEmpty) {
+        throw Exception('সদস্যের সাথে কোনো মসজিদ প্রোফাইল যুক্ত পাওয়া যায়নি।');
+      }
+
       await _storage.saveSession(
-        roleCode: 'general_member',
-        memberId: 'mem_001',
-        memberName: 'সম্মানিত মুসল্লি',
+        roleCode: roleCode,
+        memberId: user.id,
+        memberName: memberName,
         committeeId: cleanCommitteeId,
-        mosqueId: 'demo_mosque_id',
+        mosqueId: mosqueId,
       );
 
       return AuthUser(
-        uid: 'local_musalli_uid',
+        uid: user.id,
         email: syntheticEmail,
         mobile: cleanMobile,
-        memberId: 'mem_001',
-        memberName: 'সম্মানিত মুসল্লি',
+        memberId: user.id,
+        memberName: memberName,
         committeeId: cleanCommitteeId,
-        roleCode: 'general_member',
-        mosqueId: 'demo_mosque_id',
-        mosqueNameBn: 'বায়তুল মুকাররম মডেল মসজিদ',
+        roleCode: roleCode,
+        mosqueId: mosqueId,
+        mosqueNameBn: '',
       );
+    } on AuthException {
+      throw Exception('মোবাইল নম্বর অথবা পাসওয়ার্ড সঠিক নয়।');
+    } catch (e) {
+      debugPrint('Supabase mobile login error: $e');
+      rethrow;
     }
-
-    throw Exception('মোবাইল নম্বর অথবা পাসওয়ার্ড সঠিক নয়।');
   }
 
   /// Multi-Step Registration of Mosque and President
@@ -235,60 +202,70 @@ class AuthService {
   }) async {
     final generatedCommitteeId = 'MS-${DateTime.now().year % 100}${1000 + (DateTime.now().millisecond % 9000)}';
     final mosqueId = const Uuid().v4();
-    final presidentId = const Uuid().v4();
+    String effectiveUserId = const Uuid().v4();
 
-    // 1. Cloud registration if online
-    if (SupabaseService.isInitialized) {
-      try {
-        final authRes = await SupabaseService.client.auth.signUp(
-          email: presidentEmail.trim().toLowerCase(),
-          password: password,
-        );
-
-        final uid = authRes.user?.id ?? presidentId;
-
-        // Insert Mosque
-        await SupabaseService.client.from('mosques').insert({
-          'id': mosqueId,
-          'committee_id': generatedCommitteeId,
-          'name_bn': mosqueNameBn,
-          'name_en': mosqueNameEn,
-          'address': '$upazila, $district',
-          'established_year': establishedYear,
-          'committee_start_year': committeeStartYear,
-          'committee_end_year': committeeEndYear,
-          'status': 'active',
-          'district': district,
-          'upazila': upazila,
-          'bank_account_info': bankAccountInfo,
-        });
-
-        // Insert President Profile
-        await SupabaseService.client.from('profiles').insert({
-          'id': uid,
-          'mosque_id': mosqueId,
-          'full_name_bn': presidentNameBn,
-          'full_name_en': presidentNameEn,
-          'phone': presidentMobile,
-          'is_active': true,
-        });
-
-        // Insert President Member record
-        await SupabaseService.client.from('members').insert({
-          'id': uid,
-          'mosque_id': mosqueId,
-          'member_code': 'MEM-001',
-          'name_bn': presidentNameBn,
-          'name_en': presidentNameEn,
-          'mobile': presidentMobile,
-          'email': presidentEmail,
-          'role_code': 'president',
-          'status': 'active',
-        });
-      } catch (e) {
-        debugPrint('Supabase cloud registration note: $e');
-      }
+    // 1. Cloud registration
+    if (!SupabaseService.isInitialized) {
+      throw Exception('ক্লাউড সার্ভারের সাথে সংযোগ স্থাপন করা যায়নি। ইন্টারনেট সংযোগ পরীক্ষা করুন।');
     }
+
+    final authRes = await SupabaseService.client.auth.signUp(
+      email: presidentEmail.trim().toLowerCase(),
+      password: password,
+    );
+
+    final uid = authRes.user?.id;
+    if (uid == null) {
+      throw Exception('নিবন্ধন সম্পন্ন করা যায়নি। পুনরায় চেষ্টা করুন।');
+    }
+    effectiveUserId = uid;
+
+    final session = authRes.session;
+    if (session != null) {
+      await _storage.saveAuthTokens(
+        accessToken: session.accessToken,
+        refreshToken: session.refreshToken ?? '',
+      );
+    }
+
+    // Insert Mosque
+    await SupabaseService.client.from('mosques').insert({
+      'id': mosqueId,
+      'committee_id': generatedCommitteeId,
+      'name_bn': mosqueNameBn,
+      'name_en': mosqueNameEn,
+      'address': '$upazila, $district',
+      'established_year': establishedYear,
+      'committee_start_year': committeeStartYear,
+      'committee_end_year': committeeEndYear,
+      'status': 'active',
+      'district': district,
+      'upazila': upazila,
+      'bank_account_info': bankAccountInfo,
+    });
+
+    // Insert President Profile
+    await SupabaseService.client.from('profiles').insert({
+      'id': effectiveUserId,
+      'mosque_id': mosqueId,
+      'full_name_bn': presidentNameBn,
+      'full_name_en': presidentNameEn,
+      'phone': presidentMobile,
+      'is_active': true,
+    });
+
+    // Insert President Member record
+    await SupabaseService.client.from('members').insert({
+      'id': effectiveUserId,
+      'mosque_id': mosqueId,
+      'member_code': 'MEM-001',
+      'name_bn': presidentNameBn,
+      'name_en': presidentNameEn,
+      'mobile': presidentMobile,
+      'email': presidentEmail,
+      'role_code': 'president',
+      'status': 'active',
+    });
 
     // 2. Local persistence in Drift SQLite
     await _database.into(_database.mosquesTable).insertOnConflictUpdate(
@@ -309,7 +286,7 @@ class AuthService {
     // Save active session
     await _storage.saveSession(
       roleCode: 'president',
-      memberId: presidentId,
+      memberId: effectiveUserId,
       memberName: presidentNameBn,
       committeeId: generatedCommitteeId,
       mosqueId: mosqueId,

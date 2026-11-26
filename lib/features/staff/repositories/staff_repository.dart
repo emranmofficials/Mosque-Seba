@@ -1,15 +1,10 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../../core/network/supabase_service.dart';
+import '../../../core/network/supabase_service.dart';
 import '../models/staff_model.dart';
 import '../models/staff_payroll_model.dart';
 
 /// Repository for Staff & Payroll Management (স্টাফ ও বেতন রিপোজিটরি)
 class StaffRepository {
-  final SupabaseService _supabaseService;
-
-  StaffRepository({SupabaseService? supabaseService})
-      : _supabaseService = supabaseService ?? SupabaseService();
-
   SupabaseClient get _client => SupabaseService.client;
 
   /// Fetch all active staff members
@@ -50,13 +45,13 @@ class StaffRepository {
     }
   }
 
-  /// Fetch payroll history
+  /// Fetch payroll history for a mosque
   Future<List<StaffPayrollModel>> fetchPayrollHistory({
     required String mosqueId,
     String? monthFilter,
   }) async {
     try {
-      var query = _client.from('staff_payroll').select();
+      var query = _client.from('staff_payroll').select().eq('mosque_id', mosqueId);
       if (monthFilter != null && monthFilter.isNotEmpty) {
         query = query.eq('month', monthFilter);
       }
@@ -89,6 +84,7 @@ class StaffRepository {
 
       final payrollPayload = {
         'id': payrollId,
+        'mosque_id': mosqueId,
         'staff_id': staffId,
         'staff_name_bn': staffNameBn,
         'month': month,

@@ -7,70 +7,96 @@ import 'app_colors.dart';
 class AppTypography {
   static const String fontFamily = AppConfig.fontHindSiliguri;
 
+  static const TextStyle headlineLarge = TextStyle(
+    fontFamily: fontFamily,
+    fontWeight: FontWeight.w800,
+    fontSize: 28,
+    height: 38 / 28,
+    color: AppColors.textPrimary,
+  );
+
+  static const TextStyle headlineMedium = TextStyle(
+    fontFamily: fontFamily,
+    fontWeight: FontWeight.w700,
+    fontSize: 22,
+    height: 30 / 22,
+    color: AppColors.textPrimary,
+  );
+
+  static const TextStyle headlineSmall = TextStyle(
+    fontFamily: fontFamily,
+    fontWeight: FontWeight.w700,
+    fontSize: 18,
+    height: 26 / 18,
+    color: AppColors.textPrimary,
+  );
+
+  static const TextStyle titleLarge = TextStyle(
+    fontFamily: fontFamily,
+    fontWeight: FontWeight.w700,
+    fontSize: 18,
+    height: 26 / 18,
+    color: AppColors.textPrimary,
+  );
+
+  static const TextStyle titleMedium = TextStyle(
+    fontFamily: fontFamily,
+    fontWeight: FontWeight.w600,
+    fontSize: 16,
+    height: 24 / 16,
+    color: AppColors.textPrimary,
+  );
+
+  static const TextStyle titleSmall = TextStyle(
+    fontFamily: fontFamily,
+    fontWeight: FontWeight.w500,
+    fontSize: 14,
+    height: 22 / 14,
+    color: AppColors.textSecondary,
+  );
+
+  static const TextStyle bodyLarge = TextStyle(
+    fontFamily: fontFamily,
+    fontWeight: FontWeight.w400,
+    fontSize: 15,
+    height: 24 / 15,
+    color: AppColors.textPrimary,
+  );
+
+  static const TextStyle bodyMedium = TextStyle(
+    fontFamily: fontFamily,
+    fontWeight: FontWeight.w400,
+    fontSize: 13,
+    height: 20 / 13,
+    color: AppColors.textSecondary,
+  );
+
+  static const TextStyle bodySmall = TextStyle(
+    fontFamily: fontFamily,
+    fontWeight: FontWeight.w400,
+    fontSize: 12,
+    height: 18 / 12,
+    color: AppColors.textMuted,
+  );
+
+  static const TextStyle caption = TextStyle(
+    fontFamily: fontFamily,
+    fontWeight: FontWeight.w500,
+    fontSize: 11,
+    height: 16 / 11,
+    color: AppColors.textMuted,
+  );
+
   static const TextTheme lightTextTheme = TextTheme(
-    headlineLarge: TextStyle(
-      fontFamily: fontFamily,
-      fontWeight: FontWeight.w800,
-      fontSize: 28,
-      height: 38 / 28,
-      color: AppColors.textPrimary,
-    ),
-    headlineMedium: TextStyle(
-      fontFamily: fontFamily,
-      fontWeight: FontWeight.w700,
-      fontSize: 22,
-      height: 30 / 22,
-      color: AppColors.textPrimary,
-    ),
-    headlineSmall: TextStyle(
-      fontFamily: fontFamily,
-      fontWeight: FontWeight.w700,
-      fontSize: 18,
-      height: 26 / 18,
-      color: AppColors.textPrimary,
-    ),
-    titleLarge: TextStyle(
-      fontFamily: fontFamily,
-      fontWeight: FontWeight.w700,
-      fontSize: 18,
-      height: 26 / 18,
-      color: AppColors.textPrimary,
-    ),
-    titleMedium: TextStyle(
-      fontFamily: fontFamily,
-      fontWeight: FontWeight.w600,
-      fontSize: 16,
-      height: 24 / 16,
-      color: AppColors.textPrimary,
-    ),
-    titleSmall: TextStyle(
-      fontFamily: fontFamily,
-      fontWeight: FontWeight.w500,
-      fontSize: 14,
-      height: 22 / 14,
-      color: AppColors.textSecondary,
-    ),
-    bodyLarge: TextStyle(
-      fontFamily: fontFamily,
-      fontWeight: FontWeight.w400,
-      fontSize: 15,
-      height: 24 / 15,
-      color: AppColors.textPrimary,
-    ),
-    bodyMedium: TextStyle(
-      fontFamily: fontFamily,
-      fontWeight: FontWeight.w400,
-      fontSize: 13,
-      height: 20 / 13,
-      color: AppColors.textSecondary,
-    ),
-    bodySmall: TextStyle(
-      fontFamily: fontFamily,
-      fontWeight: FontWeight.w400,
-      fontSize: 12,
-      height: 18 / 12,
-      color: AppColors.textMuted,
-    ),
+    headlineLarge: headlineLarge,
+    headlineMedium: headlineMedium,
+    headlineSmall: headlineSmall,
+    titleLarge: titleLarge,
+    titleMedium: titleMedium,
+    titleSmall: titleSmall,
+    bodyLarge: bodyLarge,
+    bodyMedium: bodyMedium,
+    bodySmall: bodySmall,
     labelLarge: TextStyle(
       fontFamily: fontFamily,
       fontWeight: FontWeight.w600,
@@ -85,13 +111,7 @@ class AppTypography {
       height: 18 / 12,
       color: AppColors.textSecondary,
     ),
-    labelSmall: TextStyle(
-      fontFamily: fontFamily,
-      fontWeight: FontWeight.w500,
-      fontSize: 11,
-      height: 16 / 11,
-      color: AppColors.textMuted,
-    ),
+    labelSmall: caption,
   );
 
   static const TextTheme darkTextTheme = TextTheme(
