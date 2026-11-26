@@ -164,14 +164,14 @@ class AuthService {
       try {
         profileRes = await SupabaseService.client
             .from('profiles')
-            .select('id, mosque_id, full_name_bn, phone')
-            .eq('id', user.id)
+            .select('id, auth_user_id, mosque_id, name_bn, full_name_bn, mobile, phone')
+            .or('id.eq.${user.id},auth_user_id.eq.${user.id}')
             .maybeSingle();
       } catch (_) {
         profileRes = await SupabaseService.client
             .from('profiles')
             .select('id, mosque_id, email')
-            .eq('id', user.id)
+            .or('id.eq.${user.id},auth_user_id.eq.${user.id}')
             .maybeSingle();
       }
 
@@ -187,13 +187,7 @@ class AuthService {
             .from('members')
             .select('id, role_code, name_bn, mobile')
             .eq('mosque_id', mosqueId)
-            .eq('id', user.id)
-            .maybeSingle();
-        memberRes ??= await SupabaseService.client
-            .from('members')
-            .select('id, role_code, name_bn, mobile')
-            .eq('mosque_id', mosqueId)
-            .eq('email', cleanEmail)
+            .or('id.eq.${user.id},email.eq.$cleanEmail')
             .maybeSingle();
       } catch (_) {}
 
@@ -202,8 +196,11 @@ class AuthService {
       final memberId = memberRes?['id']?.toString() ?? user.id;
       final memberName = memberRes?['name_bn']?.toString().trim().isNotEmpty == true
           ? memberRes!['name_bn'].toString()
-          : (profileRes?['full_name_bn']?.toString() ?? 'সভাপতি');
+          : (profileRes?['name_bn']?.toString().trim().isNotEmpty == true
+              ? profileRes!['name_bn'].toString()
+              : (profileRes?['full_name_bn']?.toString() ?? 'সভাপতি'));
       final mobile = memberRes?['mobile']?.toString() ??
+          profileRes?['mobile']?.toString() ??
           profileRes?['phone']?.toString() ??
           (user.phone ?? '');
 
@@ -378,10 +375,26 @@ class AuthService {
       throw Exception('ক্লাউড সার্ভারের সাথে সংযোগ স্থাপন করা যায়নি। ইন্টারনেট সংযোগ পরীক্ষা করুন।');
     }
 
-    final authRes = await SupabaseService.client.auth.signUp(
-      email: presidentEmail.trim().toLowerCase(),
-      password: password,
-    );
+    final cleanPresEmail = presidentEmail.trim().toLowerCase();
+    final cleanPresMobile = presidentMobile.replaceAll('-', '').replaceAll(' ', '').trim();
+
+    AuthResponse? authRes;
+    try {
+      authRes = await SupabaseService.client.auth.signUp(
+        email: cleanPresEmail,
+        password: password,
+      );
+    } on AuthException catch (e) {
+      if (e.message.toLowerCase().contains('already') ||
+          e.message.toLowerCase().contains('exists')) {
+        authRes = await SupabaseService.client.auth.signInWithPassword(
+          email: cleanPresEmail,
+          password: password,
+        );
+      } else {
+        rethrow;
+      }
+    }
 
     final uid = authRes.user?.id;
     if (uid == null) {
@@ -397,54 +410,75 @@ class AuthService {
       );
     }
 
-    // Insert Mosque
-    await SupabaseService.client.from('mosques').insert({
-      'id': mosqueId,
-      'committee_id': generatedCommitteeId,
-      'name_bn': mosqueNameBn,
-      'name_en': mosqueNameEn,
-      'address': '$upazila, $district',
-      'established_year': establishedYear,
-      'committee_start_year': committeeStartYear,
-      'committee_end_year': committeeEndYear,
-      'status': 'active',
-      'district': district,
-      'upazila': upazila,
-      'bank_account_info': bankAccountInfo,
-    });
-
-    // Insert President Profile (with legacy column fallback)
-    final cleanPresEmail = presidentEmail.trim().toLowerCase();
+    // Attempt atomic registration via SECURITY DEFINER database function
+    bool rpcSuccess = false;
     try {
-      await SupabaseService.client.from('profiles').insert({
-        'id': effectiveUserId,
-        'mosque_id': mosqueId,
-        'email': cleanPresEmail,
-        'full_name_bn': presidentNameBn,
-        'full_name_en': presidentNameEn,
-        'phone': presidentMobile,
-        'is_active': true,
+      await SupabaseService.client.rpc('seba_register_mosque_and_president', params: {
+        'p_mosque_id': mosqueId,
+        'p_committee_id': generatedCommitteeId,
+        'p_mosque_name_bn': mosqueNameBn,
+        'p_mosque_name_en': mosqueNameEn,
+        'p_district': district,
+        'p_upazila': upazila,
+        'p_established_year': establishedYear,
+        'p_committee_start_year': committeeStartYear,
+        'p_committee_end_year': committeeEndYear,
+        'p_bank_info': bankAccountInfo,
+        'p_president_name_bn': presidentNameBn,
+        'p_president_name_en': presidentNameEn,
+        'p_president_mobile': cleanPresMobile,
+        'p_president_email': cleanPresEmail,
       });
-    } catch (_) {
-      await SupabaseService.client.from('profiles').insert({
-        'id': effectiveUserId,
-        'mosque_id': mosqueId,
-        'email': cleanPresEmail,
-      });
+      rpcSuccess = true;
+    } catch (e) {
+      debugPrint('RPC registration fallback to direct insert: $e');
     }
 
-    // Insert President Member record
-    await SupabaseService.client.from('members').insert({
-      'id': effectiveUserId,
-      'mosque_id': mosqueId,
-      'member_code': 'MEM-001',
-      'name_bn': presidentNameBn,
-      'name_en': presidentNameEn,
-      'mobile': presidentMobile,
-      'email': presidentEmail,
-      'role_code': 'president',
-      'status': 'active',
-    });
+    if (!rpcSuccess) {
+      // Direct Insert Fallback ensuring all required constraints and RLS checks are satisfied
+      await SupabaseService.client.from('mosques').insert({
+        'id': mosqueId,
+        'committee_id': generatedCommitteeId,
+        'name_bn': mosqueNameBn,
+        'name_en': mosqueNameEn,
+        'address': '$upazila, $district',
+        'established_year': establishedYear,
+        'committee_start_year': committeeStartYear,
+        'committee_end_year': committeeEndYear,
+        'status': 'active',
+        'district': district,
+        'upazila': upazila,
+        'bank_account_info': bankAccountInfo,
+      });
+
+      await SupabaseService.client.from('profiles').insert({
+        'id': effectiveUserId,
+        'auth_user_id': effectiveUserId,
+        'mosque_id': mosqueId,
+        'member_id': effectiveUserId,
+        'name_bn': presidentNameBn,
+        'full_name_bn': presidentNameBn,
+        'name_en': presidentNameEn,
+        'full_name_en': presidentNameEn,
+        'email': cleanPresEmail,
+        'mobile': cleanPresMobile,
+        'phone': cleanPresMobile,
+        'status': 'active',
+        'is_active': true,
+      });
+
+      await SupabaseService.client.from('members').insert({
+        'id': effectiveUserId,
+        'mosque_id': mosqueId,
+        'member_code': 'MEM-001',
+        'name_bn': presidentNameBn,
+        'name_en': presidentNameEn,
+        'mobile': cleanPresMobile,
+        'email': cleanPresEmail,
+        'role_code': 'president',
+        'status': 'active',
+      });
+    }
 
     // 2. Local persistence in Drift SQLite
     await _database.into(_database.mosquesTable).insertOnConflictUpdate(
