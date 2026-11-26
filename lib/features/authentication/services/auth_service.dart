@@ -159,12 +159,21 @@ class AuthService {
         );
       }
 
-      // Fetch linked profile & mosque
-      final profileRes = await SupabaseService.client
-          .from('profiles')
-          .select('id, mosque_id, full_name_bn, phone')
-          .eq('id', user.id)
-          .maybeSingle();
+      // Fetch linked profile & mosque (resilient to legacy vs migrated profiles schema)
+      Map<String, dynamic>? profileRes;
+      try {
+        profileRes = await SupabaseService.client
+            .from('profiles')
+            .select('id, mosque_id, full_name_bn, phone')
+            .eq('id', user.id)
+            .maybeSingle();
+      } catch (_) {
+        profileRes = await SupabaseService.client
+            .from('profiles')
+            .select('id, mosque_id, email')
+            .eq('id', user.id)
+            .maybeSingle();
+      }
 
       final mosqueId = profileRes?['mosque_id']?.toString() ?? '';
       if (mosqueId.isEmpty) {
@@ -404,15 +413,25 @@ class AuthService {
       'bank_account_info': bankAccountInfo,
     });
 
-    // Insert President Profile
-    await SupabaseService.client.from('profiles').insert({
-      'id': effectiveUserId,
-      'mosque_id': mosqueId,
-      'full_name_bn': presidentNameBn,
-      'full_name_en': presidentNameEn,
-      'phone': presidentMobile,
-      'is_active': true,
-    });
+    // Insert President Profile (with legacy column fallback)
+    final cleanPresEmail = presidentEmail.trim().toLowerCase();
+    try {
+      await SupabaseService.client.from('profiles').insert({
+        'id': effectiveUserId,
+        'mosque_id': mosqueId,
+        'email': cleanPresEmail,
+        'full_name_bn': presidentNameBn,
+        'full_name_en': presidentNameEn,
+        'phone': presidentMobile,
+        'is_active': true,
+      });
+    } catch (_) {
+      await SupabaseService.client.from('profiles').insert({
+        'id': effectiveUserId,
+        'mosque_id': mosqueId,
+        'email': cleanPresEmail,
+      });
+    }
 
     // Insert President Member record
     await SupabaseService.client.from('members').insert({

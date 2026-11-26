@@ -53,9 +53,13 @@ class CashboxRecordModel extends Equatable {
   });
 
   factory CashboxRecordModel.fromJson(Map<String, dynamic> json) {
+    final rawWaqtDate = json['waqt_date'] as String? ?? '';
+    final rawCountedAt = json['counted_at'] ?? json['created_at'];
     return CashboxRecordModel(
       id: json['id'] as String? ?? '',
-      waqtDate: json['waqt_date'] as String? ?? '',
+      waqtDate: rawWaqtDate.isNotEmpty
+          ? rawWaqtDate
+          : (json['collection_date'] as String? ?? ''),
       note1000: json['note_1000'] as int? ?? 0,
       note500: json['note_500'] as int? ?? 0,
       note200: json['note_200'] as int? ?? 0,
@@ -76,10 +80,10 @@ class CashboxRecordModel extends Equatable {
       witness3SignatureUrl: json['witness_3_signature_url'] as String?,
       voucherCode: json['voucher_code'] as String?,
       notes: json['notes'] as String? ?? '',
-      countedAt: json['counted_at'] != null
-          ? (json['counted_at'] is int
-              ? json['counted_at'] as int
-              : DateTime.tryParse(json['counted_at'].toString())?.millisecondsSinceEpoch ?? 0)
+      countedAt: rawCountedAt != null
+          ? (rawCountedAt is int
+              ? rawCountedAt
+              : DateTime.tryParse(rawCountedAt.toString())?.millisecondsSinceEpoch ?? 0)
           : 0,
     );
   }

@@ -30,12 +30,15 @@ class MadrasaAttendanceModel extends Equatable {
   bool get isLeave => status == 'leave';
 
   factory MadrasaAttendanceModel.fromJson(Map<String, dynamic> json) {
+    final rawAttDate = json['attendance_date'] as String? ?? '';
     return MadrasaAttendanceModel(
       id: json['id'] as String? ?? '',
       studentId: json['student_id'] as String? ?? '',
       studentNameBn: json['student_name_bn'] as String? ?? '',
       className: json['class_name'] as String? ?? '',
-      attendanceDate: json['attendance_date'] as String? ?? '',
+      attendanceDate: rawAttDate.isNotEmpty
+          ? rawAttDate
+          : (json['date'] as String? ?? ''),
       status: json['status'] as String? ?? 'present',
       remarks: json['remarks'] as String? ?? '',
       recordedBy: json['recorded_by'] as String? ?? 'শিক্ষক',

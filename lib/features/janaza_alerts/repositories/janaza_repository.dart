@@ -72,12 +72,14 @@ class JanazaRepository {
         janazaVenue: extractAfter('• স্থান:', fallback: 'মসজিদ প্রাঙ্গণ'),
         janazaTime: extractAfter(
           '• সময়:',
-          fallback: item['publish_date'] as String? ?? '',
+          fallback: (item['publish_date'] as String?) ??
+              (item['publish_at']?.toString().split('T').first ?? ''),
         ),
         graveyardVenue: extractAfter('• দাফন:'),
         contactPhone: extractAfter('• যোগাযোগ:'),
         extraNotes: content,
-        broadcastAt: item['publish_date'] as String? ?? '',
+        broadcastAt: (item['publish_date'] as String?) ??
+            (item['publish_at']?.toString().split('T').first ?? ''),
       );
     }).toList();
   }

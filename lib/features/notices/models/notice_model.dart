@@ -32,14 +32,16 @@ class NoticeModel extends Equatable {
   bool get isImportant => priority == 'important';
 
   factory NoticeModel.fromJson(Map<String, dynamic> json) {
+    final rawPublishDate = json['publish_date'] as String? ?? '';
+    final fallbackPublishAt = json['publish_at']?.toString().split('T').first ?? '';
     return NoticeModel(
       id: json['id'] as String? ?? '',
       title: json['title'] as String? ?? '',
       content: json['content'] as String? ?? '',
       priority: json['priority'] as String? ?? 'normal',
       isPinned: json['is_pinned'] as bool? ?? false,
-      publishDate: json['publish_date'] as String? ?? '',
-      expiryDate: json['expiry_date'] as String?,
+      publishDate: rawPublishDate.isNotEmpty ? rawPublishDate : fallbackPublishAt,
+      expiryDate: json['expiry_date'] as String? ?? json['expiry_at'] as String?,
       status: json['status'] as String? ?? 'published',
       createdBy: json['created_by'] as String? ?? '',
       imageUrl: json['image_url'] as String?,

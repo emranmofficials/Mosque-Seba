@@ -32,6 +32,27 @@ class OfflineCacheService {
 
   String generateId() => _uuid.v4();
 
+  /// Normalizes model payloads for Supabase PostgreSQL compatibility
+  /// (e.g. converts integer epoch ms timestamps on TIMESTAMPTZ columns to ISO-8601 UTC).
+  static Map<String, dynamic> normalizeCloudPayload(Map<String, dynamic> raw) {
+    final normalized = Map<String, dynamic>.from(raw);
+    for (final key in const ['created_at', 'counted_at']) {
+      if (!normalized.containsKey(key)) continue;
+      final val = normalized[key];
+      if (val is int) {
+        if (val <= 0) {
+          normalized.remove(key);
+        } else {
+          normalized[key] =
+              DateTime.fromMillisecondsSinceEpoch(val, isUtc: true).toIso8601String();
+        }
+      } else if (val is String && val.trim().isEmpty) {
+        normalized.remove(key);
+      }
+    }
+    return normalized;
+  }
+
   SupabaseClient? get _safeClient {
     if (!SupabaseService.isInitialized) return null;
     try {
@@ -249,7 +270,7 @@ class OfflineCacheService {
     bool upsert = false,
     bool attachMosqueId = true,
   }) async {
-    final serverPayload = Map<String, dynamic>.from(payload);
+    final serverPayload = normalizeCloudPayload(payload);
     final rawId = serverPayload['id']?.toString().trim() ?? '';
     final recordId = rawId.isEmpty ? generateId() : rawId;
     serverPayload['id'] = recordId;
@@ -258,7 +279,7 @@ class OfflineCacheService {
     }
 
     final localPayload = Map<String, dynamic>.from(serverPayload);
-    localPayload['created_at'] ??= DateTime.now().toIso8601String();
+    localPayload['created_at'] ??= DateTime.now().toUtc().toIso8601String();
 
     await _saveLocal(
       tableName: tableName,
@@ -302,14 +323,14 @@ class OfflineCacheService {
 
     final prepared = <Map<String, dynamic>>[];
     for (final raw in records) {
-      final serverMap = Map<String, dynamic>.from(raw);
+      final serverMap = normalizeCloudPayload(raw);
       final rawId = serverMap['id']?.toString().trim() ?? '';
       serverMap['id'] = rawId.isEmpty ? generateId() : rawId;
       serverMap['mosque_id'] = mosqueId;
       prepared.add(serverMap);
 
       final localMap = Map<String, dynamic>.from(serverMap);
-      localMap['created_at'] ??= DateTime.now().toIso8601String();
+      localMap['created_at'] ??= DateTime.now().toUtc().toIso8601String();
       await _saveLocal(
         tableName: tableName,
         mosqueId: mosqueId,
@@ -344,7 +365,7 @@ class OfflineCacheService {
     required Map<String, dynamic> updates,
     String? mosqueId,
   }) async {
-    final cleanUpdates = Map<String, dynamic>.from(updates)..remove('id');
+    final cleanUpdates = normalizeCloudPayload(updates)..remove('id');
     final existing = await readLocalById(tableName: tableName, id: id);
     final effectiveMosqueId =
         mosqueId ?? existing?['mosque_id']?.toString() ?? '';

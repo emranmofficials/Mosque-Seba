@@ -27,15 +27,34 @@ class ElectionCandidateModel extends Equatable {
   });
 
   factory ElectionCandidateModel.fromJson(Map<String, dynamic> json) {
+    final rawScheduleId = json['schedule_id'] as String? ?? '';
+    final rawRole = json['target_role'] as String? ?? '';
+    final rawRoleBn = json['target_role_bn'] as String? ?? '';
+    final rawCand = json['candidate_name'] as String? ?? '';
+    final rawProposer = json['proposer_name'] as String? ?? '';
+    final rawSeconder = json['seconder_name'] as String? ?? '';
+
     return ElectionCandidateModel(
       id: json['id'] as String? ?? '',
-      scheduleId: json['schedule_id'] as String? ?? '',
-      targetRole: json['target_role'] as String? ?? 'general_member',
-      targetRoleBn: json['target_role_bn'] as String? ?? 'সদস্য',
-      candidateName: json['candidate_name'] as String? ?? '',
+      scheduleId: rawScheduleId.isNotEmpty
+          ? rawScheduleId
+          : (json['election_id'] as String? ?? ''),
+      targetRole: rawRole.isNotEmpty
+          ? rawRole
+          : (json['target_role_code'] as String? ?? 'general_member'),
+      targetRoleBn: rawRoleBn.isNotEmpty
+          ? rawRoleBn
+          : (json['target_role_title_bn'] as String? ?? 'সদস্য'),
+      candidateName: rawCand.isNotEmpty
+          ? rawCand
+          : (json['candidate_name_bn'] as String? ?? ''),
       symbolOrPanel: json['symbol_or_panel'] as String? ?? 'সাধারণ',
-      proposerName: json['proposer_name'] as String? ?? '',
-      seconderName: json['seconder_name'] as String? ?? '',
+      proposerName: rawProposer.isNotEmpty
+          ? rawProposer
+          : (json['proposer_name_bn'] as String? ?? ''),
+      seconderName: rawSeconder.isNotEmpty
+          ? rawSeconder
+          : (json['seconder_name_bn'] as String? ?? ''),
       votesReceived: json['votes_received'] as int? ?? 0,
       isElected: json['is_elected'] as bool? ?? false,
     );

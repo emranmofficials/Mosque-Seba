@@ -79,12 +79,13 @@ class SupabaseSyncService {
       for (final item in pendingItems) {
         try {
           if (item.operation == 'insert') {
-            await _client.from(item.tableName).upsert(item.payload);
+            final cleanPayload = OfflineCacheService.normalizeCloudPayload(item.payload);
+            await _client.from(item.tableName).upsert(cleanPayload);
             successCount++;
           } else if (item.operation == 'update') {
             final id = item.payload['id'];
             if (id != null) {
-              final updates = Map<String, dynamic>.from(item.payload)
+              final updates = OfflineCacheService.normalizeCloudPayload(item.payload)
                 ..remove('id');
               await _client.from(item.tableName).update(updates).eq('id', id);
               successCount++;

@@ -1,7 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mosqueseba/core/database/offline_cache_service.dart';
 import 'package:mosqueseba/features/app_security/security/encryption_helper.dart';
+import 'package:mosqueseba/features/cashbox/models/cashbox_record_model.dart';
 import 'package:mosqueseba/features/cloud_sync/services/offline_queue_manager.dart';
+import 'package:mosqueseba/features/elections/models/election_candidate_model.dart';
+import 'package:mosqueseba/features/madrasa_attendance/models/madrasa_attendance_model.dart';
+import 'package:mosqueseba/features/notices/models/notice_model.dart';
 import 'package:mosqueseba/features/subscriptions/repositories/chanda_repository.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -100,6 +104,69 @@ void main() {
       expect(txns.length, 1);
       expect(txns.first['type'], 'income');
       expect((txns.first['amount'] as num).toDouble(), 500.0);
+    });
+
+    test('normalizeCloudPayload converts epoch millis and strips non-positive timestamps', () {
+      final positive = OfflineCacheService.normalizeCloudPayload({
+        'id': 'evt-1',
+        'created_at': 1795689600000,
+        'counted_at': 1795689600000,
+      });
+      expect(positive['created_at'], isA<String>());
+      expect((positive['created_at'] as String).endsWith('Z'), isTrue);
+      expect(positive['counted_at'], isA<String>());
+
+      final zeroRemoved = OfflineCacheService.normalizeCloudPayload({
+        'id': 'evt-2',
+        'created_at': 0,
+        'counted_at': '',
+      });
+      expect(zeroRemoved.containsKey('created_at'), isFalse);
+      expect(zeroRemoved.containsKey('counted_at'), isFalse);
+    });
+
+    test('models decode legacy Supabase column names transparently', () {
+      final notice = NoticeModel.fromJson({
+        'id': 'n1',
+        'title': 'জুমার নামাজ',
+        'content': 'সময়মতো আসুন',
+        'publish_at': '2026-11-26T10:00:00Z',
+        'expiry_at': '2026-12-01',
+      });
+      expect(notice.publishDate, '2026-11-26');
+      expect(notice.expiryDate, '2026-12-01');
+
+      final attendance = MadrasaAttendanceModel.fromJson({
+        'id': 'a1',
+        'student_id': 's1',
+        'date': '2026-11-26',
+        'status': 'present',
+      });
+      expect(attendance.attendanceDate, '2026-11-26');
+
+      final candidate = ElectionCandidateModel.fromJson({
+        'id': 'c1',
+        'election_id': 'el-1',
+        'target_role_code': 'secretary',
+        'target_role_title_bn': 'সাধারণ সম্পাদক',
+        'candidate_name_bn': 'আবদুল করিম',
+        'proposer_name_bn': 'রফিকুল ইসলাম',
+        'seconder_name_bn': 'নজরুল ইসলাম',
+      });
+      expect(candidate.scheduleId, 'el-1');
+      expect(candidate.targetRole, 'secretary');
+      expect(candidate.targetRoleBn, 'সাধারণ সম্পাদক');
+      expect(candidate.candidateName, 'আবদুল করিম');
+
+      final cashbox = CashboxRecordModel.fromJson({
+        'id': 'cb1',
+        'collection_date': '2026-11-26',
+        'witness_1_name': 'সাক্ষী ১',
+        'witness_2_name': 'সাক্ষী ২',
+        'created_at': '2026-11-26T12:00:00Z',
+      });
+      expect(cashbox.waqtDate, '2026-11-26');
+      expect(cashbox.countedAt, greaterThan(0));
     });
   });
 }
