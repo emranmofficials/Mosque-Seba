@@ -22,7 +22,7 @@ class AppConfig {
   static const String geminiApiKey = String.fromEnvironment('GEMINI_API_KEY');
   static const String geminiModel = String.fromEnvironment(
     'GEMINI_MODEL',
-    defaultValue: 'gemini-2.5-flash',
+    defaultValue: 'gemini-3.5-flash-lite',
   );
 
   // Asset paths
