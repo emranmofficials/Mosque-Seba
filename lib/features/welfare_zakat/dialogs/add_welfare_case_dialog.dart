@@ -45,7 +45,7 @@ class _AddWelfareCaseDialogState extends State<AddWelfareCaseDialog> {
     super.dispose();
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
     final now = DateTime.now();
