@@ -1,31 +1,32 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../core/network/supabase_service.dart';
+import '../../../core/database/offline_cache_service.dart';
 import '../models/mosque_event_model.dart';
 
 /// Repository for Mosque Events & Mahfils (মসজিদ অনুষ্ঠান ও ওয়াজ মাহফিল রিপোজিটরি)
 class EventRepository {
-  SupabaseClient get _client => SupabaseService.client;
+  final OfflineCacheService _cache;
+
+  EventRepository({OfflineCacheService? cache})
+      : _cache = cache ?? OfflineCacheService.instance;
 
   /// Fetch all events for a mosque with optional status filter
   Future<List<MosqueEventModel>> fetchEvents({
     required String mosqueId,
     String? statusFilter,
   }) async {
-    try {
-      var query = _client.from('mosque_events').select().eq('mosque_id', mosqueId);
-      if (statusFilter != null && statusFilter.isNotEmpty && statusFilter != 'all') {
-        query = query.eq('status', statusFilter);
-      }
-
-      final res = await query.order('event_date', ascending: true);
-      final List<dynamic> data = res as List<dynamic>;
-
-      return data
-          .map((item) => MosqueEventModel.fromJson(item as Map<String, dynamic>))
-          .toList();
-    } catch (e) {
-      return [];
+    final equals = <String, dynamic>{};
+    if (statusFilter != null && statusFilter.isNotEmpty && statusFilter != 'all') {
+      equals['status'] = statusFilter;
     }
+
+    final rows = await _cache.fetchList(
+      tableName: 'mosque_events',
+      mosqueId: mosqueId,
+      orderBy: 'event_date',
+      ascending: true,
+      equalsFilters: equals,
+    );
+
+    return rows.map(MosqueEventModel.fromJson).toList();
   }
 
   /// Create a new event
@@ -35,24 +36,39 @@ class EventRepository {
   }) async {
     try {
       final payload = event.toJson();
-      payload['mosque_id'] = mosqueId;
-      if (payload['id'] == null || (payload['id'] as String).isEmpty) {
-        payload['id'] = 'ev-${DateTime.now().millisecondsSinceEpoch}';
+      if ((payload['id']?.toString().trim() ?? '').isEmpty) {
+        payload.remove('id');
       }
-
-      final res = await _client.from('mosque_events').insert(payload).select().single();
+      final res = await _cache.insertRecord(
+        tableName: 'mosque_events',
+        mosqueId: mosqueId,
+        payload: payload,
+      );
       return MosqueEventModel.fromJson(res);
-    } catch (e) {
+    } catch (_) {
       return null;
     }
   }
 
-  /// Update event
-  Future<bool> updateEvent(MosqueEventModel event) async {
+  /// Update event details or actual expense
+  Future<bool> updateEvent(MosqueEventModel event, {String? mosqueId}) async {
     try {
-      await _client.from('mosque_events').update(event.toJson()).eq('id', event.id);
-      return true;
-    } catch (e) {
+      return await _cache.updateRecord(
+        tableName: 'mosque_events',
+        id: event.id,
+        mosqueId: mosqueId,
+        updates: event.toJson(),
+      );
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Delete an event
+  Future<bool> deleteEvent(String eventId) async {
+    try {
+      return await _cache.deleteRecord(tableName: 'mosque_events', id: eventId);
+    } catch (_) {
       return false;
     }
   }

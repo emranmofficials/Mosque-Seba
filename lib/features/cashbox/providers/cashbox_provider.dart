@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../authentication/providers/auth_provider.dart';
+import '../../finance/providers/finance_provider.dart';
 import '../models/cashbox_record_model.dart';
 import '../repositories/cashbox_repository.dart';
 
@@ -10,8 +11,9 @@ final cashboxRepositoryProvider = Provider<CashboxRepository>((ref) {
 class CashboxListNotifier extends StateNotifier<AsyncValue<List<CashboxRecordModel>>> {
   final CashboxRepository _repository;
   final String _mosqueId;
+  final Ref _ref;
 
-  CashboxListNotifier(this._repository, this._mosqueId)
+  CashboxListNotifier(this._repository, this._mosqueId, this._ref)
       : super(const AsyncValue.loading()) {
     loadRecords();
   }
@@ -35,6 +37,7 @@ class CashboxListNotifier extends StateNotifier<AsyncValue<List<CashboxRecordMod
     );
     if (result != null) {
       await loadRecords();
+      _ref.invalidate(financeListProvider);
     }
     return result;
   }
@@ -44,5 +47,5 @@ final cashboxListProvider = StateNotifierProvider<CashboxListNotifier, AsyncValu
   final repo = ref.watch(cashboxRepositoryProvider);
   final authState = ref.watch(authNotifierProvider);
   final mosqueId = authState.valueOrNull?.mosqueId ?? 'mosque-default';
-  return CashboxListNotifier(repo, mosqueId);
+  return CashboxListNotifier(repo, mosqueId, ref);
 });

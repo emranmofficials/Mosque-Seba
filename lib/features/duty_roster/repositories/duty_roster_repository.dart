@@ -1,31 +1,32 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../core/network/supabase_service.dart';
+import '../../../core/database/offline_cache_service.dart';
 import '../models/duty_roster_item.dart';
 
 /// Repository for Weekly Duty Roster (দায়িত্ব রোস্টার রিপোজিটরি)
 class DutyRosterRepository {
-  SupabaseClient get _client => SupabaseService.client;
+  final OfflineCacheService _cache;
+
+  DutyRosterRepository({OfflineCacheService? cache})
+      : _cache = cache ?? OfflineCacheService.instance;
 
   /// Fetch duty roster items, optionally filtered by day of week
   Future<List<DutyRosterItem>> fetchRoster({
     required String mosqueId,
     String? dayOfWeek,
   }) async {
-    try {
-      var query = _client.from('duty_roster').select().eq('mosque_id', mosqueId);
-      if (dayOfWeek != null && dayOfWeek.isNotEmpty && dayOfWeek != 'সকল') {
-        query = query.eq('day_of_week', dayOfWeek);
-      }
-
-      final response = await query.order('created_at', ascending: true);
-      final List<dynamic> data = response as List<dynamic>;
-
-      return data
-          .map((item) => DutyRosterItem.fromJson(item as Map<String, dynamic>))
-          .toList();
-    } catch (e) {
-      return [];
+    final equals = <String, dynamic>{};
+    if (dayOfWeek != null && dayOfWeek.isNotEmpty && dayOfWeek != 'সকল') {
+      equals['day_of_week'] = dayOfWeek;
     }
+
+    final rows = await _cache.fetchList(
+      tableName: 'duty_roster',
+      mosqueId: mosqueId,
+      orderBy: 'created_at',
+      ascending: true,
+      equalsFilters: equals,
+    );
+
+    return rows.map(DutyRosterItem.fromJson).toList();
   }
 
   /// Assign or update duty roster slot
@@ -35,14 +36,17 @@ class DutyRosterRepository {
   }) async {
     try {
       final payload = item.toJson();
-      payload['mosque_id'] = mosqueId;
-      if (payload['id'] == null || (payload['id'] as String).isEmpty) {
-        payload['id'] = 'ros-${DateTime.now().millisecondsSinceEpoch}';
+      if ((payload['id']?.toString().trim() ?? '').isEmpty) {
+        payload.remove('id');
       }
-
-      final res = await _client.from('duty_roster').upsert(payload).select().single();
+      final res = await _cache.insertRecord(
+        tableName: 'duty_roster',
+        mosqueId: mosqueId,
+        payload: payload,
+        upsert: true,
+      );
       return DutyRosterItem.fromJson(res);
-    } catch (e) {
+    } catch (_) {
       return null;
     }
   }
@@ -50,9 +54,8 @@ class DutyRosterRepository {
   /// Delete a duty assignment
   Future<bool> removeDuty(String id) async {
     try {
-      await _client.from('duty_roster').delete().eq('id', id);
-      return true;
-    } catch (e) {
+      return await _cache.deleteRecord(tableName: 'duty_roster', id: id);
+    } catch (_) {
       return false;
     }
   }

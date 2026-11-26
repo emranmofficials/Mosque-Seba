@@ -1,57 +1,62 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../core/network/supabase_service.dart';
+import '../../../core/database/offline_cache_service.dart';
 import '../../cloud_sync/services/offline_queue_manager.dart';
 import '../models/madrasa_fee_payment_model.dart';
 
 /// Repository for Madrasa Fee Collections (মাদরাসা ফি আদায় ও হিসাব রিপোজিটরি)
 class MadrasaFeeRepository {
-  final OfflineQueueManager _queueManager;
+  final OfflineCacheService _cache;
 
-  MadrasaFeeRepository({OfflineQueueManager? queueManager})
-      : _queueManager = queueManager ?? OfflineQueueManager();
-
-  SupabaseClient get _client => SupabaseService.client;
+  MadrasaFeeRepository({
+    OfflineQueueManager? queueManager,
+    OfflineCacheService? cache,
+  }) : _cache = cache ?? OfflineCacheService(queueManager: queueManager);
 
   /// Fetch all student fee payments for a mosque
   Future<List<MadrasaFeePaymentModel>> fetchFeePayments({
     required String mosqueId,
     String? monthFilter,
   }) async {
-    try {
-      var query = _client.from('madrasa_fee_payments').select().eq('mosque_id', mosqueId);
-      if (monthFilter != null && monthFilter.isNotEmpty && monthFilter != 'all') {
-        query = query.eq('month', monthFilter);
-      }
-
-      final res = await query.order('created_at', ascending: false);
-      final List<dynamic> data = res as List<dynamic>;
-
-      return data
-          .map((item) => MadrasaFeePaymentModel.fromJson(item as Map<String, dynamic>))
-          .toList();
-    } catch (e) {
-      return [];
+    final equals = <String, dynamic>{};
+    if (monthFilter != null &&
+        monthFilter.isNotEmpty &&
+        monthFilter != 'all' &&
+        monthFilter != 'সকল') {
+      equals['month'] = monthFilter;
     }
+
+    final rows = await _cache.fetchList(
+      tableName: 'madrasa_fee_payments',
+      mosqueId: mosqueId,
+      orderBy: 'created_at',
+      ascending: false,
+      equalsFilters: equals,
+    );
+
+    final list = rows.map(MadrasaFeePaymentModel.fromJson).toList();
+    list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return list;
   }
 
-  /// Collect student fee and auto-post income transaction to Finance
+  /// Collect student fee and auto-post income transaction to Finance (offline-safe)
   Future<MadrasaFeePaymentModel?> collectFee({
     required String mosqueId,
     required MadrasaFeePaymentModel payment,
   }) async {
     try {
       final payload = payment.toJson();
-      payload['mosque_id'] = mosqueId;
-      if (payload['id'] == null || (payload['id'] as String).isEmpty) {
-        payload['id'] = 'mfp-${DateTime.now().millisecondsSinceEpoch}';
+      if ((payload['id']?.toString().trim() ?? '').isEmpty) {
+        payload.remove('id');
       }
+      if (payload['created_at'] == 0) payload.remove('created_at');
 
-      final res = await _client.from('madrasa_fee_payments').insert(payload).select().single();
+      final res = await _cache.insertRecord(
+        tableName: 'madrasa_fee_payments',
+        mosqueId: mosqueId,
+        payload: payload,
+      );
       final feeResult = MadrasaFeePaymentModel.fromJson(res);
 
-      // Auto-post to Finance Transactions ledger (PRD §20 integration requirement)
       final txnPayload = {
-        'id': 'txn-mfp-${feeResult.id}',
         'mosque_id': mosqueId,
         'transaction_code': 'TXN-${feeResult.receiptCode}',
         'category_name_bn': 'মাদরাসা ছাত্র ফি',
@@ -64,21 +69,16 @@ class MadrasaFeeRepository {
         'created_by': feeResult.receivedBy,
         'approval_status': 'approved',
         'is_reversal': false,
-        'created_at': DateTime.now().millisecondsSinceEpoch,
       };
 
-      try {
-        await _client.from('transactions').insert(txnPayload);
-      } catch (_) {
-        await _queueManager.enqueue(
-          tableName: 'transactions',
-          operation: 'insert',
-          payload: txnPayload,
-        );
-      }
+      await _cache.insertRecord(
+        tableName: 'transactions',
+        mosqueId: mosqueId,
+        payload: txnPayload,
+      );
 
       return feeResult;
-    } catch (e) {
+    } catch (_) {
       return null;
     }
   }

@@ -316,6 +316,19 @@ class WelfareCasesTable extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+// --- UNIVERSAL OFFLINE-FIRST JSON CACHE TABLE ---
+
+class LocalRecordsTable extends Table {
+  TextColumn get entityTable => text()();
+  TextColumn get recordId => text()();
+  TextColumn get mosqueId => text()();
+  TextColumn get payloadJson => text()();
+  IntColumn get updatedAt => integer()();
+
+  @override
+  Set<Column> get primaryKey => {entityTable, recordId};
+}
+
 @DriftDatabase(tables: [
   MosquesTable,
   MembersTable,
@@ -333,12 +346,148 @@ class WelfareCasesTable extends Table {
   MadrasaFeePaymentsTable,
   MosqueEventsTable,
   WelfareCasesTable,
+  LocalRecordsTable,
 ])
 class AppDatabase extends _$AppDatabase {
-  AppDatabase() : super(_openConnection());
+  AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+        onCreate: (Migrator m) async {
+          await m.createAll();
+        },
+        onUpgrade: (Migrator m, int from, int to) async {
+          if (from < 2) {
+            await m.createTable(localRecordsTable);
+          }
+        },
+      );
+
+  /// Upserts a cached entity JSON payload into SQLite
+  Future<void> upsertLocalRecord({
+    required String entityTable,
+    required String recordId,
+    required String mosqueId,
+    required String payloadJson,
+    int? updatedAt,
+  }) async {
+    await into(localRecordsTable).insertOnConflictUpdate(
+      LocalRecordsTableCompanion.insert(
+        entityTable: entityTable,
+        recordId: recordId,
+        mosqueId: mosqueId,
+        payloadJson: payloadJson,
+        updatedAt: updatedAt ?? DateTime.now().millisecondsSinceEpoch,
+      ),
+    );
+  }
+
+  /// Reads all cached JSON payloads for a table and mosque
+  Future<List<String>> readLocalPayloads({
+    required String entityTable,
+    required String mosqueId,
+  }) async {
+    final rows = await (select(localRecordsTable)
+          ..where(
+            (tbl) =>
+                tbl.entityTable.equals(entityTable) &
+                tbl.mosqueId.equals(mosqueId),
+          )
+          ..orderBy([(tbl) => OrderingTerm.desc(tbl.updatedAt)]))
+        .get();
+    return rows.map((r) => r.payloadJson).toList();
+  }
+
+  /// Reads a single cached JSON payload by record ID
+  Future<String?> readLocalPayloadById({
+    required String entityTable,
+    required String recordId,
+  }) async {
+    final row = await (select(localRecordsTable)
+          ..where(
+            (tbl) =>
+                tbl.entityTable.equals(entityTable) &
+                tbl.recordId.equals(recordId),
+          )
+          ..limit(1))
+        .getSingleOrNull();
+    return row?.payloadJson;
+  }
+
+  /// Deletes a single cached record from SQLite
+  Future<void> deleteLocalRecord({
+    required String entityTable,
+    required String recordId,
+  }) async {
+    await (delete(localRecordsTable)
+          ..where(
+            (tbl) =>
+                tbl.entityTable.equals(entityTable) &
+                tbl.recordId.equals(recordId),
+          ))
+        .go();
+  }
+
+  /// Replaces cached rows for a table and mosque, skipping preserved IDs
+  Future<void> replaceLocalTableCache({
+    required String entityTable,
+    required String mosqueId,
+    required Map<String, String> recordPayloads,
+    Set<String> preserveRecordIds = const {},
+  }) async {
+    await transaction(() async {
+      final existing = await (select(localRecordsTable)
+            ..where(
+              (tbl) =>
+                  tbl.entityTable.equals(entityTable) &
+                  tbl.mosqueId.equals(mosqueId),
+            ))
+          .get();
+
+      for (final row in existing) {
+        if (!preserveRecordIds.contains(row.recordId)) {
+          await (delete(localRecordsTable)
+                ..where(
+                  (tbl) =>
+                      tbl.entityTable.equals(entityTable) &
+                      tbl.recordId.equals(row.recordId),
+                ))
+              .go();
+        }
+      }
+
+      final now = DateTime.now().millisecondsSinceEpoch;
+      var offset = 0;
+      for (final entry in recordPayloads.entries) {
+        if (preserveRecordIds.contains(entry.key)) continue;
+        await into(localRecordsTable).insertOnConflictUpdate(
+          LocalRecordsTableCompanion.insert(
+            entityTable: entityTable,
+            recordId: entry.key,
+            mosqueId: mosqueId,
+            payloadJson: entry.value,
+            updatedAt: now - offset,
+          ),
+        );
+        offset++;
+      }
+    });
+  }
+
+  /// Counts cached rows per table for the active mosque
+  Future<Map<String, int>> countLocalRecordsByTable(String mosqueId) async {
+    final rows = await (select(localRecordsTable)
+          ..where((tbl) => tbl.mosqueId.equals(mosqueId)))
+        .get();
+    final counts = <String, int>{};
+    for (final row in rows) {
+      counts[row.entityTable] = (counts[row.entityTable] ?? 0) + 1;
+    }
+    return counts;
+  }
 
   /// Clears all tenant-specific data when switching or logging out of a mosque
   Future<void> clearAllTenantData() async {
@@ -359,6 +508,7 @@ class AppDatabase extends _$AppDatabase {
       await delete(madrasaFeePaymentsTable).go();
       await delete(mosqueEventsTable).go();
       await delete(welfareCasesTable).go();
+      await delete(localRecordsTable).go();
     });
   }
 }

@@ -10,12 +10,14 @@ class WelfareCaseCard extends StatelessWidget {
   final WelfareCaseModel welfareCase;
   final VoidCallback? onTap;
   final VoidCallback? onApprove;
+  final VoidCallback? onDisburse;
 
   const WelfareCaseCard({
     super.key,
     required this.welfareCase,
     this.onTap,
     this.onApprove,
+    this.onDisburse,
   });
 
   Color _getStatusColor(String status) {
@@ -179,6 +181,18 @@ class WelfareCaseCard extends StatelessWidget {
                   label: const Text('অনুমোদন করুন', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.roleTreasurer,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                  ),
+                ),
+              if (welfareCase.status == 'approved' && onDisburse != null)
+                ElevatedButton.icon(
+                  onPressed: onDisburse,
+                  icon: const Icon(Icons.payments_outlined, size: 14),
+                  label: const Text('বিতরণ সম্পন্ন করুন', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.emeraldPrimary,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),

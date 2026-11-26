@@ -6,7 +6,10 @@ import '../../../shared/components/empty_state_view.dart';
 import '../../../shared/components/error_state_view.dart';
 import '../../../shared/widgets/adaptive_scaffold.dart';
 import '../../authentication/providers/auth_provider.dart';
+import '../../role_permissions/models/committee_role.dart';
+import '../../role_permissions/providers/role_permissions_provider.dart';
 import '../dialogs/publish_notice_dialog.dart';
+import '../models/notice_model.dart';
 import '../providers/notice_provider.dart';
 import '../widgets/notice_card.dart';
 
@@ -22,7 +25,11 @@ class NoticeListScreen extends ConsumerWidget {
     'পিন করা',
   ];
 
-  void _showPublishDialog(BuildContext context, WidgetRef ref) {
+  void _showPublishDialog(
+    BuildContext context,
+    WidgetRef ref, {
+    NoticeModel? existingNotice,
+  }) {
     final authState = ref.read(authNotifierProvider);
     final author = authState.valueOrNull?.memberName ?? 'সাধারণ সম্পাদক';
 
@@ -30,7 +37,13 @@ class NoticeListScreen extends ConsumerWidget {
       context: context,
       builder: (ctx) => PublishNoticeDialog(
         authorName: author,
-        onSubmit: (newNotice) => ref.read(noticeListProvider.notifier).publishNotice(newNotice),
+        existingNotice: existingNotice,
+        onSubmit: (notice) {
+          if (existingNotice != null) {
+            return ref.read(noticeListProvider.notifier).updateNotice(notice);
+          }
+          return ref.read(noticeListProvider.notifier).publishNotice(notice);
+        },
       ),
     );
   }
@@ -38,20 +51,48 @@ class NoticeListScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final noticesAsync = ref.watch(noticeListProvider);
+    final filteredNotices = ref.watch(filteredNoticesProvider);
     final currentPriority = ref.watch(noticePriorityFilterProvider);
     final isPinnedOnly = ref.watch(noticePinnedOnlyFilterProvider);
+    final role = ref.watch(currentRoleProvider);
+    final canManageNotices = role == CommitteeRole.president || role.canPublishNotices();
 
     return AdaptiveScaffold(
       title: 'মসজিদ ডিজিটাল নোটিশ বোর্ড',
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: AppColors.primary,
-        foregroundColor: AppColors.onPrimary,
-        icon: const Icon(Icons.campaign_outlined),
-        label: const Text('নতুন নোটিশ', style: TextStyle(fontWeight: FontWeight.bold)),
-        onPressed: () => _showPublishDialog(context, ref),
-      ),
+      floatingActionButton: canManageNotices
+          ? FloatingActionButton.extended(
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.onPrimary,
+              icon: const Icon(Icons.campaign_outlined),
+              label: const Text('নতুন নোটিশ', style: TextStyle(fontWeight: FontWeight.bold)),
+              onPressed: () => _showPublishDialog(context, ref),
+            )
+          : null,
       body: Column(
         children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppDimens.spacing16,
+              AppDimens.spacing8,
+              AppDimens.spacing16,
+              4,
+            ),
+            child: TextField(
+              onChanged: (val) =>
+                  ref.read(noticeSearchQueryProvider.notifier).state = val,
+              decoration: InputDecoration(
+                hintText: 'নোটিশ খুঁজুন...',
+                prefixIcon: const Icon(Icons.search),
+                isDense: true,
+                filled: true,
+                fillColor: AppColors.surface,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppDimens.radiusMd),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+          ),
           // Filter Tabs
           Container(
             height: 48,
@@ -107,30 +148,50 @@ class NoticeListScreen extends ConsumerWidget {
                 message: err.toString(),
                 onRetry: () => ref.read(noticeListProvider.notifier).loadNotices(),
               ),
-              data: (notices) {
-                if (notices.isEmpty) {
+              data: (_) {
+                if (filteredNotices.isEmpty) {
                   return EmptyStateView(
                     title: 'কোনো নোটিশ পাওয়া যায়নি',
-                    message: 'মসজিদের জরুরি নোটিশ ও গুরুত্বপূর্ণ ঘোষণা প্রকাশ করতে নিচে চাপ দিন।',
-                    actionLabel: 'নোটিশ প্রকাশ করুন',
-                    onAction: () => _showPublishDialog(context, ref),
+                    message: canManageNotices
+                        ? 'মসজিদের জরুরি নোটিশ ও গুরুত্বপূর্ণ ঘোষণা প্রকাশ করতে নিচে চাপ দিন।'
+                        : 'বর্তমানে এই বিভাগে কোনো নোটিশ নেই।',
+                    actionLabel: canManageNotices ? 'নোটিশ প্রকাশ করুন' : null,
+                    onAction: canManageNotices ? () => _showPublishDialog(context, ref) : null,
                   );
                 }
 
-                return ListView.builder(
-                  padding: const EdgeInsets.all(AppDimens.spacing16),
-                  itemCount: notices.length,
-                  itemBuilder: (context, index) {
-                    final notice = notices[index];
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: AppDimens.spacing12),
-                      child: NoticeCard(
-                        notice: notice,
-                        onPinToggle: () => ref.read(noticeListProvider.notifier).togglePin(notice.id, !notice.isPinned),
-                        onDelete: () => ref.read(noticeListProvider.notifier).deleteNotice(notice.id),
-                      ),
-                    );
-                  },
+                return RefreshIndicator(
+                  onRefresh: () => ref.read(noticeListProvider.notifier).loadNotices(),
+                  child: ListView.builder(
+                    padding: const EdgeInsets.all(AppDimens.spacing16),
+                    itemCount: filteredNotices.length,
+                    itemBuilder: (context, index) {
+                      final notice = filteredNotices[index];
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: AppDimens.spacing12),
+                        child: NoticeCard(
+                          notice: notice,
+                          onPinToggle: canManageNotices
+                              ? () => ref
+                                  .read(noticeListProvider.notifier)
+                                  .togglePin(notice.id, !notice.isPinned)
+                              : null,
+                          onEdit: canManageNotices
+                              ? () => _showPublishDialog(
+                                    context,
+                                    ref,
+                                    existingNotice: notice,
+                                  )
+                              : null,
+                          onDelete: canManageNotices
+                              ? () => ref
+                                  .read(noticeListProvider.notifier)
+                                  .deleteNotice(notice.id)
+                              : null,
+                        ),
+                      );
+                    },
+                  ),
                 );
               },
             ),

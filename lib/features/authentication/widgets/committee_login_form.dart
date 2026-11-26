@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../bootstrap/dependency_injection.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimens.dart';
@@ -22,6 +23,15 @@ class _CommitteeLoginFormState extends ConsumerState<CommitteeLoginForm> {
   bool _rememberMe = true;
   bool _isLoading = false;
   String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    final remembered = ref.read(sessionStorageServiceProvider).rememberedEmail;
+    if (remembered.isNotEmpty) {
+      _emailController.text = remembered;
+    }
+  }
 
   @override
   void dispose() {
@@ -50,6 +60,9 @@ class _CommitteeLoginFormState extends ConsumerState<CommitteeLoginForm> {
 
     try {
       await ref.read(authNotifierProvider.notifier).loginWithEmail(email, password);
+      await ref
+          .read(sessionStorageServiceProvider)
+          .setRememberedEmail(_rememberMe ? email : null);
       if (mounted) {
         context.go(AppRouter.dashboard);
       }
@@ -62,6 +75,97 @@ class _CommitteeLoginFormState extends ConsumerState<CommitteeLoginForm> {
         setState(() => _isLoading = false);
       }
     }
+  }
+
+  Future<void> _showForgotPasswordDialog() async {
+    final resetEmailCtrl = TextEditingController(text: _emailController.text.trim());
+    bool sending = false;
+    String? dialogError;
+
+    await showDialog<void>(
+      context: context,
+      builder: (dialogCtx) => StatefulBuilder(
+        builder: (dialogCtx, setDialogState) => AlertDialog(
+          title: const Text('পাসওয়ার্ড রিসেট'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'নিবন্ধিত ইমেইল দিন। পাসওয়ার্ড রিসেট করার লিংক পাঠানো হবে।',
+                style: TextStyle(fontSize: 13),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: resetEmailCtrl,
+                keyboardType: TextInputType.emailAddress,
+                decoration: const InputDecoration(
+                  labelText: 'ইমেইল ঠিকানা',
+                  hintText: 'president@mosque.org',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              if (dialogError != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  dialogError!,
+                  style: const TextStyle(color: AppColors.urgentRed, fontSize: 12),
+                ),
+              ],
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: sending ? null : () => Navigator.pop(dialogCtx),
+              child: const Text('বাতিল'),
+            ),
+            FilledButton(
+              onPressed: sending
+                  ? null
+                  : () async {
+                      final email = resetEmailCtrl.text.trim();
+                      if (email.isEmpty || !email.contains('@')) {
+                        setDialogState(
+                          () => dialogError = 'সঠিক ইমেইল ঠিকানা প্রদান করুন।',
+                        );
+                        return;
+                      }
+                      setDialogState(() {
+                        sending = true;
+                        dialogError = null;
+                      });
+                      try {
+                        await ref.read(authServiceProvider).sendPasswordResetEmail(email);
+                        if (!dialogCtx.mounted) return;
+                        Navigator.pop(dialogCtx);
+                        if (!mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('পাসওয়ার্ড রিসেট লিংক ইমেইলে পাঠানো হয়েছে।'),
+                            backgroundColor: AppColors.emeraldPrimary,
+                          ),
+                        );
+                      } catch (e) {
+                        setDialogState(() {
+                          sending = false;
+                          dialogError = e.toString().replaceFirst('Exception: ', '');
+                        });
+                      }
+                    },
+              child: sending
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Text('লিংক পাঠান'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    resetEmailCtrl.dispose();
   }
 
   @override
@@ -132,11 +236,7 @@ class _CommitteeLoginFormState extends ConsumerState<CommitteeLoginForm> {
               ],
             ),
             TextButton(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('পাসওয়ার্ড রিসেটের জন্য প্রধান সেক্রেটারির সাথে যোগাযোগ করুন।')),
-                );
-              },
+              onPressed: _showForgotPasswordDialog,
               child: const Text('পাসওয়ার্ড ভুলে গেছেন?', style: TextStyle(fontSize: 12)),
             ),
           ],

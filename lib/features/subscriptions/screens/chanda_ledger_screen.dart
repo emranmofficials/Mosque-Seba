@@ -8,8 +8,11 @@ import '../../../shared/components/empty_state_view.dart';
 import '../../../shared/components/error_state_view.dart';
 import '../../../shared/widgets/adaptive_scaffold.dart';
 import '../../../shared/widgets/card_shell.dart';
+import '../../authentication/providers/auth_provider.dart';
 import '../../membership/models/member_model.dart';
 import '../../membership/providers/member_provider.dart';
+import '../../printing_pdf/dialogs/thermal_printer_dialog.dart';
+import '../../printing_pdf/services/native_printing_service.dart';
 import '../dialogs/receive_chanda_dialog.dart';
 import '../models/chanda_payment_model.dart';
 import '../providers/chanda_provider.dart';
@@ -48,17 +51,27 @@ class ChandaLedgerScreen extends ConsumerWidget {
     );
 
     if (result != null && context.mounted) {
-      _showReceiptPreview(context, result);
+      _showReceiptPreview(context, ref, result);
     }
   }
 
-  void _showReceiptPreview(BuildContext context, ChandaPaymentModel payment) {
-    showDialog(
+  void _showReceiptPreview(
+    BuildContext context,
+    WidgetRef ref,
+    ChandaPaymentModel payment,
+  ) {
+    final printingService = NativePrintingService();
+    final mosqueName =
+        ref.read(authNotifierProvider).valueOrNull?.mosqueNameBn ?? '';
+    final resolvedMosque =
+        mosqueName.isNotEmpty ? mosqueName : 'মসজিদ সেবা জামে মসজিদ';
+
+    showDialog<void>(
       context: context,
       builder: (ctx) => Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimens.radiusLg)),
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 420),
+          constraints: const BoxConstraints(maxWidth: 440),
           child: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -66,10 +79,81 @@ class ChandaLedgerScreen extends ConsumerWidget {
                 QrReceiptWidget(payment: payment),
                 Padding(
                   padding: const EdgeInsets.all(AppDimens.spacing12),
-                  child: TextButton.icon(
-                    icon: const Icon(Icons.close),
-                    label: const Text('বন্ধ করুন'),
-                    onPressed: () => Navigator.of(ctx).pop(),
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    alignment: WrapAlignment.center,
+                    children: [
+                      ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.emeraldPrimary,
+                          foregroundColor: Colors.white,
+                        ),
+                        icon: const Icon(Icons.print, size: 16),
+                        label: const Text('PDF প্রিন্ট'),
+                        onPressed: () {
+                          Navigator.of(ctx).pop();
+                          printingService.printReceipt(
+                            receiptNo: payment.receiptCode,
+                            memberName: payment.memberNameBn,
+                            memberCode: payment.memberId,
+                            month: payment.month,
+                            amount: payment.amountPaid,
+                            receivedBy: payment.receivedBy,
+                            date: payment.paidAt,
+                            paymentMethod: payment.method,
+                            qrVerificationCode: payment.qrVerificationCode,
+                            mosqueName: resolvedMosque,
+                          );
+                        },
+                      ),
+                      OutlinedButton.icon(
+                        icon: const Icon(Icons.share_outlined, size: 16),
+                        label: const Text('শেয়ার'),
+                        onPressed: () async {
+                          final bytes = await printingService.buildReceiptPdf(
+                            receiptNo: payment.receiptCode,
+                            memberName: payment.memberNameBn,
+                            memberCode: payment.memberId,
+                            month: payment.month,
+                            amount: payment.amountPaid,
+                            receivedBy: payment.receivedBy,
+                            date: payment.paidAt,
+                            paymentMethod: payment.method,
+                            qrVerificationCode: payment.qrVerificationCode,
+                            mosqueName: resolvedMosque,
+                          );
+                          await printingService.shareDocument(
+                            bytes,
+                            'Chanda_${payment.receiptCode}.pdf',
+                          );
+                        },
+                      ),
+                      OutlinedButton.icon(
+                        icon: const Icon(Icons.bluetooth_connected, size: 16),
+                        label: const Text('থার্মাল'),
+                        onPressed: () => showThermalPrinterDialog(
+                          context,
+                          buildPdf: () => printingService.buildReceiptPdf(
+                            receiptNo: payment.receiptCode,
+                            memberName: payment.memberNameBn,
+                            memberCode: payment.memberId,
+                            month: payment.month,
+                            amount: payment.amountPaid,
+                            receivedBy: payment.receivedBy,
+                            date: payment.paidAt,
+                            paymentMethod: payment.method,
+                            qrVerificationCode: payment.qrVerificationCode,
+                            mosqueName: resolvedMosque,
+                          ),
+                        ),
+                      ),
+                      TextButton.icon(
+                        icon: const Icon(Icons.close, size: 16),
+                        label: const Text('বন্ধ'),
+                        onPressed: () => Navigator.of(ctx).pop(),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -102,12 +186,26 @@ class ChandaLedgerScreen extends ConsumerWidget {
           message: err.toString(),
           onRetry: () => ref.read(chandaListProvider.notifier).loadPayments(),
         ),
-        data: (payments) {
+        data: (allPayments) {
+          final payments = targetMember != null
+              ? allPayments.where((p) => p.memberId == targetMember!.id).toList()
+              : allPayments;
           final totalCollected = payments.fold<double>(0.0, (acc, p) => acc + p.amountPaid);
 
           return ListView(
             padding: const EdgeInsets.all(AppDimens.spacing16),
             children: [
+              if (targetMember != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: Text(
+                    'সদস্য ফিল্টার: ${targetMember!.nameBn}',
+                    style: AppTypography.bodyMedium.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ),
               // Summary card
               CardShell(
                 padding: const EdgeInsets.all(AppDimens.spacing16),
@@ -167,7 +265,7 @@ class ChandaLedgerScreen extends ConsumerWidget {
                   (payment) => Padding(
                     padding: const EdgeInsets.only(bottom: AppDimens.spacing12),
                     child: CardShell(
-                      onTap: () => _showReceiptPreview(context, payment),
+                      onTap: () => _showReceiptPreview(context, ref, payment),
                       padding: const EdgeInsets.all(AppDimens.spacing12),
                       child: Row(
                         children: [

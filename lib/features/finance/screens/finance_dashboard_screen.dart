@@ -8,12 +8,15 @@ import '../../../shared/components/error_state_view.dart';
 import '../../../shared/widgets/adaptive_scaffold.dart';
 import '../../../shared/widgets/card_shell.dart';
 import '../../authentication/providers/auth_provider.dart';
+import '../../role_permissions/models/committee_role.dart';
+import '../../role_permissions/providers/role_permissions_provider.dart';
 import '../dialogs/add_transaction_dialog.dart';
 import '../dialogs/approve_transaction_dialog.dart';
 import '../models/finance_transaction_model.dart';
 import '../providers/finance_provider.dart';
 import '../widgets/balance_summary_cards.dart';
 import '../widgets/pending_approval_card.dart';
+import '../widgets/transaction_detail_sheet.dart';
 import '../widgets/transaction_item_card.dart';
 
 /// Main Financial Dashboard Screen (মসজিদ হিসাব ও আর্থিক তহবিল)
@@ -77,7 +80,10 @@ class FinanceDashboardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final summary = ref.watch(financeSummaryProvider);
-    final transactionsAsync = ref.watch(financeListProvider);
+    final transactionsAsync = ref.watch(financeAllTransactionsProvider);
+    final role = ref.watch(currentRoleProvider);
+    final canManageFinance = role == CommitteeRole.president || role.canManageFinance();
+    final canApproveFinance = role == CommitteeRole.president || role.canApproveFinance();
 
     return AdaptiveScaffold(
       title: 'মসজিদ তহবিল ও হিসাব',
@@ -96,39 +102,41 @@ class FinanceDashboardScreen extends ConsumerWidget {
             // Balance Summary
             BalanceSummaryCards(summary: summary),
             const SizedBox(height: AppDimens.spacing16),
-            // Quick Voucher Buttons Row
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.success,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimens.radiusMd)),
+            // Quick Voucher Buttons Row (Role-protected)
+            if (canManageFinance) ...[
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.success,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimens.radiusMd)),
+                      ),
+                      icon: const Icon(Icons.add_circle_outline),
+                      label: const Text('আয় ভাউচার (+)', style: TextStyle(fontWeight: FontWeight.bold)),
+                      onPressed: () => _showAddVoucherDialog(context, ref, 'income'),
                     ),
-                    icon: const Icon(Icons.add_circle_outline),
-                    label: const Text('আয় ভাউচার (+)', style: TextStyle(fontWeight: FontWeight.bold)),
-                    onPressed: () => _showAddVoucherDialog(context, ref, 'income'),
                   ),
-                ),
-                const SizedBox(width: AppDimens.spacing12),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.error,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimens.radiusMd)),
+                  const SizedBox(width: AppDimens.spacing12),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.error,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimens.radiusMd)),
+                      ),
+                      icon: const Icon(Icons.remove_circle_outline),
+                      label: const Text('ব্যয় ভাউচার (-)', style: TextStyle(fontWeight: FontWeight.bold)),
+                      onPressed: () => _showAddVoucherDialog(context, ref, 'expense'),
                     ),
-                    icon: const Icon(Icons.remove_circle_outline),
-                    label: const Text('ব্যয় ভাউচার (-)', style: TextStyle(fontWeight: FontWeight.bold)),
-                    onPressed: () => _showAddVoucherDialog(context, ref, 'expense'),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppDimens.spacing20),
+                ],
+              ),
+              const SizedBox(height: AppDimens.spacing20),
+            ],
             // Pending Approvals Section
             transactionsAsync.when(
               loading: () => const SizedBox.shrink(),
@@ -163,7 +171,17 @@ class FinanceDashboardScreen extends ConsumerWidget {
                         padding: const EdgeInsets.only(bottom: AppDimens.spacing12),
                         child: PendingApprovalCard(
                           transaction: p,
-                          onReview: () => _showApproveDialog(context, ref, p),
+                          onReview: () {
+                            if (!canApproveFinance) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('ভাউচার অনুমোদনের ক্ষমতা কেবল সভাপতি ও সহ-সভাপতির।'),
+                                ),
+                              );
+                              return;
+                            }
+                            _showApproveDialog(context, ref, p);
+                          },
                         ),
                       ),
                     ),
@@ -202,7 +220,10 @@ class FinanceDashboardScreen extends ConsumerWidget {
                   children: recent
                       .map((t) => Padding(
                             padding: const EdgeInsets.only(bottom: AppDimens.spacing8),
-                            child: TransactionItemCard(transaction: t),
+                            child: TransactionItemCard(
+                              transaction: t,
+                              onTap: () => showTransactionDetailSheet(context, ref, t),
+                            ),
                           ))
                       .toList(),
                 );

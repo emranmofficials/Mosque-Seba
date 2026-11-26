@@ -11,6 +11,7 @@ import '../../authentication/providers/auth_provider.dart';
 import '../../finance/providers/finance_provider.dart';
 import '../../hadith/widgets/hadith_board_widget.dart';
 import '../../membership/providers/member_provider.dart';
+import '../../notices/providers/notice_provider.dart';
 import '../../notifications/providers/notification_provider.dart';
 import '../../prayer_times/widgets/prayer_countdown_card.dart';
 import '../../role_permissions/providers/role_permissions_provider.dart';
@@ -38,6 +39,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final unreadCount = ref.watch(unreadNotificationCountProvider);
     final financeSummary = ref.watch(financeSummaryProvider);
     final totalMembers = ref.watch(memberListProvider).valueOrNull?.length ?? 0;
+    final notices = ref.watch(noticeListProvider).valueOrNull ?? const [];
+    final publishedNotices = notices.where((n) => n.status == 'published').toList();
+    final pinnedNotices = publishedNotices.where((n) => n.isPinned).toList();
+    final latestNotice = pinnedNotices.isNotEmpty
+        ? pinnedNotices.first
+        : (publishedNotices.isNotEmpty ? publishedNotices.first : null);
 
     // 5 Primary Navigation Destinations based on UI-01 & UI-02 profiles
     final destinations = [
@@ -94,6 +101,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             ref.read(authNotifierProvider.notifier).checkSession(),
             ref.read(financeListProvider.notifier).loadTransactions(),
             ref.read(memberListProvider.notifier).loadMembers(),
+            ref.read(noticeListProvider.notifier).loadNotices(),
             ref.read(notificationListProvider.notifier).loadNotifications(),
           ]);
         },
@@ -105,8 +113,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               mosqueNameBn: user?.mosqueNameBn.isNotEmpty == true
                   ? user!.mosqueNameBn
                   : 'মসজিদ সেবা পোর্টাল',
-              address: currentRole.titleBn,
+              address: user?.mosqueAddress.isNotEmpty == true
+                  ? user!.mosqueAddress
+                  : currentRole.titleBn,
               committeeId: user?.committeeId.isNotEmpty == true ? user!.committeeId : '—',
+              establishedYear: user?.establishedYear ?? DateTime.now().year,
               onProfileTap: () => context.push(AppRouter.profile),
             ),
             const SizedBox(height: MosqueSpace.md),
@@ -119,6 +130,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
             // 3. Smart Information Board (Quotes & Reminders)
             SmartBoardCard(
+              categoryBadge: latestNotice == null
+                  ? 'জুমার বিশেষ নির্দেশনা'
+                  : (latestNotice.isUrgent
+                      ? 'জরুরি বিজ্ঞপ্তি'
+                      : (latestNotice.isPinned ? 'পিন করা নোটিশ' : 'সর্বশেষ নোটিশ')),
+              title: latestNotice?.title ?? 'খুতবা শুরু হলে নীরবতা পালন করুন',
+              message: latestNotice?.content ??
+                  'খুতবা চলাকালীন মোবাইল সাইলেন্ট রাখুন এবং মনোযোগ সহকারে বয়ান শ্রবণ করুন।',
               onTap: () => context.push(AppRouter.notices),
             ),
             const SizedBox(height: MosqueSpace.md),

@@ -46,6 +46,24 @@ class WaqfListNotifier extends StateNotifier<AsyncValue<List<WaqfAssetModel>>> {
     }
     return false;
   }
+
+  Future<bool> updateProperty(WaqfAssetModel property) async {
+    final ok = await _repository.updateProperty(property, mosqueId: _mosqueId);
+    if (ok) {
+      await loadProperties();
+      return true;
+    }
+    return false;
+  }
+
+  Future<bool> deleteProperty(String propertyId) async {
+    final ok = await _repository.deleteProperty(propertyId);
+    if (ok) {
+      await loadProperties();
+      return true;
+    }
+    return false;
+  }
 }
 
 final waqfListProvider = StateNotifierProvider<WaqfListNotifier, AsyncValue<List<WaqfAssetModel>>>((ref) {

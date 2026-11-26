@@ -5,34 +5,55 @@ import '../../../core/theme/app_dimens.dart';
 import '../../../core/utils/bengali_number_formatter.dart';
 import '../../../shared/components/empty_state_view.dart';
 import '../../../shared/widgets/card_shell.dart';
+import '../../authentication/providers/auth_provider.dart';
+import '../../printing_pdf/dialogs/thermal_printer_dialog.dart';
+import '../../printing_pdf/services/native_printing_service.dart';
 import '../dialogs/collect_student_fee_dialog.dart';
 import '../models/madrasa_fee_payment_model.dart';
 import '../providers/madrasa_fee_provider.dart';
 
-/// Screen listing Student Fee Collections with digital receipt preview
+/// Screen listing Student Fee Collections with live PDF/Thermal Receipt Printing
 class FeeCollectionScreen extends ConsumerWidget {
   const FeeCollectionScreen({super.key});
 
   void _showCollectFeeDialog(BuildContext context, WidgetRef ref) {
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (ctx) => CollectStudentFeeDialog(
-        onSubmit: (payment) => ref.read(madrasaFeeListProvider.notifier).collectFee(payment),
+        onSubmit: (payment) =>
+            ref.read(madrasaFeeListProvider.notifier).collectFee(payment),
       ),
     );
   }
 
-  void _showReceiptDialog(BuildContext context, MadrasaFeePaymentModel payment) {
-    showDialog(
+  void _showReceiptDialog(
+    BuildContext context,
+    WidgetRef ref,
+    MadrasaFeePaymentModel payment,
+  ) {
+    final printingService = NativePrintingService();
+    final mosqueName =
+        ref.read(authNotifierProvider).valueOrNull?.mosqueNameBn ?? '';
+    final resolvedMosque = mosqueName.isNotEmpty
+        ? '$mosqueName — মাদরাসা বিভাগ'
+        : 'মসজিদ সেবা মাদরাসা ও মক্তব';
+
+    showDialog<void>(
       context: context,
       builder: (ctx) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimens.radiusCard)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppDimens.radiusCard),
+        ),
         child: Padding(
           padding: const EdgeInsets.all(AppDimens.spacing20),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.check_circle, color: AppColors.emeraldPrimary, size: 48),
+              const Icon(
+                Icons.check_circle,
+                color: AppColors.emeraldPrimary,
+                size: 48,
+              ),
               const SizedBox(height: 8),
               const Text(
                 'মাদরাসা ফি আদায়ের ডিজিটাল রশিদ',
@@ -47,32 +68,94 @@ class FeeCollectionScreen extends ConsumerWidget {
               _buildReceiptRow('শিক্ষার্থীর নাম', payment.studentNameBn),
               _buildReceiptRow('বিভাগ/শ্রেণী', payment.className),
               _buildReceiptRow('মাসের নাম', payment.month),
-              _buildReceiptRow('পরিশোধিত অর্থ', '৳ ${BengaliNumberFormatter.toBengali(payment.amountPaid.toInt().toString())}'),
-              _buildReceiptRow('পেমেন্ট মাধ্যম', payment.paymentMethod == 'cash' ? 'নগদ' : payment.paymentMethod),
+              _buildReceiptRow(
+                'পরিশোধিত অর্থ',
+                '৳ ${BengaliNumberFormatter.toBengali(payment.amountPaid.toInt().toString())}',
+              ),
+              _buildReceiptRow(
+                'পেমেন্ট মাধ্যম',
+                payment.paymentMethod == 'cash' ? 'নগদ' : payment.paymentMethod,
+              ),
               _buildReceiptRow('আদায়কারী', payment.receivedBy),
-              _buildReceiptRow('তারিখ', BengaliNumberFormatter.toBengali(payment.paidAt)),
+              _buildReceiptRow(
+                'তারিখ',
+                BengaliNumberFormatter.toBengali(payment.paidAt),
+              ),
               const Divider(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                alignment: WrapAlignment.end,
                 children: [
                   TextButton(
                     onPressed: () => Navigator.of(ctx).pop(),
                     child: const Text('বন্ধ করুন'),
                   ),
-                  const SizedBox(width: 8),
+                  OutlinedButton.icon(
+                    onPressed: () async {
+                      final bytes = await printingService.buildReceiptPdf(
+                        receiptNo: payment.receiptCode,
+                        memberName: payment.studentNameBn,
+                        memberCode: payment.className,
+                        month: payment.month,
+                        amount: payment.amountPaid,
+                        receivedBy: payment.receivedBy,
+                        date: payment.paidAt,
+                        titleBn: 'মাদরাসা শিক্ষার্থী ফি আদায়ের রসিদ',
+                        paymentMethod: payment.paymentMethod,
+                        mosqueName: resolvedMosque,
+                      );
+                      await printingService.shareDocument(
+                        bytes,
+                        'Madrasa_Fee_${payment.receiptCode}.pdf',
+                      );
+                    },
+                    icon: const Icon(Icons.share_outlined, size: 16),
+                    label: const Text('শেয়ার'),
+                  ),
+                  OutlinedButton.icon(
+                    onPressed: () => showThermalPrinterDialog(
+                      context,
+                      buildPdf: () => printingService.buildReceiptPdf(
+                        receiptNo: payment.receiptCode,
+                        memberName: payment.studentNameBn,
+                        memberCode: payment.className,
+                        month: payment.month,
+                        amount: payment.amountPaid,
+                        receivedBy: payment.receivedBy,
+                        date: payment.paidAt,
+                        titleBn: 'মাদরাসা শিক্ষার্থী ফি রসিদ',
+                        paymentMethod: payment.paymentMethod,
+                        mosqueName: resolvedMosque,
+                      ),
+                    ),
+                    icon: const Icon(Icons.bluetooth_connected, size: 16),
+                    label: const Text('থার্মাল'),
+                  ),
                   ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(backgroundColor: AppColors.emeraldPrimary),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.emeraldPrimary,
+                    ),
                     onPressed: () {
                       Navigator.of(ctx).pop();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('রশিদ প্রিন্ট বা শেয়ার করার প্রস্তুতি সম্পন্ন...'),
-                          backgroundColor: AppColors.emeraldPrimary,
-                        ),
+                      printingService.printReceipt(
+                        receiptNo: payment.receiptCode,
+                        memberName: payment.studentNameBn,
+                        memberCode: payment.className,
+                        month: payment.month,
+                        amount: payment.amountPaid,
+                        receivedBy: payment.receivedBy,
+                        date: payment.paidAt,
+                        titleBn: 'মাদরাসা শিক্ষার্থী ফি আদায়ের রসিদ',
+                        paymentMethod: payment.paymentMethod,
+                        mosqueName: resolvedMosque,
                       );
                     },
                     icon: const Icon(Icons.print, color: Colors.white, size: 16),
-                    label: const Text('প্রিন্ট / শেয়ার', style: TextStyle(color: Colors.white)),
+                    label: const Text(
+                      'প্রিন্ট PDF',
+                      style: TextStyle(color: Colors.white),
+                    ),
                   ),
                 ],
               ),
@@ -175,7 +258,7 @@ class FeeCollectionScreen extends ConsumerWidget {
                     return Padding(
                       padding: const EdgeInsets.only(bottom: AppDimens.spacing10),
                       child: CardShell(
-                        onTap: () => _showReceiptDialog(context, payment),
+                        onTap: () => _showReceiptDialog(context, ref, payment),
                         padding: const EdgeInsets.all(AppDimens.spacing14),
                         child: Row(
                           children: [

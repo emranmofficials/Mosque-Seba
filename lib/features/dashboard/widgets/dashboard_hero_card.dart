@@ -35,22 +35,24 @@ class DashboardHeroCard extends ConsumerWidget {
     );
     final establishedBn = BengaliNumberFormatter.toBengaliDigits(establishedYear);
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: AppGradients.emeraldDarkGradient,
-        borderRadius: BorderRadius.circular(MosqueRadius.card),
-        border: Border.all(color: AppColors.gold.withOpacity(0.4), width: 1.2),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.12),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
+    return GestureDetector(
+      onTap: onProfileTap,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: AppGradients.emeraldDarkGradient,
+          borderRadius: BorderRadius.circular(MosqueRadius.card),
+          border: Border.all(color: AppColors.gold.withOpacity(0.4), width: 1.2),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.12),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Top Row: Established Year Badge & Committee ID Copy Tag
@@ -113,7 +115,7 @@ class DashboardHeroCard extends ConsumerWidget {
 
           // Mosque Title in Bengali
           Text(
-            mosqueNameBn.isNotEmpty ? mosqueNameBn : 'বায়তুল মুকাররম জামে মসজিদ',
+            mosqueNameBn.isNotEmpty ? mosqueNameBn : 'মসজিদ সেবা পোর্টাল',
             style: const TextStyle(
               color: Colors.white,
               fontSize: 20,
@@ -131,7 +133,7 @@ class DashboardHeroCard extends ConsumerWidget {
               const SizedBox(width: 4),
               Expanded(
                 child: Text(
-                  address.isNotEmpty ? address : 'মিরপুর, ঢাকা-১২১৬',
+                  address.isNotEmpty ? address : 'ঠিকানা নির্ধারিত নয়',
                   style: TextStyle(
                     color: Colors.white.withOpacity(0.85),
                     fontSize: 12,
@@ -162,6 +164,7 @@ class DashboardHeroCard extends ConsumerWidget {
             ],
           ),
         ],
+      ),
       ),
     );
   }

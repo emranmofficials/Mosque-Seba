@@ -24,29 +24,62 @@ class WelfareDashboardScreen extends ConsumerWidget {
     );
   }
 
-  void _showApproveDialog(BuildContext context, WidgetRef ref, WelfareCaseModel welfareCase) {
-    showDialog(
+  void _showApproveDialog(
+    BuildContext context,
+    WidgetRef ref,
+    WelfareCaseModel welfareCase,
+  ) {
+    showDialog<void>(
       context: context,
       builder: (ctx) => ApproveWelfareGrantDialog(
         welfareCase: welfareCase,
-        onApprove: (amount, approver, disburseNow) {
-          ref.read(welfareListProvider.notifier).approveCase(
+        onApprove: (amount, approver, disburseNow) async {
+          final ok = await ref.read(welfareListProvider.notifier).approveCase(
                 caseId: welfareCase.id,
                 approvedAmount: amount,
                 approverName: approver,
                 disburseNow: disburseNow,
               );
+          if (!context.mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                disburseNow
-                  ? 'অনুদানের অর্থ সফলভাবে বিতরণ ও হিসাবভুক্ত হয়েছে'
-                  : 'অনুদান মঞ্জুর হয়েছে',
+                ok
+                    ? (disburseNow
+                        ? 'অনুদানের অর্থ সফলভাবে বিতরণ ও হিসাবভুক্ত হয়েছে'
+                        : 'অনুদান মঞ্জুর হয়েছে')
+                    : 'সংরক্ষণ করতে ব্যর্থ হয়েছে',
               ),
-              backgroundColor: AppColors.emeraldPrimary,
+              backgroundColor: ok ? AppColors.emeraldPrimary : Colors.red,
             ),
           );
         },
+      ),
+    );
+  }
+
+  Future<void> _disburseApprovedCase(
+    BuildContext context,
+    WidgetRef ref,
+    WelfareCaseModel welfareCase,
+  ) async {
+    final ok = await ref.read(welfareListProvider.notifier).approveCase(
+          caseId: welfareCase.id,
+          approvedAmount: welfareCase.approvedAmount > 0
+              ? welfareCase.approvedAmount
+              : welfareCase.requestedAmount,
+          approverName: welfareCase.approvedBy ?? 'সভাপতি',
+          disburseNow: true,
+        );
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          ok
+              ? 'অনুদানের অর্থ বিতরণ সম্পন্ন ও ফাইন্যান্স লেজারে যুক্ত হয়েছে'
+              : 'বিতরণ সম্পন্ন করা যায়নি',
+        ),
+        backgroundColor: ok ? AppColors.emeraldPrimary : Colors.red,
       ),
     );
   }
@@ -169,6 +202,8 @@ class WelfareDashboardScreen extends ConsumerWidget {
                       child: WelfareCaseCard(
                         welfareCase: welfareCase,
                         onApprove: () => _showApproveDialog(context, ref, welfareCase),
+                        onDisburse: () =>
+                            _disburseApprovedCase(context, ref, welfareCase),
                       ),
                     );
                   },

@@ -10,6 +10,12 @@ class SessionStorageService {
 
   static const String _keyToken = 'auth_access_token';
   static const String _keyRefreshToken = 'auth_refresh_token';
+  static const String _keyUserEmail = 'key_user_email';
+  static const String _keyUserMobile = 'key_user_mobile';
+  static const String _keyMosqueNameBn = 'key_mosque_name_bn';
+  static const String _keyMosqueAddress = 'key_mosque_address';
+  static const String _keyEstablishedYear = 'key_established_year';
+  static const String _keyRememberedEmail = 'key_remembered_email';
 
   SessionStorageService(this._prefs, this._secureStorage);
 
@@ -30,6 +36,24 @@ class SessionStorageService {
   String get committeeId =>
       _prefs.getString(AppConstants.keyCommitteeId) ?? '';
 
+  String get userEmail =>
+      _prefs.getString(_keyUserEmail) ?? '';
+
+  String get userMobile =>
+      _prefs.getString(_keyUserMobile) ?? '';
+
+  String get mosqueNameBn =>
+      _prefs.getString(_keyMosqueNameBn) ?? '';
+
+  String get mosqueAddress =>
+      _prefs.getString(_keyMosqueAddress) ?? '';
+
+  int? get establishedYear =>
+      _prefs.getInt(_keyEstablishedYear);
+
+  String get rememberedEmail =>
+      _prefs.getString(_keyRememberedEmail) ?? '';
+
   bool get isDarkMode =>
       _prefs.getBool(AppConstants.keyIsDarkMode) ?? false;
 
@@ -42,6 +66,11 @@ class SessionStorageService {
     required String memberName,
     required String committeeId,
     required String mosqueId,
+    String email = '',
+    String mobile = '',
+    String mosqueNameBn = '',
+    String mosqueAddress = '',
+    int? establishedYear,
   }) async {
     await _prefs.setBool('is_logged_in', true);
     await _prefs.setString(AppConstants.keyUserRole, roleCode);
@@ -49,6 +78,35 @@ class SessionStorageService {
     await _prefs.setString(AppConstants.keyMemberName, memberName);
     await _prefs.setString(AppConstants.keyCommitteeId, committeeId);
     await _prefs.setString(AppConstants.keyActiveMosqueId, mosqueId);
+    await _prefs.setString(_keyUserEmail, email);
+    await _prefs.setString(_keyUserMobile, mobile);
+    await _prefs.setString(_keyMosqueNameBn, mosqueNameBn);
+    await _prefs.setString(_keyMosqueAddress, mosqueAddress);
+    if (establishedYear != null) {
+      await _prefs.setInt(_keyEstablishedYear, establishedYear);
+    } else {
+      await _prefs.remove(_keyEstablishedYear);
+    }
+  }
+
+  Future<void> updateMosqueMetadata({
+    required String mosqueNameBn,
+    required String mosqueAddress,
+    int? establishedYear,
+  }) async {
+    await _prefs.setString(_keyMosqueNameBn, mosqueNameBn);
+    await _prefs.setString(_keyMosqueAddress, mosqueAddress);
+    if (establishedYear != null) {
+      await _prefs.setInt(_keyEstablishedYear, establishedYear);
+    }
+  }
+
+  Future<void> setRememberedEmail(String? email) async {
+    if (email == null || email.trim().isEmpty) {
+      await _prefs.remove(_keyRememberedEmail);
+    } else {
+      await _prefs.setString(_keyRememberedEmail, email.trim());
+    }
   }
 
   Future<void> setDarkMode(bool isDark) async {
@@ -77,6 +135,12 @@ class SessionStorageService {
     await _prefs.remove(AppConstants.keyMemberId);
     await _prefs.remove(AppConstants.keyMemberName);
     await _prefs.remove(AppConstants.keyCommitteeId);
+    await _prefs.remove(AppConstants.keyActiveMosqueId);
+    await _prefs.remove(_keyUserEmail);
+    await _prefs.remove(_keyUserMobile);
+    await _prefs.remove(_keyMosqueNameBn);
+    await _prefs.remove(_keyMosqueAddress);
+    await _prefs.remove(_keyEstablishedYear);
     await _secureStorage.deleteAll();
   }
 }

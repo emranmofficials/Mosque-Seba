@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimens.dart';
 import '../../../core/utils/bengali_number_formatter.dart';
 import '../../../shared/components/empty_state_view.dart';
 import '../dialogs/admit_student_dialog.dart';
+import '../models/student_model.dart';
 import '../providers/madrasa_provider.dart';
 import '../widgets/student_card.dart';
 
@@ -12,11 +15,87 @@ import '../widgets/student_card.dart';
 class StudentDirectoryScreen extends ConsumerWidget {
   const StudentDirectoryScreen({super.key});
 
-  void _showAdmitDialog(BuildContext context, WidgetRef ref) {
-    showDialog(
+  void _showAdmitDialog(
+    BuildContext context,
+    WidgetRef ref, {
+    StudentModel? existingStudent,
+  }) {
+    showDialog<void>(
       context: context,
       builder: (ctx) => AdmitStudentDialog(
-        onSubmit: (student) => ref.read(studentListProvider.notifier).admitStudent(student),
+        existingStudent: existingStudent,
+        onSubmit: (student) async {
+          if (existingStudent != null) {
+            await ref.read(studentListProvider.notifier).updateStudent(student);
+          } else {
+            await ref.read(studentListProvider.notifier).admitStudent(student);
+          }
+        },
+      ),
+    );
+  }
+
+  void _showStudentOptions(
+    BuildContext context,
+    WidgetRef ref,
+    StudentModel student,
+  ) {
+    showModalBottomSheet<void>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      ),
+      builder: (sheetCtx) => Padding(
+        padding: const EdgeInsets.all(AppDimens.spacing16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              student.nameBn,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            Text(
+              '${student.className} • রোল: ${BengaliNumberFormatter.toBengali(student.studentCode)}',
+              style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+            ),
+            const Divider(height: 20),
+            ListTile(
+              leading: const Icon(Icons.fact_check_outlined, color: Colors.blue),
+              title: const Text('দৈনিক হাজিরা খাতা'),
+              onTap: () {
+                Navigator.pop(sheetCtx);
+                context.push(AppRouter.madrasaAttendance);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.edit_outlined, color: AppColors.emeraldPrimary),
+              title: const Text('শিক্ষার্থীর তথ্য সম্পাদনা'),
+              onTap: () {
+                Navigator.pop(sheetCtx);
+                _showAdmitDialog(context, ref, existingStudent: student);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.delete_outline, color: AppColors.urgentRed),
+              title: const Text('তালিকা থেকে অপসারণ করুন'),
+              onTap: () async {
+                Navigator.pop(sheetCtx);
+                final ok = await ref
+                    .read(studentListProvider.notifier)
+                    .deleteStudent(student.id);
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      ok ? 'শিক্ষার্থীর রেকর্ড মুছে ফেলা হয়েছে।' : 'মুছে ফেলা যায়নি।',
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -138,6 +217,10 @@ class StudentDirectoryScreen extends ConsumerWidget {
                       padding: const EdgeInsets.only(bottom: AppDimens.spacing10),
                       child: StudentCard(
                         student: student,
+                        onTap: () => _showStudentOptions(context, ref, student),
+                        onTakeAttendance: () => context.push(AppRouter.madrasaAttendance),
+                        onLogHifz: () => context.push(AppRouter.madrasaHifz),
+                        onCollectFee: () => context.push(AppRouter.madrasaFees),
                       ),
                     );
                   },

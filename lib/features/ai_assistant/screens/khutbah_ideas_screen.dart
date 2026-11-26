@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimens.dart';
 import '../../../shared/widgets/card_shell.dart';
@@ -252,33 +253,53 @@ class _KhutbahIdeasScreenState extends ConsumerState<KhutbahIdeasScreen> {
           ),
           const SizedBox(height: 16),
 
-          // Copy / Share Button
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton.icon(
-              onPressed: () async {
-                final messenger = ScaffoldMessenger.of(context);
-                final text = [
-                  topic.title,
-                  '',
-                  topic.quranicAyat,
-                  topic.hadithReference,
-                  '',
-                  ...topic.mainPoints,
-                  '',
-                  topic.practicalGuidance,
-                ].join('\n');
-                await Clipboard.setData(ClipboardData(text: text));
-                messenger.showSnackBar(
-                  const SnackBar(
-                    content: Text('খুতবার আউটলাইন ক্লিপবোর্ডে কপি করা হয়েছে'),
-                    backgroundColor: AppColors.emeraldPrimary,
-                  ),
-                );
-              },
-              icon: const Icon(Icons.copy, size: 16),
-              label: const Text('কপি করুন'),
-            ),
+          // Copy & Share Buttons
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton.icon(
+                onPressed: () async {
+                  final messenger = ScaffoldMessenger.of(context);
+                  final text = [
+                    topic.title,
+                    '',
+                    topic.quranicAyat,
+                    topic.hadithReference,
+                    '',
+                    ...topic.mainPoints,
+                    '',
+                    topic.practicalGuidance,
+                  ].join('\n');
+                  await Clipboard.setData(ClipboardData(text: text));
+                  messenger.showSnackBar(
+                    const SnackBar(
+                      content: Text('খুতবার আউটলাইন ক্লিপবোর্ডে কপি করা হয়েছে'),
+                      backgroundColor: AppColors.emeraldPrimary,
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.copy, size: 16),
+                label: const Text('কপি করুন'),
+              ),
+              const SizedBox(width: 8),
+              OutlinedButton.icon(
+                onPressed: () async {
+                  final text = [
+                    topic.title,
+                    '',
+                    topic.quranicAyat,
+                    topic.hadithReference,
+                    '',
+                    ...topic.mainPoints,
+                    '',
+                    topic.practicalGuidance,
+                  ].join('\n');
+                  await Share.share(text, subject: topic.title);
+                },
+                icon: const Icon(Icons.share_outlined, size: 16),
+                label: const Text('শেয়ার'),
+              ),
+            ],
           ),
         ],
       ),

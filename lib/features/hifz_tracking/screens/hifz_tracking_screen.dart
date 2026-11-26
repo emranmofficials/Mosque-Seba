@@ -85,8 +85,8 @@ class HifzTrackingScreen extends ConsumerWidget {
               },
             ),
 
-            // Tab 2: 30 Paras Milestone Grid
-            _buildParaMilestoneGrid(),
+            // Tab 2: 30 Paras Milestone Grid computed live from logged sessions
+            _buildParaMilestoneGrid(logsAsync.valueOrNull ?? const <HifzRecordModel>[]),
           ],
         ),
       ),
@@ -180,7 +180,12 @@ class HifzTrackingScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildParaMilestoneGrid() {
+  Widget _buildParaMilestoneGrid(List<HifzRecordModel> logs) {
+    final loggedParas = logs.map((l) => l.paraNumber).toSet();
+    final highestPara = loggedParas.isEmpty
+        ? 0
+        : loggedParas.reduce((a, b) => a > b ? a : b);
+
     return ListView(
       padding: const EdgeInsets.all(AppDimens.spacing16),
       children: [
@@ -189,9 +194,11 @@ class HifzTrackingScreen extends ConsumerWidget {
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 4),
-        const Text(
-          'হিফজ শিক্ষার্থীদের পারা সমাপ্তি ও রিভিশন ট্র্যাকিং সারসংক্ষেপ',
-          style: TextStyle(fontSize: 12, color: Colors.grey),
+        Text(
+          logs.isEmpty
+              ? 'দৈনিক মূল্যায়ন লগে হিফজ রেকর্ড যুক্ত করলে পারা অগ্রগতি এখানে দেখা যাবে'
+              : 'মোট ${BengaliNumberFormatter.toBengali(loggedParas.length)} টি পারায় অনুশীলন লগ হয়েছে (সর্বোচ্চ পারা: ${BengaliNumberFormatter.toBengali(highestPara)})',
+          style: const TextStyle(fontSize: 12, color: Colors.grey),
         ),
         const SizedBox(height: 16),
 
@@ -207,8 +214,8 @@ class HifzTrackingScreen extends ConsumerWidget {
           itemCount: 30,
           itemBuilder: (context, index) {
             final para = index + 1;
-            final isCompleted = para <= 15; // Demonstration milestone state
-            final isCurrent = para == 16;
+            final isCompleted = loggedParas.contains(para) && para < highestPara;
+            final isCurrent = para == highestPara && highestPara > 0;
 
             Color bgColor = Colors.grey.shade200;
             Color textColor = Colors.grey.shade800;

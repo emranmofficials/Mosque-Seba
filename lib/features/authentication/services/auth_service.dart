@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthUser;
 import 'package:uuid/uuid.dart';
 import '../../../core/database/app_database.dart';
+import '../../../core/database/offline_cache_service.dart';
 import '../../../core/network/supabase_service.dart';
 import '../../../core/storage/session_storage_service.dart';
 import '../models/auth_user.dart';
@@ -15,6 +16,72 @@ class AuthService {
 
   AuthService(this._storage, this._database);
 
+  int? _toInt(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    return int.tryParse(value.toString().trim());
+  }
+
+  Future<Map<String, dynamic>?> _fetchAndCacheMosque(String mosqueId) async {
+    try {
+      if (SupabaseService.isInitialized) {
+        final mosqueRes = await SupabaseService.client
+            .from('mosques')
+            .select()
+            .eq('id', mosqueId)
+            .maybeSingle();
+
+        if (mosqueRes != null) {
+          final map = Map<String, dynamic>.from(mosqueRes);
+          final nameBn = map['name_bn']?.toString() ?? '';
+          final address = map['address']?.toString() ?? '';
+          final committeeId = map['committee_id']?.toString() ?? '';
+          if (nameBn.isNotEmpty) {
+            await _database.into(_database.mosquesTable).insertOnConflictUpdate(
+              MosquesTableCompanion.insert(
+                id: mosqueId,
+                committeeId: committeeId,
+                nameBn: nameBn,
+                address: address,
+                district: Value(map['district']?.toString()),
+                upazila: Value(map['upazila']?.toString()),
+                establishedYear: Value(_toInt(map['established_year'])),
+                committeeStartYear: Value(_toInt(map['committee_start_year'])),
+                committeeEndYear: Value(_toInt(map['committee_end_year'])),
+                bankAccountInfo: Value(map['bank_account_info']?.toString()),
+              ),
+            );
+          }
+          return map;
+        }
+      }
+    } catch (e) {
+      debugPrint('Mosque metadata fetch fallback: $e');
+    }
+
+    try {
+      final localRow = await (_database.select(_database.mosquesTable)
+            ..where((t) => t.id.equals(mosqueId)))
+          .getSingleOrNull();
+      if (localRow != null) {
+        return {
+          'id': localRow.id,
+          'committee_id': localRow.committeeId,
+          'name_bn': localRow.nameBn,
+          'address': localRow.address,
+          'district': localRow.district,
+          'upazila': localRow.upazila,
+          'established_year': localRow.establishedYear,
+          'committee_start_year': localRow.committeeStartYear,
+          'committee_end_year': localRow.committeeEndYear,
+          'bank_account_info': localRow.bankAccountInfo,
+        };
+      }
+    } catch (_) {}
+
+    return null;
+  }
+
   /// Restores user session from encrypted local storage
   Future<AuthUser?> restoreSession() async {
     if (!_storage.isLoggedIn) return null;
@@ -22,16 +89,37 @@ class AuthService {
     final mosqueId = _storage.activeMosqueId;
     if (mosqueId.isEmpty) return null;
 
+    var mosqueNameBn = _storage.mosqueNameBn;
+    var mosqueAddress = _storage.mosqueAddress;
+    var committeeId = _storage.committeeId;
+    var establishedYear = _storage.establishedYear;
+
+    if (mosqueNameBn.isEmpty || mosqueAddress.isEmpty || committeeId.isEmpty) {
+      try {
+        final localRow = await (_database.select(_database.mosquesTable)
+              ..where((t) => t.id.equals(mosqueId)))
+            .getSingleOrNull();
+        if (localRow != null) {
+          if (mosqueNameBn.isEmpty) mosqueNameBn = localRow.nameBn;
+          if (mosqueAddress.isEmpty) mosqueAddress = localRow.address;
+          if (committeeId.isEmpty) committeeId = localRow.committeeId;
+          establishedYear ??= localRow.establishedYear;
+        }
+      } catch (_) {}
+    }
+
     return AuthUser(
       uid: SupabaseService.currentUserId ?? 'local_user',
-      email: '',
-      mobile: '',
+      email: _storage.userEmail,
+      mobile: _storage.userMobile,
       memberId: _storage.memberId,
       memberName: _storage.memberName,
-      committeeId: _storage.committeeId,
+      committeeId: committeeId,
       roleCode: _storage.userRoleCode,
       mosqueId: mosqueId,
-      mosqueNameBn: '',
+      mosqueNameBn: mosqueNameBn,
+      mosqueAddress: mosqueAddress,
+      establishedYear: establishedYear,
     );
   }
 
@@ -68,7 +156,7 @@ class AuthService {
       // Fetch linked profile & mosque
       final profileRes = await SupabaseService.client
           .from('profiles')
-          .select('id, mosque_id, full_name_bn')
+          .select('id, mosque_id, full_name_bn, phone')
           .eq('id', user.id)
           .maybeSingle();
 
@@ -76,26 +164,65 @@ class AuthService {
       if (mosqueId.isEmpty) {
         throw Exception('এই অ্যাকাউন্টের সাথে কোনো মসজিদ প্রোফাইল যুক্ত নেই।');
       }
-      final memberName = profileRes?['full_name_bn']?.toString() ?? 'সভাপতি';
+
+      // Resolve actual committee role from members table
+      Map<String, dynamic>? memberRes;
+      try {
+        memberRes = await SupabaseService.client
+            .from('members')
+            .select('id, role_code, name_bn, mobile')
+            .eq('mosque_id', mosqueId)
+            .eq('id', user.id)
+            .maybeSingle();
+        memberRes ??= await SupabaseService.client
+            .from('members')
+            .select('id, role_code, name_bn, mobile')
+            .eq('mosque_id', mosqueId)
+            .eq('email', cleanEmail)
+            .maybeSingle();
+      } catch (_) {}
+
+      final roleStr = memberRes?['role_code']?.toString().trim() ?? '';
+      final roleCode = roleStr.isNotEmpty ? roleStr : 'president';
+      final memberId = memberRes?['id']?.toString() ?? user.id;
+      final memberName = memberRes?['name_bn']?.toString().trim().isNotEmpty == true
+          ? memberRes!['name_bn'].toString()
+          : (profileRes?['full_name_bn']?.toString() ?? 'সভাপতি');
+      final mobile = memberRes?['mobile']?.toString() ??
+          profileRes?['phone']?.toString() ??
+          (user.phone ?? '');
+
+      final mosqueData = await _fetchAndCacheMosque(mosqueId);
+      final mosqueNameBn = mosqueData?['name_bn']?.toString() ?? '';
+      final mosqueAddress = mosqueData?['address']?.toString() ?? '';
+      final committeeId = mosqueData?['committee_id']?.toString() ?? '';
+      final establishedYear = _toInt(mosqueData?['established_year']);
 
       await _storage.saveSession(
-        roleCode: 'president',
-        memberId: user.id,
+        roleCode: roleCode,
+        memberId: memberId,
         memberName: memberName,
-        committeeId: '',
+        committeeId: committeeId,
         mosqueId: mosqueId,
+        email: cleanEmail,
+        mobile: mobile,
+        mosqueNameBn: mosqueNameBn,
+        mosqueAddress: mosqueAddress,
+        establishedYear: establishedYear,
       );
 
       return AuthUser(
         uid: user.id,
         email: cleanEmail,
-        mobile: user.phone ?? '',
-        memberId: user.id,
+        mobile: mobile,
+        memberId: memberId,
         memberName: memberName,
-        committeeId: '',
-        roleCode: 'president',
+        committeeId: committeeId,
+        roleCode: roleCode,
         mosqueId: mosqueId,
-        mosqueNameBn: '',
+        mosqueNameBn: mosqueNameBn,
+        mosqueAddress: mosqueAddress,
+        establishedYear: establishedYear,
       );
     } on AuthException {
       throw Exception('ভুল ইমেইল অথবা পাসওয়ার্ড প্রদান করা হয়েছে।');
@@ -152,29 +279,56 @@ class AuthService {
 
       final roleCode = memberRes?['role_code']?.toString() ?? 'general_member';
       final memberName = memberRes?['name_bn']?.toString() ?? 'সম্মানিত মুসল্লি';
+      final memberId = memberRes?['id']?.toString() ?? user.id;
       final mosqueId = memberRes?['mosque_id']?.toString() ?? '';
       if (mosqueId.isEmpty) {
         throw Exception('সদস্যের সাথে কোনো মসজিদ প্রোফাইল যুক্ত পাওয়া যায়নি।');
       }
 
+      final mosqueData = await _fetchAndCacheMosque(mosqueId);
+      final mosqueCommitteeId =
+          (mosqueData?['committee_id']?.toString() ?? '').trim().toUpperCase();
+
+      if (cleanCommitteeId.isNotEmpty &&
+          mosqueCommitteeId.isNotEmpty &&
+          cleanCommitteeId != mosqueCommitteeId) {
+        try {
+          await SupabaseService.client.auth.signOut();
+        } catch (_) {}
+        throw Exception('প্রদত্ত কমিটি কোড ($cleanCommitteeId) এই মসজিদের সাথে মিলছে না। সঠিক কমিটি কোড দিন।');
+      }
+
+      final resolvedCommitteeId =
+          mosqueCommitteeId.isNotEmpty ? mosqueCommitteeId : cleanCommitteeId;
+      final mosqueNameBn = mosqueData?['name_bn']?.toString() ?? '';
+      final mosqueAddress = mosqueData?['address']?.toString() ?? '';
+      final establishedYear = _toInt(mosqueData?['established_year']);
+
       await _storage.saveSession(
         roleCode: roleCode,
-        memberId: user.id,
+        memberId: memberId,
         memberName: memberName,
-        committeeId: cleanCommitteeId,
+        committeeId: resolvedCommitteeId,
         mosqueId: mosqueId,
+        email: syntheticEmail,
+        mobile: cleanMobile,
+        mosqueNameBn: mosqueNameBn,
+        mosqueAddress: mosqueAddress,
+        establishedYear: establishedYear,
       );
 
       return AuthUser(
         uid: user.id,
         email: syntheticEmail,
         mobile: cleanMobile,
-        memberId: user.id,
+        memberId: memberId,
         memberName: memberName,
-        committeeId: cleanCommitteeId,
+        committeeId: resolvedCommitteeId,
         roleCode: roleCode,
         mosqueId: mosqueId,
-        mosqueNameBn: '',
+        mosqueNameBn: mosqueNameBn,
+        mosqueAddress: mosqueAddress,
+        establishedYear: establishedYear,
       );
     } on AuthException {
       throw Exception('মোবাইল নম্বর অথবা পাসওয়ার্ড সঠিক নয়।');
@@ -290,9 +444,85 @@ class AuthService {
       memberName: presidentNameBn,
       committeeId: generatedCommitteeId,
       mosqueId: mosqueId,
+      email: presidentEmail.trim().toLowerCase(),
+      mobile: presidentMobile,
+      mosqueNameBn: mosqueNameBn,
+      mosqueAddress: '$upazila, $district',
+      establishedYear: establishedYear,
     );
 
     return generatedCommitteeId;
+  }
+
+  /// Sends a Supabase password reset email
+  Future<void> sendPasswordResetEmail(String email) async {
+    final cleanEmail = email.trim().toLowerCase();
+    if (cleanEmail.isEmpty || !cleanEmail.contains('@')) {
+      throw Exception('সঠিক ইমেইল ঠিকানা প্রদান করুন।');
+    }
+    if (!SupabaseService.isInitialized) {
+      throw Exception('ক্লাউড সার্ভারের সাথে সংযোগ স্থাপন করা যায়নি।');
+    }
+    await SupabaseService.client.auth.resetPasswordForEmail(cleanEmail);
+  }
+
+  /// Updates mosque metadata on Supabase + Drift + session storage
+  Future<void> updateMosqueProfile({
+    required String mosqueId,
+    required String nameBn,
+    required String address,
+    int? establishedYear,
+  }) async {
+    final cleanName = nameBn.trim();
+    final cleanAddress = address.trim();
+    final payload = <String, dynamic>{
+      'name_bn': cleanName,
+      'address': cleanAddress,
+      if (establishedYear != null) 'established_year': establishedYear,
+    };
+
+    try {
+      if (SupabaseService.isInitialized) {
+        await SupabaseService.client
+            .from('mosques')
+            .update(payload)
+            .eq('id', mosqueId);
+      } else {
+        await OfflineCacheService.instance.updateRecord(
+          tableName: 'mosques',
+          mosqueId: mosqueId,
+          id: mosqueId,
+          payload: payload,
+        );
+      }
+    } catch (e) {
+      debugPrint('Mosque profile cloud update queued: $e');
+      await OfflineCacheService.instance.updateRecord(
+        tableName: 'mosques',
+        mosqueId: mosqueId,
+        id: mosqueId,
+        payload: payload,
+      );
+    }
+
+    try {
+      await (_database.update(_database.mosquesTable)
+            ..where((t) => t.id.equals(mosqueId)))
+          .write(
+        MosquesTableCompanion(
+          nameBn: Value(cleanName),
+          address: Value(cleanAddress),
+          establishedYear:
+              establishedYear != null ? Value(establishedYear) : const Value.absent(),
+        ),
+      );
+    } catch (_) {}
+
+    await _storage.updateMosqueMetadata(
+      mosqueNameBn: cleanName,
+      mosqueAddress: cleanAddress,
+      establishedYear: establishedYear,
+    );
   }
 
   /// Logout and atomic tenant data wipe
@@ -303,6 +533,7 @@ class AuthService {
       }
     } catch (_) {}
 
+    OfflineCacheService.instance.clearMemoryCache();
     await _database.clearAllTenantData();
     await _storage.clearSession();
   }

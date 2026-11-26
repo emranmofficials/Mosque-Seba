@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../authentication/providers/auth_provider.dart';
+import '../../finance/providers/finance_provider.dart';
 import '../models/staff_model.dart';
 import '../models/staff_payroll_model.dart';
 import '../repositories/staff_repository.dart';
@@ -40,6 +41,22 @@ class StaffListNotifier extends StateNotifier<AsyncValue<List<StaffModel>>> {
     }
     return false;
   }
+
+  Future<bool> updateStaff(StaffModel staff) async {
+    final ok = await _repository.updateStaff(staff, mosqueId: _mosqueId);
+    if (ok) {
+      await loadStaff();
+    }
+    return ok;
+  }
+
+  Future<bool> deactivateStaff(String staffId) async {
+    final ok = await _repository.deactivateStaff(staffId, mosqueId: _mosqueId);
+    if (ok) {
+      await loadStaff();
+    }
+    return ok;
+  }
 }
 
 final staffListProvider = StateNotifierProvider<StaffListNotifier, AsyncValue<List<StaffModel>>>((ref) {
@@ -49,19 +66,26 @@ final staffListProvider = StateNotifierProvider<StaffListNotifier, AsyncValue<Li
   return StaffListNotifier(repo, mosqueId);
 });
 
+final payrollMonthFilterProvider = StateProvider<String>((ref) => 'সকল');
+
 class PayrollHistoryNotifier extends StateNotifier<AsyncValue<List<StaffPayrollModel>>> {
   final StaffRepository _repository;
   final String _mosqueId;
+  final Ref _ref;
 
-  PayrollHistoryNotifier(this._repository, this._mosqueId)
+  PayrollHistoryNotifier(this._repository, this._mosqueId, this._ref)
       : super(const AsyncValue.loading()) {
     loadPayroll();
   }
 
-  Future<void> loadPayroll() async {
+  Future<void> loadPayroll({String? monthFilter}) async {
     state = const AsyncValue.loading();
     try {
-      final list = await _repository.fetchPayrollHistory(mosqueId: _mosqueId);
+      final activeFilter = monthFilter ?? _ref.read(payrollMonthFilterProvider);
+      final list = await _repository.fetchPayrollHistory(
+        mosqueId: _mosqueId,
+        monthFilter: activeFilter,
+      );
       if (!mounted) return;
       state = AsyncValue.data(list);
     } catch (e, st) {
@@ -89,6 +113,7 @@ class PayrollHistoryNotifier extends StateNotifier<AsyncValue<List<StaffPayrollM
     );
     if (result != null) {
       await loadPayroll();
+      _ref.invalidate(financeListProvider);
     }
     return result;
   }
@@ -98,5 +123,5 @@ final payrollHistoryProvider = StateNotifierProvider<PayrollHistoryNotifier, Asy
   final repo = ref.watch(staffRepositoryProvider);
   final authState = ref.watch(authNotifierProvider);
   final mosqueId = authState.valueOrNull?.mosqueId ?? 'mosque-default';
-  return PayrollHistoryNotifier(repo, mosqueId);
+  return PayrollHistoryNotifier(repo, mosqueId, ref);
 });

@@ -23,5 +23,24 @@ void main() {
       expect(lateNight.nextSummary.nameBn, 'ফজর');
       expect(lateNight.nextSummary.remainingMinutes, greaterThan(0));
     });
+
+    test('computes valid Sehri and Iftar solar times and district list', () {
+      final times = PrayerCalculatorService.computeSehriIftarTimes(
+        referenceTime: DateTime(2026, 3, 15, 12, 0),
+      );
+
+      expect(times.sehriEnd.isBefore(times.iftarStart), isTrue);
+      expect(times.sehriEnd.hour, inInclusiveRange(4, 6));
+      expect(times.iftarStart.hour, inInclusiveRange(17, 19));
+
+      expect(PrayerCalculatorService.bangladeshDistricts.length, 14);
+      final ctg = PrayerCalculatorService.findDistrict('চট্টগ্রাম');
+      expect(ctg.nameBn, 'চট্টগ্রাম');
+      expect(ctg.latitude, inInclusiveRange(20.0, 27.0));
+      expect(ctg.longitude, inInclusiveRange(88.0, 93.0));
+
+      final fallback = PrayerCalculatorService.findDistrict('অজানা শহর');
+      expect(fallback.nameBn, 'ঢাকা');
+    });
   });
 }

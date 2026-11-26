@@ -1,32 +1,32 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../core/network/supabase_service.dart';
+import '../../../core/database/offline_cache_service.dart';
 import '../models/waqf_asset_model.dart';
 
 /// Repository for Waqf Properties (ওয়াকফ সম্পত্তি রিপোজিটরি)
 class WaqfRepository {
-  SupabaseClient get _client => SupabaseService.client;
+  final OfflineCacheService _cache;
+
+  WaqfRepository({OfflineCacheService? cache})
+      : _cache = cache ?? OfflineCacheService.instance;
 
   /// Fetch all waqf properties for a mosque
   Future<List<WaqfAssetModel>> fetchProperties({
     required String mosqueId,
     String? categoryFilter,
   }) async {
-    try {
-      var query = _client.from('mosque_properties').select().eq('mosque_id', mosqueId);
-
-      if (categoryFilter != null && categoryFilter.isNotEmpty && categoryFilter != 'সকল') {
-        query = query.eq('category', categoryFilter);
-      }
-
-      final response = await query.order('created_at', ascending: false);
-      final List<dynamic> data = response as List<dynamic>;
-
-      return data
-          .map((item) => WaqfAssetModel.fromJson(item as Map<String, dynamic>))
-          .toList();
-    } catch (e) {
-      return [];
+    final equals = <String, dynamic>{};
+    if (categoryFilter != null && categoryFilter.isNotEmpty && categoryFilter != 'সকল') {
+      equals['category'] = categoryFilter;
     }
+
+    final rows = await _cache.fetchList(
+      tableName: 'mosque_properties',
+      mosqueId: mosqueId,
+      orderBy: 'created_at',
+      ascending: false,
+      equalsFilters: equals,
+    );
+
+    return rows.map(WaqfAssetModel.fromJson).toList();
   }
 
   /// Create a new waqf property
@@ -36,31 +36,39 @@ class WaqfRepository {
   }) async {
     try {
       final payload = property.toJson();
-      payload['mosque_id'] = mosqueId;
-      if (payload['id'] == null || (payload['id'] as String).isEmpty) {
-        payload['id'] = 'prop-${DateTime.now().millisecondsSinceEpoch}';
+      if ((payload['id']?.toString().trim() ?? '').isEmpty) {
+        payload.remove('id');
       }
-
-      final res = await _client
-          .from('mosque_properties')
-          .insert(payload)
-          .select()
-          .single();
+      final res = await _cache.insertRecord(
+        tableName: 'mosque_properties',
+        mosqueId: mosqueId,
+        payload: payload,
+      );
       return WaqfAssetModel.fromJson(res);
-    } catch (e) {
+    } catch (_) {
       return null;
     }
   }
 
   /// Update an existing property
-  Future<bool> updateProperty(WaqfAssetModel property) async {
+  Future<bool> updateProperty(WaqfAssetModel property, {String? mosqueId}) async {
     try {
-      await _client
-          .from('mosque_properties')
-          .update(property.toJson())
-          .eq('id', property.id);
-      return true;
-    } catch (e) {
+      return await _cache.updateRecord(
+        tableName: 'mosque_properties',
+        id: property.id,
+        mosqueId: mosqueId,
+        updates: property.toJson(),
+      );
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Delete a waqf property
+  Future<bool> deleteProperty(String id) async {
+    try {
+      return await _cache.deleteRecord(tableName: 'mosque_properties', id: id);
+    } catch (_) {
       return false;
     }
   }

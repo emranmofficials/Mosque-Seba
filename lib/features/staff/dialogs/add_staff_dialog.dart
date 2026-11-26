@@ -2,15 +2,21 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimens.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/utils/bengali_number_formatter.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../models/staff_model.dart';
 
-/// Modal dialog to recruit or register a new mosque staff member
+/// Modal dialog to recruit, register, or edit a mosque staff member
 class AddStaffDialog extends StatefulWidget {
+  final StaffModel? existingStaff;
   final Future<bool> Function(StaffModel staff) onSubmit;
 
-  const AddStaffDialog({super.key, required this.onSubmit});
+  const AddStaffDialog({
+    super.key,
+    this.existingStaff,
+    required this.onSubmit,
+  });
 
   @override
   State<AddStaffDialog> createState() => _AddStaffDialogState();
@@ -36,6 +42,25 @@ class _AddStaffDialogState extends State<AddStaffDialog> {
   };
 
   @override
+  void initState() {
+    super.initState();
+    final existing = widget.existingStaff;
+    if (existing != null) {
+      _nameBnController.text = existing.nameBn;
+      _mobileController.text = existing.mobile;
+      _salaryController.text = existing.salaryAmount.toInt().toString();
+      if (_designationMap.containsKey(existing.roleCode)) {
+        _selectedRoleCode = existing.roleCode;
+        _selectedDesignation = _designationMap[existing.roleCode]!;
+      } else {
+        _selectedRoleCode = 'other';
+        _selectedDesignation = existing.designationBn;
+      }
+      _mealRequired = existing.mealRequired;
+    }
+  }
+
+  @override
   void dispose() {
     _nameBnController.dispose();
     _mobileController.dispose();
@@ -48,16 +73,24 @@ class _AddStaffDialogState extends State<AddStaffDialog> {
 
     setState(() => _isLoading = true);
 
-    final salary = double.tryParse(_salaryController.text.trim()) ?? 0.0;
+    final existing = widget.existingStaff;
+    final salary = double.tryParse(
+          BengaliNumberFormatter.toEnglishDigits(_salaryController.text.trim()),
+        ) ??
+        0.0;
     final staff = StaffModel(
-      id: '',
+      id: existing?.id ?? '',
       nameBn: _nameBnController.text.trim(),
       roleCode: _selectedRoleCode,
       designationBn: _selectedDesignation,
+      employmentType: existing?.employmentType ?? 'full_time',
       salaryAmount: salary,
       mobile: _mobileController.text.trim(),
       mealRequired: _mealRequired,
-      joinDate: DateTime.now().toIso8601String().split('T').first,
+      isActive: existing?.isActive ?? true,
+      joinDate: existing?.joinDate.isNotEmpty == true
+          ? existing!.joinDate
+          : DateTime.now().toIso8601String().split('T').first,
     );
 
     final ok = await widget.onSubmit(staff);
@@ -67,7 +100,13 @@ class _AddStaffDialogState extends State<AddStaffDialog> {
       if (ok) {
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('নতুন স্টাফ সফলভাবে নিযুক্ত হয়েছেন')),
+          SnackBar(
+            content: Text(
+              existing != null
+                  ? 'স্টাফের তথ্য সফলভাবে হালনাগাদ হয়েছে'
+                  : 'নতুন স্টাফ সফলভাবে নিযুক্ত হয়েছেন',
+            ),
+          ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -96,7 +135,9 @@ class _AddStaffDialogState extends State<AddStaffDialog> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'নতুন স্টাফ নিয়োগ ও নিবন্ধন',
+                        widget.existingStaff != null
+                            ? 'স্টাফের তথ্য সম্পাদনা'
+                            : 'নতুন স্টাফ নিয়োগ ও নিবন্ধন',
                         style: AppTypography.titleLarge.copyWith(fontWeight: FontWeight.bold),
                       ),
                       IconButton(
@@ -181,7 +222,9 @@ class _AddStaffDialogState extends State<AddStaffDialog> {
                       const SizedBox(width: AppDimens.spacing12),
                       Expanded(
                         child: AppButton(
-                          label: 'নিয়োগ সংরক্ষণ',
+                          label: widget.existingStaff != null
+                              ? 'হালনাগাদ করুন'
+                              : 'নিয়োগ সংরক্ষণ',
                           isLoading: _isLoading,
                           onPressed: _handleSave,
                         ),

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'bootstrap/dependency_injection.dart';
 import 'core/config/app_config.dart';
 import 'core/theme/app_theme.dart';
+import 'features/app_security/widgets/app_lock_wrapper.dart';
 
 /// Root Application Widget for Mosque Seba (মসজিদ সেবা)
 class MosqueSebaApp extends ConsumerWidget {
@@ -13,13 +14,15 @@ class MosqueSebaApp extends ConsumerWidget {
     final isDark = ref.watch(isDarkModeProvider);
     final router = ref.watch(routerProvider);
 
-    return MaterialApp.router(
-      title: '${AppConfig.appNameBn} (${AppConfig.appNameEn})',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode: isDark ? ThemeMode.dark : ThemeMode.light,
-      routerConfig: router,
+    return AppLockWrapper(
+      child: MaterialApp.router(
+        title: '${AppConfig.appNameBn} (${AppConfig.appNameEn})',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        themeMode: isDark ? ThemeMode.dark : ThemeMode.light,
+        routerConfig: router,
+      ),
     );
   }
 }

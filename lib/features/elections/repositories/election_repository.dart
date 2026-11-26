@@ -1,28 +1,26 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../core/network/supabase_service.dart';
+import '../../../core/database/offline_cache_service.dart';
 import '../models/election_candidate_model.dart';
 import '../models/election_schedule_model.dart';
 
 /// Repository for Mosque Committee Elections & Gazette (নির্বাচন ও গেজেট রিপোজিটরি)
 class ElectionRepository {
-  SupabaseClient get _client => SupabaseService.client;
+  final OfflineCacheService _cache;
+
+  ElectionRepository({OfflineCacheService? cache})
+      : _cache = cache ?? OfflineCacheService.instance;
 
   /// Fetch active and historical election schedules
-  Future<List<ElectionScheduleModel>> fetchSchedules({required String mosqueId}) async {
-    try {
-      final response = await _client
-          .from('election_schedules')
-          .select()
-          .eq('mosque_id', mosqueId)
-          .order('created_at', ascending: false);
+  Future<List<ElectionScheduleModel>> fetchSchedules({
+    required String mosqueId,
+  }) async {
+    final rows = await _cache.fetchList(
+      tableName: 'election_schedules',
+      mosqueId: mosqueId,
+      orderBy: 'created_at',
+      ascending: false,
+    );
 
-      final List<dynamic> data = response as List<dynamic>;
-      return data
-          .map((item) => ElectionScheduleModel.fromJson(item as Map<String, dynamic>))
-          .toList();
-    } catch (e) {
-      return [];
-    }
+    return rows.map(ElectionScheduleModel.fromJson).toList();
   }
 
   /// Announce a new election schedule
@@ -32,60 +30,73 @@ class ElectionRepository {
   }) async {
     try {
       final payload = schedule.toJson();
-      payload['mosque_id'] = mosqueId;
-      if (payload['id'] == null || (payload['id'] as String).isEmpty) {
-        payload['id'] = 'elec-${DateTime.now().millisecondsSinceEpoch}';
+      if ((payload['id']?.toString().trim() ?? '').isEmpty) {
+        payload.remove('id');
       }
-
-      final res = await _client.from('election_schedules').insert(payload).select().single();
+      final res = await _cache.insertRecord(
+        tableName: 'election_schedules',
+        mosqueId: mosqueId,
+        payload: payload,
+      );
       return ElectionScheduleModel.fromJson(res);
-    } catch (e) {
+    } catch (_) {
       return null;
     }
   }
 
   /// Fetch all candidates for a specific election
   Future<List<ElectionCandidateModel>> fetchCandidates(String scheduleId) async {
-    try {
-      final response = await _client
-          .from('election_candidates')
-          .select()
-          .eq('schedule_id', scheduleId)
-          .order('votes_received', ascending: false);
+    final rows = await _cache.fetchList(
+      tableName: 'election_candidates',
+      mosqueId: scheduleId,
+      filterByMosqueId: false,
+      orderBy: 'votes_received',
+      ascending: false,
+      equalsFilters: {'schedule_id': scheduleId},
+    );
 
-      final List<dynamic> data = response as List<dynamic>;
-      return data
-          .map((item) => ElectionCandidateModel.fromJson(item as Map<String, dynamic>))
-          .toList();
-    } catch (e) {
-      return [];
-    }
+    final list = rows.map(ElectionCandidateModel.fromJson).toList();
+    list.sort((a, b) => b.votesReceived.compareTo(a.votesReceived));
+    return list;
   }
 
   /// Nominate candidate
-  Future<ElectionCandidateModel?> nominateCandidate(ElectionCandidateModel candidate) async {
+  Future<ElectionCandidateModel?> nominateCandidate(
+    ElectionCandidateModel candidate,
+  ) async {
     try {
       final payload = candidate.toJson();
-      if (payload['id'] == null || (payload['id'] as String).isEmpty) {
-        payload['id'] = 'cand-${DateTime.now().millisecondsSinceEpoch}';
+      if ((payload['id']?.toString().trim() ?? '').isEmpty) {
+        payload.remove('id');
       }
-
-      final res = await _client.from('election_candidates').insert(payload).select().single();
+      final res = await _cache.insertRecord(
+        tableName: 'election_candidates',
+        mosqueId: candidate.scheduleId,
+        attachMosqueId: false,
+        payload: payload,
+      );
       return ElectionCandidateModel.fromJson(res);
-    } catch (e) {
+    } catch (_) {
       return null;
     }
   }
 
   /// Record vote count or declaration
-  Future<bool> updateVoteCount(String candidateId, int votes, bool isElected) async {
+  Future<bool> updateVoteCount(
+    String candidateId,
+    int votes,
+    bool isElected,
+  ) async {
     try {
-      await _client.from('election_candidates').update({
-        'votes_received': votes,
-        'is_elected': isElected,
-      }).eq('id', candidateId);
-      return true;
-    } catch (e) {
+      return await _cache.updateRecord(
+        tableName: 'election_candidates',
+        id: candidateId,
+        updates: {
+          'votes_received': votes,
+          'is_elected': isElected,
+        },
+      );
+    } catch (_) {
       return false;
     }
   }

@@ -1,31 +1,32 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../core/network/supabase_service.dart';
+import '../../../core/database/offline_cache_service.dart';
 import '../models/meeting_model.dart';
 
 /// Repository for Mosque Meetings & Resolutions (কমিটির সভা ও সিদ্ধান্ত রিপোজিটরি)
 class MeetingRepository {
-  SupabaseClient get _client => SupabaseService.client;
+  final OfflineCacheService _cache;
+
+  MeetingRepository({OfflineCacheService? cache})
+      : _cache = cache ?? OfflineCacheService.instance;
 
   /// Fetch all meetings for a mosque
   Future<List<MeetingModel>> fetchMeetings({
     required String mosqueId,
     String? statusFilter,
   }) async {
-    try {
-      var query = _client.from('meetings').select().eq('mosque_id', mosqueId);
-      if (statusFilter != null && statusFilter.isNotEmpty && statusFilter != 'all') {
-        query = query.eq('status', statusFilter);
-      }
-
-      final response = await query.order('meeting_date', ascending: false);
-      final List<dynamic> data = response as List<dynamic>;
-
-      return data
-          .map((item) => MeetingModel.fromJson(item as Map<String, dynamic>))
-          .toList();
-    } catch (e) {
-      return [];
+    final equals = <String, dynamic>{};
+    if (statusFilter != null && statusFilter.isNotEmpty && statusFilter != 'all') {
+      equals['status'] = statusFilter;
     }
+
+    final rows = await _cache.fetchList(
+      tableName: 'meetings',
+      mosqueId: mosqueId,
+      orderBy: 'meeting_date',
+      ascending: false,
+      equalsFilters: equals,
+    );
+
+    return rows.map(MeetingModel.fromJson).toList();
   }
 
   /// Schedule a new meeting
@@ -35,27 +36,60 @@ class MeetingRepository {
   }) async {
     try {
       final payload = meeting.toJson();
-      payload['mosque_id'] = mosqueId;
-      if (payload['id'] == null || (payload['id'] as String).isEmpty) {
-        payload['id'] = 'meet-${DateTime.now().millisecondsSinceEpoch}';
+      if ((payload['id']?.toString().trim() ?? '').isEmpty) {
+        payload.remove('id');
       }
-
-      final res = await _client.from('meetings').insert(payload).select().single();
+      final res = await _cache.insertRecord(
+        tableName: 'meetings',
+        mosqueId: mosqueId,
+        payload: payload,
+      );
       return MeetingModel.fromJson(res);
-    } catch (e) {
+    } catch (_) {
       return null;
     }
   }
 
-  /// Record resolutions and mark meeting as completed
-  Future<bool> recordResolution(String meetingId, String resolution) async {
+  /// Update meeting details
+  Future<bool> updateMeeting(MeetingModel meeting, {String? mosqueId}) async {
     try {
-      await _client.from('meetings').update({
-        'resolution': resolution,
-        'status': 'completed',
-      }).eq('id', meetingId);
-      return true;
-    } catch (e) {
+      return await _cache.updateRecord(
+        tableName: 'meetings',
+        id: meeting.id,
+        mosqueId: mosqueId,
+        updates: meeting.toJson(),
+      );
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Record resolutions and mark meeting as completed
+  Future<bool> recordResolution(
+    String meetingId,
+    String resolution, {
+    String? mosqueId,
+  }) async {
+    try {
+      return await _cache.updateRecord(
+        tableName: 'meetings',
+        id: meetingId,
+        mosqueId: mosqueId,
+        updates: {
+          'resolution': resolution,
+          'status': 'completed',
+        },
+      );
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Delete or cancel a meeting
+  Future<bool> deleteMeeting(String meetingId) async {
+    try {
+      return await _cache.deleteRecord(tableName: 'meetings', id: meetingId);
+    } catch (_) {
       return false;
     }
   }

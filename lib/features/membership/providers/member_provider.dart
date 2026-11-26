@@ -56,7 +56,16 @@ class MemberListNotifier extends StateNotifier<AsyncValue<List<MemberModel>>> {
   }
 
   Future<bool> updateMember(MemberModel member) async {
-    final ok = await _repository.updateMember(member);
+    final ok = await _repository.updateMember(member, mosqueId: _mosqueId);
+    if (ok) {
+      await loadMembers();
+      return true;
+    }
+    return false;
+  }
+
+  Future<bool> deleteMember(String memberId) async {
+    final ok = await _repository.deleteMember(memberId);
     if (ok) {
       await loadMembers();
       return true;

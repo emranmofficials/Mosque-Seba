@@ -46,11 +46,30 @@ class PermissionEngine {
 
     switch (permission) {
       case PermissionCatalog.financeView:
-        return true; // All roles can view transparent summaries
+      case PermissionCatalog.memberView:
+      case PermissionCatalog.chandaView:
+      case PermissionCatalog.chandaPay:
+      case PermissionCatalog.staffView:
+      case PermissionCatalog.madrasaView:
+      case PermissionCatalog.studentView:
+      case PermissionCatalog.attendanceView:
+      case PermissionCatalog.hifzView:
+      case PermissionCatalog.noticeView:
+      case PermissionCatalog.meetingView:
+        return true; // Transparent community read access
       case PermissionCatalog.financeCreate:
         return role.canManageFinance();
       case PermissionCatalog.financeApprove:
         return role.canApproveFinance();
+      case PermissionCatalog.financeReport:
+        return role.canManageFinance() ||
+            role.canApproveFinance() ||
+            role == CommitteeRole.generalSecretary ||
+            role == CommitteeRole.advisoryBoard;
+      case PermissionCatalog.staffManage:
+        return role == CommitteeRole.president ||
+            role == CommitteeRole.vicePresident ||
+            role == CommitteeRole.generalSecretary;
       case PermissionCatalog.staffSalaryView:
         return role == CommitteeRole.president ||
             role == CommitteeRole.vicePresident ||
@@ -61,6 +80,8 @@ class PermissionEngine {
       case PermissionCatalog.memberCreate:
       case PermissionCatalog.memberUpdate:
         return role.canManageMembers();
+      case PermissionCatalog.memberArchive:
+        return role == CommitteeRole.president || role == CommitteeRole.generalSecretary;
       case PermissionCatalog.chandaReceive:
         return role == CommitteeRole.president ||
             role == CommitteeRole.treasurer ||
@@ -70,10 +91,31 @@ class PermissionEngine {
         return role.canManageCashbox();
       case PermissionCatalog.cashboxWitness:
         return role.canWitnessCashbox();
+      case PermissionCatalog.madrasaManage:
+      case PermissionCatalog.studentCreate:
+      case PermissionCatalog.attendanceManage:
+      case PermissionCatalog.hifzManage:
+      case PermissionCatalog.examPublish:
+        return role.canManageWelfareEducation() || role == CommitteeRole.assistantSecretary;
+      case PermissionCatalog.feeReceive:
+        return role.canManageFinance() ||
+            role.canManageWelfareEducation() ||
+            role == CommitteeRole.officeSecretary;
       case PermissionCatalog.noticeManage:
         return role.canPublishNotices();
       case PermissionCatalog.meetingManage:
         return role.canScheduleMeetings();
+      case PermissionCatalog.prayerManage:
+        return role == CommitteeRole.president ||
+            role == CommitteeRole.generalSecretary ||
+            role == CommitteeRole.imam ||
+            role == CommitteeRole.muazzin ||
+            role == CommitteeRole.publicitySecretary;
+      case PermissionCatalog.dutyManage:
+        return role == CommitteeRole.president ||
+            role == CommitteeRole.vicePresident ||
+            role == CommitteeRole.generalSecretary ||
+            role == CommitteeRole.imam;
       case PermissionCatalog.welfareManage:
         return role.canManageWelfareEducation();
       default:

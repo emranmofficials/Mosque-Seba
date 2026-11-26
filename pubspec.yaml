@@ -36,13 +36,23 @@ dependencies:
   uuid: ^4.4.2
   equatable: ^2.0.5
 
-  # Document Generation, Touch Signature & Printing
+  # Document Generation, Touch Signature, Media & Printing
   qr_flutter: ^4.1.0
   pdf: ^3.11.1
   printing: ^5.13.2
   signature: ^5.4.1
   url_launcher: ^6.3.0
   share_plus: ^10.0.2
+  image_picker: ">=1.1.2 <1.2.0"
+  image: ^4.1.7
+  print_bluetooth_thermal: ">=1.2.0 <1.2.2"
+  esc_pos_utils_plus: ">=2.0.2 <3.0.0"
+
+  # Notifications, Azan Alarms, Connectivity & Biometrics
+  flutter_local_notifications: ">=18.0.1 <19.0.0"
+  timezone: ">=0.9.4 <0.11.0"
+  local_auth: ">=2.3.0 <3.0.0"
+  connectivity_plus: ">=6.1.0 <7.0.0"
 
   # Google Gemini AI Integration
   google_generative_ai: ^0.4.6
@@ -77,5 +87,5 @@ flutter:
           weight: 500
         - asset: assets/fonts/hind_siliguri.ttf
           weight: 600
-        - asset: assets/fonts/hind_siliguri.ttf
+        - asset: assets/fonts/hind_siliguri_bold.ttf
           weight: 700

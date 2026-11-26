@@ -91,5 +91,57 @@ void main() {
         UiProfile.ui03Musalli,
       );
     });
+
+    test('evaluates expanded catalog permissions across specialist roles', () {
+      expect(
+        PermissionEngine.hasPermission(
+          CommitteeRole.imam,
+          PermissionCatalog.madrasaManage,
+        ),
+        isTrue,
+      );
+      expect(
+        PermissionEngine.hasPermission(
+          CommitteeRole.imam,
+          PermissionCatalog.dutyManage,
+        ),
+        isTrue,
+      );
+      expect(
+        PermissionEngine.hasPermission(
+          CommitteeRole.muazzin,
+          PermissionCatalog.prayerManage,
+        ),
+        isTrue,
+      );
+      expect(
+        PermissionEngine.hasPermission(
+          CommitteeRole.officeSecretary,
+          PermissionCatalog.feeReceive,
+        ),
+        isTrue,
+      );
+      expect(
+        PermissionEngine.hasPermission(
+          CommitteeRole.generalSecretary,
+          PermissionCatalog.memberArchive,
+        ),
+        isTrue,
+      );
+      expect(
+        PermissionEngine.hasPermission(
+          CommitteeRole.generalMember,
+          PermissionCatalog.madrasaManage,
+        ),
+        isFalse,
+      );
+      expect(
+        PermissionEngine.hasPermission(
+          CommitteeRole.generalMember,
+          PermissionCatalog.staffManage,
+        ),
+        isFalse,
+      );
+    });
   });
 }

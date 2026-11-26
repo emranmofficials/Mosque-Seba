@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimens.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/utils/bengali_number_formatter.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_text_field.dart';
+import '../../role_permissions/models/committee_role.dart';
 import '../models/member_model.dart';
 
 /// Modal dialog to register a new mosque member
@@ -25,7 +27,7 @@ class _AddMemberDialogState extends State<AddMemberDialog> {
   final _monthlyChandaController = TextEditingController(text: '100');
   final _nidController = TextEditingController();
 
-  final String _selectedRole = 'general_member';
+  String _selectedRole = CommitteeRole.generalMember.code;
   bool _willingToProvideMeal = false;
   bool _isLoading = false;
 
@@ -45,7 +47,10 @@ class _AddMemberDialogState extends State<AddMemberDialog> {
     setState(() => _isLoading = true);
 
     final autoCode = 'M-${DateTime.now().millisecondsSinceEpoch % 10000}';
-    final chanda = double.tryParse(_monthlyChandaController.text.trim()) ?? 0.0;
+    final chanda = double.tryParse(
+          BengaliNumberFormatter.toEnglishDigits(_monthlyChandaController.text.trim()),
+        ) ??
+        0.0;
 
     final newMember = MemberModel(
       id: '',
@@ -154,6 +159,28 @@ class _AddMemberDialogState extends State<AddMemberDialog> {
                     hint: 'ঐচ্ছিক',
                     keyboardType: TextInputType.number,
                     controller: _nidController,
+                  ),
+                  const SizedBox(height: AppDimens.spacing12),
+                  DropdownButtonFormField<String>(
+                    value: _selectedRole,
+                    isExpanded: true,
+                    decoration: const InputDecoration(
+                      labelText: 'কমিটির পদবি / ধরন',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: CommitteeRole.values
+                        .map(
+                          (r) => DropdownMenuItem<String>(
+                            value: r.code,
+                            child: Text(r.titleBn),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (val) {
+                      if (val != null) {
+                        setState(() => _selectedRole = val);
+                      }
+                    },
                   ),
                   const SizedBox(height: AppDimens.spacing12),
                   CheckboxListTile(

@@ -108,6 +108,13 @@ class AppRouter {
       case cashbox:
         return PermissionEngine.hasPermission(role, PermissionCatalog.cashboxManage) ||
             PermissionEngine.hasPermission(role, PermissionCatalog.cashboxWitness);
+      case madrasaAttendance:
+      case madrasaHifz:
+        return PermissionEngine.hasPermission(role, PermissionCatalog.madrasaManage);
+      case madrasaFees:
+        return PermissionEngine.hasPermission(role, PermissionCatalog.feeReceive);
+      case posterAi:
+        return role.canPublishNotices() || role.canManageSmartBoard();
       default:
         return true;
     }

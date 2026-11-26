@@ -70,7 +70,7 @@ class _LogHifzSessionDialogState extends ConsumerState<LogHifzSessionDialog> {
       studentNameBn: _selectedStudent!.nameBn,
       paraNumber: _selectedPara,
       surahName: _surahController.text.trim(),
-      pageNumber: int.tryParse(_pageController.text.trim()) ?? 1,
+      pageNumber: (BengaliNumberFormatter.parseDouble(_pageController.text.trim()) ?? 1).toInt(),
       sabaqRating: _sabaqRating,
       sabaqiRating: _sabaqiRating,
       manzilRating: _manzilRating,

@@ -10,12 +10,14 @@ class RosterWaqtCard extends StatelessWidget {
   final String waqtName;
   final List<DutyRosterItem> assignments;
   final VoidCallback onAssign;
+  final ValueChanged<String>? onRemove;
 
   const RosterWaqtCard({
     super.key,
     required this.waqtName,
     required this.assignments,
     required this.onAssign,
+    this.onRemove,
   });
 
   IconData _getWaqtIcon(String waqt) {
@@ -105,12 +107,24 @@ class RosterWaqtCard extends StatelessWidget {
                         style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.w600),
                       ),
                       if (item.notes.isNotEmpty) ...[
-                        const Spacer(),
-                        Text(
-                          '(${item.notes})',
-                          style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            '(${item.notes})',
+                            style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                      ],
+                      ] else
+                        const Spacer(),
+                      if (onRemove != null)
+                        IconButton(
+                          icon: const Icon(Icons.delete_outline, size: 18, color: Colors.red),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          tooltip: 'দায়িত্ব সরান',
+                          onPressed: () => onRemove!(item.id),
+                        ),
                     ],
                   ),
                 );

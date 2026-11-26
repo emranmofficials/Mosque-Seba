@@ -17,15 +17,22 @@ import '../widgets/meal_slot_card.dart';
 class MealScheduleScreen extends ConsumerWidget {
   const MealScheduleScreen({super.key});
 
-  void _showAddDialog(BuildContext context, WidgetRef ref, String dateStr, String mealType) {
+  void _showAddDialog(
+    BuildContext context,
+    WidgetRef ref,
+    String dateStr,
+    String mealType, {
+    MealScheduleItem? existingItem,
+  }) {
     final members = ref.read(memberListProvider).asData?.value ?? [];
     final volunteers = members.where((m) => m.willingToProvideStaffMeals).toList();
 
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (ctx) => AddMealScheduleDialog(
         dateStr: dateStr,
         defaultMealType: mealType,
+        existingItem: existingItem,
         volunteers: volunteers,
         onSubmit: (item) => ref.read(mealScheduleListProvider.notifier).addSchedule(item),
       ),
@@ -122,7 +129,13 @@ class MealScheduleScreen extends ConsumerWidget {
                     MealSlotCard(
                       mealType: 'দুপুর',
                       item: lunchItem,
-                      onAssign: () => _showAddDialog(context, ref, selectedDate, 'দুপুর'),
+                      onAssign: () => _showAddDialog(
+                        context,
+                        ref,
+                        selectedDate,
+                        'দুপুর',
+                        existingItem: lunchItem,
+                      ),
                       onStatusChanged: (status) {
                         if (lunchItem != null) {
                           ref.read(mealScheduleListProvider.notifier).updateStatus(lunchItem.id, status);
@@ -134,7 +147,13 @@ class MealScheduleScreen extends ConsumerWidget {
                     MealSlotCard(
                       mealType: 'রাত',
                       item: dinnerItem,
-                      onAssign: () => _showAddDialog(context, ref, selectedDate, 'রাত'),
+                      onAssign: () => _showAddDialog(
+                        context,
+                        ref,
+                        selectedDate,
+                        'রাত',
+                        existingItem: dinnerItem,
+                      ),
                       onStatusChanged: (status) {
                         if (dinnerItem != null) {
                           ref.read(mealScheduleListProvider.notifier).updateStatus(dinnerItem.id, status);

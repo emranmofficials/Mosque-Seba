@@ -1,16 +1,37 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimens.dart';
 import '../../../shared/widgets/card_shell.dart';
+import '../../role_permissions/models/committee_role.dart';
+import '../../role_permissions/models/permission_catalog.dart';
+import '../../role_permissions/providers/role_permissions_provider.dart';
+import '../../role_permissions/services/permission_engine.dart';
 
 /// Screen listing All Mosque Operations, Modules, and Educational Hubs
-class MoreMenuScreen extends StatelessWidget {
+class MoreMenuScreen extends ConsumerWidget {
   const MoreMenuScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final role = ref.watch(currentRoleProvider);
+    final canManageMadrasa = role == CommitteeRole.president ||
+        PermissionEngine.hasPermission(role, PermissionCatalog.madrasaManage);
+    final canReceiveFees = role == CommitteeRole.president ||
+        PermissionEngine.hasPermission(role, PermissionCatalog.feeReceive);
+    final canCashbox = role == CommitteeRole.president ||
+        PermissionEngine.hasPermission(role, PermissionCatalog.cashboxManage) ||
+        PermissionEngine.hasPermission(role, PermissionCatalog.cashboxWitness);
+    final canAdmin = role == CommitteeRole.president || role.canEditMosqueProfile();
+    final canSeal = role == CommitteeRole.president ||
+        role.canManageOfficeDocs() ||
+        role == CommitteeRole.treasurer;
+    final canPosterAi = role == CommitteeRole.president ||
+        role.canPublishNotices() ||
+        role.canManageSmartBoard();
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('অন্যান্য কার্যক্রম ও মডিউল'),
@@ -19,7 +40,7 @@ class MoreMenuScreen extends StatelessWidget {
         padding: const EdgeInsets.all(AppDimens.spacing16),
         children: [
           // 1. Madrasa & Islamic Education
-          _buildCategoryHeader('মাদরাসা ও ইসলামী শিক্ষা (Phase 7)', Icons.school, AppColors.emeraldPrimary),
+          _buildCategoryHeader('মাদরাসা ও ইসলামী শিক্ষা', Icons.school, AppColors.emeraldPrimary),
           const SizedBox(height: 8),
           _buildMenuItem(
             context: context,
@@ -38,24 +59,26 @@ class MoreMenuScreen extends StatelessWidget {
             color: AppColors.emeraldPrimary,
             onTap: () => context.push(AppRouter.madrasaStudents),
           ),
-          const SizedBox(height: 6),
-          _buildMenuItem(
-            context: context,
-            title: 'দৈনিক হাজিরা খাতা',
-            subtitle: 'ছাত্রদের দৈনিক উপস্থিতি, অনুপস্থিতি ও শতকরা হার',
-            icon: Icons.fact_check_outlined,
-            color: Colors.blue.shade700,
-            onTap: () => context.push(AppRouter.madrasaAttendance),
-          ),
-          const SizedBox(height: 6),
-          _buildMenuItem(
-            context: context,
-            title: 'হিফজুল কুরআন ট্র্যাকার',
-            subtitle: 'পারা-পৃষ্ঠা ও ছবক, ছবকী, আমোখতা ৫-স্টার মূল্যায়ন',
-            icon: Icons.auto_stories_outlined,
-            color: AppColors.goldDeep,
-            onTap: () => context.push(AppRouter.madrasaHifz),
-          ),
+          if (canManageMadrasa) ...[
+            const SizedBox(height: 6),
+            _buildMenuItem(
+              context: context,
+              title: 'দৈনিক হাজিরা খাতা',
+              subtitle: 'ছাত্রদের দৈনিক উপস্থিতি, অনুপস্থিতি ও শতকরা হার',
+              icon: Icons.fact_check_outlined,
+              color: Colors.blue.shade700,
+              onTap: () => context.push(AppRouter.madrasaAttendance),
+            ),
+            const SizedBox(height: 6),
+            _buildMenuItem(
+              context: context,
+              title: 'হিফজুল কুরআন ট্র্যাকার',
+              subtitle: 'পারা-পৃষ্ঠা ও ছবক, ছবকী, আমোখতা ৫-স্টার মূল্যায়ন',
+              icon: Icons.auto_stories_outlined,
+              color: AppColors.goldDeep,
+              onTap: () => context.push(AppRouter.madrasaHifz),
+            ),
+          ],
           const SizedBox(height: 6),
           _buildMenuItem(
             context: context,
@@ -65,15 +88,17 @@ class MoreMenuScreen extends StatelessWidget {
             color: Colors.purple.shade700,
             onTap: () => context.push(AppRouter.madrasaExams),
           ),
-          const SizedBox(height: 6),
-          _buildMenuItem(
-            context: context,
-            title: 'মাদরাসা ফি আদায় ও রসিদ',
-            subtitle: 'ছাত্রদের মাসিক ফি সংগ্রহ ও অটোমেটিক ফাইন্যান্স এন্ট্রি',
-            icon: Icons.receipt_long_outlined,
-            color: AppColors.roleTreasurer,
-            onTap: () => context.push(AppRouter.madrasaFees),
-          ),
+          if (canReceiveFees) ...[
+            const SizedBox(height: 6),
+            _buildMenuItem(
+              context: context,
+              title: 'মাদরাসা ফি আদায় ও রসিদ',
+              subtitle: 'ছাত্রদের মাসিক ফি সংগ্রহ ও অটোমেটিক ফাইন্যান্স এন্ট্রি',
+              icon: Icons.receipt_long_outlined,
+              color: AppColors.roleTreasurer,
+              onTap: () => context.push(AppRouter.madrasaFees),
+            ),
+          ],
           const SizedBox(height: 20),
 
           // 2. Staff & Administration
@@ -136,15 +161,17 @@ class MoreMenuScreen extends StatelessWidget {
             color: Colors.green.shade800,
             onTap: () => context.push(AppRouter.waqfAssets),
           ),
-          const SizedBox(height: 6),
-          _buildMenuItem(
-            context: context,
-            title: 'জুমার দানবাক্স গণনা',
-            subtitle: '৩-সাক্ষী নোট গণনা ও ভাউচার রেজিস্টার',
-            icon: Icons.inventory_2_outlined,
-            color: AppColors.roleTreasurer,
-            onTap: () => context.push(AppRouter.cashbox),
-          ),
+          if (canCashbox) ...[
+            const SizedBox(height: 6),
+            _buildMenuItem(
+              context: context,
+              title: 'জুমার দানবাক্স গণনা',
+              subtitle: '৩-সাক্ষী নোট গণনা ও ভাউচার রেজিস্টার',
+              icon: Icons.inventory_2_outlined,
+              color: AppColors.roleTreasurer,
+              onTap: () => context.push(AppRouter.cashbox),
+            ),
+          ],
           const SizedBox(height: 6),
           _buildMenuItem(
             context: context,
@@ -183,8 +210,8 @@ class MoreMenuScreen extends StatelessWidget {
           ),
           const SizedBox(height: 20),
 
-          // 4. Events, Welfare & AI Creative (Phase 8)
-          _buildCategoryHeader('অনুষ্ঠান, সমাজকল্যাণ ও পোস্টার AI (Phase 8)', Icons.celebration_outlined, AppColors.goldDeep),
+          // 4. Events, Welfare & AI Creative
+          _buildCategoryHeader('অনুষ্ঠান, সমাজকল্যাণ ও পোস্টার AI', Icons.celebration_outlined, AppColors.goldDeep),
           const SizedBox(height: 8),
           _buildMenuItem(
             context: context,
@@ -194,15 +221,17 @@ class MoreMenuScreen extends StatelessWidget {
             color: AppColors.goldDeep,
             onTap: () => context.push(AppRouter.events),
           ),
-          const SizedBox(height: 6),
-          _buildMenuItem(
-            context: context,
-            title: 'ইসলামিক দাওয়াতনামা পোস্টার AI',
-            subtitle: 'Gemini 3.8 Flash দিয়ে মাহফিলের ব্যানার ও আমন্ত্রণপত্র ডিজাইন',
-            icon: Icons.auto_awesome_outlined,
-            color: AppColors.emeraldPrimary,
-            onTap: () => context.push(AppRouter.posterAi),
-          ),
+          if (canPosterAi) ...[
+            const SizedBox(height: 6),
+            _buildMenuItem(
+              context: context,
+              title: 'ইসলামিক দাওয়াতনামা পোস্টার AI',
+              subtitle: 'Gemini AI দিয়ে মাহফিলের ব্যানার ও আমন্ত্রণপত্র ডিজাইন',
+              icon: Icons.auto_awesome_outlined,
+              color: AppColors.emeraldPrimary,
+              onTap: () => context.push(AppRouter.posterAi),
+            ),
+          ],
           const SizedBox(height: 6),
           _buildMenuItem(
             context: context,
@@ -214,8 +243,8 @@ class MoreMenuScreen extends StatelessWidget {
           ),
           const SizedBox(height: 20),
 
-          // 5. Documents, Security & Cloud Sync (Phase 9)
-          _buildCategoryHeader('ডকুমেন্ট, নিরাপত্তা ও ক্লাউড সিঙ্ক (Phase 9)', Icons.lock_outline, Colors.blueGrey.shade800),
+          // 5. Documents, Security & Cloud Sync
+          _buildCategoryHeader('ডকুমেন্ট, নিরাপত্তা ও ক্লাউড সিঙ্ক', Icons.lock_outline, Colors.blueGrey.shade800),
           const SizedBox(height: 8),
           _buildMenuItem(
             context: context,
@@ -225,15 +254,17 @@ class MoreMenuScreen extends StatelessWidget {
             color: AppColors.emeraldPrimary,
             onTap: () => context.push(AppRouter.khutbahIdeas),
           ),
-          const SizedBox(height: 6),
-          _buildMenuItem(
-            context: context,
-            title: 'অফিসিয়াল সিল ও ডিজিটাল স্বাক্ষর',
-            subtitle: 'কমিটির সভাপতি ও কোষাধ্যক্ষের এনক্রিপ্টেড স্বাক্ষর ও সিল',
-            icon: Icons.draw_outlined,
-            color: Colors.indigo.shade700,
-            onTap: () => context.push(AppRouter.sealSignature),
-          ),
+          if (canSeal) ...[
+            const SizedBox(height: 6),
+            _buildMenuItem(
+              context: context,
+              title: 'অফিসিয়াল সিল ও ডিজিটাল স্বাক্ষর',
+              subtitle: 'কমিটির সভাপতি ও কোষাধ্যক্ষের এনক্রিপ্টেড স্বাক্ষর ও সিল',
+              icon: Icons.draw_outlined,
+              color: Colors.indigo.shade700,
+              onTap: () => context.push(AppRouter.sealSignature),
+            ),
+          ],
           const SizedBox(height: 6),
           _buildMenuItem(
             context: context,
@@ -243,24 +274,26 @@ class MoreMenuScreen extends StatelessWidget {
             color: Colors.deepOrange.shade700,
             onTap: () => context.push(AppRouter.printHub),
           ),
-          const SizedBox(height: 6),
-          _buildMenuItem(
-            context: context,
-            title: 'অ্যাপ্লিকেশন নিরাপত্তা ও ডিভাইস অডিট',
-            subtitle: 'রুট ও টেম্পারিং সুরক্ষা এবং এনক্রিপশন স্ট্যাটাস নিরীক্ষা',
-            icon: Icons.security_outlined,
-            color: Colors.red.shade700,
-            onTap: () => context.push(AppRouter.appSecurity),
-          ),
-          const SizedBox(height: 6),
-          _buildMenuItem(
-            context: context,
-            title: 'ক্লাউড সিঙ্ক ও ব্যাকআপ',
-            subtitle: 'Supabase ব্যাকএন্ডে রিয়েল-টাইম অফলাইন ও অনলাইন সিঙ্ক',
-            icon: Icons.cloud_sync_outlined,
-            color: Colors.teal.shade800,
-            onTap: () => context.push(AppRouter.cloudSync),
-          ),
+          if (canAdmin) ...[
+            const SizedBox(height: 6),
+            _buildMenuItem(
+              context: context,
+              title: 'অ্যাপ্লিকেশন নিরাপত্তা ও ডিভাইস অডিট',
+              subtitle: 'রুট ও টেম্পারিং সুরক্ষা এবং এনক্রিপশন স্ট্যাটাস নিরীক্ষা',
+              icon: Icons.security_outlined,
+              color: Colors.red.shade700,
+              onTap: () => context.push(AppRouter.appSecurity),
+            ),
+            const SizedBox(height: 6),
+            _buildMenuItem(
+              context: context,
+              title: 'ক্লাউড সিঙ্ক ও ব্যাকআপ',
+              subtitle: 'Supabase ব্যাকএন্ডে রিয়েল-টাইম অফলাইন ও অনলাইন সিঙ্ক',
+              icon: Icons.cloud_sync_outlined,
+              color: Colors.teal.shade800,
+              onTap: () => context.push(AppRouter.cloudSync),
+            ),
+          ],
           const SizedBox(height: AppDimens.spacing24),
         ],
       ),

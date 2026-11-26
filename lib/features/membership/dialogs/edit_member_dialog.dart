@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimens.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/utils/bengali_number_formatter.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_text_field.dart';
+import '../../role_permissions/models/committee_role.dart';
 import '../models/member_model.dart';
 
 /// Modal dialog to edit an existing member's profile
@@ -31,6 +33,7 @@ class _EditMemberDialogState extends State<EditMemberDialog> {
   late TextEditingController _nidController;
   late bool _willingToProvideMeal;
   late String _status;
+  late String _selectedRole;
   bool _isLoading = false;
 
   @override
@@ -42,7 +45,10 @@ class _EditMemberDialogState extends State<EditMemberDialog> {
     _monthlyChandaController = TextEditingController(text: widget.member.monthlyChanda.toStringAsFixed(0));
     _nidController = TextEditingController(text: widget.member.nid);
     _willingToProvideMeal = widget.member.willingToProvideStaffMeals;
-    _status = widget.member.status;
+    _status = const ['active', 'inactive', 'deceased'].contains(widget.member.status)
+        ? widget.member.status
+        : 'active';
+    _selectedRole = CommitteeRole.fromCode(widget.member.roleCode).code;
   }
 
   @override
@@ -60,13 +66,17 @@ class _EditMemberDialogState extends State<EditMemberDialog> {
 
     setState(() => _isLoading = true);
 
-    final chanda = double.tryParse(_monthlyChandaController.text.trim()) ?? 0.0;
+    final chanda = double.tryParse(
+          BengaliNumberFormatter.toEnglishDigits(_monthlyChandaController.text.trim()),
+        ) ??
+        0.0;
     final updated = widget.member.copyWith(
       nameBn: _nameBnController.text.trim(),
       mobile: _mobileController.text.trim(),
       villageArea: _villageAreaController.text.trim(),
       monthlyChanda: chanda,
       nid: _nidController.text.trim(),
+      roleCode: _selectedRole,
       willingToProvideStaffMeals: _willingToProvideMeal,
       status: _status,
     );
@@ -155,6 +165,43 @@ class _EditMemberDialogState extends State<EditMemberDialog> {
                   AppTextField(
                     label: 'জাতীয় পরিচয়পত্র (NID)',
                     controller: _nidController,
+                  ),
+                  const SizedBox(height: AppDimens.spacing12),
+                  DropdownButtonFormField<String>(
+                    value: _selectedRole,
+                    isExpanded: true,
+                    decoration: const InputDecoration(
+                      labelText: 'কমিটির পদবি',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: CommitteeRole.values
+                        .map(
+                          (r) => DropdownMenuItem<String>(
+                            value: r.code,
+                            child: Text(r.titleBn),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (val) {
+                      if (val != null) setState(() => _selectedRole = val);
+                    },
+                  ),
+                  const SizedBox(height: AppDimens.spacing12),
+                  DropdownButtonFormField<String>(
+                    value: _status,
+                    isExpanded: true,
+                    decoration: const InputDecoration(
+                      labelText: 'সদস্যের অবস্থা',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: const [
+                      DropdownMenuItem(value: 'active', child: Text('সক্রিয়')),
+                      DropdownMenuItem(value: 'inactive', child: Text('নিষ্ক্রিয়')),
+                      DropdownMenuItem(value: 'deceased', child: Text('মরহুম / বিগত')),
+                    ],
+                    onChanged: (val) {
+                      if (val != null) setState(() => _status = val);
+                    },
                   ),
                   const SizedBox(height: AppDimens.spacing12),
                   CheckboxListTile(

@@ -44,4 +44,9 @@ class SecureTokenManager {
     if (storedHash == null || storedHash.isEmpty) return false;
     return storedHash == EncryptionHelper.hashSha256(enteredPin);
   }
+
+  /// Clear stored Committee PIN
+  Future<void> clearCommitteePin() async {
+    await _storage.delete(key: _keyCommitteePinHash);
+  }
 }

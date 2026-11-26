@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimens.dart';
 import '../../../core/theme/app_typography.dart';
@@ -102,8 +103,21 @@ class JanazaAlertCard extends StatelessWidget {
             children: [
               OutlinedButton.icon(
                 icon: const Icon(Icons.copy, size: 16),
-                label: const Text('বার্তা কপি করুন'),
+                label: const Text('কপি'),
                 onPressed: () => _copyToClipboard(context),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: AppColors.onPrimary,
+                ),
+                icon: const Icon(Icons.share, size: 16),
+                label: const Text('শেয়ার করুন'),
+                onPressed: () => Share.share(
+                  alert.toBroadcastMessage(mosqueName),
+                  subject: 'জরুরি জানাজা সংবাদ: ${alert.deceasedName}',
+                ),
               ),
             ],
           ),

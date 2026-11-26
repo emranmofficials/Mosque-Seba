@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../authentication/providers/auth_provider.dart';
+import '../../finance/providers/finance_provider.dart';
 import '../models/welfare_case_model.dart';
 import '../repositories/welfare_repository.dart';
 
@@ -13,8 +14,9 @@ final welfareStatusFilterProvider = StateProvider<String>((ref) => 'all');
 class WelfareListNotifier extends StateNotifier<AsyncValue<List<WelfareCaseModel>>> {
   final WelfareRepository _repository;
   final String _mosqueId;
+  final Ref _ref;
 
-  WelfareListNotifier(this._repository, this._mosqueId)
+  WelfareListNotifier(this._repository, this._mosqueId, this._ref)
       : super(const AsyncValue.loading()) {
     loadCases();
   }
@@ -79,6 +81,9 @@ class WelfareListNotifier extends StateNotifier<AsyncValue<List<WelfareCaseModel
             return c;
           }).toList(),
         );
+        if (disburseNow) {
+          _ref.invalidate(financeListProvider);
+        }
         return true;
       }
       return false;
@@ -93,7 +98,7 @@ final welfareListProvider =
   final repo = ref.watch(welfareRepositoryProvider);
   final authState = ref.watch(authNotifierProvider);
   final mosqueId = authState.valueOrNull?.mosqueId ?? 'mosque-default';
-  return WelfareListNotifier(repo, mosqueId);
+  return WelfareListNotifier(repo, mosqueId, ref);
 });
 
 final filteredWelfareCasesProvider = Provider<List<WelfareCaseModel>>((ref) {

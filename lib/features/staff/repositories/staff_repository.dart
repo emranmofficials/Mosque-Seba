@@ -1,29 +1,27 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../core/network/supabase_service.dart';
+import '../../../core/database/offline_cache_service.dart';
 import '../models/staff_model.dart';
 import '../models/staff_payroll_model.dart';
 
 /// Repository for Staff & Payroll Management (স্টাফ ও বেতন রিপোজিটরি)
 class StaffRepository {
-  SupabaseClient get _client => SupabaseService.client;
+  final OfflineCacheService _cache;
+
+  StaffRepository({OfflineCacheService? cache})
+      : _cache = cache ?? OfflineCacheService.instance;
 
   /// Fetch all active staff members
   Future<List<StaffModel>> fetchStaff({required String mosqueId}) async {
-    try {
-      final response = await _client
-          .from('staff')
-          .select()
-          .eq('mosque_id', mosqueId)
-          .eq('is_active', true)
-          .order('salary_amount', ascending: false);
+    final rows = await _cache.fetchList(
+      tableName: 'staff',
+      mosqueId: mosqueId,
+      orderBy: 'salary_amount',
+      ascending: false,
+      equalsFilters: {'is_active': true},
+    );
 
-      final List<dynamic> data = response as List<dynamic>;
-      return data
-          .map((item) => StaffModel.fromJson(item as Map<String, dynamic>))
-          .toList();
-    } catch (e) {
-      return [];
-    }
+    final list = rows.map(StaffModel.fromJson).where((s) => s.isActive).toList();
+    list.sort((a, b) => b.salaryAmount.compareTo(a.salaryAmount));
+    return list;
   }
 
   /// Create or register a new staff member
@@ -33,15 +31,45 @@ class StaffRepository {
   }) async {
     try {
       final payload = staff.toJson();
-      payload['mosque_id'] = mosqueId;
-      if (payload['id'] == null || (payload['id'] as String).isEmpty) {
-        payload['id'] = 'staff-${DateTime.now().millisecondsSinceEpoch}';
+      if ((payload['id']?.toString().trim() ?? '').isEmpty) {
+        payload.remove('id');
       }
-
-      final res = await _client.from('staff').insert(payload).select().single();
+      final res = await _cache.insertRecord(
+        tableName: 'staff',
+        mosqueId: mosqueId,
+        payload: payload,
+      );
       return StaffModel.fromJson(res);
-    } catch (e) {
+    } catch (_) {
       return null;
+    }
+  }
+
+  /// Update an existing staff record
+  Future<bool> updateStaff(StaffModel staff, {String? mosqueId}) async {
+    try {
+      return await _cache.updateRecord(
+        tableName: 'staff',
+        id: staff.id,
+        mosqueId: mosqueId,
+        updates: staff.toJson(),
+      );
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Deactivate a staff member without erasing payroll history
+  Future<bool> deactivateStaff(String staffId, {String? mosqueId}) async {
+    try {
+      return await _cache.updateRecord(
+        tableName: 'staff',
+        id: staffId,
+        mosqueId: mosqueId,
+        updates: {'is_active': false},
+      );
+    } catch (_) {
+      return false;
     }
   }
 
@@ -50,24 +78,25 @@ class StaffRepository {
     required String mosqueId,
     String? monthFilter,
   }) async {
-    try {
-      var query = _client.from('staff_payroll').select().eq('mosque_id', mosqueId);
-      if (monthFilter != null && monthFilter.isNotEmpty) {
-        query = query.eq('month', monthFilter);
-      }
-
-      final response = await query.order('created_at', ascending: false);
-      final List<dynamic> data = response as List<dynamic>;
-
-      return data
-          .map((item) => StaffPayrollModel.fromJson(item as Map<String, dynamic>))
-          .toList();
-    } catch (e) {
-      return [];
+    final equals = <String, dynamic>{};
+    if (monthFilter != null && monthFilter.isNotEmpty && monthFilter != 'সকল') {
+      equals['month'] = monthFilter;
     }
+
+    final rows = await _cache.fetchList(
+      tableName: 'staff_payroll',
+      mosqueId: mosqueId,
+      orderBy: 'created_at',
+      ascending: false,
+      equalsFilters: equals,
+    );
+
+    final list = rows.map(StaffPayrollModel.fromJson).toList();
+    list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return list;
   }
 
-  /// Disburse salary payment with atomic double-entry cross-posting to Finance Expense
+  /// Disburse salary payment with offline-safe Finance cross-posting
   Future<StaffPayrollModel?> disburseSalary({
     required String mosqueId,
     required String staffId,
@@ -80,10 +109,8 @@ class StaffRepository {
     try {
       final netSalary = baseSalary + bonusAmount;
       final paidDate = DateTime.now().toIso8601String().split('T').first;
-      final payrollId = 'pay-${DateTime.now().millisecondsSinceEpoch}';
 
       final payrollPayload = {
-        'id': payrollId,
         'mosque_id': mosqueId,
         'staff_id': staffId,
         'staff_name_bn': staffNameBn,
@@ -95,14 +122,17 @@ class StaffRepository {
         'paid_date': paidDate,
       };
 
-      // 1. Insert into staff_payroll
-      final res = await _client.from('staff_payroll').insert(payrollPayload).select().single();
+      final res = await _cache.insertRecord(
+        tableName: 'staff_payroll',
+        mosqueId: mosqueId,
+        payload: payrollPayload,
+      );
       final payroll = StaffPayrollModel.fromJson(res);
 
-      // 2. Cross-post to Finance General Ledger (transactions) as EXPENSE
       final txnPayload = {
         'mosque_id': mosqueId,
-        'transaction_code': 'TXN-${DateTime.now().year}-${DateTime.now().millisecondsSinceEpoch % 1000000}',
+        'transaction_code':
+            'TXN-${DateTime.now().year}-${DateTime.now().millisecondsSinceEpoch % 1000000}',
         'category_name_bn': 'ইমাম-মুয়াজ্জিন বেতনভাতা',
         'type': 'expense',
         'amount': netSalary,
@@ -115,10 +145,14 @@ class StaffRepository {
         'is_reversal': false,
       };
 
-      await _client.from('transactions').insert(txnPayload);
+      await _cache.insertRecord(
+        tableName: 'transactions',
+        mosqueId: mosqueId,
+        payload: txnPayload,
+      );
 
       return payroll;
-    } catch (e) {
+    } catch (_) {
       return null;
     }
   }

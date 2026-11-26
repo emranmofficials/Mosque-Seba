@@ -1,16 +1,15 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../core/network/supabase_service.dart';
+import '../../../core/database/offline_cache_service.dart';
 import '../../cloud_sync/services/offline_queue_manager.dart';
 import '../models/welfare_case_model.dart';
 
 /// Repository for Welfare & Zakat Applications (যাকাত ও সমাজকল্যাণ রিপোজিটরি)
 class WelfareRepository {
-  final OfflineQueueManager _queueManager;
+  final OfflineCacheService _cache;
 
-  WelfareRepository({OfflineQueueManager? queueManager})
-      : _queueManager = queueManager ?? OfflineQueueManager();
-
-  SupabaseClient get _client => SupabaseService.client;
+  WelfareRepository({
+    OfflineQueueManager? queueManager,
+    OfflineCacheService? cache,
+  }) : _cache = cache ?? OfflineCacheService(queueManager: queueManager);
 
   /// Fetch all welfare cases for a mosque with optional category and status filters
   Future<List<WelfareCaseModel>> fetchCases({
@@ -18,24 +17,25 @@ class WelfareRepository {
     String? categoryFilter,
     String? statusFilter,
   }) async {
-    try {
-      var query = _client.from('welfare_cases').select().eq('mosque_id', mosqueId);
-      if (categoryFilter != null && categoryFilter.isNotEmpty && categoryFilter != 'all') {
-        query = query.eq('category', categoryFilter);
-      }
-      if (statusFilter != null && statusFilter.isNotEmpty && statusFilter != 'all') {
-        query = query.eq('status', statusFilter);
-      }
-
-      final res = await query.order('created_at', ascending: false);
-      final List<dynamic> data = res as List<dynamic>;
-
-      return data
-          .map((item) => WelfareCaseModel.fromJson(item as Map<String, dynamic>))
-          .toList();
-    } catch (e) {
-      return [];
+    final equals = <String, dynamic>{};
+    if (categoryFilter != null && categoryFilter.isNotEmpty && categoryFilter != 'all') {
+      equals['category'] = categoryFilter;
     }
+    if (statusFilter != null && statusFilter.isNotEmpty && statusFilter != 'all') {
+      equals['status'] = statusFilter;
+    }
+
+    final rows = await _cache.fetchList(
+      tableName: 'welfare_cases',
+      mosqueId: mosqueId,
+      orderBy: 'created_at',
+      ascending: false,
+      equalsFilters: equals,
+    );
+
+    final list = rows.map(WelfareCaseModel.fromJson).toList();
+    list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return list;
   }
 
   /// Submit a new welfare case application
@@ -45,48 +45,54 @@ class WelfareRepository {
   }) async {
     try {
       final payload = welfareCase.toJson();
-      payload['mosque_id'] = mosqueId;
-      if (payload['id'] == null || (payload['id'] as String).isEmpty) {
-        payload['id'] = 'wlf-${DateTime.now().millisecondsSinceEpoch}';
+      if ((payload['id']?.toString().trim() ?? '').isEmpty) {
+        payload.remove('id');
       }
-
-      final res = await _client.from('welfare_cases').insert(payload).select().single();
+      final res = await _cache.insertRecord(
+        tableName: 'welfare_cases',
+        mosqueId: mosqueId,
+        payload: payload,
+      );
       return WelfareCaseModel.fromJson(res);
-    } catch (e) {
+    } catch (_) {
       return null;
     }
   }
 
-  /// Approve grant and record disbursement with Finance integration
+  /// Approve, disburse, or reject welfare case with Finance integration
   Future<bool> approveAndDisburse({
     required String mosqueId,
     required String caseId,
     required double approvedAmount,
     required String approverName,
     required bool disburseNow,
+    String statusOverride = '',
   }) async {
     try {
       final now = DateTime.now();
       final dateStr =
           '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
 
+      final targetStatus = statusOverride.isNotEmpty
+          ? statusOverride
+          : (disburseNow ? 'disbursed' : 'approved');
+
       final updatePayload = {
         'approved_amount': approvedAmount,
         'approved_by': approverName,
-        'status': disburseNow ? 'disbursed' : 'approved',
+        'status': targetStatus,
         if (disburseNow) 'disbursed_date': dateStr,
       };
 
-      await _client
-          .from('welfare_cases')
-          .update(updatePayload)
-          .eq('id', caseId)
-          .eq('mosque_id', mosqueId);
+      await _cache.updateRecord(
+        tableName: 'welfare_cases',
+        id: caseId,
+        mosqueId: mosqueId,
+        updates: updatePayload,
+      );
 
-      // Auto-post to Finance Transactions ledger (PRD §26)
-      if (disburseNow) {
+      if (disburseNow && targetStatus == 'disbursed') {
         final txnPayload = {
-          'id': 'txn-wlf-$caseId',
           'mosque_id': mosqueId,
           'transaction_code': 'TXN-WLF-${caseId.hashCode.abs() % 10000}',
           'category_name_bn': 'যাকাত ও সমাজকল্যাণ বিতরণ',
@@ -99,21 +105,16 @@ class WelfareRepository {
           'created_by': approverName,
           'approval_status': 'approved',
           'is_reversal': false,
-          'created_at': DateTime.now().millisecondsSinceEpoch,
         };
-        try {
-          await _client.from('transactions').insert(txnPayload);
-        } catch (_) {
-          await _queueManager.enqueue(
-            tableName: 'transactions',
-            operation: 'insert',
-            payload: txnPayload,
-          );
-        }
+        await _cache.insertRecord(
+          tableName: 'transactions',
+          mosqueId: mosqueId,
+          payload: txnPayload,
+        );
       }
 
       return true;
-    } catch (e) {
+    } catch (_) {
       return false;
     }
   }

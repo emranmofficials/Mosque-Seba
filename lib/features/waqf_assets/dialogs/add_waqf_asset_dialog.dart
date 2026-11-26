@@ -6,11 +6,16 @@ import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../models/waqf_asset_model.dart';
 
-/// Dialog to record a new Waqf Property (ওয়াকফ সম্পত্তি নিবন্ধন)
+/// Dialog to record or edit a Waqf Property (ওয়াকফ সম্পত্তি নিবন্ধন ও সম্পাদনা)
 class AddWaqfAssetDialog extends StatefulWidget {
+  final WaqfAssetModel? existingAsset;
   final Future<bool> Function(WaqfAssetModel asset) onSubmit;
 
-  const AddWaqfAssetDialog({super.key, required this.onSubmit});
+  const AddWaqfAssetDialog({
+    super.key,
+    this.existingAsset,
+    required this.onSubmit,
+  });
 
   @override
   State<AddWaqfAssetDialog> createState() => _AddWaqfAssetDialogState();
@@ -46,6 +51,26 @@ class _AddWaqfAssetDialogState extends State<AddWaqfAssetDialog> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    final existing = widget.existingAsset;
+    if (existing != null) {
+      _titleController.text = existing.title;
+      _areaController.text = existing.areaOrQuantity;
+      _locationController.text = existing.locationOrDagNo;
+      _deedNoController.text = existing.deedOrRegNo;
+      _valuationController.text = existing.estimatedValueOrIncome;
+      _descriptionController.text = existing.description;
+      if (_categories.contains(existing.category)) {
+        _selectedCategory = existing.category;
+      }
+      if (_statuses.contains(existing.status)) {
+        _selectedStatus = existing.status;
+      }
+    }
+  }
+
+  @override
   void dispose() {
     _titleController.dispose();
     _areaController.dispose();
@@ -61,8 +86,9 @@ class _AddWaqfAssetDialogState extends State<AddWaqfAssetDialog> {
 
     setState(() => _isLoading = true);
 
+    final existing = widget.existingAsset;
     final asset = WaqfAssetModel(
-      id: '',
+      id: existing?.id ?? '',
       title: _titleController.text.trim(),
       category: _selectedCategory,
       areaOrQuantity: _areaController.text.trim(),
@@ -71,7 +97,10 @@ class _AddWaqfAssetDialogState extends State<AddWaqfAssetDialog> {
       estimatedValueOrIncome: _valuationController.text.trim(),
       status: _selectedStatus,
       description: _descriptionController.text.trim(),
-      recordedDate: DateTime.now().toIso8601String().split('T').first,
+      recordedDate:
+          existing?.recordedDate.isNotEmpty == true
+              ? existing!.recordedDate
+              : DateTime.now().toIso8601String().split('T').first,
     );
 
     final ok = await widget.onSubmit(asset);
@@ -81,7 +110,13 @@ class _AddWaqfAssetDialogState extends State<AddWaqfAssetDialog> {
       if (ok) {
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('ওয়াকফ সম্পত্তি সফলভাবে নিবন্ধিত হয়েছে')),
+          SnackBar(
+            content: Text(
+              existing != null
+                  ? 'ওয়াকফ সম্পত্তির তথ্য হালনাগাদ হয়েছে'
+                  : 'ওয়াকফ সম্পত্তি সফলভাবে নিবন্ধিত হয়েছে',
+            ),
+          ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -112,7 +147,9 @@ class _AddWaqfAssetDialogState extends State<AddWaqfAssetDialog> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'ওয়াকফ সম্পত্তি নিবন্ধন',
+                        widget.existingAsset != null
+                            ? 'ওয়াকফ সম্পত্তি সম্পাদনা'
+                            : 'ওয়াকফ সম্পত্তি নিবন্ধন',
                         style: AppTypography.titleLarge.copyWith(fontWeight: FontWeight.bold),
                       ),
                       IconButton(
@@ -229,7 +266,9 @@ class _AddWaqfAssetDialogState extends State<AddWaqfAssetDialog> {
                       const SizedBox(width: AppDimens.spacing12),
                       Expanded(
                         child: AppButton(
-                          label: 'নিবন্ধন করুন',
+                          label: widget.existingAsset != null
+                              ? 'হালনাগাদ করুন'
+                              : 'নিবন্ধন করুন',
                           isLoading: _isLoading,
                           onPressed: _handleSave,
                         ),

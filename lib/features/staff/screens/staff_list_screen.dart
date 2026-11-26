@@ -9,6 +9,10 @@ import '../../../shared/components/empty_state_view.dart';
 import '../../../shared/components/error_state_view.dart';
 import '../../../shared/widgets/adaptive_scaffold.dart';
 import '../../../shared/widgets/card_shell.dart';
+import '../../role_permissions/models/committee_role.dart';
+import '../../role_permissions/models/permission_catalog.dart';
+import '../../role_permissions/providers/role_permissions_provider.dart';
+import '../../role_permissions/services/permission_engine.dart';
 import '../dialogs/add_staff_dialog.dart';
 import '../dialogs/disburse_salary_dialog.dart';
 import '../models/staff_model.dart';
@@ -19,11 +23,59 @@ import '../widgets/staff_card.dart';
 class StaffListScreen extends ConsumerWidget {
   const StaffListScreen({super.key});
 
-  void _showAddStaffDialog(BuildContext context, WidgetRef ref) {
+  void _showAddStaffDialog(
+    BuildContext context,
+    WidgetRef ref, {
+    StaffModel? existingStaff,
+  }) {
     showDialog(
       context: context,
       builder: (ctx) => AddStaffDialog(
-        onSubmit: (newStaff) => ref.read(staffListProvider.notifier).addStaff(newStaff),
+        existingStaff: existingStaff,
+        onSubmit: (staff) {
+          if (existingStaff != null) {
+            return ref.read(staffListProvider.notifier).updateStaff(staff);
+          }
+          return ref.read(staffListProvider.notifier).addStaff(staff);
+        },
+      ),
+    );
+  }
+
+  Future<void> _confirmDeactivate(
+    BuildContext context,
+    WidgetRef ref,
+    StaffModel staff,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('স্টাফ অব্যাহতি নিশ্চিত করুন'),
+        content: Text('${staff.nameBn} কে সক্রিয় স্টাফ তালিকা থেকে সরাতে চান? পূর্ববর্তী বেতনের রেকর্ড সুরক্ষিত থাকবে।'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('বাতিল'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.urgentRed,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('অব্যাহতি দিন'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    final ok = await ref.read(staffListProvider.notifier).deactivateStaff(staff.id);
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          ok ? '${staff.nameBn} কে নিষ্ক্রিয় করা হয়েছে।' : 'প্রক্রিয়াটি ব্যর্থ হয়েছে।',
+        ),
       ),
     );
   }
@@ -56,23 +108,33 @@ class StaffListScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final staffAsync = ref.watch(staffListProvider);
+    final role = ref.watch(currentRoleProvider);
+    final canManageStaff = role == CommitteeRole.president ||
+        PermissionEngine.hasPermission(role, PermissionCatalog.staffManage);
+    final canPaySalary = role == CommitteeRole.president ||
+        PermissionEngine.hasPermission(role, PermissionCatalog.staffSalaryPay);
+    final canViewPayroll = role == CommitteeRole.president ||
+        PermissionEngine.hasPermission(role, PermissionCatalog.staffSalaryView);
 
     return AdaptiveScaffold(
       title: 'মসজিদ স্টাফ ও ইমাম-মুয়াজ্জিন',
       actions: [
-        IconButton(
-          icon: const Icon(Icons.history_edu),
-          tooltip: 'বেতন পরিশোধ খতিয়ান',
-          onPressed: () => context.push('/staff-payroll'),
-        ),
+        if (canViewPayroll)
+          IconButton(
+            icon: const Icon(Icons.history_edu),
+            tooltip: 'বেতন পরিশোধ খতিয়ান',
+            onPressed: () => context.push('/staff-payroll'),
+          ),
       ],
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: AppColors.primary,
-        foregroundColor: AppColors.onPrimary,
-        icon: const Icon(Icons.person_add_alt_1),
-        label: const Text('স্টাফ নিয়োগ', style: TextStyle(fontWeight: FontWeight.bold)),
-        onPressed: () => _showAddStaffDialog(context, ref),
-      ),
+      floatingActionButton: canManageStaff
+          ? FloatingActionButton.extended(
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.onPrimary,
+              icon: const Icon(Icons.person_add_alt_1),
+              label: const Text('স্টাফ নিয়োগ', style: TextStyle(fontWeight: FontWeight.bold)),
+              onPressed: () => _showAddStaffDialog(context, ref),
+            )
+          : null,
       body: staffAsync.when(
         loading: () => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
         error: (err, _) => ErrorStateView(
@@ -152,7 +214,14 @@ class StaffListScreen extends ConsumerWidget {
                     padding: const EdgeInsets.only(bottom: AppDimens.spacing12),
                     child: StaffCard(
                       staff: staff,
+                      canPaySalary: canPaySalary,
                       onPaySalary: () => _showDisburseDialog(context, ref, staff),
+                      onEdit: canManageStaff
+                          ? () => _showAddStaffDialog(context, ref, existingStaff: staff)
+                          : null,
+                      onDeactivate: canManageStaff
+                          ? () => _confirmDeactivate(context, ref, staff)
+                          : null,
                     ),
                   ),
                 ),

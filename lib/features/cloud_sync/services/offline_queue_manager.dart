@@ -93,4 +93,14 @@ class OfflineQueueManager {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_outboxKey);
   }
+
+  /// Counts pending outbox mutations grouped by Supabase table name
+  Future<Map<String, int>> getPendingCountsByTable() async {
+    final queue = await getPendingQueue();
+    final counts = <String, int>{};
+    for (final item in queue) {
+      counts[item.tableName] = (counts[item.tableName] ?? 0) + 1;
+    }
+    return counts;
+  }
 }

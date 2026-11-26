@@ -6,6 +6,7 @@ import '../../../shared/components/error_state_view.dart';
 import '../../../shared/widgets/adaptive_scaffold.dart';
 import '../../staff/providers/staff_provider.dart';
 import '../dialogs/assign_duty_dialog.dart';
+import '../models/duty_roster_item.dart';
 import '../providers/duty_roster_provider.dart';
 import '../widgets/roster_waqt_card.dart';
 
@@ -32,7 +33,13 @@ class DutyRosterScreen extends ConsumerWidget {
     'জুমা',
   ];
 
-  void _showAssignDialog(BuildContext context, WidgetRef ref, String waqt, String day) {
+  void _showAssignDialog(
+    BuildContext context,
+    WidgetRef ref,
+    String waqt,
+    String day, {
+    DutyRosterItem? existingItem,
+  }) {
     final staffList = ref.read(staffListProvider).asData?.value ?? [];
 
     showDialog(
@@ -41,6 +48,7 @@ class DutyRosterScreen extends ConsumerWidget {
         dayOfWeek: day,
         waqtName: waqt,
         staffList: staffList,
+        existingItem: existingItem,
         onAssign: (item) => ref.read(dutyRosterListProvider.notifier).assignDuty(item),
       ),
     );
@@ -109,7 +117,15 @@ class DutyRosterScreen extends ConsumerWidget {
                       child: RosterWaqtCard(
                         waqtName: waqt,
                         assignments: assignments,
-                        onAssign: () => _showAssignDialog(context, ref, waqt, selectedDay),
+                        onAssign: () => _showAssignDialog(
+                          context,
+                          ref,
+                          waqt,
+                          selectedDay,
+                          existingItem: assignments.length == 1 ? assignments.first : null,
+                        ),
+                        onRemove: (id) =>
+                            ref.read(dutyRosterListProvider.notifier).removeDuty(id),
                       ),
                     );
                   }).toList(),

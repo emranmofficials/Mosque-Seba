@@ -10,11 +10,17 @@ import '../models/staff_model.dart';
 class StaffCard extends StatelessWidget {
   final StaffModel staff;
   final VoidCallback onPaySalary;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDeactivate;
+  final bool canPaySalary;
 
   const StaffCard({
     super.key,
     required this.staff,
     required this.onPaySalary,
+    this.onEdit,
+    this.onDeactivate,
+    this.canPaySalary = true,
   });
 
   @override
@@ -95,6 +101,29 @@ class StaffCard extends StatelessWidget {
                   ),
                 ],
               ),
+              if (onEdit != null || onDeactivate != null)
+                PopupMenuButton<String>(
+                  icon: const Icon(Icons.more_vert, size: 18, color: AppColors.textSecondary),
+                  onSelected: (val) {
+                    if (val == 'edit') onEdit?.call();
+                    if (val == 'deactivate') onDeactivate?.call();
+                  },
+                  itemBuilder: (ctx) => [
+                    if (onEdit != null)
+                      const PopupMenuItem(
+                        value: 'edit',
+                        child: Text('তথ্য সম্পাদনা'),
+                      ),
+                    if (onDeactivate != null)
+                      const PopupMenuItem(
+                        value: 'deactivate',
+                        child: Text(
+                          'নিষ্ক্রিয় / অব্যাহতি',
+                          style: TextStyle(color: AppColors.error),
+                        ),
+                      ),
+                  ],
+                ),
             ],
           ),
           const SizedBox(height: AppDimens.spacing12),
@@ -109,17 +138,18 @@ class StaffCard extends StatelessWidget {
                 style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
               ),
               const Spacer(),
-              ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: AppColors.onPrimary,
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimens.radiusSm)),
+              if (canPaySalary)
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: AppColors.onPrimary,
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimens.radiusSm)),
+                  ),
+                  icon: const Icon(Icons.payments_outlined, size: 16),
+                  label: const Text('বেতন পরিশোধ', style: TextStyle(fontWeight: FontWeight.bold)),
+                  onPressed: onPaySalary,
                 ),
-                icon: const Icon(Icons.payments_outlined, size: 16),
-                label: const Text('বেতন পরিশোধ', style: TextStyle(fontWeight: FontWeight.bold)),
-                onPressed: onPaySalary,
-              ),
             ],
           ),
         ],

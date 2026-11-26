@@ -1,5 +1,4 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../core/network/supabase_service.dart';
+import '../../../core/database/offline_cache_service.dart';
 import '../models/finance_transaction_model.dart';
 
 /// Financial Summary metrics (মোট হিসাবের সারাংশ)
@@ -32,40 +31,44 @@ class FinancialSummary {
 
 /// Repository for Financial Ledger and Approvals (আর্থিক খতিয়ান ও অনুমোদন রিপোজিটরি)
 class FinanceRepository {
-  SupabaseClient get _client => SupabaseService.client;
+  final OfflineCacheService _cache;
 
-  /// Fetch all transactions for a mosque
+  FinanceRepository({OfflineCacheService? cache})
+      : _cache = cache ?? OfflineCacheService.instance;
+
+  /// Fetch all transactions for a mosque (Supabase online with Drift SQLite fallback)
   Future<List<FinanceTransactionModel>> fetchTransactions({
     required String mosqueId,
     String? typeFilter,
     String? statusFilter,
   }) async {
-    try {
-      var query = _client.from('transactions').select().eq('mosque_id', mosqueId);
-
-      if (typeFilter != null && typeFilter.isNotEmpty && typeFilter != 'all') {
-        query = query.eq('type', typeFilter.toLowerCase());
-      }
-
-      if (statusFilter != null && statusFilter.isNotEmpty && statusFilter != 'all') {
-        query = query.eq('approval_status', statusFilter.toLowerCase());
-      }
-
-      final response = await query.order('created_at', ascending: false);
-      final List<dynamic> data = response as List<dynamic>;
-
-      return data
-          .map((item) => FinanceTransactionModel.fromJson(item as Map<String, dynamic>))
-          .toList();
-    } catch (e) {
-      return [];
+    final equals = <String, dynamic>{};
+    if (typeFilter != null && typeFilter.isNotEmpty && typeFilter != 'all') {
+      equals['type'] = typeFilter.toLowerCase();
     }
+    if (statusFilter != null && statusFilter.isNotEmpty && statusFilter != 'all') {
+      equals['approval_status'] = statusFilter.toLowerCase();
+    }
+
+    final rows = await _cache.fetchList(
+      tableName: 'transactions',
+      mosqueId: mosqueId,
+      orderBy: 'created_at',
+      ascending: false,
+      equalsFilters: equals,
+    );
+
+    final list = rows.map(FinanceTransactionModel.fromJson).toList();
+    list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return list;
   }
 
-  /// Calculate live summary metrics
+  /// Calculate live summary metrics directly from approved ledger entries
   FinancialSummary calculateSummary(List<FinanceTransactionModel> transactions) {
     double income = 0.0;
     double expense = 0.0;
+    double bankNet = 0.0;
+    double cashNet = 0.0;
     int pendingCount = 0;
 
     for (final txn in transactions) {
@@ -75,24 +78,44 @@ class FinanceRepository {
       }
       if (txn.approvalStatus == 'rejected' || txn.isReversal) continue;
 
+      final descLower = txn.description.toLowerCase();
+      final catLower = txn.categoryNameBn.toLowerCase();
+      final isBankTxn = catLower.contains('ব্যাংক') ||
+          catLower.contains('bank') ||
+          descLower.contains('ব্যাংক') ||
+          descLower.contains('bank') ||
+          descLower.contains('বিকাশ') ||
+          descLower.contains('bkash') ||
+          descLower.contains('nagad') ||
+          descLower.contains('নগদ ওয়ালেট') ||
+          descLower.contains('রকেট') ||
+          descLower.contains('চেক');
+
       if (txn.isIncome) {
         income += txn.amount;
+        if (isBankTxn) {
+          bankNet += txn.amount;
+        } else {
+          cashNet += txn.amount;
+        }
       } else {
         expense += txn.amount;
+        if (isBankTxn) {
+          bankNet -= txn.amount;
+        } else {
+          cashNet -= txn.amount;
+        }
       }
     }
 
     final net = income - expense;
-    // Approximating 65% cash in hand and 35% bank deposit as per legacy distribution
-    final cash = net > 0 ? net * 0.65 : 0.0;
-    final bank = net > 0 ? net * 0.35 : 0.0;
 
     return FinancialSummary(
       totalIncome: income,
       totalExpense: expense,
       netBalance: net,
-      cashInHand: cash,
-      bankBalance: bank,
+      cashInHand: cashNet,
+      bankBalance: bankNet,
       pendingVouchersCount: pendingCount,
     );
   }
@@ -111,16 +134,13 @@ class FinanceRepository {
     String sourceType = 'manual',
   }) async {
     try {
-      // Threshold rules:
-      // Amount <= 5,000: Auto approved if submitted by Treasurer or President
-      // Amount > 5,000: Pending approval
       final isAutoApproved = amount <= 5000.0 &&
           (userRole == 'treasurer' || userRole == 'president');
 
       final status = isAutoApproved ? 'approved' : 'pending';
       final approvedBy = isAutoApproved ? createdBy : null;
-
-      final txnCode = 'TXN-${DateTime.now().year}-${DateTime.now().millisecondsSinceEpoch % 1000000}';
+      final txnCode =
+          'TXN-${DateTime.now().year}-${DateTime.now().millisecondsSinceEpoch % 1000000}';
 
       final payload = {
         'mosque_id': mosqueId,
@@ -138,9 +158,13 @@ class FinanceRepository {
         'is_reversal': false,
       };
 
-      final res = await _client.from('transactions').insert(payload).select().single();
+      final res = await _cache.insertRecord(
+        tableName: 'transactions',
+        mosqueId: mosqueId,
+        payload: payload,
+      );
       return FinanceTransactionModel.fromJson(res);
-    } catch (e) {
+    } catch (_) {
       return null;
     }
   }
@@ -151,19 +175,23 @@ class FinanceRepository {
     required String reviewerName,
     required String creatorName,
     required bool isApproved,
+    String? mosqueId,
   }) async {
-    // Non-negotiable invariant: Creator cannot approve their own voucher!
     if (reviewerName.trim().toLowerCase() == creatorName.trim().toLowerCase()) {
       throw Exception('অনুমোদন নীতি লঙ্ঘন: ভাউচার তৈরিকারী নিজের ভাউচার অনুমোদন করতে পারবেন না!');
     }
 
     try {
-      await _client.from('transactions').update({
-        'approval_status': isApproved ? 'approved' : 'rejected',
-        'approved_by': reviewerName,
-      }).eq('id', transactionId);
-      return true;
-    } catch (e) {
+      return await _cache.updateRecord(
+        tableName: 'transactions',
+        id: transactionId,
+        mosqueId: mosqueId,
+        updates: {
+          'approval_status': isApproved ? 'approved' : 'rejected',
+          'approved_by': reviewerName,
+        },
+      );
+    } catch (_) {
       return false;
     }
   }
@@ -176,14 +204,13 @@ class FinanceRepository {
     required String reversedBy,
   }) async {
     try {
-      // 1. Mark original as reversed
-      await _client
-          .from('transactions')
-          .update({'is_reversal': true})
-          .eq('id', originalTxn.id)
-          .eq('mosque_id', mosqueId);
+      await _cache.updateRecord(
+        tableName: 'transactions',
+        id: originalTxn.id,
+        mosqueId: mosqueId,
+        updates: {'is_reversal': true},
+      );
 
-      // 2. Insert offsetting reversal entry
       final reversalType = originalTxn.isIncome ? 'expense' : 'income';
       final payload = {
         'mosque_id': mosqueId,
@@ -201,9 +228,13 @@ class FinanceRepository {
         'is_reversal': true,
       };
 
-      await _client.from('transactions').insert(payload);
+      await _cache.insertRecord(
+        tableName: 'transactions',
+        mosqueId: mosqueId,
+        payload: payload,
+      );
       return true;
-    } catch (e) {
+    } catch (_) {
       return false;
     }
   }

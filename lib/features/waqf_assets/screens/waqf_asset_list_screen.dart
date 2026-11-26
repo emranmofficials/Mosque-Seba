@@ -9,6 +9,8 @@ import '../../../shared/components/empty_state_view.dart';
 import '../../../shared/components/error_state_view.dart';
 import '../../../shared/widgets/adaptive_scaffold.dart';
 import '../../../shared/widgets/card_shell.dart';
+import '../../role_permissions/models/committee_role.dart';
+import '../../role_permissions/providers/role_permissions_provider.dart';
 import '../dialogs/add_waqf_asset_dialog.dart';
 import '../providers/waqf_provider.dart';
 import '../widgets/waqf_asset_card.dart';
@@ -23,6 +25,7 @@ class WaqfAssetListScreen extends ConsumerWidget {
     'দোকান / মার্কেট',
     'পুকুর / জলাশয়',
     'ভবন / স্থাপনা',
+    'অন্যান্য',
   ];
 
   void _showAddDialog(BuildContext context, WidgetRef ref) {
@@ -38,16 +41,22 @@ class WaqfAssetListScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final propertiesAsync = ref.watch(waqfListProvider);
     final selectedCategory = ref.watch(waqfCategoryFilterProvider);
+    final role = ref.watch(currentRoleProvider);
+    final canManageWaqf = role == CommitteeRole.president ||
+        role.canEditMosqueProfile() ||
+        role.canManageFinance();
 
     return AdaptiveScaffold(
       title: 'ওয়াকফ ও সম্পত্তি ডিরেক্টরি',
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: AppColors.primary,
-        foregroundColor: AppColors.onPrimary,
-        icon: const Icon(Icons.add_location_alt_outlined),
-        label: const Text('সম্পত্তি যোগ', style: TextStyle(fontWeight: FontWeight.bold)),
-        onPressed: () => _showAddDialog(context, ref),
-      ),
+      floatingActionButton: canManageWaqf
+          ? FloatingActionButton.extended(
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.onPrimary,
+              icon: const Icon(Icons.add_location_alt_outlined),
+              label: const Text('সম্পত্তি যোগ', style: TextStyle(fontWeight: FontWeight.bold)),
+              onPressed: () => _showAddDialog(context, ref),
+            )
+          : null,
       body: Column(
         children: [
           // Category filter bar

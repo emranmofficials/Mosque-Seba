@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../../../core/theme/app_colors.dart';
@@ -8,18 +9,103 @@ import '../../../core/utils/bengali_number_formatter.dart';
 import '../../../shared/widgets/adaptive_scaffold.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/card_shell.dart';
+import '../../role_permissions/models/committee_role.dart';
+import '../../role_permissions/providers/role_permissions_provider.dart';
+import '../dialogs/edit_member_dialog.dart';
 import '../models/member_model.dart';
+import '../providers/member_provider.dart';
 
 /// Screen displaying full member profile and QR verification badge
-class MemberProfileScreen extends StatelessWidget {
+class MemberProfileScreen extends ConsumerStatefulWidget {
   final MemberModel member;
 
   const MemberProfileScreen({super.key, required this.member});
 
   @override
+  ConsumerState<MemberProfileScreen> createState() => _MemberProfileScreenState();
+}
+
+class _MemberProfileScreenState extends ConsumerState<MemberProfileScreen> {
+  late MemberModel _member;
+
+  @override
+  void initState() {
+    super.initState();
+    _member = widget.member;
+  }
+
+  Future<void> _confirmDelete() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('সদস্য অপসারণ'),
+        content: Text('${_member.nameBn} কে তালিকা থেকে মুছে ফেলতে চান?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('বাতিল'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.urgentRed,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('মুছে ফেলুন'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    final ok = await ref.read(memberListProvider.notifier).deleteMember(_member.id);
+    if (!mounted) return;
+    if (ok) {
+      context.pop();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('সদস্য অপসারণ ব্যর্থ হয়েছে।')),
+      );
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final role = ref.watch(currentRoleProvider);
+    final canManage = role == CommitteeRole.president || role.canManageMembers();
+    final member = _member;
+
     return AdaptiveScaffold(
       title: 'সদস্য পরিচিতি',
+      actions: canManage
+          ? [
+              IconButton(
+                tooltip: 'তথ্য সম্পাদনা',
+                icon: const Icon(Icons.edit_outlined),
+                onPressed: () {
+                  showDialog<void>(
+                    context: context,
+                    builder: (ctx) => EditMemberDialog(
+                      member: member,
+                      onUpdate: (updated) async {
+                        final ok = await ref
+                            .read(memberListProvider.notifier)
+                            .updateMember(updated);
+                        if (ok && mounted) {
+                          setState(() => _member = updated);
+                        }
+                        return ok;
+                      },
+                    ),
+                  );
+                },
+              ),
+              IconButton(
+                tooltip: 'অপসারণ',
+                icon: const Icon(Icons.delete_outline, color: AppColors.urgentRed),
+                onPressed: _confirmDelete,
+              ),
+            ]
+          : null,
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(AppDimens.spacing16),
         child: Column(
@@ -65,6 +151,11 @@ class MemberProfileScreen extends StatelessWidget {
                   const SizedBox(height: AppDimens.spacing16),
                   const Divider(),
                   const SizedBox(height: AppDimens.spacing12),
+                  _buildProfileRow(
+                    Icons.badge_outlined,
+                    'কমিটির পদবি',
+                    CommitteeRole.fromCode(member.roleCode).titleBn,
+                  ),
                   _buildProfileRow(Icons.phone, 'মোবাইল', BengaliNumberFormatter.toBengali(member.mobile)),
                   _buildProfileRow(Icons.location_on, 'গ্রাম / এলাকা', member.villageArea.isNotEmpty ? member.villageArea : 'উল্লেখ নেই'),
                   _buildProfileRow(Icons.payments, 'মাসিক চাঁদা অঙ্গীকার', BengaliNumberFormatter.formatCurrency(member.monthlyChanda)),

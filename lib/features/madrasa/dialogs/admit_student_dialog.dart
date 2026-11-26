@@ -4,11 +4,16 @@ import '../../../core/theme/app_dimens.dart';
 import '../../../core/utils/bengali_number_formatter.dart';
 import '../models/student_model.dart';
 
-/// Modal Dialog for Admitting a New Madrasa Student (শিক্ষার্থী ভর্তি ফরম)
+/// Modal Dialog for Admitting or Editing a Madrasa Student (শিক্ষার্থী ভর্তি ও সম্পাদনা ফরম)
 class AdmitStudentDialog extends StatefulWidget {
+  final StudentModel? existingStudent;
   final Function(StudentModel) onSubmit;
 
-  const AdmitStudentDialog({super.key, required this.onSubmit});
+  const AdmitStudentDialog({
+    super.key,
+    this.existingStudent,
+    required this.onSubmit,
+  });
 
   @override
   State<AdmitStudentDialog> createState() => _AdmitStudentDialogState();
@@ -38,6 +43,30 @@ class _AdmitStudentDialogState extends State<AdmitStudentDialog> {
   final List<String> _bloodGroups = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'];
 
   @override
+  void initState() {
+    super.initState();
+    final existing = widget.existingStudent;
+    if (existing != null) {
+      _nameBnController.text = existing.nameBn;
+      _nameEnController.text = existing.nameEn;
+      _guardianNameController.text = existing.guardianName;
+      _guardianMobileController.text = existing.guardianMobile;
+      _guardianNidController.text = existing.guardianNid;
+      _monthlyFeeController.text = existing.monthlyFee.toInt().toString();
+      if (_classes.contains(existing.className)) {
+        _selectedClass = existing.className;
+      }
+      if (_bloodGroups.contains(existing.bloodGroup)) {
+        _selectedBloodGroup = existing.bloodGroup;
+      }
+      final parsedDate = DateTime.tryParse(existing.admissionDate);
+      if (parsedDate != null) {
+        _admissionDate = parsedDate;
+      }
+    }
+  }
+
+  @override
   void dispose() {
     _nameBnController.dispose();
     _nameEnController.dispose();
@@ -51,25 +80,27 @@ class _AdmitStudentDialogState extends State<AdmitStudentDialog> {
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
 
+    final existing = widget.existingStudent;
     final dateStr =
         '${_admissionDate.year}-${_admissionDate.month.toString().padLeft(2, '0')}-${_admissionDate.day.toString().padLeft(2, '0')}';
-    final randomCode =
+    final code = existing?.studentCode ??
         'MS-${_selectedClass.characters.first}-${DateTime.now().millisecondsSinceEpoch % 1000}';
+    final feeEnglish = BengaliNumberFormatter.toEnglishDigits(_monthlyFeeController.text.trim());
 
     final student = StudentModel(
-      id: 'std-${DateTime.now().millisecondsSinceEpoch}',
-      studentCode: randomCode,
+      id: existing?.id ?? '',
+      studentCode: code,
       nameBn: _nameBnController.text.trim(),
       nameEn: _nameEnController.text.trim(),
       className: _selectedClass,
       guardianName: _guardianNameController.text.trim(),
       guardianMobile: _guardianMobileController.text.trim(),
       guardianNid: _guardianNidController.text.trim(),
-      monthlyFee: double.tryParse(_monthlyFeeController.text.trim()) ?? 0.0,
+      monthlyFee: double.tryParse(feeEnglish) ?? 0.0,
       admissionDate: dateStr,
       bloodGroup: _selectedBloodGroup,
-      status: 'active',
-      createdAt: DateTime.now().millisecondsSinceEpoch,
+      status: existing?.status ?? 'active',
+      createdAt: existing?.createdAt ?? DateTime.now().millisecondsSinceEpoch,
     );
 
     widget.onSubmit(student);
@@ -104,9 +135,11 @@ class _AdmitStudentDialogState extends State<AdmitStudentDialog> {
                           child: const Icon(Icons.school, color: AppColors.emeraldPrimary, size: 22),
                         ),
                         const SizedBox(width: 10),
-                        const Text(
-                          'নতুন শিক্ষার্থী ভর্তি ফরম',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        Text(
+                          widget.existingStudent != null
+                              ? 'শিক্ষার্থীর তথ্য সম্পাদনা'
+                              : 'নতুন শিক্ষার্থী ভর্তি ফরম',
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                       ],
                     ),
@@ -196,6 +229,19 @@ class _AdmitStudentDialogState extends State<AdmitStudentDialog> {
                         ),
                         const SizedBox(height: 14),
 
+                        // Guardian NID Number
+                        TextFormField(
+                          controller: _guardianNidController,
+                          keyboardType: TextInputType.number,
+                          decoration: InputDecoration(
+                            labelText: 'অভিভাবকের এনআইডি / জন্ম নিবন্ধন (ঐচ্ছিক)',
+                            hintText: '১০ বা ১৭ ডিজিটের নম্বর',
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppDimens.radiusSmall)),
+                            prefixIcon: const Icon(Icons.credit_card_outlined),
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+
                         // Monthly Fee & Blood Group Row
                         Row(
                           children: [
@@ -278,7 +324,12 @@ class _AdmitStudentDialogState extends State<AdmitStudentDialog> {
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimens.radiusButton)),
                   ),
-                  child: const Text('ভর্তি নিশ্চিত করুন', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  child: Text(
+                    widget.existingStudent != null
+                        ? 'তথ্য হালনাগাদ করুন'
+                        : 'ভর্তি নিশ্চিত করুন',
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
                 ),
               ],
             ),

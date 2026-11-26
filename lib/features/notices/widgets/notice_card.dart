@@ -10,12 +10,14 @@ import '../models/notice_model.dart';
 class NoticeCard extends StatelessWidget {
   final NoticeModel notice;
   final VoidCallback? onPinToggle;
+  final VoidCallback? onEdit;
   final VoidCallback? onDelete;
 
   const NoticeCard({
     super.key,
     required this.notice,
     this.onPinToggle,
+    this.onEdit,
     this.onDelete,
   });
 
@@ -109,18 +111,25 @@ class NoticeCard extends StatelessWidget {
                 BengaliNumberFormatter.toBengali(notice.publishDate),
                 style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
               ),
-              if (onPinToggle != null || onDelete != null)
+              if (onPinToggle != null || onEdit != null || onDelete != null)
                 PopupMenuButton<String>(
                   icon: const Icon(Icons.more_vert, size: 18, color: AppColors.textSecondary),
                   onSelected: (val) {
                     if (val == 'pin') onPinToggle?.call();
+                    if (val == 'edit') onEdit?.call();
                     if (val == 'delete') onDelete?.call();
                   },
                   itemBuilder: (ctx) => [
-                    PopupMenuItem(
-                      value: 'pin',
-                      child: Text(notice.isPinned ? 'আন-পিন করুন' : 'পিন করুন'),
-                    ),
+                    if (onPinToggle != null)
+                      PopupMenuItem(
+                        value: 'pin',
+                        child: Text(notice.isPinned ? 'আন-পিন করুন' : 'পিন করুন'),
+                      ),
+                    if (onEdit != null)
+                      const PopupMenuItem(
+                        value: 'edit',
+                        child: Text('সম্পাদনা করুন'),
+                      ),
                     if (onDelete != null)
                       const PopupMenuItem(
                         value: 'delete',

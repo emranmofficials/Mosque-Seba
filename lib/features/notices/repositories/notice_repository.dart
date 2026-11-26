@@ -1,10 +1,13 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../core/network/supabase_service.dart';
+import '../../../core/database/offline_cache_service.dart';
+import '../../../core/services/notification_service.dart';
 import '../models/notice_model.dart';
 
 /// Repository for Official Mosque Notices (মসজিদ নোটিশ রিপোজিটরি)
 class NoticeRepository {
-  SupabaseClient get _client => SupabaseService.client;
+  final OfflineCacheService _cache;
+
+  NoticeRepository({OfflineCacheService? cache})
+      : _cache = cache ?? OfflineCacheService.instance;
 
   /// Fetch all notices for a mosque with optional priority filter
   Future<List<NoticeModel>> fetchNotices({
@@ -12,53 +15,105 @@ class NoticeRepository {
     String? priorityFilter,
     bool? pinnedOnly,
   }) async {
-    try {
-      var query = _client.from('notices').select().eq('mosque_id', mosqueId);
-
-      if (priorityFilter != null && priorityFilter.isNotEmpty && priorityFilter != 'all') {
-        query = query.eq('priority', priorityFilter.toLowerCase());
-      }
-
-      if (pinnedOnly == true) {
-        query = query.eq('is_pinned', true);
-      }
-
-      final response = await query.order('is_pinned', ascending: false).order('created_at', ascending: false);
-      final List<dynamic> data = response as List<dynamic>;
-
-      return data
-          .map((item) => NoticeModel.fromJson(item as Map<String, dynamic>))
-          .toList();
-    } catch (e) {
-      return [];
+    final equals = <String, dynamic>{};
+    if (priorityFilter != null && priorityFilter.isNotEmpty && priorityFilter != 'all') {
+      equals['priority'] = priorityFilter.toLowerCase();
     }
+    if (pinnedOnly == true) {
+      equals['is_pinned'] = true;
+    }
+
+    final rows = await _cache.fetchList(
+      tableName: 'notices',
+      mosqueId: mosqueId,
+      orderBy: 'created_at',
+      ascending: false,
+      equalsFilters: equals,
+    );
+
+    final list = rows.map(NoticeModel.fromJson).toList();
+    list.sort((a, b) {
+      if (a.isPinned != b.isPinned) return a.isPinned ? -1 : 1;
+      return b.createdAt.compareTo(a.createdAt);
+    });
+    return list;
   }
 
-  /// Publish a new notice
+  /// Publish a new notice, create in-app notification, and trigger local push for urgent items
   Future<NoticeModel?> publishNotice({
     required String mosqueId,
     required NoticeModel notice,
   }) async {
     try {
       final payload = notice.toJson();
-      payload['mosque_id'] = mosqueId;
-      if (payload['id'] == null || (payload['id'] as String).isEmpty) {
-        payload['id'] = 'not-${DateTime.now().millisecondsSinceEpoch}';
+      if ((payload['id']?.toString().trim() ?? '').isEmpty) {
+        payload.remove('id');
+      }
+      final res = await _cache.insertRecord(
+        tableName: 'notices',
+        mosqueId: mosqueId,
+        payload: payload,
+      );
+      final saved = NoticeModel.fromJson(res);
+
+      // Record inside Notification Center
+      await _cache.insertRecord(
+        tableName: 'notifications',
+        mosqueId: mosqueId,
+        payload: {
+          'mosque_id': mosqueId,
+          'title': saved.isUrgent ? '🚨 জরুরি নোটিশ: ${saved.title}' : saved.title,
+          'body': saved.content.length > 140
+              ? '${saved.content.substring(0, 140)}...'
+              : saved.content,
+          'priority': saved.priority,
+          'entity_type': 'notice',
+          'entity_id': saved.id,
+          'is_read': false,
+        },
+      );
+
+      if (saved.isUrgent || saved.isImportant) {
+        await NotificationService.instance.showInstantAlert(
+          title: saved.isUrgent ? '🚨 ${saved.title}' : '📢 ${saved.title}',
+          body: saved.content.length > 120
+              ? '${saved.content.substring(0, 120)}...'
+              : saved.content,
+          payload: '/notices',
+          isUrgent: saved.isUrgent,
+        );
       }
 
-      final res = await _client.from('notices').insert(payload).select().single();
-      return NoticeModel.fromJson(res);
-    } catch (e) {
+      return saved;
+    } catch (_) {
       return null;
     }
   }
 
-  /// Toggle pin status
-  Future<bool> togglePin(String noticeId, bool isPinned) async {
+  /// Update an existing notice
+  Future<bool> updateNotice(NoticeModel notice, {String? mosqueId}) async {
     try {
-      await _client.from('notices').update({'is_pinned': isPinned}).eq('id', noticeId);
-      return true;
-    } catch (e) {
+      return await _cache.updateRecord(
+        tableName: 'notices',
+        id: notice.id,
+        mosqueId: mosqueId,
+        updates: notice.toJson(),
+      );
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Toggle pin status
+  Future<bool> togglePin(String noticeId, bool isPinned, {String? mosqueId}) async {
+    try {
+      return await _cache.updateRecord(
+        tableName: 'notices',
+        id: noticeId,
+        mosqueId: mosqueId,
+        updates: {'is_pinned': isPinned},
+      );
+    } catch (_) {
       return false;
     }
   }
@@ -66,9 +121,8 @@ class NoticeRepository {
   /// Delete a notice
   Future<bool> deleteNotice(String noticeId) async {
     try {
-      await _client.from('notices').delete().eq('id', noticeId);
-      return true;
-    } catch (e) {
+      return await _cache.deleteRecord(tableName: 'notices', id: noticeId);
+    } catch (_) {
       return false;
     }
   }

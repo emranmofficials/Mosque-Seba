@@ -17,14 +17,16 @@ class HijriCalendarHelper {
     'জিলহজ',
   ];
 
-  /// Approximates Hijri date from Gregorian date with moon offset (-1, 0, +1)
-  static String formatHijriDate(DateTime gregorianDate, {int moonOffsetDays = 0}) {
+  /// Computes Hijri (year, month [1..12], day [1..30]) from Gregorian date.
+  static ({int year, int month, int day}) computeHijriParts(
+    DateTime gregorianDate, {
+    int moonOffsetDays = 0,
+  }) {
     final adjustedDate = gregorianDate.add(Duration(days: moonOffsetDays));
-    
-    // Julian Day Number Calculation
+
     int y = adjustedDate.year;
     int m = adjustedDate.month;
-    int d = adjustedDate.day;
+    final int d = adjustedDate.day;
 
     if (m < 3) {
       y -= 1;
@@ -39,7 +41,6 @@ class HijriCalendarHelper {
         b -
         1524.5;
 
-    // Convert Julian Day to Hijri Epoch
     final double z = jd - 1948438.5;
     final int l = (z / 10631).floor();
     final double rem = z - 10631 * l;
@@ -47,7 +48,7 @@ class HijriCalendarHelper {
     final int hijriYear = 30 * l + j + 1;
 
     final double dayOfYear = rem - (j * 354.36667) + 0.5;
-    int hijriMonth = ((dayOfYear) / 29.530588).floor() + 1;
+    int hijriMonth = (dayOfYear / 29.530588).floor() + 1;
     if (hijriMonth > 12) hijriMonth = 12;
     if (hijriMonth < 1) hijriMonth = 1;
 
@@ -55,9 +56,15 @@ class HijriCalendarHelper {
     if (hijriDay > 30) hijriDay = 30;
     if (hijriDay < 1) hijriDay = 1;
 
-    final monthName = hijriMonthsBn[hijriMonth - 1];
-    final dayBn = BengaliNumberFormatter.toBengaliDigits(hijriDay);
-    final yearBn = BengaliNumberFormatter.toBengaliDigits(hijriYear);
+    return (year: hijriYear, month: hijriMonth, day: hijriDay);
+  }
+
+  /// Approximates Hijri date from Gregorian date with moon offset (-1, 0, +1)
+  static String formatHijriDate(DateTime gregorianDate, {int moonOffsetDays = 0}) {
+    final parts = computeHijriParts(gregorianDate, moonOffsetDays: moonOffsetDays);
+    final monthName = hijriMonthsBn[parts.month - 1];
+    final dayBn = BengaliNumberFormatter.toBengaliDigits(parts.day);
+    final yearBn = BengaliNumberFormatter.toBengaliDigits(parts.year);
 
     return '$dayBn $monthName $yearBn হিজরি';
   }

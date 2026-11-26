@@ -25,98 +25,128 @@ class KpiSummaryGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Cash Balance Card
-        Expanded(
-          child: CardShell(
+        Row(
+          children: [
+            // Cash Balance Card
+            Expanded(
+              child: CardShell(
+                onTap: onFinanceTap,
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('নগদ ক্যাশ', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                        Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: const BoxDecoration(shape: BoxShape.circle, color: AppColors.emeraldSoft),
+                          child: const Icon(Icons.account_balance_wallet_outlined, size: 14, color: AppColors.emeraldPrimary),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      BengaliNumberFormatter.formatCurrency(cashBalance),
+                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.emeraldPrimary),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(width: MosqueSpace.sm),
+
+            // Bank Balance Card
+            Expanded(
+              child: CardShell(
+                onTap: onFinanceTap,
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('ব্যাংক জমা', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                        Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: const BoxDecoration(shape: BoxShape.circle, color: AppColors.goldLight),
+                          child: const Icon(Icons.account_balance_outlined, size: 14, color: AppColors.goldDark),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      BengaliNumberFormatter.formatCurrency(bankBalance),
+                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.goldDark),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(width: MosqueSpace.sm),
+
+            // Total Members Card
+            Expanded(
+              child: CardShell(
+                onTap: onMembersTap,
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('মোট সদস্য', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                        Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(shape: BoxShape.circle, color: AppColors.infoBlue.withOpacity(0.12)),
+                          child: const Icon(Icons.people_outline, size: 14, color: AppColors.infoBlue),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      '${BengaliNumberFormatter.toBengaliDigits(totalMembers)} জন',
+                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+        if (pendingApprovals > 0) ...[
+          const SizedBox(height: MosqueSpace.sm),
+          CardShell(
             onTap: onFinanceTap,
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            border: Border.all(color: AppColors.gold.withOpacity(0.5)),
+            child: Row(
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text('নগদ ক্যাশ', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
-                    Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: const BoxDecoration(shape: BoxShape.circle, color: AppColors.emeraldSoft),
-                      child: const Icon(Icons.account_balance_wallet_outlined, size: 14, color: AppColors.emeraldPrimary),
+                const Icon(Icons.pending_actions, size: 16, color: AppColors.goldDark),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'অনুমোদনের অপেক্ষায় থাকা ভাউচার: ${BengaliNumberFormatter.toBengaliDigits(pendingApprovals)}টি',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.goldDark,
                     ),
-                  ],
+                  ),
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  BengaliNumberFormatter.formatCurrency(cashBalance),
-                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.emeraldPrimary),
-                ),
+                const Icon(Icons.arrow_forward_ios, size: 12, color: AppColors.goldDark),
               ],
             ),
           ),
-        ),
-
-        const SizedBox(width: MosqueSpace.sm),
-
-        // Bank Balance Card
-        Expanded(
-          child: CardShell(
-            onTap: onFinanceTap,
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text('ব্যাংক জমা', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
-                    Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: const BoxDecoration(shape: BoxShape.circle, color: AppColors.goldLight),
-                      child: const Icon(Icons.account_balance_outlined, size: 14, color: AppColors.goldDark),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  BengaliNumberFormatter.formatCurrency(bankBalance),
-                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.goldDark),
-                ),
-              ],
-            ),
-          ),
-        ),
-
-        const SizedBox(width: MosqueSpace.sm),
-
-        // Total Members Card
-        Expanded(
-          child: CardShell(
-            onTap: onMembersTap,
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text('মোট সদস্য', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
-                    Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(shape: BoxShape.circle, color: AppColors.infoBlue.withOpacity(0.12)),
-                      child: const Icon(Icons.people_outline, size: 14, color: AppColors.infoBlue),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  '${BengaliNumberFormatter.toBengaliDigits(totalMembers)} জন',
-                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-          ),
-        ),
+        ],
       ],
     );
   }

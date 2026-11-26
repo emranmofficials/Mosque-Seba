@@ -1,10 +1,13 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../core/network/supabase_service.dart';
+import '../../../core/database/offline_cache_service.dart';
+import '../../app_security/security/encryption_helper.dart';
 import '../models/chanda_payment_model.dart';
 
 /// Repository for Chanda Payments & Collection (চাঁদা কালেকশন রিপোজিটরি)
 class ChandaRepository {
-  SupabaseClient get _client => SupabaseService.client;
+  final OfflineCacheService _cache;
+
+  ChandaRepository({OfflineCacheService? cache})
+      : _cache = cache ?? OfflineCacheService.instance;
 
   /// Fetch all chanda payments for a mosque
   Future<List<ChandaPaymentModel>> fetchPayments({
@@ -12,29 +15,28 @@ class ChandaRepository {
     String? monthFilter,
     String? memberId,
   }) async {
-    try {
-      var query = _client.from('chanda_payments').select().eq('mosque_id', mosqueId);
-
-      if (monthFilter != null && monthFilter.isNotEmpty) {
-        query = query.eq('month', monthFilter);
-      }
-
-      if (memberId != null && memberId.isNotEmpty) {
-        query = query.eq('member_id', memberId);
-      }
-
-      final response = await query.order('created_at', ascending: false);
-      final List<dynamic> data = response as List<dynamic>;
-
-      return data
-          .map((item) => ChandaPaymentModel.fromJson(item as Map<String, dynamic>))
-          .toList();
-    } catch (e) {
-      return [];
+    final equals = <String, dynamic>{};
+    if (monthFilter != null && monthFilter.isNotEmpty && monthFilter != 'সকল') {
+      equals['month'] = monthFilter;
     }
+    if (memberId != null && memberId.isNotEmpty) {
+      equals['member_id'] = memberId;
+    }
+
+    final rows = await _cache.fetchList(
+      tableName: 'chanda_payments',
+      mosqueId: mosqueId,
+      orderBy: 'created_at',
+      ascending: false,
+      equalsFilters: equals,
+    );
+
+    final list = rows.map(ChandaPaymentModel.fromJson).toList();
+    list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return list;
   }
 
-  /// Receive Chanda Payment with atomic double-entry finance cross-posting
+  /// Receive Chanda Payment with HMAC-signed QR & offline-safe Finance cross-posting
   Future<ChandaPaymentModel?> receivePayment({
     required String mosqueId,
     required String memberId,
@@ -45,8 +47,14 @@ class ChandaRepository {
     required String receivedBy,
   }) async {
     try {
-      final receiptCode = 'RCP-${DateTime.now().year}-${DateTime.now().millisecondsSinceEpoch % 100000}';
-      final qrCode = 'MOSQUE_SEBA:CHANDA:$receiptCode:$amount';
+      final receiptCode =
+          'RCP-${DateTime.now().year}-${DateTime.now().millisecondsSinceEpoch % 100000}';
+      final hmacSig = EncryptionHelper.generateReceiptSignature(
+        receiptNo: receiptCode,
+        amount: amount,
+        memberCode: memberId,
+      );
+      final qrCode = 'MOSQUE_SEBA:CHANDA:$receiptCode:$amount:$memberId:$hmacSig';
       final paidAt = DateTime.now().toIso8601String().split('T').first;
 
       final payload = {
@@ -64,11 +72,15 @@ class ChandaRepository {
         'paid_at': paidAt,
       };
 
-      // 1. Insert into chanda_payments
-      final res = await _client.from('chanda_payments').insert(payload).select().single();
+      // 1. Insert into chanda_payments (offline-safe)
+      final res = await _cache.insertRecord(
+        tableName: 'chanda_payments',
+        mosqueId: mosqueId,
+        payload: payload,
+      );
       final payment = ChandaPaymentModel.fromJson(res);
 
-      // 2. Cross-post to transactions (General Ledger) as INCOME
+      // 2. Cross-post to transactions (General Ledger) as INCOME (offline-safe)
       final txnPayload = {
         'mosque_id': mosqueId,
         'transaction_code': 'TXN-${DateTime.now().millisecondsSinceEpoch % 1000000}',
@@ -76,7 +88,8 @@ class ChandaRepository {
         'type': 'income',
         'amount': amount,
         'txn_date': paidAt,
-        'description': '$memberNameBn এর $month এর মাসিক চাঁদা পরিশোধ (রসিদ: $receiptCode)',
+        'description':
+            '$memberNameBn এর $month এর মাসিক চাঁদা পরিশোধ (রসিদ: $receiptCode)',
         'source_type': 'chanda_payment',
         'source_id': payment.id,
         'created_by': receivedBy,
@@ -84,10 +97,14 @@ class ChandaRepository {
         'is_reversal': false,
       };
 
-      await _client.from('transactions').insert(txnPayload);
+      await _cache.insertRecord(
+        tableName: 'transactions',
+        mosqueId: mosqueId,
+        payload: txnPayload,
+      );
 
       return payment;
-    } catch (e) {
+    } catch (_) {
       return null;
     }
   }

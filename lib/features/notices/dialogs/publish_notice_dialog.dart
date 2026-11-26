@@ -6,14 +6,16 @@ import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../models/notice_model.dart';
 
-/// Modal dialog to draft and publish a new official mosque notice
+/// Modal dialog to draft, publish, or edit an official mosque notice
 class PublishNoticeDialog extends StatefulWidget {
   final String authorName;
+  final NoticeModel? existingNotice;
   final Future<bool> Function(NoticeModel notice) onSubmit;
 
   const PublishNoticeDialog({
     super.key,
     required this.authorName,
+    this.existingNotice,
     required this.onSubmit,
   });
 
@@ -37,6 +39,20 @@ class _PublishNoticeDialogState extends State<PublishNoticeDialog> {
   };
 
   @override
+  void initState() {
+    super.initState();
+    final existing = widget.existingNotice;
+    if (existing != null) {
+      _titleController.text = existing.title;
+      _contentController.text = existing.content;
+      if (_priorityMap.containsKey(existing.priority)) {
+        _priority = existing.priority;
+      }
+      _isPinned = existing.isPinned;
+    }
+  }
+
+  @override
   void dispose() {
     _titleController.dispose();
     _contentController.dispose();
@@ -48,15 +64,18 @@ class _PublishNoticeDialogState extends State<PublishNoticeDialog> {
 
     setState(() => _isLoading = true);
 
+    final existing = widget.existingNotice;
     final notice = NoticeModel(
-      id: '',
+      id: existing?.id ?? '',
       title: _titleController.text.trim(),
       content: _contentController.text.trim(),
       priority: _priority,
       isPinned: _isPinned,
-      publishDate: DateTime.now().toIso8601String().split('T').first,
-      createdBy: widget.authorName,
-      createdAt: DateTime.now().millisecondsSinceEpoch,
+      publishDate: existing?.publishDate ??
+          DateTime.now().toIso8601String().split('T').first,
+      status: existing?.status ?? 'published',
+      createdBy: existing?.createdBy ?? widget.authorName,
+      createdAt: existing?.createdAt ?? DateTime.now().millisecondsSinceEpoch,
     );
 
     final ok = await widget.onSubmit(notice);
@@ -66,7 +85,13 @@ class _PublishNoticeDialogState extends State<PublishNoticeDialog> {
       if (ok) {
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('নোটিশ সফলভাবে প্রকাশিত হয়েছে')),
+          SnackBar(
+            content: Text(
+              existing != null
+                  ? 'নোটিশ সফলভাবে হালনাগাদ হয়েছে'
+                  : 'নোটিশ সফলভাবে প্রকাশিত হয়েছে',
+            ),
+          ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -95,7 +120,9 @@ class _PublishNoticeDialogState extends State<PublishNoticeDialog> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'নতুন নোটিশ প্রকাশ',
+                        widget.existingNotice != null
+                            ? 'নোটিশ সম্পাদনা'
+                            : 'নতুন নোটিশ প্রকাশ',
                         style: AppTypography.titleLarge.copyWith(fontWeight: FontWeight.bold),
                       ),
                       IconButton(
@@ -159,7 +186,9 @@ class _PublishNoticeDialogState extends State<PublishNoticeDialog> {
                       const SizedBox(width: AppDimens.spacing12),
                       Expanded(
                         child: AppButton(
-                          label: 'প্রকাশ করুন',
+                          label: widget.existingNotice != null
+                              ? 'হালনাগাদ করুন'
+                              : 'প্রকাশ করুন',
                           isLoading: _isLoading,
                           onPressed: _handlePublish,
                         ),

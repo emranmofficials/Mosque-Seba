@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../authentication/providers/auth_provider.dart';
+import '../../finance/providers/finance_provider.dart';
 import '../models/chanda_payment_model.dart';
 import '../repositories/chanda_repository.dart';
 
@@ -54,6 +55,7 @@ class ChandaListNotifier extends StateNotifier<AsyncValue<List<ChandaPaymentMode
     );
     if (payment != null) {
       await loadPayments();
+      _ref.invalidate(financeListProvider);
     }
     return payment;
   }

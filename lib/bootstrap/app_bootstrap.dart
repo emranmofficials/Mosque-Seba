@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../core/database/offline_cache_service.dart';
 import '../core/network/supabase_service.dart';
+import '../core/services/notification_service.dart';
 import '../core/theme/app_colors.dart';
 import 'dependency_injection.dart';
 
@@ -38,6 +40,18 @@ class AppBootstrap {
       overrides: [
         sharedPreferencesProvider.overrideWithValue(sharedPreferences),
       ],
+    );
+
+    // Attach Drift SQLite DB to shared OfflineCacheService & init notifications
+    final db = container.read(appDatabaseProvider);
+    OfflineCacheService.instance.attachDatabase(db);
+
+    await NotificationService.instance.initialize(
+      onTapPayload: (routePayload) {
+        if (routePayload != null && routePayload.startsWith('/')) {
+          container.read(routerProvider).push(routePayload);
+        }
+      },
     );
 
     return container;

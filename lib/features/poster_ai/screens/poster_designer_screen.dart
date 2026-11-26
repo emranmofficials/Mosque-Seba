@@ -1,5 +1,14 @@
+import 'dart:io';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimens.dart';
 import '../../events/models/mosque_event_model.dart';
@@ -19,6 +28,8 @@ class PosterDesignerScreen extends ConsumerStatefulWidget {
 
 class _PosterDesignerScreenState extends ConsumerState<PosterDesignerScreen> {
   final _promptController = TextEditingController();
+  final GlobalKey _posterBoundaryKey = GlobalKey();
+  bool _isExporting = false;
 
   @override
   void initState() {
@@ -34,6 +45,68 @@ class _PosterDesignerScreenState extends ConsumerState<PosterDesignerScreen> {
   void dispose() {
     _promptController.dispose();
     super.dispose();
+  }
+
+  Future<Uint8List?> _capturePosterPng() async {
+    final boundary = _posterBoundaryKey.currentContext?.findRenderObject()
+        as RenderRepaintBoundary?;
+    if (boundary == null) return null;
+    final image = await boundary.toImage(pixelRatio: 3.0);
+    final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+    return byteData?.buffer.asUint8List();
+  }
+
+  Future<void> _sharePosterPng(PosterDesignModel design) async {
+    if (_isExporting) return;
+    setState(() => _isExporting = true);
+    try {
+      final pngBytes = await _capturePosterPng();
+      if (pngBytes == null) return;
+      final dir = await getTemporaryDirectory();
+      final file = File(
+        '${dir.path}/mosque_poster_${DateTime.now().millisecondsSinceEpoch}.png',
+      );
+      await file.writeAsBytes(pngBytes);
+      await Share.shareXFiles(
+        [XFile(file.path)],
+        text: '${design.eventTitle}\n${design.eventDate} • ${design.venue}',
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('পোস্টার এক্সপোর্টে ত্রুটি হয়েছে: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isExporting = false);
+    }
+  }
+
+  Future<void> _printPosterPdf(PosterDesignModel design) async {
+    if (_isExporting) return;
+    setState(() => _isExporting = true);
+    try {
+      final pngBytes = await _capturePosterPng();
+      if (pngBytes == null) return;
+      final doc = pw.Document();
+      final pdfImg = pw.MemoryImage(pngBytes);
+      doc.addPage(
+        pw.Page(
+          pageFormat: PdfPageFormat.a4,
+          build: (_) => pw.Center(child: pw.Image(pdfImg, fit: pw.BoxFit.contain)),
+        ),
+      );
+      final bytes = await doc.save();
+      await Printing.layoutPdf(
+        onLayout: (_) async => bytes,
+        name: 'Mosque_Poster.pdf',
+      );
+    } finally {
+      if (mounted) setState(() => _isExporting = false);
+    }
   }
 
   void _showEditSheet() {
@@ -89,7 +162,7 @@ class _PosterDesignerScreenState extends ConsumerState<PosterDesignerScreen> {
                       Icon(Icons.auto_awesome, color: AppColors.emeraldPrimary, size: 18),
                       SizedBox(width: 8),
                       Text(
-                        'Gemini 3.8 Flash দ্বারা পোস্টার জেনারেটর',
+                        'Gemini AI দ্বারা পোস্টার জেনারেটর',
                         style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.emeraldPrimary),
                       ),
                     ],
@@ -155,8 +228,11 @@ class _PosterDesignerScreenState extends ConsumerState<PosterDesignerScreen> {
             ),
             const SizedBox(height: 16),
 
-            // The High Fidelity Live Canvas
-            PosterPreviewCanvas(design: design),
+            // The High Fidelity Live Canvas wrapped in RepaintBoundary for PNG/PDF export
+            RepaintBoundary(
+              key: _posterBoundaryKey,
+              child: PosterPreviewCanvas(design: design),
+            ),
             const SizedBox(height: 20),
 
             // Action Buttons
@@ -166,23 +242,31 @@ class _PosterDesignerScreenState extends ConsumerState<PosterDesignerScreen> {
                   child: OutlinedButton.icon(
                     onPressed: _showEditSheet,
                     icon: const Icon(Icons.edit, size: 18),
-                    label: const Text('লেখা পরিবর্তন'),
+                    label: const Text('সম্পাদনা'),
                     style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12)),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _isExporting ? null : () => _printPosterPdf(design),
+                    icon: const Icon(Icons.print_outlined, size: 18),
+                    label: const Text('প্রিন্ট PDF'),
+                    style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 12)),
+                  ),
+                ),
+                const SizedBox(width: 8),
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('পোস্টার উচ্চ রেজোলিউশনে রেন্ডার ও ডাউনলোডের জন্য প্রস্তুত...'),
-                          backgroundColor: AppColors.emeraldPrimary,
-                        ),
-                      );
-                    },
-                    icon: const Icon(Icons.share, size: 18),
-                    label: const Text('শেয়ার ও প্রিন্ট'),
+                    onPressed: _isExporting ? null : () => _sharePosterPng(design),
+                    icon: _isExporting
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                          )
+                        : const Icon(Icons.share, size: 18),
+                    label: const Text('ছবি শেয়ার'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.emeraldPrimary,
                       foregroundColor: Colors.white,

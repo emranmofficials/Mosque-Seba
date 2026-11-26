@@ -26,23 +26,13 @@ class NoticeListNotifier extends StateNotifier<AsyncValue<List<NoticeModel>>> {
     try {
       final priority = _ref.read(noticePriorityFilterProvider);
       final pinnedOnly = _ref.read(noticePinnedOnlyFilterProvider);
-      final search = _ref.read(noticeSearchQueryProvider).trim().toLowerCase();
 
-      var list = await _repository.fetchNotices(
+      final list = await _repository.fetchNotices(
         mosqueId: _mosqueId,
         priorityFilter: priority,
         pinnedOnly: pinnedOnly,
       );
       if (!mounted) return;
-
-      if (search.isNotEmpty) {
-        list = list.where((n) {
-          return n.title.toLowerCase().contains(search) ||
-              n.content.toLowerCase().contains(search) ||
-              n.createdBy.toLowerCase().contains(search);
-        }).toList();
-      }
-
       state = AsyncValue.data(list);
     } catch (e, st) {
       if (!mounted) return;
@@ -62,8 +52,17 @@ class NoticeListNotifier extends StateNotifier<AsyncValue<List<NoticeModel>>> {
     return false;
   }
 
+  Future<bool> updateNotice(NoticeModel notice) async {
+    final ok = await _repository.updateNotice(notice, mosqueId: _mosqueId);
+    if (ok) {
+      await loadNotices();
+      return true;
+    }
+    return false;
+  }
+
   Future<bool> togglePin(String noticeId, bool isPinned) async {
-    final ok = await _repository.togglePin(noticeId, isPinned);
+    final ok = await _repository.togglePin(noticeId, isPinned, mosqueId: _mosqueId);
     if (ok) {
       await loadNotices();
       return true;
@@ -86,4 +85,16 @@ final noticeListProvider = StateNotifierProvider<NoticeListNotifier, AsyncValue<
   final authState = ref.watch(authNotifierProvider);
   final mosqueId = authState.valueOrNull?.mosqueId ?? 'mosque-default';
   return NoticeListNotifier(repo, mosqueId, ref);
+});
+
+final filteredNoticesProvider = Provider<List<NoticeModel>>((ref) {
+  final noticesAsync = ref.watch(noticeListProvider);
+  final query = ref.watch(noticeSearchQueryProvider).trim().toLowerCase();
+  final list = noticesAsync.valueOrNull ?? const [];
+  if (query.isEmpty) return list;
+  return list.where((n) {
+    return n.title.toLowerCase().contains(query) ||
+        n.content.toLowerCase().contains(query) ||
+        n.createdBy.toLowerCase().contains(query);
+  }).toList();
 });

@@ -1,10 +1,12 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../core/network/supabase_service.dart';
+import '../../../core/database/offline_cache_service.dart';
 import '../models/student_model.dart';
 
 /// Repository for Madrasa Students (মাদরাসা শিক্ষার্থী ও ভর্তি রিপোজিটরি)
 class MadrasaRepository {
-  SupabaseClient get _client => SupabaseService.client;
+  final OfflineCacheService _cache;
+
+  MadrasaRepository({OfflineCacheService? cache})
+      : _cache = cache ?? OfflineCacheService.instance;
 
   /// Fetch students for a mosque with optional class & status filters
   Future<List<StudentModel>> fetchStudents({
@@ -12,25 +14,25 @@ class MadrasaRepository {
     String? className,
     String? status,
   }) async {
-    try {
-      var query = _client.from('madrasa_students').select().eq('mosque_id', mosqueId);
-
-      if (className != null && className.isNotEmpty && className != 'all') {
-        query = query.eq('class_name', className);
-      }
-      if (status != null && status.isNotEmpty && status != 'all') {
-        query = query.eq('status', status);
-      }
-
-      final response = await query.order('student_code', ascending: true);
-      final List<dynamic> data = response as List<dynamic>;
-
-      return data
-          .map((item) => StudentModel.fromJson(item as Map<String, dynamic>))
-          .toList();
-    } catch (e) {
-      return [];
+    final equals = <String, dynamic>{};
+    if (className != null && className.isNotEmpty && className != 'all') {
+      equals['class_name'] = className;
     }
+    if (status != null && status.isNotEmpty && status != 'all') {
+      equals['status'] = status;
+    }
+
+    final rows = await _cache.fetchList(
+      tableName: 'madrasa_students',
+      mosqueId: mosqueId,
+      orderBy: 'student_code',
+      ascending: true,
+      equalsFilters: equals,
+    );
+
+    final list = rows.map(StudentModel.fromJson).toList();
+    list.sort((a, b) => a.studentCode.compareTo(b.studentCode));
+    return list;
   }
 
   /// Admit a new student
@@ -40,27 +42,31 @@ class MadrasaRepository {
   }) async {
     try {
       final payload = student.toJson();
-      payload['mosque_id'] = mosqueId;
-      if (payload['id'] == null || (payload['id'] as String).isEmpty) {
-        payload['id'] = 'std-${DateTime.now().millisecondsSinceEpoch}';
+      if ((payload['id']?.toString().trim() ?? '').isEmpty) {
+        payload.remove('id');
       }
-
-      final res = await _client.from('madrasa_students').insert(payload).select().single();
+      if (payload['created_at'] == 0) payload.remove('created_at');
+      final res = await _cache.insertRecord(
+        tableName: 'madrasa_students',
+        mosqueId: mosqueId,
+        payload: payload,
+      );
       return StudentModel.fromJson(res);
-    } catch (e) {
+    } catch (_) {
       return null;
     }
   }
 
   /// Update an existing student record
-  Future<bool> updateStudent(StudentModel student) async {
+  Future<bool> updateStudent(StudentModel student, {String? mosqueId}) async {
     try {
-      await _client
-          .from('madrasa_students')
-          .update(student.toJson())
-          .eq('id', student.id);
-      return true;
-    } catch (e) {
+      return await _cache.updateRecord(
+        tableName: 'madrasa_students',
+        id: student.id,
+        mosqueId: mosqueId,
+        updates: student.toJson(),
+      );
+    } catch (_) {
       return false;
     }
   }
@@ -68,9 +74,11 @@ class MadrasaRepository {
   /// Remove student
   Future<bool> deleteStudent(String studentId) async {
     try {
-      await _client.from('madrasa_students').delete().eq('id', studentId);
-      return true;
-    } catch (e) {
+      return await _cache.deleteRecord(
+        tableName: 'madrasa_students',
+        id: studentId,
+      );
+    } catch (_) {
       return false;
     }
   }

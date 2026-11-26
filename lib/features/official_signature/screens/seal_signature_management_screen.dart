@@ -1,65 +1,113 @@
-import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimens.dart';
+import '../../../core/utils/bengali_number_formatter.dart';
 import '../../../shared/widgets/card_shell.dart';
+import '../../authentication/providers/auth_provider.dart';
 import '../dialogs/signature_pad_dialog.dart';
 import '../services/signature_storage_service.dart';
 
 /// Screen for managing the Official Mosque Seal, Stamp, and Authorized Signatures
-class SealSignatureManagementScreen extends StatefulWidget {
+class SealSignatureManagementScreen extends ConsumerStatefulWidget {
   const SealSignatureManagementScreen({super.key});
 
   @override
-  State<SealSignatureManagementScreen> createState() => _SealSignatureManagementScreenState();
+  ConsumerState<SealSignatureManagementScreen> createState() =>
+      _SealSignatureManagementScreenState();
 }
 
-class _SealSignatureManagementScreenState extends State<SealSignatureManagementScreen> {
+class _SealSignatureManagementScreenState
+    extends ConsumerState<SealSignatureManagementScreen> {
   final _service = SignatureStorageService();
-  bool _hasPresidentSign = false;
-  bool _hasTreasurerSign = false;
-  bool _hasSecretarySign = false;
+  final _picker = ImagePicker();
+
+  Uint8List? _presidentSign;
+  Uint8List? _secretarySign;
+  Uint8List? _treasurerSign;
+  Uint8List? _sealBytes;
 
   @override
   void initState() {
     super.initState();
-    _loadSavedSignatures();
+    _loadSavedAssets();
   }
 
-  Future<void> _loadSavedSignatures() async {
+  Future<void> _loadSavedAssets() async {
     final pres = await _service.getSignature('president');
     final sec = await _service.getSignature('general_secretary');
     final treas = await _service.getSignature('treasurer');
+    final seal = await _service.getSeal();
     if (!mounted) return;
     setState(() {
-      _hasPresidentSign = pres != null && pres.isNotEmpty;
-      _hasSecretarySign = sec != null && sec.isNotEmpty;
-      _hasTreasurerSign = treas != null && treas.isNotEmpty;
+      _presidentSign = pres;
+      _secretarySign = sec;
+      _treasurerSign = treas;
+      _sealBytes = seal;
     });
   }
 
+  Future<void> _pickSealImage() async {
+    try {
+      final picked = await _picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 800,
+        maxHeight: 800,
+        imageQuality: 90,
+      );
+      if (picked == null) return;
+      final bytes = await picked.readAsBytes();
+      await _service.saveSeal(bytes);
+      if (!mounted) return;
+      setState(() => _sealBytes = bytes);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('অফিসিয়াল সিল সফলভাবে সংরক্ষিত হয়েছে'),
+          backgroundColor: AppColors.emeraldPrimary,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('সিল নির্বাচনে ত্রুটি হয়েছে: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _removeSeal() async {
+    await _service.deleteSeal();
+    if (!mounted) return;
+    setState(() => _sealBytes = null);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('অফিসিয়াল সিল মুছে ফেলা হয়েছে')),
+    );
+  }
+
   void _openSignDialog(String title, String role, String roleCode) {
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (ctx) => SignaturePadDialog(
         title: title,
         signatoryRole: role,
-        onSave: (points) async {
-          final serialized = points
-              .map((p) => p == null ? null : {'dx': p.dx, 'dy': p.dy})
-              .toList();
-          final bytes = Uint8List.fromList(utf8.encode(jsonEncode(serialized)));
-          await _service.saveSignature(roleCode: roleCode, signatureBytes: bytes);
+        onSavePng: (pngBytes) async {
+          await _service.saveSignature(
+            roleCode: roleCode,
+            signatureBytes: pngBytes,
+          );
           if (!mounted) return;
           setState(() {
-            if (roleCode == 'president') _hasPresidentSign = true;
-            if (roleCode == 'treasurer') _hasTreasurerSign = true;
-            if (roleCode == 'general_secretary') _hasSecretarySign = true;
+            if (roleCode == 'president') _presidentSign = pngBytes;
+            if (roleCode == 'treasurer') _treasurerSign = pngBytes;
+            if (roleCode == 'general_secretary') _secretarySign = pngBytes;
           });
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('$role-এর স্বাক্ষর সফলভাবে এনক্রিপ্ট করে সংরক্ষিত হয়েছে'),
+              content: Text('$role-এর স্বাক্ষর এনক্রিপ্ট করে সংরক্ষিত হয়েছে'),
               backgroundColor: AppColors.emeraldPrimary,
             ),
           );
@@ -68,8 +116,29 @@ class _SealSignatureManagementScreenState extends State<SealSignatureManagementS
     );
   }
 
+  Future<void> _deleteSignature(String roleCode, String roleLabel) async {
+    await _service.deleteSignature(roleCode);
+    if (!mounted) return;
+    setState(() {
+      if (roleCode == 'president') _presidentSign = null;
+      if (roleCode == 'treasurer') _treasurerSign = null;
+      if (roleCode == 'general_secretary') _secretarySign = null;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('$roleLabel-এর স্বাক্ষর মুছে ফেলা হয়েছে')),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final authUser = ref.watch(authNotifierProvider).valueOrNull;
+    final mosqueName = (authUser?.mosqueNameBn.isNotEmpty ?? false)
+        ? authUser!.mosqueNameBn
+        : 'মসজিদ সেবা কেন্দ্রীয় মসজিদ';
+    final committeeId = (authUser?.committeeId.isNotEmpty ?? false)
+        ? BengaliNumberFormatter.toBengali(authUser!.committeeId)
+        : 'MS-2026';
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('অফিসিয়াল সিল ও ডিজিটাল স্বাক্ষর'),
@@ -83,42 +152,69 @@ class _SealSignatureManagementScreenState extends State<SealSignatureManagementS
             child: Column(
               children: [
                 Container(
-                  width: 90,
-                  height: 90,
+                  width: 96,
+                  height: 96,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(color: AppColors.emeraldPrimary, width: 2),
                     color: AppColors.emeraldPrimary.withOpacity(0.08),
                   ),
-                  child: const Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.verified, color: AppColors.emeraldPrimary, size: 36),
-                        Text('অফিসিয়াল সিল', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.emeraldPrimary)),
-                      ],
-                    ),
-                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: _sealBytes != null
+                      ? Image.memory(
+                          _sealBytes!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => const Icon(
+                            Icons.verified,
+                            color: AppColors.emeraldPrimary,
+                            size: 36,
+                          ),
+                        )
+                      : const Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.verified, color: AppColors.emeraldPrimary, size: 36),
+                              Text(
+                                'অফিসিয়াল সিল',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.emeraldPrimary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                 ),
                 const SizedBox(height: 12),
-                const Text(
-                  'বায়তুল মুকাররম মডেল জামে মসজিদ',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                Text(
+                  mosqueName,
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 2),
-                const Text('স্থাপিত: ১৯৯৫ খ্রি. • ওয়াকফ রেজি নং: ৪২৪৫/ঢাকা', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                Text(
+                  'কমিটি আইডি: $committeeId • রসিদ ও PDF-এ স্বয়ংক্রিয়ভাবে যুক্ত হবে',
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  textAlign: TextAlign.center,
+                ),
                 const SizedBox(height: 14),
-                OutlinedButton.icon(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('মসজিদ সিল ফাইল আপলোড ডায়ালগ খোলা হচ্ছে...'),
-                        backgroundColor: AppColors.emeraldPrimary,
+                Wrap(
+                  spacing: 8,
+                  children: [
+                    OutlinedButton.icon(
+                      onPressed: _pickSealImage,
+                      icon: const Icon(Icons.upload_file, size: 16),
+                      label: Text(_sealBytes == null ? 'সিল আপলোড করুন' : 'সিল পরিবর্তন'),
+                    ),
+                    if (_sealBytes != null)
+                      OutlinedButton.icon(
+                        onPressed: _removeSeal,
+                        icon: const Icon(Icons.delete_outline, size: 16, color: Colors.red),
+                        label: const Text('মুছুন', style: TextStyle(color: Colors.red)),
                       ),
-                    );
-                  },
-                  icon: const Icon(Icons.upload_file, size: 16),
-                  label: const Text('নতুন সিল আপলোড করুন'),
+                  ],
                 ),
               ],
             ),
@@ -132,7 +228,7 @@ class _SealSignatureManagementScreenState extends State<SealSignatureManagementS
           ),
           const SizedBox(height: 4),
           const Text(
-            'রসিদ, ভাউচার ও নোটিশে ব্যবহারের জন্য এনক্রিপ্টেড স্বাক্ষর',
+            'রসিদ, ভাউচার ও রিপোর্ট কার্ড PDF-এ স্বয়ংক্রিয়ভাবে যুক্ত হবে',
             style: TextStyle(fontSize: 12, color: Colors.grey),
           ),
           const SizedBox(height: 12),
@@ -140,24 +236,39 @@ class _SealSignatureManagementScreenState extends State<SealSignatureManagementS
           _buildSignatoryTile(
             title: 'সভাপতি মহোদয়ের স্বাক্ষর',
             role: 'মুহতারাম সভাপতি',
-            isConfigured: _hasPresidentSign,
-            onTap: () => _openSignDialog('সভাপতির স্বাক্ষর', 'মুহতারাম সভাপতি', 'president'),
+            signatureBytes: _presidentSign,
+            onTap: () => _openSignDialog(
+              'সভাপতির স্বাক্ষর',
+              'মুহতারাম সভাপতি',
+              'president',
+            ),
+            onDelete: () => _deleteSignature('president', 'সভাপতি'),
           ),
           const SizedBox(height: 10),
 
           _buildSignatoryTile(
             title: 'সাধারণ সম্পাদকের স্বাক্ষর',
             role: 'সাধারণ সম্পাদক',
-            isConfigured: _hasSecretarySign,
-            onTap: () => _openSignDialog('সাধারণ সম্পাদকের স্বাক্ষর', 'সাধারণ সম্পাদক', 'general_secretary'),
+            signatureBytes: _secretarySign,
+            onTap: () => _openSignDialog(
+              'সাধারণ সম্পাদকের স্বাক্ষর',
+              'সাধারণ সম্পাদক',
+              'general_secretary',
+            ),
+            onDelete: () => _deleteSignature('general_secretary', 'সাধারণ সম্পাদক'),
           ),
           const SizedBox(height: 10),
 
           _buildSignatoryTile(
             title: 'কোষাধ্যক্ষের স্বাক্ষর',
             role: 'অর্থ সম্পাদক / কোষাধ্যক্ষ',
-            isConfigured: _hasTreasurerSign,
-            onTap: () => _openSignDialog('কোষাধ্যক্ষের স্বাক্ষর', 'কোষাধ্যক্ষ', 'treasurer'),
+            signatureBytes: _treasurerSign,
+            onTap: () => _openSignDialog(
+              'কোষাধ্যক্ষের স্বাক্ষর',
+              'কোষাধ্যক্ষ',
+              'treasurer',
+            ),
+            onDelete: () => _deleteSignature('treasurer', 'কোষাধ্যক্ষ'),
           ),
         ],
       ),
@@ -167,52 +278,103 @@ class _SealSignatureManagementScreenState extends State<SealSignatureManagementS
   Widget _buildSignatoryTile({
     required String title,
     required String role,
-    required bool isConfigured,
+    required Uint8List? signatureBytes,
     required VoidCallback onTap,
+    required VoidCallback onDelete,
   }) {
+    final isConfigured = signatureBytes != null && signatureBytes.isNotEmpty;
+    final hasValidPng =
+        isConfigured && SignatureStorageService.isPngBytes(signatureBytes);
+
     return CardShell(
       onTap: onTap,
       padding: const EdgeInsets.all(AppDimens.spacing14),
-      child: Row(
+      child: Column(
         children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: (isConfigured ? AppColors.emeraldPrimary : Colors.grey).withOpacity(0.12),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              isConfigured ? Icons.draw : Icons.gesture,
-              color: isConfigured ? AppColors.emeraldPrimary : Colors.grey,
-              size: 22,
-            ),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: (isConfigured ? AppColors.emeraldPrimary : Colors.grey)
+                      .withOpacity(0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  isConfigured ? Icons.draw : Icons.gesture,
+                  color: isConfigured ? AppColors.emeraldPrimary : Colors.grey,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      role,
+                      style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: (isConfigured ? AppColors.emeraldPrimary : Colors.orange)
+                      .withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  isConfigured ? 'সংরক্ষিত' : 'স্বাক্ষর দিন',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: isConfigured
+                        ? AppColors.emeraldPrimary
+                        : Colors.orange.shade800,
+                  ),
+                ),
+              ),
+              if (isConfigured)
+                IconButton(
+                  icon: const Icon(Icons.delete_outline, size: 18, color: Colors.red),
+                  onPressed: onDelete,
+                  tooltip: 'স্বাক্ষর মুছুন',
+                ),
+            ],
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                const SizedBox(height: 2),
-                Text(role, style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
-              ],
+          if (hasValidPng) ...[
+            const SizedBox(height: 10),
+            Container(
+              height: 54,
+              width: double.infinity,
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade50,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: Image.memory(signatureBytes, fit: BoxFit.contain),
             ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: (isConfigured ? AppColors.emeraldPrimary : Colors.orange).withOpacity(0.12),
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: Text(
-              isConfigured ? 'সংরক্ষিত' : 'স্বাক্ষর দিন',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.bold,
-                color: isConfigured ? AppColors.emeraldPrimary : Colors.orange.shade800,
+          ] else if (isConfigured) ...[
+            const SizedBox(height: 6),
+            const Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'প্রিভিউ দেখতে অনুগ্রহ করে পুনরায় স্বাক্ষর আঁকুন',
+                style: TextStyle(fontSize: 11, color: Colors.orange),
               ),
             ),
-          ),
+          ],
         ],
       ),
     );

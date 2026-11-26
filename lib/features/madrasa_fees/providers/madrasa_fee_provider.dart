@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../authentication/providers/auth_provider.dart';
+import '../../finance/providers/finance_provider.dart';
 import '../models/madrasa_fee_payment_model.dart';
 import '../repositories/madrasa_fee_repository.dart';
 
@@ -12,8 +13,9 @@ final feeMonthFilterProvider = StateProvider<String>((ref) => 'all');
 class MadrasaFeeListNotifier extends StateNotifier<AsyncValue<List<MadrasaFeePaymentModel>>> {
   final MadrasaFeeRepository _repository;
   final String _mosqueId;
+  final Ref _ref;
 
-  MadrasaFeeListNotifier(this._repository, this._mosqueId)
+  MadrasaFeeListNotifier(this._repository, this._mosqueId, this._ref)
       : super(const AsyncValue.loading()) {
     loadFeePayments();
   }
@@ -43,6 +45,7 @@ class MadrasaFeeListNotifier extends StateNotifier<AsyncValue<List<MadrasaFeePay
       if (created != null) {
         final current = state.valueOrNull ?? [];
         state = AsyncValue.data([created, ...current]);
+        _ref.invalidate(financeListProvider);
         return true;
       }
       return false;
@@ -57,5 +60,5 @@ final madrasaFeeListProvider =
   final repo = ref.watch(madrasaFeeRepositoryProvider);
   final authState = ref.watch(authNotifierProvider);
   final mosqueId = authState.valueOrNull?.mosqueId ?? 'mosque-default';
-  return MadrasaFeeListNotifier(repo, mosqueId);
+  return MadrasaFeeListNotifier(repo, mosqueId, ref);
 });

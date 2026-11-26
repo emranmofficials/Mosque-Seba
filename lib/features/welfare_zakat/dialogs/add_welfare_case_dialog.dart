@@ -5,7 +5,7 @@ import '../models/welfare_case_model.dart';
 
 /// Modal dialog for submitting a new Welfare or Zakat aid application
 class AddWelfareCaseDialog extends StatefulWidget {
-  final Function(WelfareCaseModel) onSubmit;
+  final Future<bool> Function(WelfareCaseModel) onSubmit;
 
   const AddWelfareCaseDialog({super.key, required this.onSubmit});
 
@@ -69,8 +69,18 @@ class _AddWelfareCaseDialogState extends State<AddWelfareCaseDialog> {
       createdAt: DateTime.now().millisecondsSinceEpoch,
     );
 
-    widget.onSubmit(welfareCase);
-    Navigator.of(context).pop();
+    final ok = await widget.onSubmit(welfareCase);
+    if (!mounted) return;
+    if (ok) {
+      Navigator.of(context).pop();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('আবেদন সংরক্ষণ করতে ব্যর্থ হয়েছে'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   @override

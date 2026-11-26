@@ -1,21 +1,110 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimens.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../shared/widgets/adaptive_scaffold.dart';
 import '../../../shared/widgets/card_shell.dart';
+import '../../role_permissions/models/committee_role.dart';
+import '../../role_permissions/providers/role_permissions_provider.dart';
+import '../dialogs/add_waqf_asset_dialog.dart';
 import '../models/waqf_asset_model.dart';
+import '../providers/waqf_provider.dart';
 
 /// Screen displaying detailed view of a Waqf Property and its deed/registration info
-class WaqfAssetDetailScreen extends StatelessWidget {
+class WaqfAssetDetailScreen extends ConsumerStatefulWidget {
   final WaqfAssetModel asset;
 
   const WaqfAssetDetailScreen({super.key, required this.asset});
 
   @override
+  ConsumerState<WaqfAssetDetailScreen> createState() => _WaqfAssetDetailScreenState();
+}
+
+class _WaqfAssetDetailScreenState extends ConsumerState<WaqfAssetDetailScreen> {
+  late WaqfAssetModel _asset;
+
+  @override
+  void initState() {
+    super.initState();
+    _asset = widget.asset;
+  }
+
+  Future<void> _confirmDelete() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('সম্পত্তি অপসারণ'),
+        content: Text('${_asset.title} রেকর্ডটি মুছে ফেলতে চান?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('বাতিল'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.urgentRed,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('মুছে ফেলুন'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    final ok = await ref.read(waqfListProvider.notifier).deleteProperty(_asset.id);
+    if (!mounted) return;
+    if (ok) {
+      context.pop();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('সম্পত্তি অপসারণ ব্যর্থ হয়েছে।')),
+      );
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final role = ref.watch(currentRoleProvider);
+    final canManage = role == CommitteeRole.president ||
+        role.canEditMosqueProfile() ||
+        role.canManageFinance();
+    final asset = _asset;
+
     return AdaptiveScaffold(
       title: 'ওয়াকফ সম্পত্তির বিবরণ',
+      actions: canManage
+          ? [
+              IconButton(
+                tooltip: 'সম্পাদনা',
+                icon: const Icon(Icons.edit_outlined),
+                onPressed: () {
+                  showDialog<void>(
+                    context: context,
+                    builder: (ctx) => AddWaqfAssetDialog(
+                      existingAsset: asset,
+                      onSubmit: (updated) async {
+                        final ok = await ref
+                            .read(waqfListProvider.notifier)
+                            .updateProperty(updated);
+                        if (ok && mounted) {
+                          setState(() => _asset = updated);
+                        }
+                        return ok;
+                      },
+                    ),
+                  );
+                },
+              ),
+              IconButton(
+                tooltip: 'মুছে ফেলুন',
+                icon: const Icon(Icons.delete_outline, color: AppColors.urgentRed),
+                onPressed: _confirmDelete,
+              ),
+            ]
+          : null,
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(AppDimens.spacing16),
         child: Column(

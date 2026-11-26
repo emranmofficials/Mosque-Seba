@@ -1,27 +1,23 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../core/network/supabase_service.dart';
+import '../../../core/database/offline_cache_service.dart';
 import '../models/exam_model.dart';
 
 /// Repository for Madrasa Exams & Results (মাদরাসা পরীক্ষা ও ফলাফল রিপোজিটরি)
 class ExamRepository {
-  SupabaseClient get _client => SupabaseService.client;
+  final OfflineCacheService _cache;
+
+  ExamRepository({OfflineCacheService? cache})
+      : _cache = cache ?? OfflineCacheService.instance;
 
   /// Fetch all exams for a mosque
   Future<List<ExamModel>> fetchExams({required String mosqueId}) async {
-    try {
-      final res = await _client
-          .from('examinations')
-          .select()
-          .eq('mosque_id', mosqueId)
-          .order('start_date', ascending: false);
-      final List<dynamic> data = res as List<dynamic>;
+    final rows = await _cache.fetchList(
+      tableName: 'examinations',
+      mosqueId: mosqueId,
+      orderBy: 'start_date',
+      ascending: false,
+    );
 
-      return data
-          .map((item) => ExamModel.fromJson(item as Map<String, dynamic>))
-          .toList();
-    } catch (e) {
-      return [];
-    }
+    return rows.map(ExamModel.fromJson).toList();
   }
 
   /// Create a new exam
@@ -31,14 +27,18 @@ class ExamRepository {
   }) async {
     try {
       final payload = exam.toJson();
-      payload['mosque_id'] = mosqueId;
-      if (payload['id'] == null || (payload['id'] as String).isEmpty) {
-        payload['id'] = 'ex-${DateTime.now().millisecondsSinceEpoch}';
+      if ((payload['id']?.toString().trim() ?? '').isEmpty) {
+        payload.remove('id');
       }
+      if (payload['created_at'] == 0) payload.remove('created_at');
 
-      final res = await _client.from('examinations').insert(payload).select().single();
+      final res = await _cache.insertRecord(
+        tableName: 'examinations',
+        mosqueId: mosqueId,
+        payload: payload,
+      );
       return ExamModel.fromJson(res);
-    } catch (e) {
+    } catch (_) {
       return null;
     }
   }
@@ -49,24 +49,21 @@ class ExamRepository {
     String? examId,
     String? studentId,
   }) async {
-    try {
-      var query = _client.from('exam_results').select().eq('mosque_id', mosqueId);
-      if (examId != null && examId.isNotEmpty) {
-        query = query.eq('exam_id', examId);
-      }
-      if (studentId != null && studentId.isNotEmpty) {
-        query = query.eq('student_id', studentId);
-      }
-
-      final res = await query;
-      final List<dynamic> data = res as List<dynamic>;
-
-      return data
-          .map((item) => ExamResultModel.fromJson(item as Map<String, dynamic>))
-          .toList();
-    } catch (e) {
-      return [];
+    final equals = <String, dynamic>{};
+    if (examId != null && examId.isNotEmpty) {
+      equals['exam_id'] = examId;
     }
+    if (studentId != null && studentId.isNotEmpty) {
+      equals['student_id'] = studentId;
+    }
+
+    final rows = await _cache.fetchList(
+      tableName: 'exam_results',
+      mosqueId: mosqueId,
+      equalsFilters: equals,
+    );
+
+    return rows.map(ExamResultModel.fromJson).toList();
   }
 
   /// Add student mark entry
@@ -76,14 +73,18 @@ class ExamRepository {
   }) async {
     try {
       final payload = result.toJson();
-      payload['mosque_id'] = mosqueId;
-      if (payload['id'] == null || (payload['id'] as String).isEmpty) {
-        payload['id'] = 'res-${DateTime.now().millisecondsSinceEpoch}';
+      if ((payload['id']?.toString().trim() ?? '').isEmpty) {
+        payload.remove('id');
       }
+      if (payload['created_at'] == 0) payload.remove('created_at');
 
-      final res = await _client.from('exam_results').insert(payload).select().single();
+      final res = await _cache.insertRecord(
+        tableName: 'exam_results',
+        mosqueId: mosqueId,
+        payload: payload,
+      );
       return ExamResultModel.fromJson(res);
-    } catch (e) {
+    } catch (_) {
       return null;
     }
   }

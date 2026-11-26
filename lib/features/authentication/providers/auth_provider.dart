@@ -65,6 +65,31 @@ class AuthNotifier extends StateNotifier<AsyncValue<AuthUser?>> {
     }
   }
 
+  Future<void> updateMosqueProfile({
+    required String nameBn,
+    required String address,
+    int? establishedYear,
+  }) async {
+    final current = state.valueOrNull;
+    if (current == null || current.mosqueId.isEmpty) return;
+
+    await _authService.updateMosqueProfile(
+      mosqueId: current.mosqueId,
+      nameBn: nameBn,
+      address: address,
+      establishedYear: establishedYear,
+    );
+
+    if (!mounted) return;
+    state = AsyncValue.data(
+      current.copyWith(
+        mosqueNameBn: nameBn.trim(),
+        mosqueAddress: address.trim(),
+        establishedYear: establishedYear ?? current.establishedYear,
+      ),
+    );
+  }
+
   Future<void> logout() async {
     state = const AsyncValue.loading();
     await _authService.logout();

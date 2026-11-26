@@ -11,6 +11,7 @@ import '../models/meal_schedule_item.dart';
 class AddMealScheduleDialog extends StatefulWidget {
   final String dateStr;
   final String defaultMealType;
+  final MealScheduleItem? existingItem;
   final List<MemberModel> volunteers;
   final Future<bool> Function(MealScheduleItem item) onSubmit;
 
@@ -18,6 +19,7 @@ class AddMealScheduleDialog extends StatefulWidget {
     super.key,
     required this.dateStr,
     this.defaultMealType = 'দুপুর',
+    this.existingItem,
     required this.volunteers,
     required this.onSubmit,
   });
@@ -38,7 +40,12 @@ class _AddMealScheduleDialogState extends State<AddMealScheduleDialog> {
   @override
   void initState() {
     super.initState();
-    _mealType = widget.defaultMealType;
+    _mealType = widget.existingItem?.mealType ?? widget.defaultMealType;
+    if (widget.existingItem != null) {
+      _providerNameController.text = widget.existingItem!.providerName;
+      _providerMobileController.text = widget.existingItem!.providerMobile;
+      _receiverStaffController.text = widget.existingItem!.receiverStaffName;
+    }
   }
 
   @override
@@ -62,13 +69,13 @@ class _AddMealScheduleDialogState extends State<AddMealScheduleDialog> {
     setState(() => _isLoading = true);
 
     final item = MealScheduleItem(
-      id: '',
+      id: widget.existingItem?.id ?? '',
       dateStr: widget.dateStr,
       mealType: _mealType,
       providerName: _providerNameController.text.trim(),
       providerMobile: _providerMobileController.text.trim(),
       receiverStaffName: _receiverStaffController.text.trim(),
-      status: 'scheduled',
+      status: widget.existingItem?.status ?? 'scheduled',
     );
 
     final ok = await widget.onSubmit(item);

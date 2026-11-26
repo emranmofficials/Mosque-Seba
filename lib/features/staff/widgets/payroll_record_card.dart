@@ -9,8 +9,13 @@ import '../models/staff_payroll_model.dart';
 /// Card presenting a disbursed staff payroll record
 class PayrollRecordCard extends StatelessWidget {
   final StaffPayrollModel payroll;
+  final VoidCallback? onPrintSlip;
 
-  const PayrollRecordCard({super.key, required this.payroll});
+  const PayrollRecordCard({
+    super.key,
+    required this.payroll,
+    this.onPrintSlip,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -57,6 +62,14 @@ class PayrollRecordCard extends StatelessWidget {
                 ),
             ],
           ),
+          if (onPrintSlip != null) ...[
+            const SizedBox(width: 6),
+            IconButton(
+              icon: const Icon(Icons.print_outlined, size: 20, color: AppColors.primary),
+              tooltip: 'বেতন স্লিপ PDF',
+              onPressed: onPrintSlip,
+            ),
+          ],
         ],
       ),
     );

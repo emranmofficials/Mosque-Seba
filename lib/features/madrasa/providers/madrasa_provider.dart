@@ -51,12 +51,29 @@ class StudentListNotifier extends StateNotifier<AsyncValue<List<StudentModel>>> 
 
   Future<bool> updateStudent(StudentModel student) async {
     try {
-      final success = await _repository.updateStudent(student);
+      final success = await _repository.updateStudent(student, mosqueId: _mosqueId);
       if (!mounted) return success;
       if (success) {
         final current = state.valueOrNull ?? [];
         state = AsyncValue.data(
           current.map((s) => s.id == student.id ? student : s).toList(),
+        );
+        return true;
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<bool> deleteStudent(String studentId) async {
+    try {
+      final success = await _repository.deleteStudent(studentId);
+      if (!mounted) return success;
+      if (success) {
+        final current = state.valueOrNull ?? [];
+        state = AsyncValue.data(
+          current.where((s) => s.id != studentId).toList(),
         );
         return true;
       }

@@ -12,6 +12,7 @@ class AssignDutyDialog extends StatefulWidget {
   final String dayOfWeek;
   final String waqtName;
   final List<StaffModel> staffList;
+  final DutyRosterItem? existingItem;
   final Future<bool> Function(DutyRosterItem item) onAssign;
 
   const AssignDutyDialog({
@@ -19,6 +20,7 @@ class AssignDutyDialog extends StatefulWidget {
     required this.dayOfWeek,
     required this.waqtName,
     required this.staffList,
+    this.existingItem,
     required this.onAssign,
   });
 
@@ -45,7 +47,19 @@ class _AssignDutyDialogState extends State<AssignDutyDialog> {
   @override
   void initState() {
     super.initState();
-    _selectedStaff = widget.staffList.isNotEmpty ? widget.staffList.first : null;
+    final existing = widget.existingItem;
+    if (existing != null) {
+      final matching = widget.staffList.where((s) => s.id == existing.staffId).toList();
+      _selectedStaff = matching.isNotEmpty
+          ? matching.first
+          : (widget.staffList.isNotEmpty ? widget.staffList.first : null);
+      if (_roleTitles.contains(existing.roleTitle)) {
+        _selectedRoleTitle = existing.roleTitle;
+      }
+      _notesController.text = existing.notes;
+    } else {
+      _selectedStaff = widget.staffList.isNotEmpty ? widget.staffList.first : null;
+    }
   }
 
   @override
@@ -55,12 +69,18 @@ class _AssignDutyDialogState extends State<AssignDutyDialog> {
   }
 
   Future<void> _handleSave() async {
-    if (!_formKey.currentState!.validate() || _selectedStaff == null) return;
+    if (_selectedStaff == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('দয়া করে প্রথমে স্টাফ তালিকা থেকে স্টাফ নিবন্ধন করুন।')),
+      );
+      return;
+    }
+    if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
 
     final item = DutyRosterItem(
-      id: '',
+      id: widget.existingItem?.id ?? '',
       staffId: _selectedStaff!.id,
       staffNameBn: _selectedStaff!.nameBn,
       dayOfWeek: widget.dayOfWeek,

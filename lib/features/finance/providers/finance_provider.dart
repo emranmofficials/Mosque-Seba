@@ -72,10 +72,29 @@ class FinanceStateNotifier extends StateNotifier<AsyncValue<List<FinanceTransact
     required bool isApproved,
   }) async {
     final ok = await _repository.reviewTransaction(
+      mosqueId: _mosqueId,
       transactionId: transactionId,
       reviewerName: reviewerName,
       creatorName: creatorName,
       isApproved: isApproved,
+    );
+    if (ok) {
+      await loadTransactions();
+      return true;
+    }
+    return false;
+  }
+
+  Future<bool> reverseVoucher({
+    required FinanceTransactionModel originalTxn,
+    required String reason,
+    required String reversedBy,
+  }) async {
+    final ok = await _repository.reverseTransaction(
+      mosqueId: _mosqueId,
+      originalTxn: originalTxn,
+      reason: reason,
+      reversedBy: reversedBy,
     );
     if (ok) {
       await loadTransactions();
@@ -92,8 +111,24 @@ final financeListProvider = StateNotifierProvider<FinanceStateNotifier, AsyncVal
   return FinanceStateNotifier(repo, mosqueId, ref);
 });
 
+final financeAllTransactionsProvider =
+    FutureProvider<List<FinanceTransactionModel>>((ref) async {
+  final listState = ref.watch(financeListProvider);
+  final type = ref.watch(financeTypeFilterProvider);
+  final status = ref.watch(financeStatusFilterProvider);
+  if (type == 'all' &&
+      status == 'all' &&
+      listState is AsyncData<List<FinanceTransactionModel>>) {
+    return listState.value;
+  }
+  final repo = ref.watch(financeRepositoryProvider);
+  final authState = ref.watch(authNotifierProvider);
+  final mosqueId = authState.valueOrNull?.mosqueId ?? 'mosque-default';
+  return repo.fetchTransactions(mosqueId: mosqueId);
+});
+
 final financeSummaryProvider = Provider<FinancialSummary>((ref) {
-  final txnsAsync = ref.watch(financeListProvider);
+  final txnsAsync = ref.watch(financeAllTransactionsProvider);
   final repo = ref.watch(financeRepositoryProvider);
   return txnsAsync.maybeWhen(
     data: (txns) => repo.calculateSummary(txns),
