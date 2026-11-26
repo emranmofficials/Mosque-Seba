@@ -1,8 +1,10 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import '../../../core/services/notification_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimens.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/utils/app_toast.dart';
 import '../../../core/utils/bengali_number_formatter.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_text_field.dart';
@@ -77,13 +79,13 @@ class _AddMemberDialogState extends State<AddMemberDialog> {
       setState(() => _isLoading = false);
       if (success) {
         Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('নতুন সদস্য সফলভাবে যুক্ত হয়েছে')),
+        AppToast.success(context, 'নতুন সদস্য সফলভাবে যুক্ত হয়েছে');
+        NotificationService.instance.showInstantAlert(
+          title: 'নতুন সদস্য যুক্ত হয়েছে',
+          body: '${newMember.nameBn} কে সদস্য তালিকায় যুক্ত করা হয়েছে (আইডি: ${newMember.memberCode})',
         );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('সদস্য সংরক্ষণ করতে ব্যর্থ হয়েছে')),
-        );
+        AppToast.error(context, 'সদস্য সংরক্ষণ করতে ব্যর্থ হয়েছে');
       }
     }
   }

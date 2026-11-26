@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/router/app_router.dart';
+import '../../../core/services/notification_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimens.dart';
+import '../../../core/utils/app_toast.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../../../shared/widgets/card_shell.dart';
@@ -134,10 +136,18 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
           _generatedCommitteeId = committeeId;
           _currentStep = 3;
         });
+        AppToast.success(context, 'অভিনন্দন! আপনার মসজিদ সফলভাবে নিবন্ধিত হয়েছে।');
+        NotificationService.instance.showInstantAlert(
+          title: 'মসজিদ সেবা - নিবন্ধন সম্পন্ন',
+          body: '${_mosqueNameBnController.text.trim()} সফলভাবে নিবন্ধিত হয়েছে। কমিটি আইডি: $committeeId',
+          isUrgent: true,
+        );
       }
     } catch (e) {
       if (mounted) {
-        setState(() => _errorMessage = e.toString().replaceFirst('Exception: ', ''));
+        final err = e.toString().replaceFirst('Exception: ', '');
+        setState(() => _errorMessage = err);
+        AppToast.error(context, err);
       }
     } finally {
       if (mounted) {

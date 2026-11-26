@@ -5,7 +5,9 @@ import '../../../bootstrap/dependency_injection.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimens.dart';
+import '../../../core/utils/app_toast.dart';
 import '../../../core/utils/bengali_number_formatter.dart';
+import '../../../shared/dialogs/app_dialogs.dart';
 import '../../../shared/widgets/card_shell.dart';
 import '../../authentication/models/auth_user.dart';
 import '../../authentication/providers/auth_provider.dart';
@@ -17,33 +19,12 @@ class MosqueProfileScreen extends ConsumerWidget {
   const MosqueProfileScreen({super.key});
 
   Future<void> _confirmLogout(BuildContext context, WidgetRef ref) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('লগআউট নিশ্চিত করুন'),
-        content: const Text(
-          'লগআউট করলে এই ডিভাইসের লোকাল ক্যাশ সেশন মুছে যাবে এবং পুনরায় লগইন করতে হবে।',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('বাতিল'),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.urgentRed,
-              foregroundColor: Colors.white,
-            ),
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('লগআউট'),
-          ),
-        ],
-      ),
-    );
+    final confirmed = await AppDialogs.confirmLogout(context);
 
     if (confirmed == true) {
       await ref.read(authNotifierProvider.notifier).logout();
       if (context.mounted) {
+        AppToast.info(context, 'সফলভাবে লগআউট করা হয়েছে');
         context.go(AppRouter.login);
       }
     }

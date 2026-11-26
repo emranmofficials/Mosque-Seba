@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/router/app_router.dart';
+import '../../../core/services/notification_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimens.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/utils/app_toast.dart';
 import '../../../shared/components/empty_state_view.dart';
 import '../../../shared/components/error_state_view.dart';
 import '../../../shared/widgets/adaptive_scaffold.dart';
@@ -22,6 +24,21 @@ class NotificationCenterScreen extends ConsumerWidget {
     return AdaptiveScaffold(
       title: 'বিজ্ঞপ্তি কেন্দ্র',
       actions: [
+        IconButton(
+          icon: const Icon(Icons.notifications_active_outlined),
+          tooltip: 'টেস্ট পুশ নোটিফিকেশন',
+          onPressed: () async {
+            await NotificationService.instance.requestPermissions();
+            await NotificationService.instance.showInstantAlert(
+              title: 'মসজিদ সেবা নোটিফিকেশন',
+              body: 'পুশ নোটিফিকেশন সার্ভিস সফলভাবে সক্রিয় রয়েছে। আলহামদুলিল্লাহ!',
+              isUrgent: true,
+            );
+            if (context.mounted) {
+              AppToast.success(context, 'টেস্ট পুশ নোটিফিকেশন পাঠানো হয়েছে');
+            }
+          },
+        ),
         IconButton(
           icon: const Icon(Icons.done_all),
           tooltip: 'সব পঠিত হিসেবে চিহ্নিত করুন',

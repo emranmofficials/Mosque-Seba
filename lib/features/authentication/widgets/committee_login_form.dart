@@ -5,6 +5,7 @@ import '../../../bootstrap/dependency_injection.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimens.dart';
+import '../../../core/utils/app_toast.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../providers/auth_provider.dart';
@@ -64,11 +65,14 @@ class _CommitteeLoginFormState extends ConsumerState<CommitteeLoginForm> {
           .read(sessionStorageServiceProvider)
           .setRememberedEmail(_rememberMe ? email : null);
       if (mounted) {
+        AppToast.success(context, 'লগইন সফল হয়েছে');
         context.go(AppRouter.dashboard);
       }
     } catch (e) {
       if (mounted) {
-        setState(() => _errorMessage = e.toString().replaceFirst('Exception: ', ''));
+        final err = e.toString().replaceFirst('Exception: ', '');
+        setState(() => _errorMessage = err);
+        AppToast.error(context, err);
       }
     } finally {
       if (mounted) {

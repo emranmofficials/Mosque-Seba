@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimens.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/utils/app_toast.dart';
 import '../../../core/utils/bengali_number_formatter.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_text_field.dart';
@@ -91,13 +92,9 @@ class _EditMemberDialogState extends State<EditMemberDialog> {
       setState(() => _isLoading = false);
       if (success) {
         Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('সদস্যের তথ্য সফলভাবে হালনাগাদ হয়েছে')),
-        );
+        AppToast.success(context, 'সদস্যের তথ্য সফলভাবে হালনাগাদ হয়েছে');
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('হালনাগাদ করতে ব্যর্থ হয়েছে')),
-        );
+        AppToast.error(context, 'তথ্য হালনাগাদ করতে ব্যর্থ হয়েছে');
       }
     }
   }

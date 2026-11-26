@@ -3,8 +3,8 @@ class AppConfig {
   static const String appNameBn = 'মসজিদ সেবা';
   static const String appNameEn = 'Mosque Seba';
   static const String packageName = 'com.mosqueseba.app';
-  static const String appVersion = '1.2.5';
-  static const int buildNumber = 10;
+  static const String appVersion = '1.3.0';
+  static const int buildNumber = 11;
   static const String tagline = 'মসজিদের খেদমতে আধুনিক প্রযুক্তি, পরিচালনায় স্বচ্ছ আস্থা';
 
   // Production Supabase Cloud Backend Configuration (overrideable via --dart-define)

@@ -6,7 +6,9 @@ import 'package:qr_flutter/qr_flutter.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimens.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/utils/app_toast.dart';
 import '../../../core/utils/bengali_number_formatter.dart';
+import '../../../shared/dialogs/app_dialogs.dart';
 import '../../../shared/widgets/adaptive_scaffold.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/card_shell.dart';
@@ -36,36 +38,18 @@ class _MemberProfileScreenState extends ConsumerState<MemberProfileScreen> {
   }
 
   Future<void> _confirmDelete() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('সদস্য অপসারণ'),
-        content: Text('${_member.nameBn} কে তালিকা থেকে মুছে ফেলতে চান?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('বাতিল'),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.urgentRed,
-              foregroundColor: Colors.white,
-            ),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('মুছে ফেলুন'),
-          ),
-        ],
-      ),
+    final confirmed = await AppDialogs.confirmDelete(
+      context,
+      itemName: _member.nameBn,
     );
     if (confirmed != true) return;
     final ok = await ref.read(memberListProvider.notifier).deleteMember(_member.id);
     if (!mounted) return;
     if (ok) {
+      AppToast.success(context, '${_member.nameBn} কে তালিকা থেকে মুছে ফেলা হয়েছে');
       context.pop();
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('সদস্য অপসারণ ব্যর্থ হয়েছে।')),
-      );
+      AppToast.error(context, 'সদস্য অপসারণ ব্যর্থ হয়েছে।');
     }
   }
 

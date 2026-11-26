@@ -52,7 +52,7 @@ jobs:
       - name: Upload Release APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: MosqueSeba-v1.2.5-release
+          name: MosqueSeba-v1.3.0-release
           path: build/app/outputs/flutter-apk/app-release.apk
           retention-days: 30
 
@@ -60,13 +60,17 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
         with:
-          tag_name: v1.2.5
-          name: Mosque Seba v1.2.5 (Release APK)
+          tag_name: v1.3.0
+          name: Mosque Seba v1.3.0 Official Release
           body: |
-            ## 🕌 Mosque Seba (মসজিদ সেবা) v1.2.5
-            - Complete 1:1 Flutter rebuild with 37 modules
-            - Offline-first SQLite database
-            - Full multi-role authorization and real-time prayer schedule
+            ## 🕌 Mosque Seba (মসজিদ সেবা) v1.3.0 Official Release
+            - 🔔 রিয়েল-টাইম পুশ নোটিফিকেশন ও ইনস্ট্যান্ট অ্যালার্ট সাপোর্ট
+            - 🍞 প্রিমিয়াম ফ্লোটিং টোস্ট নোটিফিকেশন (সফল, ত্রুটি, তথ্য ও সতর্কতা)
+            - ⚠️ কনফার্মেশন ও ডিলিট ওয়ার্নিং ডায়ালগ (AppDialogs)
+            - 🆔 সদস্যদের জন্য ৮ সংখ্যার ইউনিকোড রেন্ডম আইডি (Member Code)
+            - 🕌 মসজিদের জন্য ১০ সংখ্যার ইউনিক আইডি / কমিটি কোড (Mosque ID)
+            - 📷 প্রোফাইল ছবি ও মসজিদের লোগো ক্যামেরা/গ্যালারি থেকে ক্লাউড ও অফলাইন আপলোড
+            - ⚡ সম্পূর্ণ অফলাইন Drift SQLite ডাটাবেজ এবং Supabase ক্লাউড অটো-সিঙ্ক
             
             **Download the APK file below directly to your phone:**
           files: build/app/outputs/flutter-apk/app-release.apk
