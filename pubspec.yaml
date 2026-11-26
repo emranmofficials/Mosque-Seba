@@ -18,7 +18,7 @@ dependencies:
   go_router: ^14.2.0
 
   # Cloud Backend, Auth, Storage & Realtime
-  supabase_flutter: ^2.6.0
+  supabase_flutter: ^2.13.0
 
   # Offline-First Relational SQLite Local Database
   drift: ^2.20.0
