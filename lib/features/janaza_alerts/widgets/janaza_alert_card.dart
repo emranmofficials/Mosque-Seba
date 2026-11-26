@@ -30,7 +30,7 @@ class JanazaAlertCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return CardShell(
       padding: const EdgeInsets.all(AppDimens.spacing16),
-      border: Border.all(color: AppColors.error.withValues(alpha: 0.5), width: 1.5),
+      border: Border.all(color: AppColors.error.withOpacity(0.5), width: 1.5),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -39,7 +39,7 @@ class JanazaAlertCard extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 6),
             decoration: BoxDecoration(
-              color: AppColors.error.withValues(alpha: 0.1),
+              color: AppColors.error.withOpacity(0.1),
               borderRadius: BorderRadius.circular(AppDimens.radiusSm),
             ),
             child: const Text(

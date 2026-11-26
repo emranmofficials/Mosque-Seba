@@ -22,14 +22,14 @@ class CandidateCard extends StatelessWidget {
     return CardShell(
       padding: const EdgeInsets.all(AppDimens.spacing12),
       border: candidate.isElected
-          ? Border.all(color: AppColors.success.withValues(alpha: 0.6), width: 1.5)
+          ? Border.all(color: AppColors.success.withOpacity(0.6), width: 1.5)
           : null,
       child: Row(
         children: [
           CircleAvatar(
             radius: 22,
             backgroundColor: candidate.isElected
-                ? AppColors.success.withValues(alpha: 0.15)
+                ? AppColors.success.withOpacity(0.15)
                 : AppColors.primaryContainer,
             child: Text(
               candidate.symbolOrPanel.characters.first,
@@ -59,7 +59,7 @@ class CandidateCard extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                         decoration: BoxDecoration(
-                          color: AppColors.success.withValues(alpha: 0.15),
+                          color: AppColors.success.withOpacity(0.15),
                           borderRadius: BorderRadius.circular(3),
                         ),
                         child: Text(

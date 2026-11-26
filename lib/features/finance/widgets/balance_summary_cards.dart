@@ -92,7 +92,7 @@ class BalanceSummaryCards extends StatelessWidget {
                   children: [
                     CircleAvatar(
                       radius: 18,
-                      backgroundColor: AppColors.success.withValues(alpha: 0.15),
+                      backgroundColor: AppColors.success.withOpacity(0.15),
                       child: const Icon(Icons.arrow_downward, color: AppColors.success, size: 18),
                     ),
                     const SizedBox(width: AppDimens.spacing8),
@@ -125,7 +125,7 @@ class BalanceSummaryCards extends StatelessWidget {
                   children: [
                     CircleAvatar(
                       radius: 18,
-                      backgroundColor: AppColors.error.withValues(alpha: 0.15),
+                      backgroundColor: AppColors.error.withOpacity(0.15),
                       child: const Icon(Icons.arrow_upward, color: AppColors.error, size: 18),
                     ),
                     const SizedBox(width: AppDimens.spacing8),

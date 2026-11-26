@@ -48,6 +48,6 @@ final janazaListProvider = StateNotifierProvider<JanazaListNotifier, AsyncValue<
   final repo = ref.watch(janazaRepositoryProvider);
   final authState = ref.watch(authNotifierProvider);
   final mosqueId = authState.valueOrNull?.mosqueId ?? 'mosque-default';
-  final mosqueName = 'মসজিদ সেবা জামে মসজিদ';
+  const mosqueName = 'মসজিদ সেবা জামে মসজিদ';
   return JanazaListNotifier(repo, mosqueId, mosqueName);
 });

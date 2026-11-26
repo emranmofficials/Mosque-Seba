@@ -48,7 +48,7 @@ class NoticeCard extends StatelessWidget {
     return CardShell(
       padding: const EdgeInsets.all(AppDimens.spacing16),
       border: notice.isPinned
-          ? Border.all(color: AppColors.gold.withValues(alpha: 0.6), width: 1.5)
+          ? Border.all(color: AppColors.gold.withOpacity(0.6), width: 1.5)
           : null,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -58,9 +58,9 @@ class NoticeCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: priorityColor.withValues(alpha: 0.12),
+                  color: priorityColor.withOpacity(0.12),
                   borderRadius: BorderRadius.circular(AppDimens.radiusXs),
-                  border: Border.all(color: priorityColor.withValues(alpha: 0.4)),
+                  border: Border.all(color: priorityColor.withOpacity(0.4)),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -84,7 +84,7 @@ class NoticeCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
-                    color: AppColors.gold.withValues(alpha: 0.15),
+                    color: AppColors.gold.withOpacity(0.15),
                     borderRadius: BorderRadius.circular(AppDimens.radiusXs),
                   ),
                   child: Row(

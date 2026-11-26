@@ -21,7 +21,7 @@ class PendingApprovalCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return CardShell(
       padding: const EdgeInsets.all(AppDimens.spacing16),
-      border: Border.all(color: AppColors.warning.withValues(alpha: 0.5), width: 1.2),
+      border: Border.all(color: AppColors.warning.withOpacity(0.5), width: 1.2),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -30,7 +30,7 @@ class PendingApprovalCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: AppColors.warning.withValues(alpha: 0.15),
+                  color: AppColors.warning.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Row(

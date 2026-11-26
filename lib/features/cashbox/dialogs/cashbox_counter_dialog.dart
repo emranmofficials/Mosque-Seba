@@ -146,7 +146,7 @@ class _CashboxCounterDialogState extends State<CashboxCounterDialog> {
                   decoration: BoxDecoration(
                     color: AppColors.primaryContainer,
                     borderRadius: BorderRadius.circular(AppDimens.radiusMd),
-                    border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+                    border: Border.all(color: AppColors.primary.withOpacity(0.3)),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,

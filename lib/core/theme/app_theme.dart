@@ -7,7 +7,7 @@ import 'app_typography.dart';
 /// Provides Light & Eye-Comfort Night Theme
 class AppTheme {
   static ThemeData get lightTheme {
-    final colorScheme = ColorScheme(
+    const colorScheme = ColorScheme(
       brightness: Brightness.light,
       primary: AppColors.emeraldPrimary,
       onPrimary: AppColors.surface,
@@ -84,7 +84,7 @@ class AppTheme {
   }
 
   static ThemeData get darkTheme {
-    final colorScheme = ColorScheme(
+    const colorScheme = ColorScheme(
       brightness: Brightness.dark,
       primary: AppColors.greenAccent,
       onPrimary: AppColors.emeraldDark,

@@ -41,7 +41,7 @@ class PayrollHistoryScreen extends ConsumerWidget {
                     Container(
                       padding: const EdgeInsets.all(AppDimens.spacing10),
                       decoration: BoxDecoration(
-                        color: AppColors.success.withValues(alpha: 0.15),
+                        color: AppColors.success.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(AppDimens.radiusMd),
                       ),
                       child: const Icon(Icons.verified, color: AppColors.success, size: 28),

@@ -50,9 +50,9 @@ class MemberProfileScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.1),
+                      color: AppColors.primary.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(AppDimens.radiusSm),
-                      border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+                      border: Border.all(color: AppColors.primary.withOpacity(0.3)),
                     ),
                     child: Text(
                       'সদস্য কোড: ${BengaliNumberFormatter.toBengali(member.memberCode)}',
@@ -100,7 +100,7 @@ class MemberProfileScreen extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(AppDimens.radiusMd),
-                      border: Border.all(color: AppColors.gold.withValues(alpha: 0.4), width: 1.5),
+                      border: Border.all(color: AppColors.gold.withOpacity(0.4), width: 1.5),
                     ),
                     child: QrImageView(
                       data: 'MOSQUE_SEBA:MEMBER:${member.memberCode}:${member.id}',

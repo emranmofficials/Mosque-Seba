@@ -138,7 +138,7 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
                         child: ChoiceChip(
                           label: const Center(child: Text('আয়ের ভাউচার (+)')),
                           selected: _type == 'income',
-                          selectedColor: AppColors.success.withValues(alpha: 0.2),
+                          selectedColor: AppColors.success.withOpacity(0.2),
                           labelStyle: TextStyle(
                             color: _type == 'income' ? AppColors.success : AppColors.textPrimary,
                             fontWeight: _type == 'income' ? FontWeight.bold : FontWeight.normal,
@@ -158,7 +158,7 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
                         child: ChoiceChip(
                           label: const Center(child: Text('ব্যয়ের ভাউচার (-)')),
                           selected: _type == 'expense',
-                          selectedColor: AppColors.error.withValues(alpha: 0.2),
+                          selectedColor: AppColors.error.withOpacity(0.2),
                           labelStyle: TextStyle(
                             color: _type == 'expense' ? AppColors.error : AppColors.textPrimary,
                             fontWeight: _type == 'expense' ? FontWeight.bold : FontWeight.normal,

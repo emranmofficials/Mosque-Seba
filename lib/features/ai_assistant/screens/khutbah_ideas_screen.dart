@@ -257,6 +257,7 @@ class _KhutbahIdeasScreenState extends ConsumerState<KhutbahIdeasScreen> {
             alignment: Alignment.centerRight,
             child: TextButton.icon(
               onPressed: () async {
+                final messenger = ScaffoldMessenger.of(context);
                 final text = [
                   topic.title,
                   '',
@@ -268,8 +269,7 @@ class _KhutbahIdeasScreenState extends ConsumerState<KhutbahIdeasScreen> {
                   topic.practicalGuidance,
                 ].join('\n');
                 await Clipboard.setData(ClipboardData(text: text));
-                if (!context.mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(
+                messenger.showSnackBar(
                   const SnackBar(
                     content: Text('খুতবার আউটলাইন ক্লিপবোর্ডে কপি করা হয়েছে'),
                     backgroundColor: AppColors.emeraldPrimary,

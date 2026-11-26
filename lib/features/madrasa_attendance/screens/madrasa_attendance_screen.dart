@@ -4,8 +4,6 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimens.dart';
 import '../../../core/utils/bengali_number_formatter.dart';
 import '../../../shared/components/empty_state_view.dart';
-import '../../../shared/widgets/card_shell.dart';
-import '../models/madrasa_attendance_model.dart';
 import '../providers/madrasa_attendance_provider.dart';
 import '../widgets/attendance_toggle_row.dart';
 

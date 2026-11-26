@@ -18,8 +18,8 @@ class AppBootstrap {
         statusBarColor: AppColors.emeraldDark,
         statusBarIconBrightness: Brightness.light,
         statusBarBrightness: Brightness.dark,
-        navigationBarColor: AppColors.surface,
-        navigationBarIconBrightness: Brightness.dark,
+        systemNavigationBarColor: AppColors.surface,
+        systemNavigationBarIconBrightness: Brightness.dark,
       ),
     );
 

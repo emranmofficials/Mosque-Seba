@@ -49,8 +49,8 @@ class ElectionScheduleCard extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: schedule.isCompleted
-                      ? AppColors.success.withValues(alpha: 0.12)
-                      : AppColors.gold.withValues(alpha: 0.15),
+                      ? AppColors.success.withOpacity(0.12)
+                      : AppColors.gold.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(AppDimens.radiusSm),
                 ),
                 child: Text(

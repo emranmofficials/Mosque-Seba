@@ -25,7 +25,7 @@ class _AddMemberDialogState extends State<AddMemberDialog> {
   final _monthlyChandaController = TextEditingController(text: '100');
   final _nidController = TextEditingController();
 
-  String _selectedRole = 'general_member';
+  final String _selectedRole = 'general_member';
   bool _willingToProvideMeal = false;
   bool _isLoading = false;
 

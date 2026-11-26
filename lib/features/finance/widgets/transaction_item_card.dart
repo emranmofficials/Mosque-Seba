@@ -29,7 +29,7 @@ class TransactionItemCard extends StatelessWidget {
         children: [
           CircleAvatar(
             radius: 20,
-            backgroundColor: amountColor.withValues(alpha: 0.12),
+            backgroundColor: amountColor.withOpacity(0.12),
             child: Icon(
               isIncome ? Icons.arrow_downward : Icons.arrow_upward,
               color: amountColor,
@@ -56,7 +56,7 @@ class TransactionItemCard extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
                         decoration: BoxDecoration(
-                          color: AppColors.error.withValues(alpha: 0.12),
+                          color: AppColors.error.withOpacity(0.12),
                           borderRadius: BorderRadius.circular(3),
                         ),
                         child: Text(

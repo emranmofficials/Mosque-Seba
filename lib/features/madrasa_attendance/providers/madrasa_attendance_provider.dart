@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../authentication/providers/auth_provider.dart';
-import '../../madrasa/models/student_model.dart';
 import '../../madrasa/providers/madrasa_provider.dart';
 import '../models/madrasa_attendance_model.dart';
 import '../repositories/madrasa_attendance_repository.dart';

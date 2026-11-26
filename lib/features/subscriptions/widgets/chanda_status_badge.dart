@@ -18,18 +18,18 @@ class ChandaStatusBadge extends StatelessWidget {
     switch (status.toLowerCase()) {
       case 'paid':
       case 'পরিশোধিত':
-        bg = AppColors.success.withValues(alpha: 0.12);
+        bg = AppColors.success.withOpacity(0.12);
         fg = AppColors.success;
         label = 'পরিশোধিত';
         break;
       case 'partial':
       case 'আংশিক':
-        bg = AppColors.warning.withValues(alpha: 0.12);
+        bg = AppColors.warning.withOpacity(0.12);
         fg = AppColors.warning;
         label = 'আংশিক';
         break;
       default:
-        bg = AppColors.error.withValues(alpha: 0.12);
+        bg = AppColors.error.withOpacity(0.12);
         fg = AppColors.error;
         label = 'বকেয়া';
         break;
@@ -40,7 +40,7 @@ class ChandaStatusBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(AppDimens.radiusSm),
-        border: Border.all(color: fg.withValues(alpha: 0.3)),
+        border: Border.all(color: fg.withOpacity(0.3)),
       ),
       child: Text(
         label,

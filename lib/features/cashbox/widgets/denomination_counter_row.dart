@@ -32,7 +32,7 @@ class DenominationCounterRow extends StatelessWidget {
             decoration: BoxDecoration(
               color: AppColors.primaryContainer,
               borderRadius: BorderRadius.circular(AppDimens.radiusSm),
-              border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+              border: Border.all(color: AppColors.primary.withOpacity(0.3)),
             ),
             child: Text(
               '৳${BengaliNumberFormatter.toBengali(denomination.toString())}',

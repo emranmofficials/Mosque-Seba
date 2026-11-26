@@ -88,7 +88,7 @@ class RosterWaqtCard extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
-                          color: AppColors.gold.withValues(alpha: 0.15),
+                          color: AppColors.gold.withOpacity(0.15),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(

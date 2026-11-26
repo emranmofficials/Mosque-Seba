@@ -61,7 +61,7 @@ class NotificationCenterScreen extends ConsumerWidget {
                       radius: 18,
                       backgroundColor: notif.isRead
                           ? AppColors.surface
-                          : AppColors.primary.withValues(alpha: 0.15),
+                          : AppColors.primary.withOpacity(0.15),
                       child: Icon(
                         notif.priority == 'urgent' ? Icons.warning_amber : Icons.notifications_none,
                         color: notif.priority == 'urgent' ? AppColors.error : AppColors.primary,

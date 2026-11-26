@@ -171,10 +171,10 @@ class ChandaLedgerScreen extends ConsumerWidget {
                       padding: const EdgeInsets.all(AppDimens.spacing12),
                       child: Row(
                         children: [
-                          CircleAvatar(
+                          const CircleAvatar(
                             radius: 20,
                             backgroundColor: AppColors.primaryContainer,
-                            child: const Icon(Icons.receipt, color: AppColors.primary, size: 20),
+                            child: Icon(Icons.receipt, color: AppColors.primary, size: 20),
                           ),
                           const SizedBox(width: AppDimens.spacing12),
                           Expanded(

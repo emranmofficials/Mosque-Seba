@@ -36,8 +36,8 @@ class PosterNotifier extends StateNotifier<PosterState> {
 
   PosterNotifier(this._service)
       : super(
-          PosterState(
-            design: const PosterDesignModel(
+          const PosterState(
+            design: PosterDesignModel(
               eventTitle: 'ঐতিহাসিক বাৎসরিক তাফসিরুল কুরআন ও ওয়াজ মাহফিল',
               eventDate: '১৫ই ডিসেম্বর ২০২৬',
             ),

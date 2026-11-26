@@ -26,10 +26,10 @@ class StaffCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              CircleAvatar(
+              const CircleAvatar(
                 radius: 26,
                 backgroundColor: AppColors.primaryContainer,
-                child: const Icon(Icons.person, color: AppColors.primary, size: 28),
+                child: Icon(Icons.person, color: AppColors.primary, size: 28),
               ),
               const SizedBox(width: AppDimens.spacing12),
               Expanded(
@@ -64,7 +64,7 @@ class StaffCard extends StatelessWidget {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
-                              color: AppColors.gold.withValues(alpha: 0.15),
+                              color: AppColors.gold.withOpacity(0.15),
                               borderRadius: BorderRadius.circular(AppDimens.radiusXs),
                             ),
                             child: Text(

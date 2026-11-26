@@ -115,7 +115,7 @@ class WelfareDashboardScreen extends ConsumerWidget {
                         const SizedBox(height: 4),
                         Text(
                           '${BengaliNumberFormatter.toBengali(pendingCount.toString())} টি',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.roleTreasurer),
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.roleTreasurer),
                         ),
                       ],
                     ),

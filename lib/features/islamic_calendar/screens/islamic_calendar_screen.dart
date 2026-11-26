@@ -10,7 +10,7 @@ class IslamicCalendarScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final events = IslamicEvent.annualEvents;
+    const events = IslamicEvent.annualEvents;
 
     return Scaffold(
       appBar: AppBar(

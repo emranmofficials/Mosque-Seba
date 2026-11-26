@@ -10,7 +10,6 @@ import '../../../shared/components/error_state_view.dart';
 import '../../../shared/widgets/adaptive_scaffold.dart';
 import '../../../shared/widgets/card_shell.dart';
 import '../dialogs/add_waqf_asset_dialog.dart';
-import '../models/waqf_asset_model.dart';
 import '../providers/waqf_provider.dart';
 import '../widgets/waqf_asset_card.dart';
 

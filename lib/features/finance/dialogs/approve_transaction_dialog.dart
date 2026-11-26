@@ -107,9 +107,9 @@ class _ApproveTransactionDialogState extends State<ApproveTransactionDialog> {
                   margin: const EdgeInsets.only(bottom: AppDimens.spacing12),
                   padding: const EdgeInsets.all(AppDimens.spacing10),
                   decoration: BoxDecoration(
-                    color: AppColors.error.withValues(alpha: 0.1),
+                    color: AppColors.error.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(AppDimens.radiusSm),
-                    border: Border.all(color: AppColors.error.withValues(alpha: 0.4)),
+                    border: Border.all(color: AppColors.error.withOpacity(0.4)),
                   ),
                   child: Row(
                     children: [

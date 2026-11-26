@@ -97,7 +97,7 @@ class QrReceiptWidget extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(AppDimens.radiusMd),
-              border: Border.all(color: AppColors.gold.withValues(alpha: 0.4), width: 1.2),
+              border: Border.all(color: AppColors.gold.withOpacity(0.4), width: 1.2),
             ),
             child: Column(
               children: [

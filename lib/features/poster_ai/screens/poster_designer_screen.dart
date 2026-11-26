@@ -84,11 +84,11 @@ class _PosterDesignerScreenState extends ConsumerState<PosterDesignerScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
+                  const Row(
                     children: [
-                      const Icon(Icons.auto_awesome, color: AppColors.emeraldPrimary, size: 18),
-                      const SizedBox(width: 8),
-                      const Text(
+                      Icon(Icons.auto_awesome, color: AppColors.emeraldPrimary, size: 18),
+                      SizedBox(width: 8),
+                      Text(
                         'Gemini 3.8 Flash দ্বারা পোস্টার জেনারেটর',
                         style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.emeraldPrimary),
                       ),

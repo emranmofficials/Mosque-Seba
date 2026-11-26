@@ -32,7 +32,7 @@ class MeetingCard extends StatelessWidget {
                 padding: const EdgeInsets.all(AppDimens.spacing8),
                 decoration: BoxDecoration(
                   color: isCompleted
-                      ? AppColors.success.withValues(alpha: 0.15)
+                      ? AppColors.success.withOpacity(0.15)
                       : AppColors.primaryContainer,
                   borderRadius: BorderRadius.circular(AppDimens.radiusSm),
                 ),
@@ -71,7 +71,7 @@ class MeetingCard extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: isCompleted
-                      ? AppColors.success.withValues(alpha: 0.12)
+                      ? AppColors.success.withOpacity(0.12)
                       : AppColors.primaryContainer,
                   borderRadius: BorderRadius.circular(AppDimens.radiusSm),
                 ),
@@ -112,9 +112,9 @@ class MeetingCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(AppDimens.spacing10),
               decoration: BoxDecoration(
-                color: AppColors.success.withValues(alpha: 0.08),
+                color: AppColors.success.withOpacity(0.08),
                 borderRadius: BorderRadius.circular(AppDimens.radiusSm),
-                border: Border.all(color: AppColors.success.withValues(alpha: 0.2)),
+                border: Border.all(color: AppColors.success.withOpacity(0.2)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

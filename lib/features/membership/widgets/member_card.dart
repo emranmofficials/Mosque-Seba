@@ -63,10 +63,10 @@ class MemberCard extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: AppColors.gold.withValues(alpha: 0.15),
+                        color: AppColors.gold.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(AppDimens.radiusXs),
                         border: Border.all(
-                          color: AppColors.gold.withValues(alpha: 0.4),
+                          color: AppColors.gold.withOpacity(0.4),
                           width: 0.8,
                         ),
                       ),
@@ -127,7 +127,7 @@ class MemberCard extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
                         decoration: BoxDecoration(
-                          color: AppColors.success.withValues(alpha: 0.12),
+                          color: AppColors.success.withOpacity(0.12),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Row(

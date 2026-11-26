@@ -20,7 +20,7 @@ class PayrollRecordCard extends StatelessWidget {
         children: [
           CircleAvatar(
             radius: 20,
-            backgroundColor: AppColors.success.withValues(alpha: 0.12),
+            backgroundColor: AppColors.success.withOpacity(0.12),
             child: const Icon(Icons.check_circle_outline, color: AppColors.success, size: 22),
           ),
           const SizedBox(width: AppDimens.spacing12),

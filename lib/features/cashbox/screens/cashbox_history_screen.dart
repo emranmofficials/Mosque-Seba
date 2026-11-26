@@ -197,10 +197,10 @@ class CashboxHistoryScreen extends ConsumerWidget {
                       padding: const EdgeInsets.all(AppDimens.spacing12),
                       child: Row(
                         children: [
-                          CircleAvatar(
+                          const CircleAvatar(
                             radius: 20,
                             backgroundColor: AppColors.primaryContainer,
-                            child: const Icon(Icons.inventory_2_outlined, color: AppColors.primary, size: 20),
+                            child: Icon(Icons.inventory_2_outlined, color: AppColors.primary, size: 20),
                           ),
                           const SizedBox(width: AppDimens.spacing12),
                           Expanded(
