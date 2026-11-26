@@ -60,9 +60,10 @@ class _EnterExamMarksDialogState extends ConsumerState<EnterExamMarksDialog> {
     }
 
     final obtained =
-        BengaliNumberFormatter.parseDouble(_obtainedController.text.trim()) ?? 0.0;
-    final total =
-        BengaliNumberFormatter.parseDouble(_totalController.text.trim()) ?? 100.0;
+        BengaliNumberFormatter.parseDouble(_obtainedController.text.trim());
+    final parsedTotal =
+        BengaliNumberFormatter.parseDouble(_totalController.text.trim());
+    final total = parsedTotal > 0 ? parsedTotal : 100.0;
 
     if (total <= 0 || obtained < 0 || obtained > total) {
       ScaffoldMessenger.of(context).showSnackBar(

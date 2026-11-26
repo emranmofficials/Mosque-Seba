@@ -155,11 +155,8 @@ class NotificationService {
   Future<Map<String, bool>> getAllWaqtAlarmStates() async {
     final prefs = await SharedPreferences.getInstance();
     return {
-      'ফজর': prefs.getBool('${_azanPrefsPrefix}ফজর') ?? false,
-      'যোহর': prefs.getBool('${_azanPrefsPrefix}যোহর') ?? false,
-      'আসর': prefs.getBool('${_azanPrefsPrefix}আসর') ?? false,
-      'মাগরিব': prefs.getBool('${_azanPrefsPrefix}মাগরিব') ?? false,
-      'ইশা': prefs.getBool('${_azanPrefsPrefix}ইশা') ?? false,
+      for (final key in const ['ফজর', 'যোহর', 'আসর', 'মাগরিব', 'ইশা'])
+        key: prefs.getBool('$_azanPrefsPrefix$key') ?? false,
     };
   }
 

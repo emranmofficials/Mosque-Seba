@@ -36,6 +36,12 @@ class AuthService {
           final nameBn = map['name_bn']?.toString() ?? '';
           final address = map['address']?.toString() ?? '';
           final committeeId = map['committee_id']?.toString() ?? '';
+          final districtVal = map['district']?.toString();
+          final upazilaVal = map['upazila']?.toString();
+          final estYearVal = _toInt(map['established_year']);
+          final startYearVal = _toInt(map['committee_start_year']);
+          final endYearVal = _toInt(map['committee_end_year']);
+          final bankInfoVal = map['bank_account_info']?.toString();
           if (nameBn.isNotEmpty) {
             await _database.into(_database.mosquesTable).insertOnConflictUpdate(
               MosquesTableCompanion.insert(
@@ -43,12 +49,12 @@ class AuthService {
                 committeeId: committeeId,
                 nameBn: nameBn,
                 address: address,
-                district: Value(map['district']?.toString()),
-                upazila: Value(map['upazila']?.toString()),
-                establishedYear: Value(_toInt(map['established_year'])),
-                committeeStartYear: Value(_toInt(map['committee_start_year'])),
-                committeeEndYear: Value(_toInt(map['committee_end_year'])),
-                bankAccountInfo: Value(map['bank_account_info']?.toString()),
+                district: districtVal != null ? Value(districtVal) : const Value.absent(),
+                upazila: upazilaVal != null ? Value(upazilaVal) : const Value.absent(),
+                establishedYear: estYearVal != null ? Value(estYearVal) : const Value.absent(),
+                committeeStartYear: startYearVal != null ? Value(startYearVal) : const Value.absent(),
+                committeeEndYear: endYearVal != null ? Value(endYearVal) : const Value.absent(),
+                bankAccountInfo: bankInfoVal != null ? Value(bankInfoVal) : const Value.absent(),
               ),
             );
           }
@@ -492,7 +498,7 @@ class AuthService {
           tableName: 'mosques',
           mosqueId: mosqueId,
           id: mosqueId,
-          payload: payload,
+          updates: payload,
         );
       }
     } catch (e) {
@@ -501,7 +507,7 @@ class AuthService {
         tableName: 'mosques',
         mosqueId: mosqueId,
         id: mosqueId,
-        payload: payload,
+        updates: payload,
       );
     }
 

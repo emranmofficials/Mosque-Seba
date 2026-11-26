@@ -100,6 +100,7 @@ class PdfGeneratorService {
 ''';
 
     try {
+      // ignore: deprecated_member_use
       final bytes = await Printing.convertHtml(
         html: fullHtml,
         format: format,

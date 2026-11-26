@@ -79,7 +79,7 @@ void main() {
       );
 
       expect(payment, isNotNull);
-      final qr = payment!.qrVerificationCode ?? '';
+      final qr = payment!.qrVerificationCode;
       final parts = qr.split(':');
       expect(parts.length, 6);
       expect(parts[0], 'MOSQUE_SEBA');

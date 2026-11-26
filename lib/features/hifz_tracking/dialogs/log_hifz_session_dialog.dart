@@ -64,13 +64,16 @@ class _LogHifzSessionDialogState extends ConsumerState<LogHifzSessionDialog> {
     final dateStr =
         '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
 
+    final parsedPage =
+        BengaliNumberFormatter.parseDouble(_pageController.text.trim()).toInt();
+
     final record = HifzRecordModel(
       id: 'hifz-${DateTime.now().millisecondsSinceEpoch}',
       studentId: _selectedStudent!.id,
       studentNameBn: _selectedStudent!.nameBn,
       paraNumber: _selectedPara,
       surahName: _surahController.text.trim(),
-      pageNumber: (BengaliNumberFormatter.parseDouble(_pageController.text.trim()) ?? 1).toInt(),
+      pageNumber: parsedPage > 0 ? parsedPage : 1,
       sabaqRating: _sabaqRating,
       sabaqiRating: _sabaqiRating,
       manzilRating: _manzilRating,

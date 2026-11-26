@@ -243,7 +243,7 @@ class DocumentPrintHubScreen extends ConsumerWidget {
                 baseSalary: latestPayroll.salaryAmount,
                 bonusAmount: latestPayroll.bonusAmount,
                 netSalary: latestPayroll.netSalary,
-                paidDate: latestPayroll.paidDate,
+                paidDate: latestPayroll.paidDate ?? '',
                 mosqueName: mosqueName,
               ),
               onSharePdf: () async {
@@ -253,7 +253,7 @@ class DocumentPrintHubScreen extends ConsumerWidget {
                   baseSalary: latestPayroll.salaryAmount,
                   bonusAmount: latestPayroll.bonusAmount,
                   netSalary: latestPayroll.netSalary,
-                  paidDate: latestPayroll.paidDate,
+                  paidDate: latestPayroll.paidDate ?? '',
                   mosqueName: mosqueName,
                 );
                 await printingService.shareDocument(bytes, 'Salary_Slip.pdf');
