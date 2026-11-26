@@ -377,6 +377,143 @@ CREATE INDEX IF NOT EXISTS idx_election_candidates_schedule
 CREATE INDEX IF NOT EXISTS idx_notifications_mosque_unread
   ON public.notifications (mosque_id, is_read);
 
+-- ==============================================================================
+-- 10. ATOMIC REGISTRATION FUNCTION & RLS REFINEMENT
+-- ==============================================================================
+
+-- Ensure profiles columns permit registration insertions
+ALTER TABLE public.profiles ALTER COLUMN auth_user_id SET DEFAULT (auth.uid())::text;
+ALTER TABLE public.profiles ALTER COLUMN auth_user_id DROP NOT NULL;
+ALTER TABLE public.profiles ALTER COLUMN name_bn DROP NOT NULL;
+
+-- Update RLS on profiles to allow authenticated user to manage their own profile
+DROP POLICY IF EXISTS seba_own_profile ON public.profiles;
+CREATE POLICY seba_own_profile ON public.profiles
+  FOR ALL TO authenticated
+  USING (
+    auth_user_id = (auth.uid())::text 
+    OR id = (auth.uid())::text
+  )
+  WITH CHECK (
+    auth_user_id = (auth.uid())::text 
+    OR id = (auth.uid())::text
+  );
+
+-- Update RLS on mosques so authenticated users can read mosques (needed during login & registration)
+DROP POLICY IF EXISTS seba_mosque_select ON public.mosques;
+CREATE POLICY seba_mosque_select ON public.mosques
+  FOR SELECT TO authenticated
+  USING (true);
+
+-- Atomic registration RPC with SECURITY DEFINER
+CREATE OR REPLACE FUNCTION public.seba_register_mosque_and_president(
+  p_mosque_id text,
+  p_committee_id text,
+  p_mosque_name_bn text,
+  p_mosque_name_en text,
+  p_district text,
+  p_upazila text,
+  p_established_year integer,
+  p_committee_start_year integer,
+  p_committee_end_year integer,
+  p_bank_info text,
+  p_president_name_bn text,
+  p_president_name_en text,
+  p_president_mobile text,
+  p_president_email text
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+DECLARE
+  v_user_id text;
+  v_role_id text;
+BEGIN
+  v_user_id := auth.uid()::text;
+  IF v_user_id IS NULL THEN
+    RAISE EXCEPTION 'Authentication required to complete registration';
+  END IF;
+
+  -- 1. Insert or update Mosque
+  INSERT INTO public.mosques (
+    id, committee_id, name_bn, name_en, address, 
+    established_year, committee_start_year, committee_end_year, 
+    status, district, upazila, bank_account_info
+  ) VALUES (
+    p_mosque_id, p_committee_id, p_mosque_name_bn, p_mosque_name_en, 
+    p_upazila || ', ' || p_district,
+    p_established_year, p_committee_start_year, p_committee_end_year,
+    'active', p_district, p_upazila, coalesce(p_bank_info, '')
+  )
+  ON CONFLICT (id) DO UPDATE SET
+    committee_id = EXCLUDED.committee_id,
+    name_bn = EXCLUDED.name_bn,
+    name_en = EXCLUDED.name_en,
+    address = EXCLUDED.address,
+    district = EXCLUDED.district,
+    upazila = EXCLUDED.upazila,
+    status = 'active';
+
+  -- 2. Insert or update Profile
+  INSERT INTO public.profiles (
+    id, auth_user_id, mosque_id, member_id, 
+    name_bn, full_name_bn, name_en, full_name_en, 
+    email, mobile, phone, status, is_active
+  ) VALUES (
+    v_user_id, v_user_id, p_mosque_id, v_user_id,
+    p_president_name_bn, p_president_name_bn, p_president_name_en, p_president_name_en,
+    lower(p_president_email), p_president_mobile, p_president_mobile, 'active', true
+  )
+  ON CONFLICT (id) DO UPDATE SET
+    auth_user_id = EXCLUDED.auth_user_id,
+    mosque_id = EXCLUDED.mosque_id,
+    name_bn = EXCLUDED.name_bn,
+    full_name_bn = EXCLUDED.full_name_bn,
+    name_en = EXCLUDED.name_en,
+    full_name_en = EXCLUDED.full_name_en,
+    email = EXCLUDED.email,
+    mobile = EXCLUDED.mobile,
+    phone = EXCLUDED.phone,
+    is_active = true,
+    status = 'active';
+
+  -- 3. Insert or update Member
+  INSERT INTO public.members (
+    id, mosque_id, member_code, name_bn, name_en, mobile, email, role_code, status
+  ) VALUES (
+    v_user_id, p_mosque_id, 'MEM-001', p_president_name_bn, p_president_name_en,
+    p_president_mobile, lower(p_president_email), 'president', 'active'
+  )
+  ON CONFLICT (id) DO UPDATE SET
+    mosque_id = EXCLUDED.mosque_id,
+    name_bn = EXCLUDED.name_bn,
+    name_en = EXCLUDED.name_en,
+    mobile = EXCLUDED.mobile,
+    email = EXCLUDED.email,
+    role_code = 'president',
+    status = 'active';
+
+  -- 4. Assign president role in user_roles
+  SELECT id INTO v_role_id FROM public.roles WHERE code = 'president' LIMIT 1;
+  IF v_role_id IS NOT NULL THEN
+    INSERT INTO public.user_roles (profile_id, mosque_id, role_id, assigned_at)
+    VALUES (v_user_id, p_mosque_id, v_role_id, now())
+    ON CONFLICT DO NOTHING;
+  END IF;
+
+  RETURN jsonb_build_object(
+    'success', true,
+    'mosque_id', p_mosque_id,
+    'committee_id', p_committee_id,
+    'user_id', v_user_id
+  );
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.seba_register_mosque_and_president TO authenticated;
+
 -- Refresh PostgREST schema cache
 NOTIFY pgrst, 'reload schema';
 
