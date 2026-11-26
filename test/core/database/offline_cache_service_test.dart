@@ -126,7 +126,7 @@ void main() {
     });
 
     test('models decode legacy Supabase column names transparently', () {
-      final notice = NoticeModel.fromJson({
+      final notice = NoticeModel.fromJson(const {
         'id': 'n1',
         'title': 'জুমার নামাজ',
         'content': 'সময়মতো আসুন',
@@ -136,7 +136,7 @@ void main() {
       expect(notice.publishDate, '2026-11-26');
       expect(notice.expiryDate, '2026-12-01');
 
-      final attendance = MadrasaAttendanceModel.fromJson({
+      final attendance = MadrasaAttendanceModel.fromJson(const {
         'id': 'a1',
         'student_id': 's1',
         'date': '2026-11-26',
@@ -144,7 +144,7 @@ void main() {
       });
       expect(attendance.attendanceDate, '2026-11-26');
 
-      final candidate = ElectionCandidateModel.fromJson({
+      final candidate = ElectionCandidateModel.fromJson(const {
         'id': 'c1',
         'election_id': 'el-1',
         'target_role_code': 'secretary',
@@ -158,7 +158,7 @@ void main() {
       expect(candidate.targetRoleBn, 'সাধারণ সম্পাদক');
       expect(candidate.candidateName, 'আবদুল করিম');
 
-      final cashbox = CashboxRecordModel.fromJson({
+      final cashbox = CashboxRecordModel.fromJson(const {
         'id': 'cb1',
         'collection_date': '2026-11-26',
         'witness_1_name': 'সাক্ষী ১',
