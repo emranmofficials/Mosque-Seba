@@ -7,6 +7,7 @@ import '../../../core/theme/app_dimens.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../../../shared/widgets/card_shell.dart';
+import '../../../shared/widgets/image_picker_field.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/auth_header_banner.dart';
 import '../widgets/registration_success_card.dart';
@@ -24,6 +25,8 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
   bool _isLoading = false;
   String? _errorMessage;
   String _generatedCommitteeId = '';
+  String? _presidentPhotoUrl;
+  String? _mosqueLogoUrl;
 
   // Step 1: President Details
   final _presNameBnController = TextEditingController();
@@ -121,6 +124,8 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
         committeeStartYear: int.tryParse(_committeeStartYearController.text) ?? 2026,
         committeeEndYear: int.tryParse(_committeeEndYearController.text) ?? 2028,
         bankAccountInfo: _bankInfoController.text.trim(),
+        presidentPhotoUrl: _presidentPhotoUrl,
+        mosqueLogoUrl: _mosqueLogoUrl,
       );
       await ref.read(authNotifierProvider.notifier).checkSession();
 
@@ -219,6 +224,16 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          ImagePickerField(
+            label: 'সভাপতির ছবি (ঐচ্ছিক)',
+            subtitle: 'কমিটি পরিচিতির জন্য যুক্ত করতে পারেন',
+            folder: 'profiles',
+            isCircle: true,
+            initialUrl: _presidentPhotoUrl,
+            onImageUploaded: (url) => setState(() => _presidentPhotoUrl = url),
+            onImageRemoved: () => setState(() => _presidentPhotoUrl = null),
+          ),
+          const SizedBox(height: MosqueSpace.lg),
           AppTextField(
             label: 'সভাপতির পূর্ণ নাম (বাংলায়)',
             hint: 'যেমন: হাজী মো: রফিকুল ইসলাম',
@@ -274,6 +289,16 @@ class _RegistrationScreenState extends ConsumerState<RegistrationScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          ImagePickerField(
+            label: 'মসজিদের লোগো বা প্রতীক (ঐচ্ছিক)',
+            subtitle: 'অফিসিয়াল ডকুমেন্টে প্রদর্শিত হবে',
+            folder: 'logos',
+            isCircle: false,
+            initialUrl: _mosqueLogoUrl,
+            onImageUploaded: (url) => setState(() => _mosqueLogoUrl = url),
+            onImageRemoved: () => setState(() => _mosqueLogoUrl = null),
+          ),
+          const SizedBox(height: MosqueSpace.lg),
           AppTextField(
             label: 'মসজিদের নাম (বাংলায়)',
             hint: 'যেমন: বায়তুল মামুর জামে মসজিদ',

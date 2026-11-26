@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthUser;
@@ -365,8 +366,16 @@ class AuthService {
     required int committeeStartYear,
     required int committeeEndYear,
     required String bankAccountInfo,
+    String? presidentPhotoUrl,
+    String? mosqueLogoUrl,
   }) async {
-    final generatedCommitteeId = 'MS-${DateTime.now().year % 100}${1000 + (DateTime.now().millisecond % 9000)}';
+    final random = Random();
+    final yearPrefix = (DateTime.now().year % 100).toString().padLeft(2, '0');
+    // 10-digit random numeric Mosque ID (e.g. 2684521903)
+    final generatedCommitteeId = '$yearPrefix${10000000 + random.nextInt(90000000)}';
+    // 8-digit random numeric Member Code (e.g. 84521903)
+    final generatedMemberCode = (10000000 + random.nextInt(90000000)).toString();
+
     final mosqueId = const Uuid().v4();
     String effectiveUserId = const Uuid().v4();
 
@@ -428,6 +437,9 @@ class AuthService {
         'p_president_name_en': presidentNameEn,
         'p_president_mobile': cleanPresMobile,
         'p_president_email': cleanPresEmail,
+        'p_member_code': generatedMemberCode,
+        'p_president_photo_url': presidentPhotoUrl,
+        'p_mosque_logo_url': mosqueLogoUrl,
       });
       rpcSuccess = true;
     } catch (e) {
@@ -449,6 +461,7 @@ class AuthService {
         'district': district,
         'upazila': upazila,
         'bank_account_info': bankAccountInfo,
+        'logo_url': mosqueLogoUrl,
       });
 
       await SupabaseService.client.from('profiles').insert({
@@ -463,6 +476,7 @@ class AuthService {
         'email': cleanPresEmail,
         'mobile': cleanPresMobile,
         'phone': cleanPresMobile,
+        'photo_url': presidentPhotoUrl,
         'status': 'active',
         'is_active': true,
       });
@@ -470,12 +484,13 @@ class AuthService {
       await SupabaseService.client.from('members').insert({
         'id': effectiveUserId,
         'mosque_id': mosqueId,
-        'member_code': 'MEM-001',
+        'member_code': generatedMemberCode,
         'name_bn': presidentNameBn,
         'name_en': presidentNameEn,
         'mobile': cleanPresMobile,
         'email': cleanPresEmail,
         'role_code': 'president',
+        'photo_url': presidentPhotoUrl,
         'status': 'active',
       });
     }
@@ -493,6 +508,7 @@ class AuthService {
         committeeStartYear: Value(committeeStartYear),
         committeeEndYear: Value(committeeEndYear),
         bankAccountInfo: Value(bankAccountInfo),
+        logoUrl: Value(mosqueLogoUrl),
       ),
     );
 

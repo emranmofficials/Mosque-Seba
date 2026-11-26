@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -118,13 +119,20 @@ class _MemberProfileScreenState extends ConsumerState<MemberProfileScreen> {
                   CircleAvatar(
                     radius: 40,
                     backgroundColor: AppColors.primaryContainer,
-                    child: Text(
-                      member.nameBn.isNotEmpty ? member.nameBn.characters.first : 'স',
-                      style: AppTypography.headlineMedium.copyWith(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    backgroundImage: member.photoUrl != null && member.photoUrl!.isNotEmpty
+                        ? (member.photoUrl!.startsWith('http')
+                            ? NetworkImage(member.photoUrl!) as ImageProvider
+                            : FileImage(File(member.photoUrl!)))
+                        : null,
+                    child: (member.photoUrl == null || member.photoUrl!.isEmpty)
+                        ? Text(
+                            member.nameBn.isNotEmpty ? member.nameBn.characters.first : 'স',
+                            style: AppTypography.headlineMedium.copyWith(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          )
+                        : null,
                   ),
                   const SizedBox(height: AppDimens.spacing12),
                   Text(

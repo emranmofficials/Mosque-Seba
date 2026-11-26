@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimens.dart';
@@ -5,6 +6,7 @@ import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/bengali_number_formatter.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_text_field.dart';
+import '../../../shared/widgets/image_picker_field.dart';
 import '../../role_permissions/models/committee_role.dart';
 import '../models/member_model.dart';
 
@@ -30,6 +32,7 @@ class _AddMemberDialogState extends State<AddMemberDialog> {
   String _selectedRole = CommitteeRole.generalMember.code;
   bool _willingToProvideMeal = false;
   bool _isLoading = false;
+  String? _photoUrl;
 
   @override
   void dispose() {
@@ -46,7 +49,9 @@ class _AddMemberDialogState extends State<AddMemberDialog> {
 
     setState(() => _isLoading = true);
 
-    final autoCode = 'M-${DateTime.now().millisecondsSinceEpoch % 10000}';
+    final random = Random();
+    // 8-digit random numeric member code (e.g. 84521903)
+    final autoCode = (10000000 + random.nextInt(90000000)).toString();
     final chanda = double.tryParse(
           BengaliNumberFormatter.toEnglishDigits(_monthlyChandaController.text.trim()),
         ) ??
@@ -62,6 +67,7 @@ class _AddMemberDialogState extends State<AddMemberDialog> {
       nid: _nidController.text.trim(),
       roleCode: _selectedRole,
       willingToProvideStaffMeals: _willingToProvideMeal,
+      photoUrl: _photoUrl,
       joinDate: DateTime.now().toIso8601String().split('T').first,
     );
 
@@ -114,6 +120,16 @@ class _AddMemberDialogState extends State<AddMemberDialog> {
                   ),
                   const Divider(),
                   const SizedBox(height: AppDimens.spacing12),
+                  ImagePickerField(
+                    label: 'সদস্যের ছবি (ঐচ্ছিক)',
+                    subtitle: 'সদস্য কার্ডের জন্য ছবি নির্বাচন করুন',
+                    folder: 'members',
+                    isCircle: true,
+                    initialUrl: _photoUrl,
+                    onImageUploaded: (url) => setState(() => _photoUrl = url),
+                    onImageRemoved: () => setState(() => _photoUrl = null),
+                  ),
+                  const SizedBox(height: AppDimens.spacing16),
                   AppTextField(
                     label: 'পূর্ণ নাম (বাংলায়) *',
                     hint: 'যেমন: হাজী মো: রফিকুল ইসলাম',

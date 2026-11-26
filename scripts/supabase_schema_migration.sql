@@ -420,7 +420,10 @@ CREATE OR REPLACE FUNCTION public.seba_register_mosque_and_president(
   p_president_name_bn text,
   p_president_name_en text,
   p_president_mobile text,
-  p_president_email text
+  p_president_email text,
+  p_member_code text DEFAULT NULL,
+  p_president_photo_url text DEFAULT NULL,
+  p_mosque_logo_url text DEFAULT NULL
 )
 RETURNS jsonb
 LANGUAGE plpgsql
@@ -430,22 +433,31 @@ AS $$
 DECLARE
   v_user_id text;
   v_role_id text;
+  v_member_code text;
 BEGIN
   v_user_id := auth.uid()::text;
   IF v_user_id IS NULL THEN
     RAISE EXCEPTION 'Authentication required to complete registration';
   END IF;
 
+  -- 8-digit random numeric member code if not provided
+  IF p_member_code IS NOT NULL AND length(trim(p_member_code)) > 0 THEN
+    v_member_code := trim(p_member_code);
+  ELSE
+    v_member_code := (10000000 + floor(random() * 90000000))::text;
+  END IF;
+
   -- 1. Insert or update Mosque
   INSERT INTO public.mosques (
     id, committee_id, name_bn, name_en, address, 
     established_year, committee_start_year, committee_end_year, 
-    status, district, upazila, bank_account_info
+    status, district, upazila, bank_account_info, logo_url
   ) VALUES (
     p_mosque_id, p_committee_id, p_mosque_name_bn, p_mosque_name_en, 
     p_upazila || ', ' || p_district,
     p_established_year, p_committee_start_year, p_committee_end_year,
-    'active', p_district, p_upazila, coalesce(p_bank_info, '')
+    'active', p_district, p_upazila, coalesce(p_bank_info, ''),
+    p_mosque_logo_url
   )
   ON CONFLICT (id) DO UPDATE SET
     committee_id = EXCLUDED.committee_id,
@@ -454,17 +466,19 @@ BEGIN
     address = EXCLUDED.address,
     district = EXCLUDED.district,
     upazila = EXCLUDED.upazila,
+    logo_url = coalesce(EXCLUDED.logo_url, mosques.logo_url),
     status = 'active';
 
   -- 2. Insert or update Profile
   INSERT INTO public.profiles (
     id, auth_user_id, mosque_id, member_id, 
     name_bn, full_name_bn, name_en, full_name_en, 
-    email, mobile, phone, status, is_active
+    email, mobile, phone, photo_url, status, is_active
   ) VALUES (
     v_user_id, v_user_id, p_mosque_id, v_user_id,
     p_president_name_bn, p_president_name_bn, p_president_name_en, p_president_name_en,
-    lower(p_president_email), p_president_mobile, p_president_mobile, 'active', true
+    lower(p_president_email), p_president_mobile, p_president_mobile,
+    p_president_photo_url, 'active', true
   )
   ON CONFLICT (id) DO UPDATE SET
     auth_user_id = EXCLUDED.auth_user_id,
@@ -476,23 +490,26 @@ BEGIN
     email = EXCLUDED.email,
     mobile = EXCLUDED.mobile,
     phone = EXCLUDED.phone,
+    photo_url = coalesce(EXCLUDED.photo_url, profiles.photo_url),
     is_active = true,
     status = 'active';
 
   -- 3. Insert or update Member
   INSERT INTO public.members (
-    id, mosque_id, member_code, name_bn, name_en, mobile, email, role_code, status
+    id, mosque_id, member_code, name_bn, name_en, mobile, email, role_code, photo_url, status
   ) VALUES (
-    v_user_id, p_mosque_id, 'MEM-001', p_president_name_bn, p_president_name_en,
-    p_president_mobile, lower(p_president_email), 'president', 'active'
+    v_user_id, p_mosque_id, v_member_code, p_president_name_bn, p_president_name_en,
+    p_president_mobile, lower(p_president_email), 'president', p_president_photo_url, 'active'
   )
   ON CONFLICT (id) DO UPDATE SET
     mosque_id = EXCLUDED.mosque_id,
+    member_code = coalesce(EXCLUDED.member_code, members.member_code),
     name_bn = EXCLUDED.name_bn,
     name_en = EXCLUDED.name_en,
     mobile = EXCLUDED.mobile,
     email = EXCLUDED.email,
     role_code = 'president',
+    photo_url = coalesce(EXCLUDED.photo_url, members.photo_url),
     status = 'active';
 
   -- 4. Assign president role in user_roles
@@ -507,6 +524,7 @@ BEGIN
     'success', true,
     'mosque_id', p_mosque_id,
     'committee_id', p_committee_id,
+    'member_code', v_member_code,
     'user_id', v_user_id
   );
 END;

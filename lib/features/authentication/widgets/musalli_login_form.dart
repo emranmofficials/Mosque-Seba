@@ -37,7 +37,7 @@ class _MusalliLoginFormState extends ConsumerState<MusalliLoginForm> {
     final password = _passwordController.text;
 
     if (committeeId.isEmpty) {
-      setState(() => _errorMessage = 'মসজিদের কমিটি কোড (যেমন: MS-2026) দিন।');
+      setState(() => _errorMessage = 'মসজিদের ১০ ডিজিটের কমিটি কোড দিন।');
       return;
     }
     if (mobile.length < 11) {
@@ -105,7 +105,7 @@ class _MusalliLoginFormState extends ConsumerState<MusalliLoginForm> {
 
         AppTextField(
           label: 'মসজিদ কোড / কমিটি আইডি',
-          hint: 'যেমন: MS-2026',
+          hint: '১০ ডিজিটের কোড (যেমন: ২৬০৮৪৫১৯০৩)',
           controller: _committeeIdController,
           prefixIcon: const Icon(Icons.tag, color: AppColors.goldDeep, size: 20),
         ),

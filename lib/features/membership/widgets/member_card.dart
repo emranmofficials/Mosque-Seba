@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimens.dart';
@@ -33,13 +34,20 @@ class MemberCard extends StatelessWidget {
           CircleAvatar(
             radius: 24,
             backgroundColor: AppColors.primaryContainer,
-            child: Text(
-              member.nameBn.isNotEmpty ? member.nameBn.characters.first : 'স',
-              style: AppTypography.titleMedium.copyWith(
-                color: AppColors.primary,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            backgroundImage: member.photoUrl != null && member.photoUrl!.isNotEmpty
+                ? (member.photoUrl!.startsWith('http')
+                    ? NetworkImage(member.photoUrl!) as ImageProvider
+                    : FileImage(File(member.photoUrl!)))
+                : null,
+            child: (member.photoUrl == null || member.photoUrl!.isEmpty)
+                ? Text(
+                    member.nameBn.isNotEmpty ? member.nameBn.characters.first : 'স',
+                    style: AppTypography.titleMedium.copyWith(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  )
+                : null,
           ),
           const SizedBox(width: AppDimens.spacing12),
           // Info column

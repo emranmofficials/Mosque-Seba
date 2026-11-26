@@ -5,6 +5,7 @@ import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/bengali_number_formatter.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_text_field.dart';
+import '../../../shared/widgets/image_picker_field.dart';
 import '../../role_permissions/models/committee_role.dart';
 import '../models/member_model.dart';
 
@@ -35,10 +36,12 @@ class _EditMemberDialogState extends State<EditMemberDialog> {
   late String _status;
   late String _selectedRole;
   bool _isLoading = false;
+  String? _photoUrl;
 
   @override
   void initState() {
     super.initState();
+    _photoUrl = widget.member.photoUrl;
     _nameBnController = TextEditingController(text: widget.member.nameBn);
     _mobileController = TextEditingController(text: widget.member.mobile);
     _villageAreaController = TextEditingController(text: widget.member.villageArea);
@@ -79,6 +82,7 @@ class _EditMemberDialogState extends State<EditMemberDialog> {
       roleCode: _selectedRole,
       willingToProvideStaffMeals: _willingToProvideMeal,
       status: _status,
+      photoUrl: _photoUrl,
     );
 
     final success = await widget.onUpdate(updated);
@@ -130,6 +134,16 @@ class _EditMemberDialogState extends State<EditMemberDialog> {
                   ),
                   const Divider(),
                   const SizedBox(height: AppDimens.spacing12),
+                  ImagePickerField(
+                    label: 'সদস্যের ছবি',
+                    subtitle: 'সদস্য কার্ডের জন্য ছবি পরিবর্তন করুন',
+                    folder: 'members',
+                    isCircle: true,
+                    initialUrl: _photoUrl,
+                    onImageUploaded: (url) => setState(() => _photoUrl = url),
+                    onImageRemoved: () => setState(() => _photoUrl = null),
+                  ),
+                  const SizedBox(height: AppDimens.spacing16),
                   AppTextField(
                     label: 'পূর্ণ নাম (বাংলায়) *',
                     controller: _nameBnController,
