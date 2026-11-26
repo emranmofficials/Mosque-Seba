@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import '../../../core/config/app_config.dart';
+import '../../../core/network/supabase_service.dart';
 import '../models/poster_design_model.dart';
 
 /// Service for generating authentic Bengali Islamic Poster Copy with Gemini AI
@@ -11,6 +12,39 @@ class PosterAiService {
   PosterAiService({String? apiKey})
       : _apiKey = apiKey ?? AppConfig.geminiApiKey;
 
+  Future<String?> _generateText(String prompt) async {
+    if (SupabaseService.isInitialized && SupabaseService.hasActiveSession) {
+      try {
+        final res = await SupabaseService.client.functions.invoke(
+          'gemini-proxy',
+          body: {'prompt': prompt},
+        );
+        final data = res.data;
+        if (data is Map && data['text'] != null) {
+          final text = data['text'].toString().trim();
+          if (text.isNotEmpty) return text;
+        }
+      } catch (e) {
+        debugPrint('Supabase gemini-proxy poster fallback: $e');
+      }
+    }
+
+    if (_apiKey.isNotEmpty) {
+      try {
+        final model = GenerativeModel(
+          model: AppConfig.geminiModel,
+          apiKey: _apiKey,
+        );
+        final response = await model.generateContent([Content.text(prompt)]);
+        final text = response.text?.trim();
+        if (text != null && text.isNotEmpty) return text;
+      } catch (e) {
+        debugPrint('Direct Gemini poster fallback: $e');
+      }
+    }
+    return null;
+  }
+
   /// Generate or optimize authentic Islamic Dawat poster copy
   Future<PosterDesignModel> generatePosterCopy({
     required String prompt,
@@ -18,13 +52,8 @@ class PosterAiService {
     String? venue,
     String? date,
   }) async {
-    if (_apiKey.isNotEmpty) {
-      try {
-        final model = GenerativeModel(
-          model: AppConfig.geminiModel,
-          apiKey: _apiKey,
-        );
-        final aiPrompt = '''
+    try {
+      final aiPrompt = '''
 বাংলা ভাষায় ইসলামিক দাওয়াতনামা/মাহফিল পোস্টারের জন্য মার্জিত কপি JSON ফরম্যাটে তৈরি করুন।
 অনুষ্ঠানের ধরন: ${eventType ?? 'waz_mahfil'}
 মূল বিষয়: ${prompt.isNotEmpty ? prompt : 'তাফসিরুল কুরআন ও দোয়া মাহফিল'}
@@ -41,27 +70,25 @@ class PosterAiService {
   "themeStyle": "emerald_gold"
 }
 ''';
-        final response = await model.generateContent([Content.text(aiPrompt)]);
-        var raw = (response.text ?? '').trim();
-        if (raw.startsWith('```')) {
-          raw = raw.replaceFirst(RegExp(r'^```(?:json)?\s*'), '');
-          raw = raw.replaceFirst(RegExp(r'\s*```$'), '');
-        }
-        if (raw.isNotEmpty) {
-          final parsed = jsonDecode(raw) as Map<String, dynamic>;
-          return PosterDesignModel(
-            quranAyat: parsed['quranAyat'] as String? ?? '“তোমরা সৎকাজে পরস্পরকে সাহায্য করো...” — (সূরা মায়িদাহ: ২)',
-            eventTitle: parsed['eventTitle'] as String? ?? (prompt.isNotEmpty ? prompt : 'তাফসিরুল কুরআন ও দোয়া মাহফিল'),
-            subtitle: parsed['subtitle'] as String? ?? 'ইসলাম, শান্তি ও মানবতার কল্যাণে বিশেষ আয়োজন',
-            eventDate: date ?? 'আসন্ন তারিখ',
-            eventTime: parsed['eventTime'] as String? ?? 'বাদ আসর হতে',
-            venue: venue ?? (parsed['venue'] as String? ?? 'মসজিদ প্রাঙ্গণ'),
-            themeStyle: parsed['themeStyle'] as String? ?? 'emerald_gold',
-          );
-        }
-      } catch (e) {
-        debugPrint('Gemini poster copy fallback: $e');
+      var raw = (await _generateText(aiPrompt) ?? '').trim();
+      if (raw.startsWith('```')) {
+        raw = raw.replaceFirst(RegExp(r'^```(?:json)?\s*'), '');
+        raw = raw.replaceFirst(RegExp(r'\s*```$'), '');
       }
+      if (raw.isNotEmpty) {
+        final parsed = jsonDecode(raw) as Map<String, dynamic>;
+        return PosterDesignModel(
+          quranAyat: parsed['quranAyat'] as String? ?? '“তোমরা সৎকাজে পরস্পরকে সাহায্য করো...” — (সূরা মায়িদাহ: ২)',
+          eventTitle: parsed['eventTitle'] as String? ?? (prompt.isNotEmpty ? prompt : 'তাফসিরুল কুরআন ও দোয়া মাহফিল'),
+          subtitle: parsed['subtitle'] as String? ?? 'ইসলাম, শান্তি ও মানবতার কল্যাণে বিশেষ আয়োজন',
+          eventDate: date ?? 'আসন্ন তারিখ',
+          eventTime: parsed['eventTime'] as String? ?? 'বাদ আসর হতে',
+          venue: venue ?? (parsed['venue'] as String? ?? 'মসজিদ প্রাঙ্গণ'),
+          themeStyle: parsed['themeStyle'] as String? ?? 'emerald_gold',
+        );
+      }
+    } catch (e) {
+      debugPrint('Gemini poster copy fallback: $e');
     }
 
     if (eventType == 'iftar_party') {

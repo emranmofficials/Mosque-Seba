@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import '../../../core/config/app_config.dart';
+import '../../../core/network/supabase_service.dart';
 import '../models/khutbah_topic_model.dart';
 
 /// Gemini AI Service for Islamic Khutbah Ideas and Official Bengali Notice Drafting
@@ -11,18 +12,46 @@ class GeminiAiService {
   GeminiAiService({String? apiKey})
       : _apiKey = apiKey ?? AppConfig.geminiApiKey;
 
-  /// Generate Khutbah Topic Outline with Quranic & Hadith citations
-  Future<KhutbahTopicModel> generateKhutbahOutline({
-    required String topicPrompt,
-    String category = 'character',
-  }) async {
+  Future<String?> _generateText(String prompt) async {
+    if (SupabaseService.isInitialized && SupabaseService.hasActiveSession) {
+      try {
+        final res = await SupabaseService.client.functions.invoke(
+          'gemini-proxy',
+          body: {'prompt': prompt},
+        );
+        final data = res.data;
+        if (data is Map && data['text'] != null) {
+          final text = data['text'].toString().trim();
+          if (text.isNotEmpty) return text;
+        }
+      } catch (e) {
+        debugPrint('Supabase gemini-proxy fallback: $e');
+      }
+    }
+
     if (_apiKey.isNotEmpty) {
       try {
         final model = GenerativeModel(
           model: AppConfig.geminiModel,
           apiKey: _apiKey,
         );
-        final prompt = '''
+        final response = await model.generateContent([Content.text(prompt)]);
+        final text = response.text?.trim();
+        if (text != null && text.isNotEmpty) return text;
+      } catch (e) {
+        debugPrint('Direct Gemini fallback: $e');
+      }
+    }
+    return null;
+  }
+
+  /// Generate Khutbah Topic Outline with Quranic & Hadith citations
+  Future<KhutbahTopicModel> generateKhutbahOutline({
+    required String topicPrompt,
+    String category = 'character',
+  }) async {
+    try {
+      final prompt = '''
 বাংলা ভাষায় জুমার খুতবার জন্য একটি সংক্ষিপ্ত ও প্রামাণ্য রূপরেখা JSON ফরম্যাটে লিখুন।
 ক্যাটাগরি: $category
 বিষয়/নির্দেশনা: ${topicPrompt.isNotEmpty ? topicPrompt : category}
@@ -36,25 +65,23 @@ class GeminiAiService {
   "practicalGuidance": "মুসল্লিদের জন্য বাস্তব করণীয়"
 }
 ''';
-        final response = await model.generateContent([Content.text(prompt)]);
-        final rawText = response.text?.trim() ?? '';
-        final cleaned = _stripJsonFences(rawText);
-        if (cleaned.isNotEmpty) {
-          final parsed = jsonDecode(cleaned) as Map<String, dynamic>;
-          final pointsRaw = parsed['mainPoints'] as List<dynamic>? ?? [];
-          return KhutbahTopicModel(
-            id: 'khutbah-${DateTime.now().millisecondsSinceEpoch}',
-            title: parsed['title'] as String? ?? topicPrompt,
-            category: category,
-            quranicAyat: parsed['quranicAyat'] as String? ?? '',
-            hadithReference: parsed['hadithReference'] as String? ?? '',
-            mainPoints: pointsRaw.map((e) => e.toString()).toList(),
-            practicalGuidance: parsed['practicalGuidance'] as String? ?? '',
-          );
-        }
-      } catch (e) {
-        debugPrint('Gemini khutbah generation fallback: $e');
+      final rawText = await _generateText(prompt) ?? '';
+      final cleaned = _stripJsonFences(rawText);
+      if (cleaned.isNotEmpty) {
+        final parsed = jsonDecode(cleaned) as Map<String, dynamic>;
+        final pointsRaw = parsed['mainPoints'] as List<dynamic>? ?? [];
+        return KhutbahTopicModel(
+          id: 'khutbah-${DateTime.now().millisecondsSinceEpoch}',
+          title: parsed['title'] as String? ?? topicPrompt,
+          category: category,
+          quranicAyat: parsed['quranicAyat'] as String? ?? '',
+          hadithReference: parsed['hadithReference'] as String? ?? '',
+          mainPoints: pointsRaw.map((e) => e.toString()).toList(),
+          practicalGuidance: parsed['practicalGuidance'] as String? ?? '',
+        );
       }
+    } catch (e) {
+      debugPrint('Gemini khutbah generation fallback: $e');
     }
 
     return _fallbackKhutbahOutline(
@@ -133,22 +160,11 @@ class GeminiAiService {
     required String audience, // 'সাধারণ মুসল্লিবৃন্দ', 'কমিটি সদস্যবৃন্দ'
     required String mosqueName,
   }) async {
-    if (_apiKey.isNotEmpty) {
-      try {
-        final model = GenerativeModel(
-          model: AppConfig.geminiModel,
-          apiKey: _apiKey,
-        );
-        final prompt =
-            '$mosqueName পরিচালনা কমিটির পক্ষ থেকে "$audience"-এর উদ্দেশ্যে "$topic" বিষয়ে একটি সংক্ষিপ্ত, মার্জিত ও আনুষ্ঠানিক বাংলা নোটিশ খসড়া করুন।';
-        final response = await model.generateContent([Content.text(prompt)]);
-        final text = response.text?.trim();
-        if (text != null && text.isNotEmpty) {
-          return text;
-        }
-      } catch (e) {
-        debugPrint('Gemini notice drafting fallback: $e');
-      }
+    final prompt =
+        '$mosqueName পরিচালনা কমিটির পক্ষ থেকে "$audience"-এর উদ্দেশ্যে "$topic" বিষয়ে একটি সংক্ষিপ্ত, মার্জিত ও আনুষ্ঠানিক বাংলা নোটিশ খসড়া করুন।';
+    final text = await _generateText(prompt);
+    if (text != null && text.isNotEmpty) {
+      return text;
     }
 
     return '''
