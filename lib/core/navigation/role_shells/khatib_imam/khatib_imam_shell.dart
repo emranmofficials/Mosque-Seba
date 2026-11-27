@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../../../features/role_permissions/models/committee_role.dart';
 import '../../../../shared/widgets/adaptive_scaffold.dart';
 import '../../../router/app_router.dart';
@@ -76,6 +77,12 @@ class KhatibImamShell extends StatelessWidget {
               title: 'মাদরাসা ও ক্যাশবক্স সাক্ষী',
               subtitle: 'দ্বীনি শিক্ষা তদারকি ও সাক্ষ্য প্রদান',
               route: AppRouter.madrasa,
+            ),
+            RoleActionItem(
+              icon: Icons.groups_outlined,
+              title: 'কমিটির সভা ও শরিয়াহ পর্যালোচনা',
+              subtitle: 'পদাধিকারবলে সিদ্ধান্তে শরিয়াহ মতামত',
+              route: AppRouter.meetings,
             ),
           ],
         ),

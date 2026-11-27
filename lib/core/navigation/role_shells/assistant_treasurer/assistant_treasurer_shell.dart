@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../../../features/role_permissions/models/committee_role.dart';
 import '../../../../shared/widgets/adaptive_scaffold.dart';
 import '../../../router/app_router.dart';
@@ -13,7 +14,7 @@ class AssistantTreasurerShell extends StatelessWidget {
     return const RoleShellScaffold(
       expectedRole: CommitteeRole.assistantTreasurer,
       showKpiSummary: true,
-      showQuickActions: true,
+      showQuickActions: false,
       showPrayerCard: true,
       showSmartBoard: false,
       navTargets: [

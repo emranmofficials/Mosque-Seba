@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../../features/authentication/providers/auth_provider.dart';
 import '../../../../features/dashboard/widgets/dashboard_hero_card.dart';
 import '../../../../features/dashboard/widgets/kpi_summary_grid.dart';
@@ -26,10 +27,7 @@ class RoleNavTarget {
   final AdaptiveNavigationDestination destination;
   final String route;
 
-  const RoleNavTarget({
-    required this.destination,
-    required this.route,
-  });
+  const RoleNavTarget({required this.destination, required this.route});
 }
 
 /// An actionable module shortcut tailored to a role's duties.
@@ -52,10 +50,7 @@ class RoleActionSection {
   final String title;
   final List<RoleActionItem> items;
 
-  const RoleActionSection({
-    required this.title,
-    required this.items,
-  });
+  const RoleActionSection({required this.title, required this.items});
 }
 
 /// Shared layout shell composed by each of the 18 role-specific shells.
@@ -96,7 +91,9 @@ class _RoleShellScaffoldState extends ConsumerState<RoleShellScaffold> {
     final financeSummary = ref.watch(financeSummaryProvider);
     final totalMembers = ref.watch(memberListProvider).valueOrNull?.length ?? 0;
     final notices = ref.watch(noticeListProvider).valueOrNull ?? const [];
-    final publishedNotices = notices.where((n) => n.status == 'published').toList();
+    final publishedNotices = notices
+        .where((n) => n.status == 'published')
+        .toList();
     final pinnedNotices = publishedNotices.where((n) => n.isPinned).toList();
     final latestNotice = pinnedNotices.isNotEmpty
         ? pinnedNotices.first
@@ -137,7 +134,8 @@ class _RoleShellScaffoldState extends ConsumerState<RoleShellScaffold> {
         },
         child: LayoutBuilder(
           builder: (context, constraints) {
-            final isTablet = constraints.maxWidth >= AppConstants.tabletBreakpoint;
+            final isTablet =
+                constraints.maxWidth >= AppConstants.tabletBreakpoint;
 
             final heroCard = DashboardHeroCard(
               mosqueNameBn: user?.mosqueNameBn.isNotEmpty == true
@@ -146,8 +144,9 @@ class _RoleShellScaffoldState extends ConsumerState<RoleShellScaffold> {
               address: user?.mosqueAddress.isNotEmpty == true
                   ? user!.mosqueAddress
                   : currentRole.titleBn,
-              committeeId:
-                  user?.committeeId.isNotEmpty == true ? user!.committeeId : '—',
+              committeeId: user?.committeeId.isNotEmpty == true
+                  ? user!.committeeId
+                  : '—',
               establishedYear: user?.establishedYear ?? DateTime.now().year,
               onProfileTap: () => context.push(AppRouter.profile),
             );
@@ -212,14 +211,14 @@ class _RoleShellScaffoldState extends ConsumerState<RoleShellScaffold> {
                     categoryBadge: latestNotice == null
                         ? 'জুমার বিশেষ নির্দেশনা'
                         : (latestNotice.isUrgent
-                            ? 'জরুরি বিজ্ঞপ্তি'
-                            : (latestNotice.isPinned
-                                ? 'পিন করা নোটিশ'
-                                : 'সর্বশেষ নোটিশ')),
+                              ? 'জরুরি বিজ্ঞপ্তি'
+                              : (latestNotice.isPinned
+                                    ? 'পিন করা নোটিশ'
+                                    : 'সর্বশেষ নোটিশ')),
                     title:
-                        latestNotice?.title ?? 'খুতবা শুরু হলে নীরবতা পালন করুন',
-                    message: latestNotice?.content ??
-                        'খুতবা চলাকালীন মোবাইল সাইলেন্ট রাখুন এবং মনোযোগ সহকারে বয়ান শ্রবণ করুন।',
+                        latestNotice?.title ??
+                        'খুতবা শুরু হলে নীরবতা পালন করুন',
+                    message: latestNotice?.content ?? 'খুতবা চলাকালীন মোবাইল সাইলেন্ট রাখুন এবং মনোযোগ সহকারে বয়ান শ্রবণ করুন।',
                     onTap: () => context.push(AppRouter.notices),
                   )
                 : null;
@@ -285,7 +284,9 @@ class _RoleShellScaffoldState extends ConsumerState<RoleShellScaffold> {
                                       ...sectionWidgets.expand(
                                         (w) => [
                                           w,
-                                          const SizedBox(height: MosqueSpace.md),
+                                          const SizedBox(
+                                            height: MosqueSpace.md,
+                                          ),
                                         ],
                                       ),
                                       if (widget.showHadithBoard)
@@ -382,7 +383,9 @@ class _RoleSectionCard extends StatelessWidget {
               ),
               title: Text(
                 item.title,
-                style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                style: textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               subtitle: Text(
                 item.subtitle,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../../../features/role_permissions/models/committee_role.dart';
 import '../../../../shared/widgets/adaptive_scaffold.dart';
 import '../../../router/app_router.dart';
@@ -69,6 +70,12 @@ class AssistantSecretaryShell extends StatelessWidget {
               title: 'মাদরাসা ও মক্তব সহায়তা',
               subtitle: 'শিক্ষার্থী, হাজিরা ও পরীক্ষা সমন্বয়',
               route: AppRouter.madrasa,
+            ),
+            RoleActionItem(
+              icon: Icons.notifications_active_outlined,
+              title: 'জরুরি জানাজা বার্তা',
+              subtitle: 'সাধারণ সম্পাদকের অনুপস্থিতিতে জানাজা অ্যালার্ট',
+              route: AppRouter.janazaAlerts,
             ),
           ],
         ),

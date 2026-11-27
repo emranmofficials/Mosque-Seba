@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../../../features/role_permissions/models/committee_role.dart';
 import '../../../../shared/widgets/adaptive_scaffold.dart';
 import '../../../router/app_router.dart';
@@ -75,6 +76,12 @@ class OfficeSecretaryShell extends StatelessWidget {
               title: 'চাঁদা ও মাদরাসা ফি রশিদ',
               subtitle: 'অফিসিয়াল রশিদ ইস্যু ও নথিভুক্তি',
               route: AppRouter.chandaLedger,
+            ),
+            RoleActionItem(
+              icon: Icons.groups_outlined,
+              title: 'সভার রেজুলেশন ও চিঠিপত্র',
+              subtitle: 'স্থায়ী কার্যবিবরণী ও দাপ্তরিক নথি আর্কাইভ',
+              route: AppRouter.meetings,
             ),
           ],
         ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../../../features/role_permissions/models/committee_role.dart';
 import '../../../../shared/widgets/adaptive_scaffold.dart';
 import '../../../router/app_router.dart';
@@ -13,7 +14,7 @@ class TreasurerShell extends StatelessWidget {
     return const RoleShellScaffold(
       expectedRole: CommitteeRole.treasurer,
       showKpiSummary: true,
-      showQuickActions: true,
+      showQuickActions: false,
       showPrayerCard: true,
       showSmartBoard: false,
       navTargets: [
@@ -102,6 +103,12 @@ class TreasurerShell extends StatelessWidget {
               title: 'আর্থিক রিপোর্ট ও রশিদ প্রিন্ট',
               subtitle: 'সিল-স্বাক্ষরসহ পিডিএফ ও প্রিন্ট',
               route: AppRouter.printHub,
+            ),
+            RoleActionItem(
+              icon: Icons.draw_outlined,
+              title: 'অফিসিয়াল সিল ও স্বাক্ষর',
+              subtitle: 'রশিদ ও ভাউচারের জন্য ডিজিটাল স্বাক্ষর',
+              route: AppRouter.sealSignature,
             ),
           ],
         ),
