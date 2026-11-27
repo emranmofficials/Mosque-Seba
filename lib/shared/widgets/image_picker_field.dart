@@ -89,7 +89,7 @@ class _ImagePickerFieldState extends State<ImagePickerField> {
             children: [
               Text(
                 widget.label,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: MosqueSpace.sm),
               ListTile(
@@ -164,8 +164,7 @@ class _ImagePickerFieldState extends State<ImagePickerField> {
         const SizedBox(height: 4),
         Text(
           'ছবি যুক্ত করুন',
-          style: TextStyle(
-            fontSize: 11,
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
             color: AppColors.textSecondary.withOpacity(0.7),
           ),
         ),
@@ -225,13 +224,13 @@ class _ImagePickerFieldState extends State<ImagePickerField> {
           const SizedBox(height: MosqueSpace.xs),
           Text(
             widget.label,
-            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
           ),
           if (widget.subtitle != null) ...[
             const SizedBox(height: 2),
             Text(
               widget.subtitle!,
-              style: TextStyle(fontSize: 11, color: AppColors.textSecondary.withOpacity(0.6)),
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(color: AppColors.textSecondary.withOpacity(0.6)),
             ),
           ],
         ],

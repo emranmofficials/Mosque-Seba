@@ -43,7 +43,7 @@ class CardShell extends StatelessWidget {
       border: cardBorder,
       boxShadow: [
         BoxShadow(
-          color: isDark ? Colors.black.withOpacity(0.3) : const Color(0x0A0D5C3A),
+          color: isDark ? Colors.black.withOpacity(0.3) : AppColors.emeraldPrimary.withOpacity(0.04),
           blurRadius: 10,
           spreadRadius: 0,
           offset: const Offset(0, 3),

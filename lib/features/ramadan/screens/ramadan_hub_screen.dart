@@ -69,9 +69,11 @@ class _RamadanHubScreenState extends ConsumerState<RamadanHubScreen> {
       appBar: AppBar(
         title: const Text('পবিত্র মাহে রমজান স্পেশাল হাব'),
       ),
-      body: ListView(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(MosqueContentPadding.screenHorizontal),
-        children: [
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
           SehriIftarCountdownWidget(currentRamadanDay: ramadanDay),
           const SizedBox(height: MosqueSpace.lg),
 
@@ -83,16 +85,15 @@ class _RamadanHubScreenState extends ConsumerState<RamadanHubScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
+                    Text(
                       '২০ রাকাত তারাবিহ ট্র্যাকার',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
                     ),
                     Text(
                       'সম্পন্ন: ${BengaliNumberFormatter.toBengali(_taraweehCompletedDays)} / ৩০ দিন',
-                      style: const TextStyle(
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: AppColors.emeraldPrimary,
-                        fontSize: 12,
                       ),
                     ),
                   ],
@@ -115,7 +116,7 @@ class _RamadanHubScreenState extends ConsumerState<RamadanHubScreen> {
                   children: [
                     OutlinedButton.icon(
                       icon: const Icon(Icons.remove, size: 16),
-                      label: const Text('-১ দিন', style: TextStyle(fontSize: 12)),
+                      label: const Text('-১ দিন'),
                       onPressed: _taraweehCompletedDays > 0
                           ? () => _updateTaraweeh(_taraweehCompletedDays - 1)
                           : null,
@@ -126,10 +127,7 @@ class _RamadanHubScreenState extends ConsumerState<RamadanHubScreen> {
                         foregroundColor: Colors.white,
                       ),
                       icon: const Icon(Icons.check_circle_outline, size: 16),
-                      label: const Text(
-                        '+১ দিন সম্পন্ন',
-                        style: TextStyle(fontSize: 12),
-                      ),
+                      label: const Text('+১ দিন সম্পন্ন'),
                       onPressed: _taraweehCompletedDays < 30
                           ? () => _updateTaraweeh(_taraweehCompletedDays + 1)
                           : null,
@@ -138,7 +136,7 @@ class _RamadanHubScreenState extends ConsumerState<RamadanHubScreen> {
                       onPressed: _taraweehCompletedDays > 0
                           ? () => _updateTaraweeh(0)
                           : null,
-                      child: const Text('রিসেট', style: TextStyle(fontSize: 12)),
+                      child: const Text('রিসেট'),
                     ),
                   ],
                 ),
@@ -156,16 +154,15 @@ class _RamadanHubScreenState extends ConsumerState<RamadanHubScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
+                    Text(
                       'খতমে কুরআন অগ্রগতি (পারাভিত্তিক)',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
                     ),
                     Text(
                       'পঠিত: ${BengaliNumberFormatter.toBengali(_khatamParasRead)} / ৩০ পারা',
-                      style: const TextStyle(
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: AppColors.goldDark,
-                        fontSize: 12,
                       ),
                     ),
                   ],
@@ -186,7 +183,7 @@ class _RamadanHubScreenState extends ConsumerState<RamadanHubScreen> {
                   children: [
                     OutlinedButton.icon(
                       icon: const Icon(Icons.remove, size: 16),
-                      label: const Text('-১ পারা', style: TextStyle(fontSize: 12)),
+                      label: const Text('-১ পারা'),
                       onPressed: _khatamParasRead > 0
                           ? () => _updateKhatam(_khatamParasRead - 1)
                           : null,
@@ -197,10 +194,7 @@ class _RamadanHubScreenState extends ConsumerState<RamadanHubScreen> {
                         foregroundColor: Colors.white,
                       ),
                       icon: const Icon(Icons.menu_book, size: 16),
-                      label: const Text(
-                        '+১ পারা তেলাওয়াত',
-                        style: TextStyle(fontSize: 12),
-                      ),
+                      label: const Text('+১ পারা তেলাওয়াত'),
                       onPressed: _khatamParasRead < 30
                           ? () => _updateKhatam(_khatamParasRead + 1)
                           : null,
@@ -209,7 +203,7 @@ class _RamadanHubScreenState extends ConsumerState<RamadanHubScreen> {
                       onPressed: _khatamParasRead > 0
                           ? () => _updateKhatam(0)
                           : null,
-                      child: const Text('রিসেট', style: TextStyle(fontSize: 12)),
+                      child: const Text('রিসেট'),
                     ),
                   ],
                 ),
@@ -218,6 +212,7 @@ class _RamadanHubScreenState extends ConsumerState<RamadanHubScreen> {
           ),
         ],
       ),
-    );
+    ),
+  );
   }
 }

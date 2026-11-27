@@ -186,9 +186,11 @@ class HifzTrackingScreen extends ConsumerWidget {
         ? 0
         : loggedParas.reduce((a, b) => a > b ? a : b);
 
-    return ListView(
+    return SingleChildScrollView(
       padding: const EdgeInsets.all(AppDimens.spacing16),
-      children: [
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
         const Text(
           'কুরআনুল কারীমের ৩০ পারা অগ্রগতি নির্দেশক',
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
@@ -265,6 +267,7 @@ class HifzTrackingScreen extends ConsumerWidget {
           },
         ),
       ],
-    );
+    ),
+  );
   }
 }

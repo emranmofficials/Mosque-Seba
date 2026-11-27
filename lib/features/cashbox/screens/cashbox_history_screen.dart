@@ -138,9 +138,12 @@ class CashboxHistoryScreen extends ConsumerWidget {
         data: (records) {
           final totalAllFridays = records.fold<double>(0.0, (acc, r) => acc + r.totalAmount);
 
-          return ListView(
-            padding: const EdgeInsets.all(AppDimens.spacing16),
-            children: [
+          return CustomScrollView(
+            slivers: [
+              SliverPadding(
+                padding: const EdgeInsets.all(AppDimens.spacing16),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
               CardShell(
                 padding: const EdgeInsets.all(AppDimens.spacing16),
                 child: Row(
@@ -183,67 +186,82 @@ class CashboxHistoryScreen extends ConsumerWidget {
                 style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: AppDimens.spacing12),
-              if (records.isEmpty)
-                const EmptyStateView(
-                  title: 'কোনো গণনার রেকর্ড নেই',
-                  message: 'জুমার জামাতের পর ৩ সাক্ষীর উপস্থিতিতে নোট গণনা সম্পন্ন করুন।',
-                )
-              else
-                ...records.map(
-                  (record) => Padding(
-                    padding: const EdgeInsets.only(bottom: AppDimens.spacing12),
-                    child: CardShell(
-                      onTap: () => _showRecordDetails(context, record),
-                      padding: const EdgeInsets.all(AppDimens.spacing12),
-                      child: Row(
-                        children: [
-                          const CircleAvatar(
-                            radius: 20,
-                            backgroundColor: AppColors.primaryContainer,
-                            child: Icon(Icons.inventory_2_outlined, color: AppColors.primary, size: 20),
-                          ),
-                          const SizedBox(width: AppDimens.spacing12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                    ]),
+                  ),
+                ),
+                if (records.isEmpty)
+                  const SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: AppDimens.spacing16),
+                      child: EmptyStateView(
+                        title: 'কোনো গণনার রেকর্ড নেই',
+                        message: 'জুমার জামাতের পর ৩ সাক্ষীর উপস্থিতিতে নোট গণনা সম্পন্ন করুন।',
+                      ),
+                    ),
+                  )
+                else
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(AppDimens.spacing16, 0, AppDimens.spacing16, AppDimens.spacing16),
+                    sliver: SliverList.builder(
+                      itemCount: records.length,
+                      itemBuilder: (context, index) {
+                        final record = records[index];
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: AppDimens.spacing12),
+                          child: CardShell(
+                            onTap: () => _showRecordDetails(context, record),
+                            padding: const EdgeInsets.all(AppDimens.spacing12),
+                            child: Row(
                               children: [
-                                Text(
-                                  'জুমার জামাত • ${BengaliNumberFormatter.toBengali(record.waqtDate)}',
-                                  style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.bold),
+                                const CircleAvatar(
+                                  radius: 20,
+                                  backgroundColor: AppColors.primaryContainer,
+                                  child: Icon(Icons.inventory_2_outlined, color: AppColors.primary, size: 20),
                                 ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  'সাক্ষী: ${record.witness1Name}',
-                                  style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                                const SizedBox(width: AppDimens.spacing12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'জুমার জামাত • ${BengaliNumberFormatter.toBengali(record.waqtDate)}',
+                                        style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.bold),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        'সাক্ষী: ${record.witness1Name}',
+                                        style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      BengaliNumberFormatter.formatCurrency(record.totalAmount),
+                                      style: AppTypography.titleMedium.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.primary,
+                                      ),
+                                    ),
+                                    Text(
+                                      '৩ সাক্ষী স্বাক্ষরিত',
+                                      style: AppTypography.caption.copyWith(color: AppColors.success, fontSize: 10),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
                           ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Text(
-                                BengaliNumberFormatter.formatCurrency(record.totalAmount),
-                                style: AppTypography.titleMedium.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.primary,
-                                ),
-                              ),
-                              Text(
-                                '৩ সাক্ষী স্বাক্ষরিত',
-                                style: AppTypography.caption.copyWith(color: AppColors.success, fontSize: 10),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
+                        );
+                      },
                     ),
                   ),
-                ),
-            ],
-          );
+              ],
+            );
         },
       ),
     );

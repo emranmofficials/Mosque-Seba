@@ -113,51 +113,54 @@ class WaqfAssetListScreen extends ConsumerWidget {
                   );
                 }
 
-                return ListView(
+                return ListView.builder(
                   padding: const EdgeInsets.all(AppDimens.spacing16),
-                  children: [
-                    // Overview Summary Banner
-                    CardShell(
-                      padding: const EdgeInsets.all(AppDimens.spacing12),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.verified_outlined, color: AppColors.primary, size: 28),
-                          const SizedBox(width: AppDimens.spacing12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'মোট নথিভুক্ত ওয়াকফ সম্পত্তি',
-                                  style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
+                  itemCount: properties.length + 1,
+                  itemBuilder: (context, index) {
+                    if (index == 0) {
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: AppDimens.spacing16),
+                        child: CardShell(
+                          padding: const EdgeInsets.all(AppDimens.spacing12),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.verified_outlined, color: AppColors.primary, size: 28),
+                              const SizedBox(width: AppDimens.spacing12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'মোট নথিভুক্ত ওয়াকফ সম্পত্তি',
+                                      style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      '${BengaliNumberFormatter.toBengali(properties.length)} টি সম্পত্তি তালিকাভুক্ত',
+                                      style: AppTypography.titleMedium.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.primary,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  '${BengaliNumberFormatter.toBengali(properties.length)} টি সম্পত্তি তালিকাভুক্ত',
-                                  style: AppTypography.titleMedium.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.primary,
-                                  ),
-                                ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: AppDimens.spacing16),
-                    ...properties.map(
-                      (property) => Padding(
-                        padding: const EdgeInsets.only(bottom: AppDimens.spacing12),
-                        child: WaqfAssetCard(
-                          asset: property,
-                          onTap: () {
-                            context.push('/waqf-assets-detail', extra: property);
-                          },
                         ),
+                      );
+                    }
+                    final property = properties[index - 1];
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: AppDimens.spacing12),
+                      child: WaqfAssetCard(
+                        asset: property,
+                        onTap: () {
+                          context.push('/waqf-assets-detail', extra: property);
+                        },
                       ),
-                    ),
-                  ],
+                    );
+                  },
                 );
               },
             ),

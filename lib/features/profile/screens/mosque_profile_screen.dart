@@ -151,9 +151,11 @@ class MosqueProfileScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('প্রোফাইল ও সেটিংস'),
       ),
-      body: ListView(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(AppDimens.spacing16),
-        children: [
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
           CardShell(
             padding: const EdgeInsets.all(AppDimens.spacing16),
             child: Row(
@@ -176,16 +178,14 @@ class MosqueProfileScreen extends ConsumerWidget {
                         user?.memberName.isNotEmpty == true
                             ? user!.memberName
                             : 'সম্মানিত ব্যবহারকারী',
-                        style: const TextStyle(
-                          fontSize: 17,
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       const SizedBox(height: 2),
                       Text(
                         role.titleBn,
-                        style: const TextStyle(
-                          fontSize: 13,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           fontWeight: FontWeight.w600,
                           color: AppColors.emeraldPrimary,
                         ),
@@ -194,8 +194,7 @@ class MosqueProfileScreen extends ConsumerWidget {
                         const SizedBox(height: 2),
                         Text(
                           'কমিটি কোড: ${user.committeeId}',
-                          style: const TextStyle(
-                            fontSize: 12,
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: AppColors.textSecondary,
                           ),
                         ),
@@ -215,9 +214,9 @@ class MosqueProfileScreen extends ConsumerWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
+                    Text(
                       'মসজিদ ও অ্যাকাউন্ট তথ্য',
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
                     ),
                     if ((role == CommitteeRole.president || role.canEditMosqueProfile()) &&
                         user != null &&
@@ -312,7 +311,8 @@ class MosqueProfileScreen extends ConsumerWidget {
           ),
         ],
       ),
-    );
+    ),
+  );
   }
 
   Widget _infoRow(String label, String value) {
@@ -325,13 +325,13 @@ class MosqueProfileScreen extends ConsumerWidget {
             width: 120,
             child: Text(
               label,
-              style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+              style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
             ),
           ),
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+              style: AppTypography.bodySmall.copyWith(fontWeight: FontWeight.w600),
             ),
           ),
         ],

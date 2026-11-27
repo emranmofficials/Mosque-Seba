@@ -160,9 +160,13 @@ class MemberListScreen extends ConsumerWidget {
                     return Center(
                       child: ConstrainedBox(
                         constraints: const BoxConstraints(maxWidth: 1080),
-                        child: ListView(
-                          padding: const EdgeInsets.all(AppDimens.spacing16),
-                          children: [
+                        child: CustomScrollView(
+                          slivers: [
+                            SliverPadding(
+                              padding: const EdgeInsets.all(AppDimens.spacing16),
+                              sliver: SliverToBoxAdapter(
+                                child: Column(
+                                  children: [
                             // Metrics Row
                             Row(
                               children: [
@@ -237,42 +241,51 @@ class MemberListScreen extends ConsumerWidget {
                               ],
                             ),
                             const SizedBox(height: AppDimens.spacing16),
+                                  ],
+                                ),
+                              ),
+                            ),
                             // Member Cards: Adaptive Grid on Tablet, Vertical List on Phone
                             if (isTablet)
-                              GridView.builder(
-                                shrinkWrap: true,
-                                physics: const NeverScrollableScrollPhysics(),
-                                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                                  maxCrossAxisExtent: 480,
-                                  mainAxisExtent: 110,
-                                  crossAxisSpacing: AppDimens.spacing12,
-                                  mainAxisSpacing: AppDimens.spacing12,
-                                ),
-                                itemCount: members.length,
-                                itemBuilder: (ctx, idx) => MemberCard(
-                                  member: members[idx],
-                                  onTap: () {
-                                    context.push('/member-profile', extra: members[idx]);
-                                  },
-                                  onEdit: () => _showEditDialog(context, ref, members[idx]),
-                                  onCollectChanda: () {
-                                    context.push('/chanda-ledger', extra: members[idx]);
-                                  },
+                              SliverPadding(
+                                padding: const EdgeInsets.fromLTRB(AppDimens.spacing16, 0, AppDimens.spacing16, AppDimens.spacing16),
+                                sliver: SliverGrid.builder(
+                                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                                    maxCrossAxisExtent: 480,
+                                    mainAxisExtent: 110,
+                                    crossAxisSpacing: AppDimens.spacing12,
+                                    mainAxisSpacing: AppDimens.spacing12,
+                                  ),
+                                  itemCount: members.length,
+                                  itemBuilder: (ctx, idx) => MemberCard(
+                                    member: members[idx],
+                                    onTap: () {
+                                      context.push('/member-profile', extra: members[idx]);
+                                    },
+                                    onEdit: () => _showEditDialog(context, ref, members[idx]),
+                                    onCollectChanda: () {
+                                      context.push('/chanda-ledger', extra: members[idx]);
+                                    },
+                                  ),
                                 ),
                               )
                             else
-                              ...members.map(
-                                (member) => Padding(
-                                  padding: const EdgeInsets.only(bottom: AppDimens.spacing12),
-                                  child: MemberCard(
-                                    member: member,
-                                    onTap: () {
-                                      context.push('/member-profile', extra: member);
-                                    },
-                                    onEdit: () => _showEditDialog(context, ref, member),
-                                    onCollectChanda: () {
-                                      context.push('/chanda-ledger', extra: member);
-                                    },
+                              SliverPadding(
+                                padding: const EdgeInsets.fromLTRB(AppDimens.spacing16, 0, AppDimens.spacing16, AppDimens.spacing16),
+                                sliver: SliverList.builder(
+                                  itemCount: members.length,
+                                  itemBuilder: (ctx, idx) => Padding(
+                                    padding: const EdgeInsets.only(bottom: AppDimens.spacing12),
+                                    child: MemberCard(
+                                      member: members[idx],
+                                      onTap: () {
+                                        context.push('/member-profile', extra: members[idx]);
+                                      },
+                                      onEdit: () => _showEditDialog(context, ref, members[idx]),
+                                      onCollectChanda: () {
+                                        context.push('/chanda-ledger', extra: members[idx]);
+                                      },
+                                    ),
                                   ),
                                 ),
                               ),

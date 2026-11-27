@@ -80,9 +80,11 @@ class StudentReportCardScreen extends ConsumerWidget {
           final resolvedClass =
               results.isNotEmpty ? results.first.className : className;
 
-          return ListView(
+          return SingleChildScrollView(
             padding: const EdgeInsets.all(AppDimens.spacing16),
-            children: [
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
               // Header Card
               CardShell(
                 padding: const EdgeInsets.all(AppDimens.spacing16),
@@ -330,7 +332,8 @@ class StudentReportCardScreen extends ConsumerWidget {
                 ),
               ),
             ],
-          );
+          ),
+        );
         },
       ),
     );

@@ -117,19 +117,16 @@ class _ElectionScreenState extends ConsumerState<ElectionScreen> with SingleTick
               controller: _tabController,
               children: [
                 // 1. Schedule Tab
-                ListView(
+                SingleChildScrollView(
                   padding: const EdgeInsets.all(AppDimens.spacing16),
-                  children: [
-                    if (activeSchedule != null)
-                      ElectionScheduleCard(schedule: activeSchedule)
-                    else
-                      EmptyStateView(
-                        title: 'কোনো সক্রিয় নির্বাচনী তফসিল নেই',
-                        message: 'নতুন সেশনের পরিচালনা কমিটি গঠনের জন্য তফসিল ঘোষণা করুন।',
-                        actionLabel: 'তফসিল ঘোষণা করুন',
-                        onAction: _showAddScheduleDialog,
-                      ),
-                  ],
+                  child: activeSchedule != null
+                      ? ElectionScheduleCard(schedule: activeSchedule)
+                      : EmptyStateView(
+                          title: 'কোনো সক্রিয় নির্বাচনী তফসিল নেই',
+                          message: 'নতুন সেশনের পরিচালনা কমিটি গঠনের জন্য তফসিল ঘোষণা করুন।',
+                          actionLabel: 'তফসিল ঘোষণা করুন',
+                          onAction: _showAddScheduleDialog,
+                        ),
                 ),
                 // 2. Candidates Tab
                 candidatesAsync.when(
@@ -159,27 +156,31 @@ class _ElectionScreenState extends ConsumerState<ElectionScreen> with SingleTick
                   },
                 ),
                 // 3. Voters Tab
-                ListView(
+                ListView.builder(
                   padding: const EdgeInsets.all(AppDimens.spacing16),
-                  children: [
-                    Text(
-                      'যোগ্য ভোটার তালিকা (${BengaliNumberFormatter.toBengali(activeMembers.length)} জন মুসল্লি)',
-                      style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 8),
-                    ...activeMembers.map((m) {
-                      return ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        leading: CircleAvatar(
-                          backgroundColor: AppColors.primaryContainer,
-                          child: Text(m.nameBn.characters.first, style: const TextStyle(fontWeight: FontWeight.bold)),
+                  itemCount: activeMembers.length + 1,
+                  itemBuilder: (ctx, idx) {
+                    if (idx == 0) {
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Text(
+                          'যোগ্য ভোটার তালিকা (${BengaliNumberFormatter.toBengali(activeMembers.length)} জন মুসল্লি)',
+                          style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold),
                         ),
-                        title: Text(m.nameBn, style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.bold)),
-                        subtitle: Text('কোড: ${BengaliNumberFormatter.toBengali(m.memberCode)} • মোবাইল: ${BengaliNumberFormatter.toBengali(m.mobile)}'),
-                        trailing: const Icon(Icons.check_circle, color: AppColors.success, size: 20),
                       );
-                    }),
-                  ],
+                    }
+                    final m = activeMembers[idx - 1];
+                    return ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: CircleAvatar(
+                        backgroundColor: AppColors.primaryContainer,
+                        child: Text(m.nameBn.characters.first, style: const TextStyle(fontWeight: FontWeight.bold)),
+                      ),
+                      title: Text(m.nameBn, style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.bold)),
+                      subtitle: Text('কোড: ${BengaliNumberFormatter.toBengali(m.memberCode)} • মোবাইল: ${BengaliNumberFormatter.toBengali(m.mobile)}'),
+                      trailing: const Icon(Icons.check_circle, color: AppColors.success, size: 20),
+                    );
+                  },
                 ),
                 // 4. Gazette & Results Tab
                 candidatesAsync.when(
@@ -193,22 +194,28 @@ class _ElectionScreenState extends ConsumerState<ElectionScreen> with SingleTick
                         message: 'ভোট গণনা সমাপ্ত হলে ফলাফল এখানে অফিসিয়াল গেজেট আকারে প্রদর্শিত হবে।',
                       );
                     }
-                    return ListView(
+                    return ListView.builder(
                       padding: const EdgeInsets.all(AppDimens.spacing16),
-                      children: [
-                        Text(
-                          'অফিসিয়াল নির্বাচনী ফলাফল ও গেজেট',
-                          style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold, color: AppColors.primary),
-                        ),
-                        const SizedBox(height: 12),
-                        ...elected.map((c) => Padding(
-                              padding: const EdgeInsets.only(bottom: 8),
-                              child: CandidateCard(
-                                candidate: c,
-                                onRecordVote: () => _showRecordVoteDialog(c),
-                              ),
-                            )),
-                      ],
+                      itemCount: elected.length + 1,
+                      itemBuilder: (ctx, idx) {
+                        if (idx == 0) {
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: Text(
+                              'অফিসিয়াল নির্বাচনী ফলাফল ও গেজেট',
+                              style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold, color: AppColors.primary),
+                            ),
+                          );
+                        }
+                        final c = elected[idx - 1];
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: CandidateCard(
+                            candidate: c,
+                            onRecordVote: () => _showRecordVoteDialog(c),
+                          ),
+                        );
+                      },
                     );
                   },
                 ),

@@ -105,9 +105,11 @@ class MealScheduleScreen extends ConsumerWidget {
                       orElse: () => null,
                     );
 
-                return ListView(
+                return SingleChildScrollView(
                   padding: const EdgeInsets.all(AppDimens.spacing16),
-                  children: [
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
                     // Overview Notice Card
                     CardShell(
                       padding: const EdgeInsets.all(AppDimens.spacing12),
@@ -161,7 +163,8 @@ class MealScheduleScreen extends ConsumerWidget {
                       },
                     ),
                   ],
-                );
+                ),
+              );
               },
             ),
           ),

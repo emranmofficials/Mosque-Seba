@@ -200,9 +200,11 @@ class _SecurityDashboardScreenState extends State<SecurityDashboardScreen> {
           ? const Center(
               child: CircularProgressIndicator(color: AppColors.emeraldPrimary),
             )
-          : ListView(
+          : SingleChildScrollView(
               padding: const EdgeInsets.all(AppDimens.spacing16),
-              children: [
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
                 // Trust Score Banner
                 CardShell(
                   padding: const EdgeInsets.all(AppDimens.spacing16),
@@ -230,15 +232,14 @@ class _SecurityDashboardScreenState extends State<SecurityDashboardScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
+                            Text(
                               'ডিভাইস ট্রাস্ট স্কোর',
-                              style: TextStyle(fontSize: 12, color: Colors.grey),
+                              style: AppTypography.caption.copyWith(color: Colors.grey),
                             ),
                             const SizedBox(height: 2),
                             Text(
                               '${BengaliNumberFormatter.toBengali(score)} / ১০০ (${isSafeScore ? 'নিরাপদ' : 'সতর্কতা'})',
-                              style: TextStyle(
-                                fontSize: 18,
+                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
                                 fontWeight: FontWeight.bold,
                                 color: isSafeScore
                                     ? AppColors.emeraldPrimary
@@ -254,9 +255,9 @@ class _SecurityDashboardScreenState extends State<SecurityDashboardScreen> {
                 const SizedBox(height: 16),
 
                 // Interactive App Lock Controls
-                const Text(
+                Text(
                   'অ্যাপ লক ও প্রবেশ নিয়ন্ত্রণ',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 10),
                 CardShell(
@@ -266,15 +267,15 @@ class _SecurityDashboardScreenState extends State<SecurityDashboardScreen> {
                       SwitchListTile.adaptive(
                         contentPadding: EdgeInsets.zero,
                         secondary: const Icon(Icons.fingerprint, color: AppColors.emeraldPrimary),
-                        title: const Text(
+                        title: Text(
                           'বায়োমেট্রিক / ফিঙ্গারপ্রিন্ট লক',
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                          style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
                         ),
                         subtitle: Text(
                           _bioAvailable
                               ? 'অ্যাপ চালুর সময় ফিঙ্গারপ্রিন্ট বা ফেস যাচাই'
                               : 'ডিভাইসে বায়োমেট্রিক অনুপলব্ধ',
-                          style: const TextStyle(fontSize: 11),
+                          style: Theme.of(context).textTheme.bodySmall,
                         ),
                         value: _bioEnabled,
                         activeColor: AppColors.emeraldPrimary,
@@ -284,15 +285,15 @@ class _SecurityDashboardScreenState extends State<SecurityDashboardScreen> {
                       ListTile(
                         contentPadding: EdgeInsets.zero,
                         leading: const Icon(Icons.pin_outlined, color: AppColors.emeraldPrimary),
-                        title: const Text(
+                        title: Text(
                           'কমিটি সিকিউরিটি পিন (SHA-256)',
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                          style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
                         ),
                         subtitle: Text(
                           _pinEnabled
                               ? 'সক্রিয় • এনক্রিপ্টেড কীস্টোরে সংরক্ষিত'
                               : 'পিন সেট করা নেই',
-                          style: const TextStyle(fontSize: 11),
+                          style: Theme.of(context).textTheme.bodySmall,
                         ),
                         trailing: Wrap(
                           spacing: 6,
@@ -303,12 +304,12 @@ class _SecurityDashboardScreenState extends State<SecurityDashboardScreen> {
                                 backgroundColor: AppColors.emeraldPrimary,
                                 foregroundColor: Colors.white,
                               ),
-                              child: Text(_pinEnabled ? 'পরিবর্তন' : 'সেট করুন', style: const TextStyle(fontSize: 12)),
+                              child: Text(_pinEnabled ? 'পরিবর্তন' : 'সেট করুন'),
                             ),
                             if (_pinEnabled)
                               TextButton(
                                 onPressed: _disablePin,
-                                child: const Text('বন্ধ', style: TextStyle(color: Colors.red, fontSize: 12)),
+                                child: const Text('বন্ধ', style: TextStyle(color: Colors.red)),
                               ),
                           ],
                         ),
@@ -319,9 +320,9 @@ class _SecurityDashboardScreenState extends State<SecurityDashboardScreen> {
                 const SizedBox(height: 18),
 
                 // Receipt HMAC Verifier
-                const Text(
+                Text(
                   'রসিদ QR / HMAC সত্যতা যাচাই',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
                 CardShell(
@@ -352,8 +353,7 @@ class _SecurityDashboardScreenState extends State<SecurityDashboardScreen> {
                         const SizedBox(height: 8),
                         Text(
                           _qrVerifyResult!,
-                          style: TextStyle(
-                            fontSize: 12,
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: _qrVerifyValid == true
                                 ? AppColors.emeraldPrimary
@@ -367,9 +367,9 @@ class _SecurityDashboardScreenState extends State<SecurityDashboardScreen> {
                 const SizedBox(height: 18),
 
                 // Honest Security Audit Summary
-                const Text(
+                Text(
                   'নিরাপত্তা যাচাইসমূহ',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 10),
 
@@ -403,6 +403,7 @@ class _SecurityDashboardScreenState extends State<SecurityDashboardScreen> {
                 ),
               ],
             ),
+          ),
     );
   }
 
@@ -427,12 +428,12 @@ class _SecurityDashboardScreenState extends State<SecurityDashboardScreen> {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
-                  style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
                 ),
               ],
             ),

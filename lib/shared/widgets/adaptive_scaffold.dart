@@ -91,14 +91,12 @@ class AdaptiveScaffold extends StatelessWidget {
                   labelType: NavigationRailLabelType.all,
                   backgroundColor: isDark ? AppColors.nightSurface : AppColors.surface,
                   selectedIconTheme: const IconThemeData(color: AppColors.emeraldPrimary),
-                  selectedLabelTextStyle: const TextStyle(
+                  selectedLabelTextStyle: Theme.of(context).textTheme.labelSmall?.copyWith(
                     color: AppColors.emeraldPrimary,
                     fontWeight: FontWeight.bold,
-                    fontSize: 12,
                   ),
-                  unselectedLabelTextStyle: TextStyle(
+                  unselectedLabelTextStyle: Theme.of(context).textTheme.labelSmall?.copyWith(
                     color: isDark ? AppColors.nightTextMuted : AppColors.textMuted,
-                    fontSize: 11,
                   ),
                   destinations: navDestinations
                       .map(

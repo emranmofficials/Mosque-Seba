@@ -192,130 +192,148 @@ class ChandaLedgerScreen extends ConsumerWidget {
               : allPayments;
           final totalCollected = payments.fold<double>(0.0, (acc, p) => acc + p.amountPaid);
 
-          return ListView(
-            padding: const EdgeInsets.all(AppDimens.spacing16),
-            children: [
-              if (targetMember != null)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: Text(
-                    'সদস্য ফিল্টার: ${targetMember!.nameBn}',
-                    style: AppTypography.bodyMedium.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                ),
-              // Summary card
-              CardShell(
+          return CustomScrollView(
+            slivers: [
+              SliverPadding(
                 padding: const EdgeInsets.all(AppDimens.spacing16),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(AppDimens.spacing10),
-                      decoration: BoxDecoration(
-                        color: AppColors.primaryContainer,
-                        borderRadius: BorderRadius.circular(AppDimens.radiusMd),
-                      ),
-                      child: const Icon(Icons.savings_outlined, color: AppColors.primary, size: 28),
-                    ),
-                    const SizedBox(width: AppDimens.spacing12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'মোট আদায়কৃত চাঁদা',
-                            style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
+                    if (targetMember != null)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: Text(
+                          'সদস্য ফিল্টার: ${targetMember!.nameBn}',
+                          style: AppTypography.bodyMedium.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primary,
                           ),
-                          const SizedBox(height: 2),
-                          Text(
-                            BengaliNumberFormatter.formatCurrency(totalCollected),
-                            style: AppTypography.titleLarge.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
-                    ),
-                    Text(
-                      '${BengaliNumberFormatter.toBengali(payments.length)} টি রসিদ',
-                      style: AppTypography.caption.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: AppDimens.spacing16),
-              Text(
-                'সাম্প্রতিক আদায় তালিকা',
-                style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: AppDimens.spacing12),
-              if (payments.isEmpty)
-                const EmptyStateView(
-                  title: 'কোনো চাঁদা আদায়ের রেকর্ড নেই',
-                  message: 'এখনও কোনো চাঁদা সংগ্রহ করা হয়নি। নিচে চাপ দিয়ে নতুন চাঁদা জমা নিন।',
-                )
-              else
-                ...payments.map(
-                  (payment) => Padding(
-                    padding: const EdgeInsets.only(bottom: AppDimens.spacing12),
-                    child: CardShell(
-                      onTap: () => _showReceiptPreview(context, ref, payment),
-                      padding: const EdgeInsets.all(AppDimens.spacing12),
+                    // Summary card
+                    CardShell(
+                      padding: const EdgeInsets.all(AppDimens.spacing16),
                       child: Row(
                         children: [
-                          const CircleAvatar(
-                            radius: 20,
-                            backgroundColor: AppColors.primaryContainer,
-                            child: Icon(Icons.receipt, color: AppColors.primary, size: 20),
+                          Container(
+                            padding: const EdgeInsets.all(AppDimens.spacing10),
+                            decoration: BoxDecoration(
+                              color: AppColors.primaryContainer,
+                              borderRadius: BorderRadius.circular(AppDimens.radiusMd),
+                            ),
+                            child: const Icon(Icons.savings_outlined, color: AppColors.primary, size: 28),
                           ),
                           const SizedBox(width: AppDimens.spacing12),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Row(
-                                  children: [
-                                    Text(
-                                      payment.memberNameBn,
-                                      style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.bold),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    ChandaStatusBadge(status: payment.status),
-                                  ],
+                                Text(
+                                  'মোট আদায়কৃত চাঁদা',
+                                  style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  'মাস: ${payment.month} • রসিদ: ${BengaliNumberFormatter.toBengali(payment.receiptCode)}',
-                                  style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
+                                  BengaliNumberFormatter.formatCurrency(totalCollected),
+                                  style: AppTypography.titleLarge.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.primary,
+                                  ),
                                 ),
                               ],
                             ),
                           ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Text(
-                                BengaliNumberFormatter.formatCurrency(payment.amountPaid),
-                                style: AppTypography.titleMedium.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.primary,
-                                ),
-                              ),
-                              Text(
-                                BengaliNumberFormatter.toBengali(payment.paidAt),
-                                style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
-                              ),
-                            ],
+                          Text(
+                            '${BengaliNumberFormatter.toBengali(payments.length)} টি রসিদ',
+                            style: AppTypography.caption.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textSecondary,
+                            ),
                           ),
                         ],
                       ),
                     ),
+                    const SizedBox(height: AppDimens.spacing16),
+                    Text(
+                      'সাম্প্রতিক আদায় তালিকা',
+                      style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: AppDimens.spacing12),
+                  ]),
+                ),
+              ),
+              if (payments.isEmpty)
+                const SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: AppDimens.spacing16),
+                    child: EmptyStateView(
+                      title: 'কোনো চাঁদা আদায়ের রেকর্ড নেই',
+                      message: 'এখনও কোনো চাঁদা সংগ্রহ করা হয়নি। নিচে চাপ দিয়ে নতুন চাঁদা জমা নিন।',
+                    ),
+                  ),
+                )
+              else
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(AppDimens.spacing16, 0, AppDimens.spacing16, AppDimens.spacing16),
+                  sliver: SliverList.builder(
+                    itemCount: payments.length,
+                    itemBuilder: (context, index) {
+                      final payment = payments[index];
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: AppDimens.spacing12),
+                        child: CardShell(
+                          onTap: () => _showReceiptPreview(context, ref, payment),
+                          padding: const EdgeInsets.all(AppDimens.spacing12),
+                          child: Row(
+                            children: [
+                              const CircleAvatar(
+                                radius: 20,
+                                backgroundColor: AppColors.primaryContainer,
+                                child: Icon(Icons.receipt, color: AppColors.primary, size: 20),
+                              ),
+                              const SizedBox(width: AppDimens.spacing12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Text(
+                                          payment.memberNameBn,
+                                          style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.bold),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        ChandaStatusBadge(status: payment.status),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      'মাস: ${payment.month} • রসিদ: ${BengaliNumberFormatter.toBengali(payment.receiptCode)}',
+                                      style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    BengaliNumberFormatter.formatCurrency(payment.amountPaid),
+                                    style: AppTypography.titleMedium.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.primary,
+                                    ),
+                                  ),
+                                  Text(
+                                    BengaliNumberFormatter.toBengali(payment.paidAt),
+                                    style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
             ],

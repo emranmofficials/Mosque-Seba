@@ -68,9 +68,8 @@ class AppHeader extends ConsumerWidget implements PreferredSizeWidget {
                 children: [
                   Text(
                     userName.isNotEmpty ? userName : 'মুহতারাম মুসল্লি',
-                    style: const TextStyle(
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: AppColors.surface,
-                      fontSize: 14,
                       fontWeight: FontWeight.bold,
                     ),
                     maxLines: 1,
@@ -78,9 +77,8 @@ class AppHeader extends ConsumerWidget implements PreferredSizeWidget {
                   ),
                   Text(
                     designation.isNotEmpty ? designation : 'সাধারণ সদস্য',
-                    style: const TextStyle(
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
                       color: AppColors.goldLight,
-                      fontSize: 11,
                       fontWeight: FontWeight.w500,
                     ),
                     maxLines: 1,
@@ -128,9 +126,8 @@ class AppHeader extends ConsumerWidget implements PreferredSizeWidget {
                         ),
                         child: Text(
                           '$unreadNotifications',
-                          style: const TextStyle(
+                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
                             color: Colors.white,
-                            fontSize: 9,
                             fontWeight: FontWeight.bold,
                           ),
                           textAlign: TextAlign.center,

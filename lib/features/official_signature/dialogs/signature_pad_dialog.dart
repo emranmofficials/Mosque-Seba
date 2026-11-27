@@ -97,15 +97,13 @@ class _SignaturePadDialogState extends State<SignaturePadDialog> {
                         children: [
                           Text(
                             widget.title,
-                            style: const TextStyle(
-                              fontSize: 16,
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                           Text(
                             widget.signatoryRole,
-                            style: TextStyle(
-                              fontSize: 12,
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
                               color: Colors.grey.shade600,
                             ),
                           ),
@@ -131,12 +129,11 @@ class _SignaturePadDialogState extends State<SignaturePadDialog> {
                   ),
                   child: Stack(
                     children: [
-                      const Center(
+                      Center(
                         child: Text(
                           'এখানে আঙুল দিয়ে স্বাক্ষর করুন',
-                          style: TextStyle(
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: Colors.black26,
-                            fontSize: 13,
                             fontStyle: FontStyle.italic,
                           ),
                         ),
@@ -212,7 +209,7 @@ class _SignaturePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = const Color(0xFF0F2027)
+      ..color = AppColors.textPrimary
       ..strokeCap = StrokeCap.round
       ..strokeWidth = 3.0;
 

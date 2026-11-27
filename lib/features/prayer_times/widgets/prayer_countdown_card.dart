@@ -18,6 +18,13 @@ class PrayerCountdownCard extends ConsumerWidget {
     final isDark = theme.brightness == Brightness.dark;
 
     return prayerDataAsync.when(
+      loading: () => const CardShell(
+        child: SizedBox(
+          height: 100,
+          child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+        ),
+      ),
+      error: (_, __) => const SizedBox.shrink(),
       data: (data) {
         final next = data.nextSummary;
         final schedule = data.schedule;
@@ -140,13 +147,6 @@ class PrayerCountdownCard extends ConsumerWidget {
           ),
         );
       },
-      loading: () => const CardShell(
-        child: SizedBox(
-          height: 100,
-          child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
-        ),
-      ),
-      error: (_, __) => const SizedBox.shrink(),
     );
   }
 }

@@ -16,15 +16,17 @@ class IslamicCalendarScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('ইসলামিক ক্যালেন্ডার ও বিশেষ দিবস'),
       ),
-      body: ListView(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(MosqueContentPadding.screenHorizontal),
-        children: [
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
           const MoonOffsetToggleWidget(),
           const SizedBox(height: MosqueSpace.lg),
 
-          const Text(
+          Text(
             'বাৎসরিক গুরুত্বপূর্ণ ইসলামিক দিবস ও ফজিলত',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: MosqueSpace.sm),
 
@@ -49,22 +51,22 @@ class IslamicCalendarScreen extends StatelessWidget {
                         controller: scrollController,
                         padding: const EdgeInsets.all(20),
                         children: [
-                          Text(e.titleBn, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                          Text(e.titleBn, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
                           const SizedBox(height: 8),
-                          Text(e.defaultSignificanceBn, style: const TextStyle(fontSize: 13, height: 1.4)),
+                          Text(e.defaultSignificanceBn, style: Theme.of(context).textTheme.bodySmall?.copyWith(height: 1.4)),
                           const SizedBox(height: 16),
                           const Text('✨ গুরুত্বপূর্ণ নফল আমল:', style: TextStyle(fontWeight: FontWeight.bold)),
                           const SizedBox(height: 4),
                           ...e.defaultAmalsBn.map((a) => Padding(
                                 padding: const EdgeInsets.symmetric(vertical: 2),
-                                child: Text('• $a', style: const TextStyle(fontSize: 12)),
+                                child: Text('• $a', style: Theme.of(context).textTheme.bodySmall),
                               )),
                           const SizedBox(height: 16),
                           const Text('🕌 খুতবা ও বয়ান পয়েন্ট:', style: TextStyle(fontWeight: FontWeight.bold)),
                           const SizedBox(height: 4),
                           ...e.defaultKhutbahPoints.map((k) => Padding(
                                 padding: const EdgeInsets.symmetric(vertical: 2),
-                                child: Text('• $k', style: const TextStyle(fontSize: 12)),
+                                child: Text('• $k', style: Theme.of(context).textTheme.bodySmall),
                               )),
                         ],
                       ),
@@ -76,6 +78,7 @@ class IslamicCalendarScreen extends StatelessWidget {
           ),
         ],
       ),
-    );
+    ),
+  );
   }
 }

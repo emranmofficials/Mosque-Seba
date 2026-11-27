@@ -46,9 +46,12 @@ class MadrasaDashboardScreen extends ConsumerWidget {
       ),
       body: RefreshIndicator(
         onRefresh: () => ref.read(studentListProvider.notifier).loadStudents(),
-        child: ListView(
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(AppDimens.spacing16),
-          children: [
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
             // KPI Summary Row
             Row(
               children: [
@@ -153,7 +156,8 @@ class MadrasaDashboardScreen extends ConsumerWidget {
           ],
         ),
       ),
-    );
+    ),
+  );
   }
 
   Widget _buildKpiCard({

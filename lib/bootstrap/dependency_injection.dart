@@ -41,10 +41,6 @@ final isDarkModeProvider = StateProvider<bool>((ref) {
   return storage.isDarkMode;
 });
 
-class _RouterRefreshNotifier extends ChangeNotifier {
-  void trigger() => notifyListeners();
-}
-
 final routerProvider = Provider<GoRouter>((ref) {
   final refreshNotifier = _RouterRefreshNotifier();
   ref.listen<AsyncValue<AuthUser?>>(
@@ -64,3 +60,8 @@ final routerProvider = Provider<GoRouter>((ref) {
 
   return router;
 });
+
+class _RouterRefreshNotifier extends ChangeNotifier {
+  void trigger() => notifyListeners();
+}
+

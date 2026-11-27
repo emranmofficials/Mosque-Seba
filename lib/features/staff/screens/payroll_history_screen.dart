@@ -46,9 +46,12 @@ class PayrollHistoryScreen extends ConsumerWidget {
           return RefreshIndicator(
             onRefresh: () =>
                 ref.read(payrollHistoryProvider.notifier).loadPayroll(monthFilter: 'সকল'),
-            child: ListView(
-              padding: const EdgeInsets.all(AppDimens.spacing16),
-              children: [
+            child: CustomScrollView(
+              slivers: [
+                SliverPadding(
+                  padding: const EdgeInsets.all(AppDimens.spacing16),
+                  sliver: SliverList(
+                    delegate: SliverChildListDelegate([
                 if (distinctMonths.length > 1) ...[
                   SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
@@ -120,30 +123,45 @@ class PayrollHistoryScreen extends ConsumerWidget {
                   style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: AppDimens.spacing12),
+                    ]),
+                  ),
+                ),
                 if (filteredList.isEmpty)
-                  const EmptyStateView(
-                    title: 'কোনো বেতন পরিশোধের রেকর্ড নেই',
-                    message: 'স্টাফ তালিকা থেকে মাসিক বেতন পরিশোধ সম্পন্ন করুন।',
+                  const SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: AppDimens.spacing16),
+                      child: EmptyStateView(
+                        title: 'কোনো বেতন পরিশোধের রেকর্ড নেই',
+                        message: 'স্টাফ তালিকা থেকে মাসিক বেতন পরিশোধ সম্পন্ন করুন।',
+                      ),
+                    ),
                   )
                 else
-                  ...filteredList.map(
-                    (payroll) => Padding(
-                      padding: const EdgeInsets.only(bottom: AppDimens.spacing8),
-                      child: PayrollRecordCard(
-                        payroll: payroll,
-                        onPrintSlip: () => NativePrintingService().printSalarySlip(
-                          staffName: payroll.staffNameBn,
-                          month: payroll.month,
-                          baseSalary: payroll.salaryAmount,
-                          bonusAmount: payroll.bonusAmount,
-                          netSalary: payroll.netSalary,
-                          paidDate: payroll.paidDate ??
-                              DateTime.now().toIso8601String().split('T').first,
-                          mosqueName: mosqueName.isNotEmpty
-                              ? mosqueName
-                              : 'মসজিদ সেবা পোর্টাল',
-                        ),
-                      ),
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(AppDimens.spacing16, 0, AppDimens.spacing16, AppDimens.spacing16),
+                    sliver: SliverList.builder(
+                      itemCount: filteredList.length,
+                      itemBuilder: (context, index) {
+                        final payroll = filteredList[index];
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: AppDimens.spacing8),
+                          child: PayrollRecordCard(
+                            payroll: payroll,
+                            onPrintSlip: () => NativePrintingService().printSalarySlip(
+                              staffName: payroll.staffNameBn,
+                              month: payroll.month,
+                              baseSalary: payroll.salaryAmount,
+                              bonusAmount: payroll.bonusAmount,
+                              netSalary: payroll.netSalary,
+                              paidDate: payroll.paidDate ??
+                                  DateTime.now().toIso8601String().split('T').first,
+                              mosqueName: mosqueName.isNotEmpty
+                                  ? mosqueName
+                                  : 'মসজিদ সেবা পোর্টাল',
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ),
               ],

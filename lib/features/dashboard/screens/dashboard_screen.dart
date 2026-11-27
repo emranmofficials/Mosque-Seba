@@ -191,66 +191,72 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 1150),
                 child: isTablet
-                    ? ListView(
+                    ? SingleChildScrollView(
                         padding: const EdgeInsets.all(MosqueContentPadding.screenHorizontal),
-                        children: [
-                          // 1. KPI Metric Ribbon
-                          kpiGrid,
-                          const SizedBox(height: MosqueSpace.md),
-                          // 2. Dual-Column Adaptive Layout
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Left Column: Identity, Prayer Times, Notices
-                              Expanded(
-                                flex: 6,
-                                child: Column(
-                                  children: [
-                                    heroCard,
-                                    const SizedBox(height: MosqueSpace.md),
-                                    prayerCard,
-                                    const SizedBox(height: MosqueSpace.md),
-                                    smartBoard,
-                                  ],
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            // 1. KPI Metric Ribbon
+                            kpiGrid,
+                            const SizedBox(height: MosqueSpace.md),
+                            // 2. Dual-Column Adaptive Layout
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Left Column: Identity, Prayer Times, Notices
+                                Expanded(
+                                  flex: 6,
+                                  child: Column(
+                                    children: [
+                                      heroCard,
+                                      const SizedBox(height: MosqueSpace.md),
+                                      prayerCard,
+                                      const SizedBox(height: MosqueSpace.md),
+                                      smartBoard,
+                                    ],
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(width: MosqueSpace.md),
-                              // Right Column: Operations, Education Hub & Hadith
-                              Expanded(
-                                flex: 5,
-                                child: Column(
-                                  children: [
-                                    quickActions,
-                                    const SizedBox(height: MosqueSpace.md),
-                                    madrasaBanner,
-                                    const SizedBox(height: MosqueSpace.md),
-                                    const HadithBoardWidget(),
-                                  ],
+                                const SizedBox(width: MosqueSpace.md),
+                                // Right Column: Operations, Education Hub & Hadith
+                                Expanded(
+                                  flex: 5,
+                                  child: Column(
+                                    children: [
+                                      quickActions,
+                                      const SizedBox(height: MosqueSpace.md),
+                                      madrasaBanner,
+                                      const SizedBox(height: MosqueSpace.md),
+                                      const HadithBoardWidget(),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: MosqueSpace.xxl),
-                        ],
+                              ],
+                            ),
+                            const SizedBox(height: MosqueSpace.xxl),
+                          ],
+                        ),
                       )
-                    : ListView(
+                    : SingleChildScrollView(
                         padding: const EdgeInsets.all(MosqueContentPadding.screenHorizontal),
-                        children: [
-                          heroCard,
-                          const SizedBox(height: MosqueSpace.md),
-                          prayerCard,
-                          const SizedBox(height: MosqueSpace.md),
-                          smartBoard,
-                          const SizedBox(height: MosqueSpace.md),
-                          quickActions,
-                          const SizedBox(height: MosqueSpace.md),
-                          const HadithBoardWidget(),
-                          const SizedBox(height: MosqueSpace.md),
-                          kpiGrid,
-                          const SizedBox(height: MosqueSpace.md),
-                          madrasaBanner,
-                          const SizedBox(height: MosqueSpace.xxl),
-                        ],
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            heroCard,
+                            const SizedBox(height: MosqueSpace.md),
+                            prayerCard,
+                            const SizedBox(height: MosqueSpace.md),
+                            smartBoard,
+                            const SizedBox(height: MosqueSpace.md),
+                            quickActions,
+                            const SizedBox(height: MosqueSpace.md),
+                            const HadithBoardWidget(),
+                            const SizedBox(height: MosqueSpace.md),
+                            kpiGrid,
+                            const SizedBox(height: MosqueSpace.md),
+                            madrasaBanner,
+                            const SizedBox(height: MosqueSpace.xxl),
+                          ],
+                        ),
                       ),
               ),
             );

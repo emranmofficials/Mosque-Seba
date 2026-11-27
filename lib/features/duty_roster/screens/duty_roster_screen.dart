@@ -108,9 +108,11 @@ class DutyRosterScreen extends ConsumerWidget {
                     ? _waqts
                     : _waqts.where((w) => w != 'জুমা').toList();
 
-                return ListView(
+                return ListView.builder(
                   padding: const EdgeInsets.all(AppDimens.spacing16),
-                  children: activeWaqts.map((waqt) {
+                  itemCount: activeWaqts.length,
+                  itemBuilder: (context, index) {
+                    final waqt = activeWaqts[index];
                     final assignments = rosterItems.where((r) => r.prayerName == waqt).toList();
                     return Padding(
                       padding: const EdgeInsets.only(bottom: AppDimens.spacing12),
@@ -128,7 +130,7 @@ class DutyRosterScreen extends ConsumerWidget {
                             ref.read(dutyRosterListProvider.notifier).removeDuty(id),
                       ),
                     );
-                  }).toList(),
+                  },
                 );
               },
             ),

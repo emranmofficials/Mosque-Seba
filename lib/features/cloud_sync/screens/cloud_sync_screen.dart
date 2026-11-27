@@ -53,9 +53,11 @@ class CloudSyncScreen extends ConsumerWidget {
         builder: (context, snapshot) {
           final cachedCounts = snapshot.data ?? const <String, int>{};
 
-          return ListView(
+          return SingleChildScrollView(
             padding: const EdgeInsets.all(AppDimens.spacing16),
-            children: [
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
               // Cloud Status Banner
               CardShell(
                 padding: const EdgeInsets.all(AppDimens.spacing16),
@@ -80,9 +82,9 @@ class CloudSyncScreen extends ConsumerWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
+                              Text(
                                 'Supabase + Drift SQLite টু-ওয়ে সিঙ্ক',
-                                style: TextStyle(fontSize: 12, color: Colors.grey),
+                                style: AppTypography.caption.copyWith(color: Colors.grey),
                               ),
                               const SizedBox(height: 2),
                               Text(
@@ -91,8 +93,7 @@ class CloudSyncScreen extends ConsumerWidget {
                                     : (syncState.pendingOutboxCount > 0
                                         ? 'অফলাইন ডাটা আপলোডের অপেক্ষায়'
                                         : 'লোকাল ও ক্লাউড ডাটাবেস প্রস্তুত'),
-                                style: const TextStyle(
-                                  fontSize: 15,
+                                style: Theme.of(context).textTheme.titleSmall?.copyWith(
                                   fontWeight: FontWeight.bold,
                                   color: AppColors.emeraldPrimary,
                                 ),
@@ -100,15 +101,14 @@ class CloudSyncScreen extends ConsumerWidget {
                               const SizedBox(height: 2),
                               Text(
                                 'সর্বশেষ সিঙ্ক: $lastSyncLabel • আউটবক্স: ${BengaliNumberFormatter.toBengali(syncState.pendingOutboxCount)} টি',
-                                style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                                style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Colors.grey.shade600),
                               ),
                               if (syncState.errorMessage != null &&
                                   syncState.errorMessage!.isNotEmpty) ...[
                                 const SizedBox(height: 4),
                                 Text(
                                   syncState.errorMessage!,
-                                  style: const TextStyle(
-                                    fontSize: 11,
+                                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
                                     color: AppColors.urgentRed,
                                   ),
                                 ),
@@ -169,9 +169,9 @@ class CloudSyncScreen extends ConsumerWidget {
               const SizedBox(height: 20),
 
               // Synced Tables Status
-              const Text(
+              Text(
                 'অফলাইন SQLite ক্যাশ ও পেন্ডিং আউটবক্স',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 10),
 
@@ -204,14 +204,13 @@ class CloudSyncScreen extends ConsumerWidget {
                             children: [
                               Text(
                                 meta['label']!,
-                                style: const TextStyle(
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 13,
                                 ),
                               ),
                               Text(
                                 'লোকাল ক্যাশ: ${BengaliNumberFormatter.toBengali(cachedCount)} ${meta['unit']}',
-                                style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                                style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Colors.grey.shade600),
                               ),
                             ],
                           ),
@@ -227,8 +226,7 @@ class CloudSyncScreen extends ConsumerWidget {
                           ),
                           child: Text(
                             statusText,
-                            style: TextStyle(
-                              fontSize: 11,
+                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
                               fontWeight: FontWeight.bold,
                               color: hasPending
                                   ? Colors.orange.shade900
@@ -242,7 +240,8 @@ class CloudSyncScreen extends ConsumerWidget {
                 );
               }),
             ],
-          );
+          ),
+        );
         },
       ),
     );

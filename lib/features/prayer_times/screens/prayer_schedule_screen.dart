@@ -60,6 +60,8 @@ class PrayerScheduleScreen extends ConsumerWidget {
         ],
       ),
       body: prayerDataAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (err, _) => Center(child: Text('ত্রুটি: $err')),
         data: (data) {
           final schedule = data.schedule;
 
@@ -302,38 +304,39 @@ class PrayerScheduleScreen extends ConsumerWidget {
               return Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 1000),
-                  child: ListView(
+                  child: SingleChildScrollView(
                     padding: const EdgeInsets.all(MosqueContentPadding.screenHorizontal),
-                    children: [
-                      districtCard,
-                      const SizedBox(height: MosqueSpace.lg),
-                      if (isTablet)
-                        GridView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                            maxCrossAxisExtent: 480,
-                            mainAxisExtent: 145,
-                            crossAxisSpacing: MosqueSpace.md,
-                            mainAxisSpacing: MosqueSpace.md,
-                          ),
-                          itemCount: schedule.length,
-                          itemBuilder: (ctx, idx) => buildCard(schedule[idx]),
-                        )
-                      else
-                        ...schedule.map((item) => Padding(
-                              padding: const EdgeInsets.only(bottom: MosqueSpace.md),
-                              child: buildCard(item),
-                            )),
-                    ],
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        districtCard,
+                        const SizedBox(height: MosqueSpace.lg),
+                        if (isTablet)
+                          GridView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                              maxCrossAxisExtent: 480,
+                              mainAxisExtent: 145,
+                              crossAxisSpacing: MosqueSpace.md,
+                              mainAxisSpacing: MosqueSpace.md,
+                            ),
+                            itemCount: schedule.length,
+                            itemBuilder: (ctx, idx) => buildCard(schedule[idx]),
+                          )
+                        else
+                          ...schedule.map((item) => Padding(
+                                padding: const EdgeInsets.only(bottom: MosqueSpace.md),
+                                child: buildCard(item),
+                              )),
+                      ],
+                    ),
                   ),
                 ),
               );
             },
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, _) => Center(child: Text('ত্রুটি: $err')),
       ),
     );
   }

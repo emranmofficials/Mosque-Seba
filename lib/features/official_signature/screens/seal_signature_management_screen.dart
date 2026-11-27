@@ -143,9 +143,11 @@ class _SealSignatureManagementScreenState
       appBar: AppBar(
         title: const Text('অফিসিয়াল সিল ও ডিজিটাল স্বাক্ষর'),
       ),
-      body: ListView(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(AppDimens.spacing16),
-        children: [
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
           // Mosque Seal Card
           CardShell(
             padding: const EdgeInsets.all(AppDimens.spacing16),
@@ -177,8 +179,7 @@ class _SealSignatureManagementScreenState
                               Icon(Icons.verified, color: AppColors.emeraldPrimary, size: 36),
                               Text(
                                 'অফিসিয়াল সিল',
-                                style: TextStyle(
-                                  fontSize: 10,
+                                style: Theme.of(context).textTheme.labelSmall?.copyWith(
                                   fontWeight: FontWeight.bold,
                                   color: AppColors.emeraldPrimary,
                                 ),
@@ -190,13 +191,13 @@ class _SealSignatureManagementScreenState
                 const SizedBox(height: 12),
                 Text(
                   mosqueName,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 2),
                 Text(
                   'কমিটি আইডি: $committeeId • রসিদ ও PDF-এ স্বয়ংক্রিয়ভাবে যুক্ত হবে',
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 14),
@@ -222,14 +223,14 @@ class _SealSignatureManagementScreenState
           const SizedBox(height: 20),
 
           // Authorized Signatures Section
-          const Text(
+          Text(
             'কমিটি অনুমোদিত ডিজিটাল স্বাক্ষরসমূহ',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 4),
-          const Text(
+          Text(
             'রসিদ, ভাউচার ও রিপোর্ট কার্ড PDF-এ স্বয়ংক্রিয়ভাবে যুক্ত হবে',
-            style: TextStyle(fontSize: 12, color: Colors.grey),
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey),
           ),
           const SizedBox(height: 12),
 
@@ -272,7 +273,8 @@ class _SealSignatureManagementScreenState
           ),
         ],
       ),
-    );
+    ),
+  );
   }
 
   Widget _buildSignatoryTile({
@@ -313,15 +315,14 @@ class _SealSignatureManagementScreenState
                   children: [
                     Text(
                       title,
-                      style: const TextStyle(
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.bold,
-                        fontSize: 14,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       role,
-                      style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Colors.grey.shade600),
                     ),
                   ],
                 ),
@@ -335,8 +336,7 @@ class _SealSignatureManagementScreenState
                 ),
                 child: Text(
                   isConfigured ? 'সংরক্ষিত' : 'স্বাক্ষর দিন',
-                  style: TextStyle(
-                    fontSize: 11,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: isConfigured
                         ? AppColors.emeraldPrimary
@@ -367,11 +367,11 @@ class _SealSignatureManagementScreenState
             ),
           ] else if (isConfigured) ...[
             const SizedBox(height: 6),
-            const Align(
+            Align(
               alignment: Alignment.centerLeft,
               child: Text(
                 'প্রিভিউ দেখতে অনুগ্রহ করে পুনরায় স্বাক্ষর আঁকুন',
-                style: TextStyle(fontSize: 11, color: Colors.orange),
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Colors.orange),
               ),
             ),
           ],

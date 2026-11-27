@@ -97,9 +97,12 @@ class FinanceDashboardScreen extends ConsumerWidget {
       ],
       body: RefreshIndicator(
         onRefresh: () => ref.read(financeListProvider.notifier).loadTransactions(),
-        child: ListView(
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.all(AppDimens.spacing16),
-          children: [
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
             // Balance Summary
             BalanceSummaryCards(summary: summary),
             const SizedBox(height: AppDimens.spacing16),
@@ -243,6 +246,7 @@ class FinanceDashboardScreen extends ConsumerWidget {
           ],
         ),
       ),
-    );
+    ),
+  );
   }
 }

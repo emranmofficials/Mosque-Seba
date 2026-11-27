@@ -146,9 +146,12 @@ class StaffListScreen extends ConsumerWidget {
           final totalMonthlyPayroll = staffList.fold<double>(0.0, (acc, s) => acc + s.salaryAmount);
           final mealCount = staffList.where((s) => s.mealRequired).length;
 
-          return ListView(
-            padding: const EdgeInsets.all(AppDimens.spacing16),
-            children: [
+          return CustomScrollView(
+            slivers: [
+              SliverPadding(
+                padding: const EdgeInsets.all(AppDimens.spacing16),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
               // Summary Banner
               CardShell(
                 padding: const EdgeInsets.all(AppDimens.spacing16),
@@ -201,32 +204,47 @@ class StaffListScreen extends ConsumerWidget {
                 style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: AppDimens.spacing12),
-              if (staffList.isEmpty)
-                EmptyStateView(
-                  title: 'কোনো স্টাফ নিবন্ধিত নেই',
-                  message: 'মসজিদের পেশ ইমাম, মুয়াজ্জিন ও খাদেমদের তথ্য নিবন্ধন করুন।',
-                  actionLabel: 'স্টাফ যোগ করুন',
-                  onAction: () => _showAddStaffDialog(context, ref),
-                )
-              else
-                ...staffList.map(
-                  (staff) => Padding(
-                    padding: const EdgeInsets.only(bottom: AppDimens.spacing12),
-                    child: StaffCard(
-                      staff: staff,
-                      canPaySalary: canPaySalary,
-                      onPaySalary: () => _showDisburseDialog(context, ref, staff),
-                      onEdit: canManageStaff
-                          ? () => _showAddStaffDialog(context, ref, existingStaff: staff)
-                          : null,
-                      onDeactivate: canManageStaff
-                          ? () => _confirmDeactivate(context, ref, staff)
-                          : null,
-                    ),
+                    ]),
                   ),
                 ),
-            ],
-          );
+                if (staffList.isEmpty)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: AppDimens.spacing16),
+                      child: EmptyStateView(
+                        title: 'কোনো স্টাফ নিবন্ধিত নেই',
+                        message: 'মসজিদের পেশ ইমাম, মুয়াজ্জিন ও খাদেমদের তথ্য নিবন্ধন করুন।',
+                        actionLabel: 'স্টাফ যোগ করুন',
+                        onAction: () => _showAddStaffDialog(context, ref),
+                      ),
+                    ),
+                  )
+                else
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(AppDimens.spacing16, 0, AppDimens.spacing16, AppDimens.spacing16),
+                    sliver: SliverList.builder(
+                      itemCount: staffList.length,
+                      itemBuilder: (context, index) {
+                        final staff = staffList[index];
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: AppDimens.spacing12),
+                          child: StaffCard(
+                            staff: staff,
+                            canPaySalary: canPaySalary,
+                            onPaySalary: () => _showDisburseDialog(context, ref, staff),
+                            onEdit: canManageStaff
+                                ? () => _showAddStaffDialog(context, ref, existingStaff: staff)
+                                : null,
+                            onDeactivate: canManageStaff
+                                ? () => _confirmDeactivate(context, ref, staff)
+                                : null,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+              ],
+            );
         },
       ),
     );

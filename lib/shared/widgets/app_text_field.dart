@@ -45,8 +45,7 @@ class AppTextField extends StatelessWidget {
         if (label != null) ...[
           Text(
             label!,
-            style: TextStyle(
-              fontSize: 13,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
               fontWeight: FontWeight.w600,
               color: isDark ? AppColors.nightTextPrimary : AppColors.textPrimary,
             ),
@@ -62,14 +61,12 @@ class AppTextField extends StatelessWidget {
           onChanged: onChanged,
           maxLines: maxLines,
           readOnly: readOnly,
-          style: TextStyle(
-            fontSize: 14,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
             color: isDark ? AppColors.nightTextPrimary : AppColors.textPrimary,
           ),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: TextStyle(
-              fontSize: 13,
+            hintStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: isDark ? AppColors.nightTextMuted : AppColors.textMuted,
             ),
             prefixIcon: prefixIcon,

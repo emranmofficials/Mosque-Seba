@@ -46,9 +46,11 @@ class DocumentPrintHubScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('ডকুমেন্ট ও প্রিন্ট সেন্টার'),
       ),
-      body: ListView(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(AppDimens.spacing16),
-        children: [
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
           const Text(
             'অফিসিয়াল ডকুমেন্টস, সিল-স্বাক্ষরযুক্ত PDF ও থার্মাল প্রিন্ট',
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
@@ -261,7 +263,8 @@ class DocumentPrintHubScreen extends ConsumerWidget {
             ),
         ],
       ),
-    );
+    ),
+  );
   }
 
   Widget _buildPrintCard({

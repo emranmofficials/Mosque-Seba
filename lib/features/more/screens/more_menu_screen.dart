@@ -36,9 +36,11 @@ class MoreMenuScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('অন্যান্য কার্যক্রম ও মডিউল'),
       ),
-      body: ListView(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(AppDimens.spacing16),
-        children: [
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
           // 1. Madrasa & Islamic Education
           _buildCategoryHeader('মাদরাসা ও ইসলামী শিক্ষা', Icons.school, AppColors.emeraldPrimary),
           const SizedBox(height: 8),
@@ -297,7 +299,8 @@ class MoreMenuScreen extends ConsumerWidget {
           const SizedBox(height: AppDimens.spacing24),
         ],
       ),
-    );
+    ),
+  );
   }
 
   Widget _buildCategoryHeader(String title, IconData icon, Color color) {
@@ -307,8 +310,7 @@ class MoreMenuScreen extends ConsumerWidget {
         const SizedBox(width: 8),
         Text(
           title,
-          style: TextStyle(
-            fontSize: 14,
+          style: AppTypography.titleSmall.copyWith(
             fontWeight: FontWeight.bold,
             color: color,
           ),
@@ -345,11 +347,11 @@ class MoreMenuScreen extends ConsumerWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 Text(
                   subtitle,
-                  style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
                 ),
               ],
             ),

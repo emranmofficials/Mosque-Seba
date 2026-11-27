@@ -45,8 +45,7 @@ class ErrorStateView extends StatelessWidget {
             const SizedBox(height: MosqueSpace.md),
             Text(
               title,
-              style: TextStyle(
-                fontSize: 16,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: isDark ? AppColors.nightTextPrimary : AppColors.textPrimary,
               ),
@@ -54,8 +53,7 @@ class ErrorStateView extends StatelessWidget {
             const SizedBox(height: MosqueSpace.xs),
             Text(
               displayMessage,
-              style: TextStyle(
-                fontSize: 13,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: isDark ? AppColors.nightTextMuted : AppColors.textMuted,
               ),
               textAlign: TextAlign.center,

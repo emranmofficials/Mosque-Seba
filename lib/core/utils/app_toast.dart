@@ -29,7 +29,7 @@ class AppToast {
         icon = Icons.error_outline;
         break;
       case ToastType.warning:
-        bgColor = const Color(0xFFD97706); // Amber 600
+        bgColor = AppColors.warning;
         icon = Icons.warning_amber_rounded;
         break;
       case ToastType.info:
@@ -49,9 +49,8 @@ class AppToast {
             Expanded(
               child: Text(
                 message,
-                style: const TextStyle(
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: textColor,
-                  fontSize: 13,
                   fontWeight: FontWeight.w500,
                 ),
               ),
