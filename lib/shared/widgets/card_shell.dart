@@ -2,13 +2,15 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_dimens.dart';
 
-/// Standard Islamic Elevated Card Shell with Subtle Border
+/// Standard Islamic Elevated Card Shell with Material 3 Ripple and Adaptive Shadow
 class CardShell extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry padding;
   final EdgeInsetsGeometry? margin;
   final Color? color;
+  final Gradient? gradient;
   final Border? border;
+  final double? borderRadius;
   final VoidCallback? onTap;
 
   const CardShell({
@@ -17,7 +19,9 @@ class CardShell extends StatelessWidget {
     this.padding = const EdgeInsets.all(MosqueContentPadding.cardInternal),
     this.margin,
     this.color,
+    this.gradient,
     this.border,
+    this.borderRadius,
     this.onTap,
   });
 
@@ -25,42 +29,54 @@ class CardShell extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cardColor = color ?? (isDark ? AppColors.nightSurface : AppColors.cardBg);
+    final radius = BorderRadius.circular(borderRadius ?? MosqueRadius.card);
     final cardBorder = border ??
         Border.all(
           color: isDark ? AppColors.nightBorder : AppColors.cardBorder,
           width: 1,
         );
 
-    Widget content = Container(
-      margin: margin,
-      padding: padding,
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(MosqueRadius.card),
-        border: cardBorder,
-        boxShadow: [
-          BoxShadow(
-            color: isDark ? Colors.black26 : Colors.black.withOpacity(0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: child,
+    final decoration = BoxDecoration(
+      color: gradient == null ? cardColor : null,
+      gradient: gradient,
+      borderRadius: radius,
+      border: cardBorder,
+      boxShadow: [
+        BoxShadow(
+          color: isDark ? Colors.black.withOpacity(0.3) : const Color(0x0A0D5C3A),
+          blurRadius: 10,
+          spreadRadius: 0,
+          offset: const Offset(0, 3),
+        ),
+      ],
     );
 
     if (onTap != null) {
-      return Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(MosqueRadius.card),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(MosqueRadius.card),
-          child: content,
+      return Container(
+        margin: margin,
+        decoration: decoration,
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: radius,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: radius,
+            splashColor: AppColors.emeraldPrimary.withOpacity(0.12),
+            highlightColor: AppColors.emeraldPrimary.withOpacity(0.06),
+            child: Padding(
+              padding: padding,
+              child: child,
+            ),
+          ),
         ),
       );
     }
 
-    return content;
+    return Container(
+      margin: margin,
+      padding: padding,
+      decoration: decoration,
+      child: child,
+    );
   }
 }

@@ -105,11 +105,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             ref.read(notificationListProvider.notifier).loadNotifications(),
           ]);
         },
-        child: ListView(
-          padding: const EdgeInsets.all(MosqueContentPadding.screenHorizontal),
-          children: [
-            // 1. Mosque Identity Hero Card
-            DashboardHeroCard(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final isTablet = constraints.maxWidth >= 720;
+
+            final heroCard = DashboardHeroCard(
               mosqueNameBn: user?.mosqueNameBn.isNotEmpty == true
                   ? user!.mosqueNameBn
                   : 'মসজিদ সেবা পোর্টাল',
@@ -119,17 +119,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               committeeId: user?.committeeId.isNotEmpty == true ? user!.committeeId : '—',
               establishedYear: user?.establishedYear ?? DateTime.now().year,
               onProfileTap: () => context.push(AppRouter.profile),
-            ),
-            const SizedBox(height: MosqueSpace.md),
+            );
 
-            // 2. Prayer Times Live Countdown Card
-            PrayerCountdownCard(
+            final prayerCard = PrayerCountdownCard(
               onTap: () => context.push(AppRouter.prayerTimes),
-            ),
-            const SizedBox(height: MosqueSpace.md),
+            );
 
-            // 3. Smart Information Board (Quotes & Reminders)
-            SmartBoardCard(
+            final smartBoard = SmartBoardCard(
               categoryBadge: latestNotice == null
                   ? 'জুমার বিশেষ নির্দেশনা'
                   : (latestNotice.isUrgent
@@ -139,35 +135,25 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               message: latestNotice?.content ??
                   'খুতবা চলাকালীন মোবাইল সাইলেন্ট রাখুন এবং মনোযোগ সহকারে বয়ান শ্রবণ করুন।',
               onTap: () => context.push(AppRouter.notices),
-            ),
-            const SizedBox(height: MosqueSpace.md),
+            );
 
-            // 4. Quick Actions Panel (4 Administrative Launchers)
-            QuickActionsGrid(
+            final quickActions = QuickActionsGrid(
               onReceiveChanda: () => context.push(AppRouter.chandaLedger),
               onAddTransaction: () => context.push(AppRouter.finance),
               onCashboxCounter: () => context.push(AppRouter.cashbox),
               onPublishNotice: () => context.push(AppRouter.notices),
-            ),
-            const SizedBox(height: MosqueSpace.md),
+            );
 
-            // 5. Daily Sahih Hadith Board
-            const HadithBoardWidget(),
-            const SizedBox(height: MosqueSpace.md),
-
-            // 6. Financial & Membership KPI Cards
-            KpiSummaryGrid(
+            final kpiGrid = KpiSummaryGrid(
               totalMembers: totalMembers,
               cashBalance: financeSummary.cashInHand,
               bankBalance: financeSummary.bankBalance,
               pendingApprovals: financeSummary.pendingVouchersCount,
               onFinanceTap: () => context.push(AppRouter.finance),
               onMembersTap: () => context.push(AppRouter.members),
-            ),
-            const SizedBox(height: MosqueSpace.md),
+            );
 
-            // 7. Madrasa & Maktab Education Highlight Banner
-            CardShell(
+            final madrasaBanner = CardShell(
               onTap: () => context.push(AppRouter.madrasa),
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               child: Row(
@@ -199,9 +185,76 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
                 ],
               ),
-            ),
-            const SizedBox(height: MosqueSpace.xxl),
-          ],
+            );
+
+            return Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1150),
+                child: isTablet
+                    ? ListView(
+                        padding: const EdgeInsets.all(MosqueContentPadding.screenHorizontal),
+                        children: [
+                          // 1. KPI Metric Ribbon
+                          kpiGrid,
+                          const SizedBox(height: MosqueSpace.md),
+                          // 2. Dual-Column Adaptive Layout
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Left Column: Identity, Prayer Times, Notices
+                              Expanded(
+                                flex: 6,
+                                child: Column(
+                                  children: [
+                                    heroCard,
+                                    const SizedBox(height: MosqueSpace.md),
+                                    prayerCard,
+                                    const SizedBox(height: MosqueSpace.md),
+                                    smartBoard,
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: MosqueSpace.md),
+                              // Right Column: Operations, Education Hub & Hadith
+                              Expanded(
+                                flex: 5,
+                                child: Column(
+                                  children: [
+                                    quickActions,
+                                    const SizedBox(height: MosqueSpace.md),
+                                    madrasaBanner,
+                                    const SizedBox(height: MosqueSpace.md),
+                                    const HadithBoardWidget(),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: MosqueSpace.xxl),
+                        ],
+                      )
+                    : ListView(
+                        padding: const EdgeInsets.all(MosqueContentPadding.screenHorizontal),
+                        children: [
+                          heroCard,
+                          const SizedBox(height: MosqueSpace.md),
+                          prayerCard,
+                          const SizedBox(height: MosqueSpace.md),
+                          smartBoard,
+                          const SizedBox(height: MosqueSpace.md),
+                          quickActions,
+                          const SizedBox(height: MosqueSpace.md),
+                          const HadithBoardWidget(),
+                          const SizedBox(height: MosqueSpace.md),
+                          kpiGrid,
+                          const SizedBox(height: MosqueSpace.md),
+                          madrasaBanner,
+                          const SizedBox(height: MosqueSpace.xxl),
+                        ],
+                      ),
+              ),
+            );
+          },
         ),
       ),
     );

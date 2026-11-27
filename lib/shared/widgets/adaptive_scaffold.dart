@@ -56,7 +56,19 @@ class AdaptiveScaffold extends StatelessWidget {
                     actions: actions,
                   )
                 : null),
-        body: body,
+        body: LayoutBuilder(
+          builder: (context, constraints) {
+            if (constraints.maxWidth >= AppConstants.tabletBreakpoint) {
+              return Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 960),
+                  child: body,
+                ),
+              );
+            }
+            return body;
+          },
+        ),
         floatingActionButton: floatingActionButton,
       );
     }
@@ -99,7 +111,14 @@ class AdaptiveScaffold extends StatelessWidget {
                       .toList(),
                 ),
                 const VerticalDivider(thickness: 1, width: 1),
-                Expanded(child: body),
+                Expanded(
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 1200),
+                      child: body,
+                    ),
+                  ),
+                ),
               ],
             ),
           );

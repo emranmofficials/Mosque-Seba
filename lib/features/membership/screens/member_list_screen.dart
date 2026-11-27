@@ -153,100 +153,134 @@ class MemberListScreen extends ConsumerWidget {
                 final totalChanda = members.fold<double>(0.0, (acc, m) => acc + m.monthlyChanda);
                 final mealVolunteers = members.where((m) => m.willingToProvideStaffMeals).length;
 
-                return ListView(
-                  padding: const EdgeInsets.all(AppDimens.spacing16),
-                  children: [
-                    // Metrics Row
-                    Row(
-                      children: [
-                        Expanded(
-                          child: CardShell(
-                            padding: const EdgeInsets.all(AppDimens.spacing12),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                return LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isTablet = constraints.maxWidth >= 650;
+
+                    return Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 1080),
+                        child: ListView(
+                          padding: const EdgeInsets.all(AppDimens.spacing16),
+                          children: [
+                            // Metrics Row
+                            Row(
                               children: [
-                                Text(
-                                  'মোট সদস্য',
-                                  style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
+                                Expanded(
+                                  child: CardShell(
+                                    padding: const EdgeInsets.all(AppDimens.spacing12),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'মোট সদস্য',
+                                          style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          '${BengaliNumberFormatter.toBengali(members.length)} জন',
+                                          style: AppTypography.titleMedium.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                            color: AppColors.primary,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                 ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  '${BengaliNumberFormatter.toBengali(members.length)} জন',
-                                  style: AppTypography.titleMedium.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.primary,
+                                const SizedBox(width: AppDimens.spacing8),
+                                Expanded(
+                                  child: CardShell(
+                                    padding: const EdgeInsets.all(AppDimens.spacing12),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'মাসিক চাঁদা অঙ্গীকার',
+                                          style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          BengaliNumberFormatter.formatCurrency(totalChanda),
+                                          style: AppTypography.titleMedium.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                            color: AppColors.gold,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: AppDimens.spacing8),
+                                Expanded(
+                                  child: CardShell(
+                                    padding: const EdgeInsets.all(AppDimens.spacing12),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'খাবার জোগানদাতা',
+                                          style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          '${BengaliNumberFormatter.toBengali(mealVolunteers)} জন',
+                                          style: AppTypography.titleMedium.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                            color: AppColors.success,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ],
                             ),
-                          ),
-                        ),
-                        const SizedBox(width: AppDimens.spacing8),
-                        Expanded(
-                          child: CardShell(
-                            padding: const EdgeInsets.all(AppDimens.spacing12),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'মাসিক চাঁদা অঙ্গীকার',
-                                  style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
+                            const SizedBox(height: AppDimens.spacing16),
+                            // Member Cards: Adaptive Grid on Tablet, Vertical List on Phone
+                            if (isTablet)
+                              GridView.builder(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                                  maxCrossAxisExtent: 480,
+                                  mainAxisExtent: 110,
+                                  crossAxisSpacing: AppDimens.spacing12,
+                                  mainAxisSpacing: AppDimens.spacing12,
                                 ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  BengaliNumberFormatter.formatCurrency(totalChanda),
-                                  style: AppTypography.titleMedium.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.gold,
+                                itemCount: members.length,
+                                itemBuilder: (ctx, idx) => MemberCard(
+                                  member: members[idx],
+                                  onTap: () {
+                                    context.push('/member-profile', extra: members[idx]);
+                                  },
+                                  onEdit: () => _showEditDialog(context, ref, members[idx]),
+                                  onCollectChanda: () {
+                                    context.push('/chanda-ledger', extra: members[idx]);
+                                  },
+                                ),
+                              )
+                            else
+                              ...members.map(
+                                (member) => Padding(
+                                  padding: const EdgeInsets.only(bottom: AppDimens.spacing12),
+                                  child: MemberCard(
+                                    member: member,
+                                    onTap: () {
+                                      context.push('/member-profile', extra: member);
+                                    },
+                                    onEdit: () => _showEditDialog(context, ref, member),
+                                    onCollectChanda: () {
+                                      context.push('/chanda-ledger', extra: member);
+                                    },
                                   ),
                                 ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: AppDimens.spacing8),
-                        Expanded(
-                          child: CardShell(
-                            padding: const EdgeInsets.all(AppDimens.spacing12),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'খাবার জোগানদাতা',
-                                  style: AppTypography.caption.copyWith(color: AppColors.textSecondary),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  '${BengaliNumberFormatter.toBengali(mealVolunteers)} জন',
-                                  style: AppTypography.titleMedium.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.success,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppDimens.spacing16),
-                    // Member Cards
-                    ...members.map(
-                      (member) => Padding(
-                        padding: const EdgeInsets.only(bottom: AppDimens.spacing12),
-                        child: MemberCard(
-                          member: member,
-                          onTap: () {
-                            context.push('/member-profile', extra: member);
-                          },
-                          onEdit: () => _showEditDialog(context, ref, member),
-                          onCollectChanda: () {
-                            context.push('/chanda-ledger', extra: member);
-                          },
+                              ),
+                          ],
                         ),
                       ),
-                    ),
-                  ],
+                    );
+                  },
                 );
               },
             ),
