@@ -172,11 +172,11 @@ class _SealSignatureManagementScreenState
                             size: 36,
                           ),
                         )
-                      : const Center(
+                      : Center(
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.verified, color: AppColors.emeraldPrimary, size: 36),
+                              const Icon(Icons.verified, color: AppColors.emeraldPrimary, size: 36),
                               Text(
                                 'অফিসিয়াল সিল',
                                 style: Theme.of(context).textTheme.labelSmall?.copyWith(

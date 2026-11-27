@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/services/biometric_auth_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimens.dart';
+import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/bengali_number_formatter.dart';
 import '../../../shared/widgets/card_shell.dart';
 import '../security/encryption_helper.dart';

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimens.dart';
+import '../../../core/theme/app_typography.dart';
 import '../../../shared/widgets/card_shell.dart';
 import '../../role_permissions/models/committee_role.dart';
 import '../../role_permissions/models/permission_catalog.dart';
