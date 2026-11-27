@@ -5,7 +5,7 @@ import '../../features/authentication/screens/login_screen.dart';
 import '../../features/authentication/screens/registration_screen.dart';
 import '../../features/authentication/screens/splash_screen.dart';
 import '../../features/cashbox/screens/cashbox_history_screen.dart';
-import '../../features/dashboard/screens/dashboard_screen.dart';
+import '../navigation/role_shells/role_shell_resolver.dart';
 import '../../features/duty_roster/screens/duty_roster_screen.dart';
 import '../../features/elections/screens/election_screen.dart';
 import '../../features/finance/screens/finance_dashboard_screen.dart';
@@ -173,7 +173,7 @@ class AppRouter {
         GoRoute(
           path: dashboard,
           name: 'dashboard',
-          builder: (context, state) => const DashboardScreen(),
+          builder: (context, state) => const RoleShellResolver(),
         ),
         GoRoute(
           path: prayerTimes,

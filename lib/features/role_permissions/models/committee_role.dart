@@ -150,6 +150,17 @@ enum CommitteeRole {
       'কমিটির যেকোনো বিতর্ক বা মতবিরোধ নিরসনে ভূমিকা রাখা।',
     ],
   ),
+  staffImam(
+    code: 'staff_imam',
+    titleBn: 'ইমাম (স্টাফ)',
+    level: 4,
+    tier: CommitteeTier.staffMusalli,
+    shortSummaryBn: 'পাঁচ ওয়াক্ত ও জুমার ইমামতি, খুতবা ও দোয়া পরিচালনা',
+    dutiesBn: [
+      'পাঁচ ওয়াক্ত নামাজ ও জুমার নামাজে ইমামতি করা।',
+      'ডিউটি রোস্টার অনুযায়ী দায়িত্ব ও তালিম পরিচালনা করা।',
+    ],
+  ),
   muazzin(
     code: 'muazzin',
     titleBn: 'মুয়াজ্জিন',
@@ -170,6 +181,17 @@ enum CommitteeRole {
     dutiesBn: [
       'মসজিদের অভ্যন্তর ও অজুখানা সবসময় পরিষ্কার-পরিচ্ছন্ন রাখা।',
       'মসজিদের বাতি, ফ্যান ও পানির সুব্যবস্থা নিশ্চিত করা।',
+    ],
+  ),
+  madrasaTeacher(
+    code: 'madrasa_teacher',
+    titleBn: 'মাদরাসা ওস্তাদ',
+    level: 4,
+    tier: CommitteeTier.staffMusalli,
+    shortSummaryBn: 'মক্তব ও হিফজ শিক্ষা, হাজিরা, সবক ও পরীক্ষা মূল্যায়ন',
+    dutiesBn: [
+      'দৈনিক মক্তব ও হিফজ ক্লাস পরিচালনা এবং হাজিরা গ্রহণ করা।',
+      'শিক্ষার্থীদের সবক, পারা ও পরীক্ষার ফলাফল লিপিবদ্ধ করা।',
     ],
   ),
   generalMember(
@@ -227,8 +249,18 @@ enum CommitteeRole {
 
   static CommitteeRole fromCode(String? code) {
     if (code == null || code.isEmpty) return CommitteeRole.generalMember;
+    final normalized = code.toLowerCase().trim();
+    if (normalized == 'khatib_imam') return CommitteeRole.imam;
+    if (normalized == 'organizational_secretary') {
+      return CommitteeRole.organizingSecretary;
+    }
+    if (normalized == 'social_welfare_secretary') {
+      return CommitteeRole.welfareEducationSecretary;
+    }
+    if (normalized == 'staff_muazzin') return CommitteeRole.muazzin;
+    if (normalized == 'staff_khadem') return CommitteeRole.khadem;
     for (final role in CommitteeRole.values) {
-      if (role.code.toLowerCase() == code.toLowerCase().trim()) {
+      if (role.code.toLowerCase() == normalized) {
         return role;
       }
     }

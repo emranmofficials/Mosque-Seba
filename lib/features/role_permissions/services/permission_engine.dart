@@ -31,9 +31,12 @@ class PermissionEngine {
       case CommitteeRole.advisoryBoard:
         return UiProfile.ui02Executive;
       case CommitteeRole.imam:
+      case CommitteeRole.staffImam:
       case CommitteeRole.muazzin:
       case CommitteeRole.khadem:
         return UiProfile.ui04Staff;
+      case CommitteeRole.madrasaTeacher:
+        return UiProfile.ui05Teacher;
       case CommitteeRole.generalMember:
         return UiProfile.ui03Musalli;
     }
@@ -96,7 +99,9 @@ class PermissionEngine {
       case PermissionCatalog.attendanceManage:
       case PermissionCatalog.hifzManage:
       case PermissionCatalog.examPublish:
-        return role.canManageWelfareEducation() || role == CommitteeRole.assistantSecretary;
+        return role.canManageWelfareEducation() ||
+            role == CommitteeRole.assistantSecretary ||
+            role == CommitteeRole.madrasaTeacher;
       case PermissionCatalog.feeReceive:
         return role.canManageFinance() ||
             role.canManageWelfareEducation() ||
@@ -109,13 +114,15 @@ class PermissionEngine {
         return role == CommitteeRole.president ||
             role == CommitteeRole.generalSecretary ||
             role == CommitteeRole.imam ||
+            role == CommitteeRole.staffImam ||
             role == CommitteeRole.muazzin ||
             role == CommitteeRole.publicitySecretary;
       case PermissionCatalog.dutyManage:
         return role == CommitteeRole.president ||
             role == CommitteeRole.vicePresident ||
             role == CommitteeRole.generalSecretary ||
-            role == CommitteeRole.imam;
+            role == CommitteeRole.imam ||
+            role == CommitteeRole.staffImam;
       case PermissionCatalog.welfareManage:
         return role.canManageWelfareEducation();
       default:

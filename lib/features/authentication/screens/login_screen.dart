@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimens.dart';
 import '../../../shared/widgets/card_shell.dart';
+import '../dialogs/demo_role_picker_dialog.dart';
 import '../dialogs/login_help_dialog.dart';
 import '../widgets/auth_header_banner.dart';
 import '../widgets/committee_login_form.dart';
@@ -40,7 +42,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   top: 48,
                   right: 16,
                   child: IconButton(
-                    icon: const Icon(Icons.help_outline, color: AppColors.goldLight),
+                    icon: const Icon(
+                      Icons.help_outline,
+                      color: AppColors.goldLight,
+                    ),
                     onPressed: () {
                       showDialog(
                         context: context,
@@ -53,14 +58,18 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
 
             Padding(
-              padding: const EdgeInsets.all(MosqueContentPadding.screenHorizontal),
+              padding: const EdgeInsets.all(
+                MosqueContentPadding.screenHorizontal,
+              ),
               child: Column(
                 children: [
                   // Tab Switcher (কমিটি vs মুসল্লি)
                   Container(
                     padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
-                      color: isDark ? AppColors.nightSurfaceVariant : AppColors.cardBorderSubtle,
+                      color: isDark
+                          ? AppColors.nightSurfaceVariant
+                          : AppColors.cardBorderSubtle,
                       borderRadius: BorderRadius.circular(MosqueRadius.pill),
                     ),
                     child: Row(
@@ -74,7 +83,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                 color: _selectedTabIndex == 0
                                     ? AppColors.emeraldPrimary
                                     : Colors.transparent,
-                                borderRadius: BorderRadius.circular(MosqueRadius.pill),
+                                borderRadius: BorderRadius.circular(
+                                  MosqueRadius.pill,
+                                ),
                               ),
                               child: Text(
                                 'সভাপতি ও কমিটি',
@@ -84,7 +95,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                   fontWeight: FontWeight.bold,
                                   color: _selectedTabIndex == 0
                                       ? Colors.white
-                                      : (isDark ? AppColors.nightTextMuted : AppColors.textSecondary),
+                                      : (isDark
+                                            ? AppColors.nightTextMuted
+                                            : AppColors.textSecondary),
                                 ),
                               ),
                             ),
@@ -99,7 +112,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                 color: _selectedTabIndex == 1
                                     ? AppColors.emeraldPrimary
                                     : Colors.transparent,
-                                borderRadius: BorderRadius.circular(MosqueRadius.pill),
+                                borderRadius: BorderRadius.circular(
+                                  MosqueRadius.pill,
+                                ),
                               ),
                               child: Text(
                                 'সাধারণ মুসল্লি',
@@ -109,7 +124,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                   fontWeight: FontWeight.bold,
                                   color: _selectedTabIndex == 1
                                       ? Colors.white
-                                      : (isDark ? AppColors.nightTextMuted : AppColors.textSecondary),
+                                      : (isDark
+                                            ? AppColors.nightTextMuted
+                                            : AppColors.textSecondary),
                                 ),
                               ),
                             ),
@@ -133,7 +150,23 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
 
-                  const SizedBox(height: MosqueSpace.xl),
+                  const SizedBox(height: MosqueSpace.lg),
+
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        showDialog<void>(
+                          context: context,
+                          builder: (_) => const DemoRolePickerDialog(),
+                        );
+                      },
+                      icon: const Icon(Icons.play_circle_outline),
+                      label: const Text('ডেমো মোডে দেখুন (১৮টি রোল)'),
+                    ),
+                  ),
+
+                  const SizedBox(height: MosqueSpace.lg),
 
                   // Link to Mosque Registration
                   Row(
@@ -143,7 +176,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         'আপনার মসজিদ কি এখনও নিবন্ধিত নয়? ',
                         style: TextStyle(
                           fontSize: 13,
-                          color: isDark ? AppColors.nightTextMuted : AppColors.textSecondary,
+                          color: isDark
+                              ? AppColors.nightTextMuted
+                              : AppColors.textSecondary,
                         ),
                       ),
                       GestureDetector(
