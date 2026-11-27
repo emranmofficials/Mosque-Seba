@@ -62,11 +62,11 @@ class PrayerScheduleScreen extends ConsumerWidget {
         data: (data) {
           final schedule = data.schedule;
 
-          return ListView(
-            padding: const EdgeInsets.all(MosqueContentPadding.screenHorizontal),
-            children: [
-              // District Coordinate Selector Card
-              CardShell(
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              final isTablet = constraints.maxWidth >= 650;
+
+              final districtCard = CardShell(
                 color: isDark ? AppColors.nightSurface : AppColors.emeraldSoft,
                 border: Border.all(color: AppColors.emeraldPrimary.withOpacity(0.3)),
                 child: Column(
@@ -78,7 +78,7 @@ class PrayerScheduleScreen extends ConsumerWidget {
                         const SizedBox(width: MosqueSpace.sm),
                         Expanded(
                           child: Text(
-                            'অবস্থান ভিত্তিক সূর্যোদয় ও আজানের সময় (হানাফি)',
+                            "অবস্থান ভিত্তিক সূর্যোদয় ও আজানের সময় (হানাফি)",
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 13,
@@ -92,7 +92,7 @@ class PrayerScheduleScreen extends ConsumerWidget {
                     DropdownButtonFormField<String>(
                       value: settings.districtNameBn,
                       decoration: InputDecoration(
-                        labelText: 'জেলা নির্বাচন করুন',
+                        labelText: "জেলা নির্বাচন করুন",
                         isDense: true,
                         filled: true,
                         fillColor: Theme.of(context).cardColor,
@@ -104,7 +104,7 @@ class PrayerScheduleScreen extends ConsumerWidget {
                           .map(
                             (d) => DropdownMenuItem(
                               value: d.nameBn,
-                              child: Text('${d.nameBn} জেলা'),
+                              child: Text("${d.nameBn} জেলা"),
                             ),
                           )
                           .toList(),
@@ -116,166 +116,219 @@ class PrayerScheduleScreen extends ConsumerWidget {
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(height: MosqueSpace.lg),
+              );
 
-              ...schedule.map((item) {
-                final alarmKey = item.nameBn == 'জুমুআ' ? 'যোহর' : item.nameBn;
+              Widget buildCard(PrayerItem item) {
+                final alarmKey = item.nameBn == "জুমুআ" ? "যোহর" : item.nameBn;
                 final isAlarmOn = settings.alarmEnabled[alarmKey] ?? false;
 
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: MosqueSpace.md),
-                  child: CardShell(
-                    border: item.isNext
-                        ? Border.all(color: AppColors.gold, width: 1.5)
-                        : null,
-                    child: Column(
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                Container(
-                                  width: 36,
-                                  height: 36,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: item.isNext
-                                        ? AppColors.goldLight
-                                        : (isDark
-                                            ? AppColors.nightSurfaceVariant
-                                            : AppColors.bgLight),
+                return CardShell(
+                  color: item.isNext
+                      ? (isDark ? AppColors.nightSurfaceVariant : AppColors.goldSoft)
+                      : null,
+                  border: item.isNext
+                      ? Border.all(color: AppColors.gold, width: 1.8)
+                      : null,
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                width: 38,
+                                height: 38,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: item.isNext
+                                      ? AppColors.goldLight
+                                      : (isDark
+                                          ? AppColors.nightSurfaceVariant
+                                          : AppColors.bgLight),
+                                ),
+                                child: Icon(
+                                  Icons.access_time,
+                                  size: 19,
+                                  color: item.isNext
+                                      ? AppColors.goldDark
+                                      : AppColors.emeraldPrimary,
+                                ),
+                              ),
+                              const SizedBox(width: MosqueSpace.md),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Text(
+                                        item.nameBn,
+                                        style: const TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      if (item.isNext) ...[
+                                        const SizedBox(width: 6),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: AppColors.gold.withOpacity(0.2),
+                                            borderRadius: BorderRadius.circular(4),
+                                            border: Border.all(color: AppColors.gold, width: 0.8),
+                                          ),
+                                          child: const Text(
+                                            "পরবর্তী ওয়াক্ত",
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.bold,
+                                              color: AppColors.goldDark,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ],
                                   ),
-                                  child: Icon(
-                                    Icons.access_time,
-                                    size: 18,
-                                    color: item.isNext
-                                        ? AppColors.goldDark
-                                        : AppColors.emeraldPrimary,
+                                  Text(
+                                    "আজান (শুরু): ${item.azanTime}",
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: isDark
+                                          ? AppColors.nightTextMuted
+                                          : AppColors.textSecondary,
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(width: MosqueSpace.md),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      item.nameBn,
-                                      style: const TextStyle(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          Row(
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    "জামাত",
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: isDark
+                                          ? AppColors.nightTextMuted
+                                          : AppColors.textSecondary,
                                     ),
-                                    Text(
-                                      'আজান (শুরু): ${item.azanTime}',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: isDark
-                                            ? AppColors.nightTextMuted
-                                            : AppColors.textSecondary,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                            Row(
-                              children: [
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Text(
-                                      'জামাত',
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        color: isDark
-                                            ? AppColors.nightTextMuted
-                                            : AppColors.textSecondary,
-                                      ),
-                                    ),
-                                    Text(
-                                      item.iqamahTime,
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        color: AppColors.emeraldPrimary,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.edit_outlined, size: 18),
-                                  tooltip: 'জামাত সময় পরিবর্তন',
-                                  onPressed: () => _pickCustomTime(
-                                    context,
-                                    ref,
-                                    item.nameBn,
-                                    item.iqamahDateTime,
                                   ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                        const Divider(height: 16),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                Icon(
-                                  isAlarmOn
-                                      ? Icons.notifications_active
-                                      : Icons.notifications_none,
-                                  size: 16,
-                                  color: isAlarmOn ? AppColors.emeraldPrimary : Colors.grey,
-                                ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  'দৈনিক আজান রিমাইন্ডার',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: isAlarmOn
-                                        ? AppColors.emeraldPrimary
-                                        : Colors.grey.shade600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Switch.adaptive(
-                              value: isAlarmOn,
-                              activeColor: AppColors.emeraldPrimary,
-                              onChanged: (val) async {
-                                final result = await ref
-                                    .read(prayerSettingsProvider.notifier)
-                                    .toggleWaqtAlarm(
-                                      waqtName: item.nameBn,
-                                      enabled: val,
-                                      hour24: item.iqamahDateTime.hour,
-                                      minute: item.iqamahDateTime.minute,
-                                      displayTime: item.iqamahTime,
-                                    );
-                                if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        result
-                                            ? '${item.nameBn} অ্যালার্ম চালু হয়েছে'
-                                            : '${item.nameBn} অ্যালার্ম বন্ধ করা হয়েছে',
-                                      ),
+                                  Text(
+                                    item.iqamahTime,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.emeraldPrimary,
                                     ),
+                                  ),
+                                ],
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.edit_outlined, size: 18),
+                                tooltip: "জামাত সময় পরিবর্তন",
+                                onPressed: () => _pickCustomTime(
+                                  context,
+                                  ref,
+                                  item.nameBn,
+                                  item.iqamahDateTime,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      const Divider(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                isAlarmOn
+                                    ? Icons.notifications_active
+                                    : Icons.notifications_none,
+                                size: 16,
+                                color: isAlarmOn ? AppColors.emeraldPrimary : Colors.grey,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                "দৈনিক আজান রিমাইন্ডার",
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: isAlarmOn
+                                      ? AppColors.emeraldPrimary
+                                      : Colors.grey.shade600,
+                                ),
+                              ),
+                            ],
+                          ),
+                          Switch.adaptive(
+                            value: isAlarmOn,
+                            activeColor: AppColors.emeraldPrimary,
+                            onChanged: (val) async {
+                              final result = await ref
+                                  .read(prayerSettingsProvider.notifier)
+                                  .toggleWaqtAlarm(
+                                    waqtName: item.nameBn,
+                                    enabled: val,
+                                    hour24: item.iqamahDateTime.hour,
+                                    minute: item.iqamahDateTime.minute,
+                                    displayTime: item.iqamahTime,
                                   );
-                                }
-                              },
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      result
+                                          ? "${item.nameBn} অ্যালার্ম চালু হয়েছে"
+                                          : "${item.nameBn} অ্যালার্ম বন্ধ করা হয়েছে",
+                                    ),
+                                  ),
+                                );
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 );
-              }),
-            ],
+              }
+
+              return Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 1000),
+                  child: ListView(
+                    padding: const EdgeInsets.all(MosqueContentPadding.screenHorizontal),
+                    children: [
+                      districtCard,
+                      const SizedBox(height: MosqueSpace.lg),
+                      if (isTablet)
+                        GridView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                            maxCrossAxisExtent: 480,
+                            mainAxisExtent: 145,
+                            crossAxisSpacing: MosqueSpace.md,
+                            mainAxisSpacing: MosqueSpace.md,
+                          ),
+                          itemCount: schedule.length,
+                          itemBuilder: (ctx, idx) => buildCard(schedule[idx]),
+                        )
+                      else
+                        ...schedule.map((item) => Padding(
+                              padding: const EdgeInsets.only(bottom: MosqueSpace.md),
+                              child: buildCard(item),
+                            )),
+                    ],
+                  ),
+                ),
+              );
+            },
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
