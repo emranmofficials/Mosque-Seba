@@ -133,12 +133,12 @@ class FinanceAnalyticsCard extends StatelessWidget {
                   child: Row(
                     children: [
                       Expanded(
-                        flex: totalFlow > 0 ? (incomePercent * 10).round().clamp(1, 1000) : 1,
+                        flex: totalFlow > 0 ? (incomePercent * 10).round().clamp(1, 1000).toInt() : 1,
                         child: Container(color: AppColors.success),
                       ),
                       const SizedBox(width: 2),
                       Expanded(
-                        flex: totalFlow > 0 ? (expensePercent * 10).round().clamp(1, 1000) : 1,
+                        flex: totalFlow > 0 ? (expensePercent * 10).round().clamp(1, 1000).toInt() : 1,
                         child: Container(color: AppColors.urgentRed),
                       ),
                     ],
@@ -198,7 +198,7 @@ class FinanceAnalyticsCard extends StatelessWidget {
                               ),
                               const SizedBox(height: 3),
                               LinearProgressIndicator(
-                                value: share.clamp(0.0, 1.0),
+                                value: share.clamp(0.0, 1.0).toDouble(),
                                 backgroundColor: isDark ? AppColors.nightSurfaceVariant : Colors.grey.shade200,
                                 valueColor: const AlwaysStoppedAnimation<Color>(AppColors.success),
                                 minHeight: 4,
@@ -255,7 +255,7 @@ class FinanceAnalyticsCard extends StatelessWidget {
                               ),
                               const SizedBox(height: 3),
                               LinearProgressIndicator(
-                                value: share.clamp(0.0, 1.0),
+                                value: share.clamp(0.0, 1.0).toDouble(),
                                 backgroundColor: isDark ? AppColors.nightSurfaceVariant : Colors.grey.shade200,
                                 valueColor: const AlwaysStoppedAnimation<Color>(AppColors.urgentRed),
                                 minHeight: 4,
