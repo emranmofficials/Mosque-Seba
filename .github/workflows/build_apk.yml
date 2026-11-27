@@ -52,7 +52,7 @@ jobs:
       - name: Upload Release APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: MosqueSeba-v1.3.0-release
+          name: MosqueSeba-v1.3.1-release
           path: build/app/outputs/flutter-apk/app-release.apk
           retention-days: 30
 
@@ -60,17 +60,17 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
         with:
-          tag_name: v1.3.0
-          name: Mosque Seba v1.3.0 Official Release
+          tag_name: v1.3.1
+          name: Mosque Seba v1.3.1 Official Release
           body: |
-            ## 🕌 Mosque Seba (মসজিদ সেবা) v1.3.0 Official Release
-            - 🔔 রিয়েল-টাইম পুশ নোটিফিকেশন ও ইনস্ট্যান্ট অ্যালার্ট সাপোর্ট
-            - 🍞 প্রিমিয়াম ফ্লোটিং টোস্ট নোটিফিকেশন (সফল, ত্রুটি, তথ্য ও সতর্কতা)
-            - ⚠️ কনফার্মেশন ও ডিলিট ওয়ার্নিং ডায়ালগ (AppDialogs)
-            - 🆔 সদস্যদের জন্য ৮ সংখ্যার ইউনিকোড রেন্ডম আইডি (Member Code)
-            - 🕌 মসজিদের জন্য ১০ সংখ্যার ইউনিক আইডি / কমিটি কোড (Mosque ID)
-            - 📷 প্রোফাইল ছবি ও মসজিদের লোগো ক্যামেরা/গ্যালারি থেকে ক্লাউড ও অফলাইন আপলোড
-            - ⚡ সম্পূর্ণ অফলাইন Drift SQLite ডাটাবেজ এবং Supabase ক্লাউড অটো-সিঙ্ক
+            ## 🕌 Mosque Seba (মসজিদ সেবা) v1.3.1 Official Release
+            - 🎨 **সেরা রেসপনসিভ ও অ্যাডাপ্টিভ ইউআই:** ট্যাবলেট ও লার্জ স্ক্রিনে ডুয়াল-কলাম ড্যাশবোর্ড ও আধুনিক কার্ড রিপল এফেক্ট
+            - 🕌 **ডিজিটাল মসজিদ ডিসপ্লে গ্রিড:** ডিজিটাল ঘড়ি/টিভি মনিটরে ৫ ওয়াক্ত নামাজের সময়সূচি ও বর্তমান/পরবর্তী ওয়াক্তের গোল্ডেন আভা
+            - 📊 **আর্থিক অ্যানালিটিক্স চার্ট ও অনুপাত:** আয় বনাম ব্যয় তুলনামূলক বার এবং শীর্ষ খাতওয়ারি ভিজ্যুয়াল প্রগ্রেস
+            - 🌙 **১-ট্যাপ ইসলামিক নাইট মোড:** ফজর ও এশার ওয়াক্তের জন্য আই-কমফোর্ট ডার্ক থিম সুইচার
+            - 📋 **ক্যাশ রশিদ ও ভাউচার ইনস্ট্যান্ট শেয়ার:** হোয়াটসঅ্যাপ ও মেসেজিংয়ে সরাসরি ডিজিটাল রশিদ শেয়ার ও PDF প্রিন্ট
+            - 🆔 **র‍্যান্ডম কোড জেনারেশন:** ৮ সংখ্যার মেম্বার আইডি ও ১০ সংখ্যার মসজিদ কমিটি আইডি
+            - 📷 **প্রোফাইল ও লোগো আপলোড:** ক্যামেরা/গ্যালারি থেকে সরাসরি ক্লাউড ও অফলাইন স্টোরেজ ব্যাকআপ
             
             **Download the APK file below directly to your phone:**
           files: build/app/outputs/flutter-apk/app-release.apk

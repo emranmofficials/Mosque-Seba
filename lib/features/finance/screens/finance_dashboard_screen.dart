@@ -15,6 +15,7 @@ import '../dialogs/approve_transaction_dialog.dart';
 import '../models/finance_transaction_model.dart';
 import '../providers/finance_provider.dart';
 import '../widgets/balance_summary_cards.dart';
+import '../widgets/finance_analytics_card.dart';
 import '../widgets/pending_approval_card.dart';
 import '../widgets/transaction_detail_sheet.dart';
 import '../widgets/transaction_item_card.dart';
@@ -102,6 +103,16 @@ class FinanceDashboardScreen extends ConsumerWidget {
             // Balance Summary
             BalanceSummaryCards(summary: summary),
             const SizedBox(height: AppDimens.spacing16),
+            // Financial Analytics & Category Breakdown
+            transactionsAsync.maybeWhen(
+              data: (txns) => Column(
+                children: [
+                  FinanceAnalyticsCard(summary: summary, transactions: txns),
+                  const SizedBox(height: AppDimens.spacing16),
+                ],
+              ),
+              orElse: () => const SizedBox.shrink(),
+            ),
             // Quick Voucher Buttons Row (Role-protected)
             if (canManageFinance) ...[
               Row(

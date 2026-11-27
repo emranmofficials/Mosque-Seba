@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../bootstrap/dependency_injection.dart';
 import '../../core/config/app_config.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_dimens.dart';
 
 /// Global Application Header (GlobalHeader.kt Parity)
-/// Displays official logo, user name, committee designation, and notification badge
-class AppHeader extends StatelessWidget implements PreferredSizeWidget {
+/// Displays official logo, user name, committee designation, theme toggle, and notification badge
+class AppHeader extends ConsumerWidget implements PreferredSizeWidget {
   final String userName;
   final String designation;
   final int unreadNotifications;
@@ -25,14 +27,17 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
   Size get preferredSize => const Size.fromHeight(64);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isDark = ref.watch(isDarkModeProvider);
+
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: MosqueContentPadding.screenHorizontal,
         vertical: MosqueSpace.sm,
       ),
-      decoration: const BoxDecoration(
-        color: AppColors.emeraldDark,
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.nightSurface : AppColors.emeraldDark,
+        border: isDark ? const Border(bottom: BorderSide(color: AppColors.nightBorder, width: 0.8)) : null,
       ),
       child: SafeArea(
         bottom: false,
@@ -83,6 +88,19 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
                   ),
                 ],
               ),
+            ),
+
+            // 1-Tap Eye-Comfort Islamic Night Mode Toggle
+            IconButton(
+              icon: Icon(
+                isDark ? Icons.light_mode : Icons.dark_mode_outlined,
+                color: isDark ? AppColors.gold : AppColors.surface,
+                size: 22,
+              ),
+              tooltip: isDark ? 'স্বাভাবিক মোড চালু করুন' : 'ইসলামিক নাইট মোড চালু করুন',
+              onPressed: () {
+                ref.read(isDarkModeProvider.notifier).state = !isDark;
+              },
             ),
 
             // Notification Bell with Badge

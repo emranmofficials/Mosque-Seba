@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_dimens.dart';
 import '../../../core/utils/bengali_number_formatter.dart';
@@ -126,7 +127,7 @@ void showTransactionDetailSheet(
               Expanded(
                 child: OutlinedButton.icon(
                   icon: const Icon(Icons.picture_as_pdf_outlined, size: 18),
-                  label: const Text('ভাউচার PDF প্রিন্ট'),
+                  label: const Text('PDF প্রিন্ট'),
                   onPressed: () async {
                     await NativePrintingService().printVoucher(
                       voucherNo: txn.transactionCode,
@@ -144,8 +145,32 @@ void showTransactionDetailSheet(
                   },
                 ),
               ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton.icon(
+                  icon: const Icon(Icons.share_outlined, size: 18),
+                  label: const Text('রশিদ শেয়ার'),
+                  onPressed: () {
+                    final text = '''
+🕌 $mosqueName
+📋 অফিসিয়াল ক্যাশ রশিদ / ভাউচার
+--------------------------------
+🔢 ভাউচার নং: ${txn.transactionCode}
+📁 খাত: ${txn.categoryNameBn} (${txn.isIncome ? 'জমা/আয়' : 'খরচ/ব্যয়'})
+💰 পরিমাণ: ${BengaliNumberFormatter.formatCurrency(txn.amount)}
+📅 তারিখ: ${BengaliNumberFormatter.toBengali(txn.txnDate)}
+📝 বিবরণ: ${txn.description.isNotEmpty ? txn.description : '—'}
+👤 প্রস্তুতকারী: ${txn.createdBy.isNotEmpty ? txn.createdBy : '—'}
+✅ স্থিতি: $statusLabel
+--------------------------------
+মসজিদ সেবা (Mosque Seba) ডিজিটাল সার্ভিস
+'''.trim();
+                    Share.share(text, subject: '$mosqueName - ভাউচার #${txn.transactionCode}');
+                  },
+                ),
+              ),
               if (canReverse) ...[
-                const SizedBox(width: 10),
+                const SizedBox(width: 8),
                 Expanded(
                   child: ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
@@ -153,7 +178,7 @@ void showTransactionDetailSheet(
                       foregroundColor: Colors.white,
                     ),
                     icon: const Icon(Icons.undo, size: 18),
-                    label: const Text('সমন্বয় / বাতিল'),
+                    label: const Text('বাতিল'),
                     onPressed: () {
                       Navigator.pop(sheetCtx);
                       _confirmReverseDialog(
